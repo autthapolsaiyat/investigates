@@ -1,24 +1,5 @@
 {
   "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/*.js", "/*.css", "/*.ico", "/*.svg"]
-  },
-  "routes": [
-    {
-      "route": "/login",
-      "rewrite": "/index.html"
-    },
-    {
-      "route": "/dashboard",
-      "rewrite": "/index.html"
-    },
-    {
-      "route": "/cases",
-      "rewrite": "/index.html"
-    },
-    {
-      "route": "/*",
-      "rewrite": "/index.html"
-    }
-  ]
+    "rewrite": "/index.html"
+  }
 }
