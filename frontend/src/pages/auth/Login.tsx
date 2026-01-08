@@ -1,85 +1,152 @@
+/**
+ * Login Page
+ * Authentication page with real API integration
+ */
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Eye, EyeOff } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
+import { Button, Input, Card } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
-import { Button, Input } from '../../components/ui';
 
-export const LoginPage = () => {
+export default function Login() {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuthStore();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, isLoading, error, clearError } = useAuthStore();
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) clearError();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
     try {
-      await login(username, password);
+      await login(formData);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+    } catch (err) {
+      // Error is handled by the store
     }
   };
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-600/30">
-            <Search className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
+            <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold">InvestiGate</h1>
-          <p className="text-dark-400 mt-1">ประตูสู่การสืบสวนยุคใหม่</p>
+          <h1 className="text-2xl font-bold text-white">InvestiGate</h1>
+          <p className="text-gray-400 mt-2">Investigation Management Platform</p>
         </div>
 
-        <div className="bg-dark-900 border border-dark-800 rounded-2xl p-8">
-          <h2 className="text-xl font-semibold mb-6">เข้าสู่ระบบ</h2>
-          
+        {/* Login Card */}
+        <Card className="p-8">
+          <h2 className="text-xl font-semibold text-white mb-6">Sign In</h2>
+
+          {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-              {error}
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              required
-            />
-
-            <div className="relative">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email
+              </label>
               <Input
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
                 required
+                autoComplete="email"
+                disabled={isLoading}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-dark-500 hover:text-dark-300"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
 
-            <Button type="submit" className="w-full" isLoading={isLoading}>
-              เข้าสู่ระบบ
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  autoComplete="current-password"
+                  disabled={isLoading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember & Forgot */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-gray-600 bg-dark-800 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="ml-2 text-sm text-gray-400">Remember me</span>
+              </label>
+              <a href="#" className="text-sm text-primary-400 hover:text-primary-300">
+                Forgot password?
+              </a>
+            </div>
+
+            {/* Submit */}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
-        </div>
 
-        <p className="text-center text-dark-500 text-sm mt-6">
-          InvestiGate Enterprise Edition v2.0
+          {/* Register Link */}
+          <p className="mt-6 text-center text-gray-400">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary-400 hover:text-primary-300">
+              Request Access
+            </Link>
+          </p>
+        </Card>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-sm mt-8">
+          &copy; 2024 InvestiGate. All rights reserved.
         </p>
       </div>
     </div>
   );
-};
+}

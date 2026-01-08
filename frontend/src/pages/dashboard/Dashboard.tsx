@@ -1,79 +1,190 @@
-import { Card, Badge } from '../../components/ui';
-import { FolderOpen, Users, DollarSign, AlertTriangle, ArrowUpRight } from 'lucide-react';
+/**
+ * Dashboard Page
+ * Main dashboard with statistics from API
+ */
+import { useEffect, useState } from 'react';
+import { 
+  Briefcase, 
+  Users, 
+  AlertTriangle, 
+  TrendingUp,
+  FileText,
+  DollarSign,
+  Loader2
+} from 'lucide-react';
+import { Card } from '../../components/ui';
+import { casesAPI, CaseStatistics } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 
-export const DashboardPage = () => {
-  const stats = [
-    { title: 'Total Cases', value: 156, icon: FolderOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', change: '+12%' },
-    { title: 'Suspects', value: 342, icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10', change: '+8%' },
-    { title: 'Transactions', value: '1.2M', icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10', change: '+24%' },
-    { title: 'Flagged', value: 89, icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10', change: '-5%' },
-  ];
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  trend?: string;
+  trendUp?: boolean;
+}
+
+function StatCard({ title, value, icon, trend, trendUp }: StatCardProps) {
+  return (
+    <Card className="p-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-gray-400 text-sm">{title}</p>
+          <p className="text-2xl font-bold text-white mt-1">{value}</p>
+          {trend && (
+            <p className={`text-sm mt-2 ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
+              {trend}
+            </p>
+          )}
+        </div>
+        <div className="p-3 bg-primary-600/20 rounded-xl">
+          {icon}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export default function Dashboard() {
+  const { user } = useAuthStore();
+  const [stats, setStats] = useState<CaseStatistics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadStatistics();
+  }, []);
+
+  const loadStatistics = async () => {
+    try {
+      setIsLoading(true);
+      const data = await casesAPI.getStatistics();
+      setStats(data);
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to load statistics');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-dark-400">ภาพรวมระบบ InvestiGate</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <p className="text-gray-400 mt-1">
+          Welcome back, {user?.first_name}! Here's an overview of your investigations.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-dark-400 text-sm">{stat.title}</p>
-                <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <ArrowUpRight className="w-4 h-4 text-green-400" />
-                  <span className="text-green-400">{stat.change}</span>
-                </div>
-              </div>
-              <div className={`p-3 rounded-xl ${stat.bg}`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
-              </div>
-            </div>
-          </Card>
-        ))}
+      {/* Error */}
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Cases"
+          value={stats?.total_cases || 0}
+          icon={<Briefcase className="w-6 h-6 text-primary-400" />}
+        />
+        <StatCard
+          title="Open Cases"
+          value={stats?.open_cases || 0}
+          icon={<FileText className="w-6 h-6 text-yellow-400" />}
+        />
+        <StatCard
+          title="Total Victims"
+          value={stats?.total_victims || 0}
+          icon={<Users className="w-6 h-6 text-orange-400" />}
+        />
+        <StatCard
+          title="Total Amount"
+          value={formatCurrency(stats?.total_amount || 0)}
+          icon={<DollarSign className="w-6 h-6 text-green-400" />}
+        />
       </div>
 
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="font-semibold mb-4">Recent Cases</h3>
+        {/* Cases by Type */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Cases by Type</h3>
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-dark-900 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-600/20 rounded-lg flex items-center justify-center">
-                    <FolderOpen className="w-5 h-5 text-primary-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium">CASE-202601-ABC{i}</p>
-                    <p className="text-sm text-dark-400">คดีสืบสวน #{i}</p>
-                  </div>
-                </div>
-                <Badge variant={i === 1 ? 'danger' : i === 2 ? 'warning' : 'success'}>
-                  {i === 1 ? 'Critical' : i === 2 ? 'High' : 'Medium'}
-                </Badge>
+            {stats?.by_type && Object.entries(stats.by_type).map(([type, count]) => (
+              <div key={type} className="flex items-center justify-between">
+                <span className="text-gray-400 capitalize">{type.replace(/_/g, ' ')}</span>
+                <span className="text-white font-medium">{count}</span>
               </div>
             ))}
+            {(!stats?.by_type || Object.keys(stats.by_type).length === 0) && (
+              <p className="text-gray-500 text-center py-4">No cases yet</p>
+            )}
           </div>
         </Card>
 
-        <Card>
-          <h3 className="font-semibold mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            {['New case created', 'Evidence uploaded', 'Suspect identified', 'Transaction flagged'].map((action, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-2 h-2 mt-2 rounded-full bg-primary-500" />
-                <div>
-                  <p className="text-sm">{action}</p>
-                  <p className="text-xs text-dark-500">{i + 1} hour ago</p>
-                </div>
+        {/* Cases by Status */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Cases by Status</h3>
+          <div className="space-y-3">
+            {stats?.by_status && Object.entries(stats.by_status).map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between">
+                <span className="text-gray-400 capitalize">{status.replace(/_/g, ' ')}</span>
+                <span className="text-white font-medium">{count}</span>
               </div>
             ))}
+            {(!stats?.by_status || Object.keys(stats.by_status).length === 0) && (
+              <p className="text-gray-500 text-center py-4">No cases yet</p>
+            )}
           </div>
         </Card>
       </div>
+
+      {/* Cases by Priority */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Cases by Priority</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {['critical', 'high', 'medium', 'low'].map((priority) => {
+            const count = stats?.by_priority?.[priority] || 0;
+            const colors: Record<string, string> = {
+              critical: 'bg-red-500/20 text-red-400 border-red-500/30',
+              high: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+              medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+              low: 'bg-green-500/20 text-green-400 border-green-500/30',
+            };
+            return (
+              <div
+                key={priority}
+                className={`p-4 rounded-lg border ${colors[priority]}`}
+              >
+                <p className="text-2xl font-bold">{count}</p>
+                <p className="text-sm capitalize">{priority}</p>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
-};
+}
