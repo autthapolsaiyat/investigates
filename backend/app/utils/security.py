@@ -2,6 +2,7 @@
 Security Utilities
 Password hashing and JWT token handling
 """
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
@@ -14,6 +15,10 @@ from app.config import settings
 from app.database import get_db
 from app.models.user import User
 
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -22,71 +27,38 @@ security = HTTPBearer()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash"""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password"""
     return pwd_context.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """
-    Create JWT access token
-    """
     to_encode = data.copy()
-    
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode.update({
-        "exp": expire,
-        "type": "access"
-    })
-    
-    encoded_jwt = jwt.encode(
-        to_encode, 
-        settings.JWT_SECRET_KEY, 
-        algorithm=settings.JWT_ALGORITHM
-    )
-    return encoded_jwt
+    to_encode.update({"exp": expire, "type": "access"})
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(data: dict) -> str:
-    """
-    Create JWT refresh token (longer expiry)
-    """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    
-    to_encode.update({
-        "exp": expire,
-        "type": "refresh"
-    })
-    
-    encoded_jwt = jwt.encode(
-        to_encode,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM
-    )
-    return encoded_jwt
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def decode_token(token: str) -> Optional[dict]:
-    """
-    Decode and validate JWT token
-    """
     try:
-        payload = jwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM]
-        )
+        logger.info(f"Decoding token...")
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        logger.info(f"Decoded payload: {payload}")
         return payload
-    except JWTError:
+    except JWTError as e:
+        logger.error(f"JWT decode error: {e}")
         return None
 
 
@@ -94,10 +66,8 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
-    """
-    Dependency to get current authenticated user
-    Use: current_user: User = Depends(get_current_user)
-    """
+    logger.info("=== get_current_user called ===")
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -105,58 +75,47 @@ async def get_current_user(
     )
     
     token = credentials.credentials
+    logger.info(f"Token: {token[:50]}...")
+    
     payload = decode_token(token)
     
     if payload is None:
+        logger.error("Payload is None - token decode failed")
         raise credentials_exception
     
-    # Check token type
     if payload.get("type") != "access":
+        logger.error(f"Wrong token type: {payload.get('type')}")
         raise credentials_exception
     
-    user_id: int = payload.get("sub")
+    user_id = payload.get("sub")
+    logger.info(f"User ID: {user_id}")
+    
     if user_id is None:
+        logger.error("User ID is None")
         raise credentials_exception
     
-    # Get user from database
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == int(user_id)).first()
     
     if user is None:
+        logger.error(f"User {user_id} not found")
         raise credentials_exception
     
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is disabled"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account is disabled")
     
+    logger.info(f"User authenticated: {user.email}")
     return user
 
 
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
-    """
-    Dependency to ensure user is active
-    """
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
     return current_user
 
 
 def require_roles(*allowed_roles):
-    """
-    Dependency factory to require specific roles
-    Usage: Depends(require_roles("admin", "investigator"))
-    """
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role.value not in allowed_roles and current_user.role.value != "super_admin":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied. Required roles: {', '.join(allowed_roles)}"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Access denied. Required roles: {', '.join(allowed_roles)}")
         return current_user
     return role_checker

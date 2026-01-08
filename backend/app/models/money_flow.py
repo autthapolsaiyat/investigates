@@ -4,7 +4,7 @@ Nodes and Edges for money flow graph visualization
 """
 from datetime import datetime
 from enum import Enum as PyEnum
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, Text, Float
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, Text, Float
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -78,8 +78,6 @@ class MoneyFlowNode(Base):
         return f"<Node {self.node_type}: {self.label}>"
 
 
-# Import Boolean here to avoid circular import
-from sqlalchemy import Boolean
 
 
 class MoneyFlowEdge(Base):

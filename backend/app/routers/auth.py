@@ -81,7 +81,7 @@ async def login(
     db.commit()
     
     # Create tokens
-    token_data = {"sub": user.id, "email": user.email, "role": user.role.value}
+    token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
     
@@ -173,7 +173,7 @@ async def refresh_token(
         )
     
     # Create new tokens
-    token_data = {"sub": user.id, "email": user.email, "role": user.role.value}
+    token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
     
