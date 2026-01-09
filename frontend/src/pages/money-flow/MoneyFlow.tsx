@@ -149,8 +149,8 @@ export const MoneyFlow = () => {
       setLoading(true);
       setError(null);
       const [nodesRes, edgesRes] = await Promise.all([
-        moneyFlowAPI.getNodes(selectedCaseId),
-        moneyFlowAPI.getEdges(selectedCaseId)
+        moneyFlowAPI.listNodes(selectedCaseId),
+        moneyFlowAPI.listEdges(selectedCaseId)
       ]);
       setNodes(nodesRes);
       setEdges(edgesRes);
