@@ -1,30 +1,51 @@
 /**
- * Organizations Page
- * Admin panel for managing organizations
+ * Organizations Page - Complete CRUD
  */
 import { useEffect, useState } from 'react';
 import { 
-  Plus, 
-  Search, 
-  Building2,
-  Users,
-  Briefcase,
-  Edit,
-  Trash2,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  XCircle
+  Plus, Search, Building2, Users, Briefcase, Edit, Trash2, 
+  Loader2, AlertCircle, CheckCircle, XCircle, X
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { organizationsAPI } from '../../services/api';
 import type { Organization } from '../../services/api';
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title: string;
+}
+
+const Modal = ({ isOpen, onClose, children, title }: ModalProps) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-dark-800 rounded-xl p-6 w-full max-w-md mx-4 border border-dark-700">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-dark-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export const Organizations = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+  const [formData, setFormData] = useState({ name: '', code: '', description: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchOrganizations();
@@ -42,6 +63,65 @@ export const Organizations = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCreate = async () => {
+    try {
+      setSaving(true);
+      await organizationsAPI.create(formData);
+      setShowCreateModal(false);
+      setFormData({ name: '', code: '', description: '' });
+      fetchOrganizations();
+    } catch (err) {
+      console.error('Failed to create organization:', err);
+      alert('Failed to create organization');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!selectedOrg) return;
+    try {
+      setSaving(true);
+      await organizationsAPI.update(selectedOrg.id, formData);
+      setShowEditModal(false);
+      setSelectedOrg(null);
+      setFormData({ name: '', code: '', description: '' });
+      fetchOrganizations();
+    } catch (err) {
+      console.error('Failed to update organization:', err);
+      alert('Failed to update organization');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedOrg) return;
+    try {
+      setSaving(true);
+      await organizationsAPI.delete(selectedOrg.id);
+      setShowDeleteModal(false);
+      setSelectedOrg(null);
+      fetchOrganizations();
+    } catch (err) {
+      console.error('Failed to delete organization:', err);
+      alert('Failed to delete organization');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEditModal = (org: Organization) => {
+    setSelectedOrg(org);
+    setFormData({ name: org.name, code: org.code, description: org.description || '' });
+    setShowEditModal(true);
+  };
+
+  const openDeleteModal = (org: Organization) => {
+    setSelectedOrg(org);
+    setShowDeleteModal(true);
   };
 
   const filteredOrganizations = organizations.filter(org =>
@@ -65,7 +145,7 @@ export const Organizations = () => {
           <h1 className="text-2xl font-bold">Organizations</h1>
           <p className="text-dark-400 mt-1">Manage organizations in the system</p>
         </div>
-        <Button onClick={() => alert('Create organization coming soon!')}>
+        <Button onClick={() => { setFormData({ name: '', code: '', description: '' }); setShowCreateModal(true); }}>
           <Plus size={20} className="mr-2" />
           New Organization
         </Button>
@@ -131,11 +211,11 @@ export const Organizations = () => {
             </div>
 
             <div className="flex items-center gap-2 pt-4 border-t border-dark-700">
-              <Button variant="ghost" size="sm" className="flex-1" onClick={() => alert('Edit coming soon!')}>
+              <Button variant="ghost" size="sm" className="flex-1" onClick={() => openEditModal(org)}>
                 <Edit size={16} className="mr-1" />
                 Edit
               </Button>
-              <Button variant="ghost" size="sm" className="flex-1 text-red-400 hover:text-red-300" onClick={() => alert('Delete coming soon!')}>
+              <Button variant="ghost" size="sm" className="flex-1 text-red-400 hover:text-red-300" onClick={() => openDeleteModal(org)}>
                 <Trash2 size={16} className="mr-1" />
                 Delete
               </Button>
@@ -152,14 +232,99 @@ export const Organizations = () => {
           <p className="text-dark-400 mb-4">
             {searchQuery ? 'Try a different search term' : 'Create your first organization to get started'}
           </p>
-          {!searchQuery && (
-            <Button onClick={() => alert('Create organization coming soon!')}>
-              <Plus size={20} className="mr-2" />
-              Create First Organization
-            </Button>
-          )}
         </div>
       )}
+
+      {/* Create Modal */}
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="New Organization">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Organization name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Code</label>
+            <Input
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '') })}
+              placeholder="ORG_CODE"
+            />
+            <p className="text-xs text-dark-400 mt-1">Uppercase letters, numbers, and underscores only</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <Input
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Optional description"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="ghost" className="flex-1" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+            <Button className="flex-1" onClick={handleCreate} disabled={saving || !formData.name || !formData.code}>
+              {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Create
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Organization">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Organization name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Code</label>
+            <Input
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '') })}
+              placeholder="ORG_CODE"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <Input
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Optional description"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="ghost" className="flex-1" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button className="flex-1" onClick={handleEdit} disabled={saving || !formData.name || !formData.code}>
+              {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Organization">
+        <div className="space-y-4">
+          <p className="text-dark-300">
+            Are you sure you want to delete <strong>{selectedOrg?.name}</strong>? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 pt-4">
+            <Button variant="ghost" className="flex-1" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="danger" className="flex-1" onClick={handleDelete} disabled={saving}>
+              {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
