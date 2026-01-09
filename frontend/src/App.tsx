@@ -6,6 +6,8 @@ import { LoginPage } from './pages/auth/Login';
 import { DashboardPage } from './pages/dashboard/Dashboard';
 import { CasesPage } from './pages/cases/Cases';
 import { MoneyFlowPage } from './pages/money-flow/MoneyFlow';
+import { OrganizationsPage } from './pages/admin/Organizations';
+import { UsersPage } from './pages/admin/Users';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -40,7 +42,9 @@ function App() {
           <Route path="money-flow" element={<MoneyFlowPage />} />
           <Route path="call-analysis" element={<ComingSoon title="Call Analysis" />} />
           <Route path="crypto" element={<ComingSoon title="Crypto Tracker" />} />
-          <Route path="admin/*" element={<ComingSoon title="Admin Panel" />} />
+          <Route path="admin/organizations" element={<OrganizationsPage />} />
+          <Route path="admin/users" element={<UsersPage />} />
+          <Route path="admin/settings" element={<ComingSoon title="Settings" />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
