@@ -8,7 +8,7 @@ import {
   Plus, 
   Search, 
   Filter,
-  MoreVertical,
+  
   Eye,
   Edit,
   Trash2,
@@ -16,7 +16,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
-import { casesAPI, Case, CaseListParams } from '../../services/api';
+import { casesAPI } from '../../services/api';
+import type { Case, CaseListParams } from '../../services/api';
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'gray',

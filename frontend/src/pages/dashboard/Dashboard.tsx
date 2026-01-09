@@ -7,13 +7,14 @@ import {
   Briefcase, 
   Users, 
   
-  TrendingUp,
+  
   FileText,
   DollarSign,
   Loader2
 } from 'lucide-react';
 import { Card } from '../../components/ui';
-import { casesAPI, CaseStatistics } from '../../services/api';
+import { casesAPI } from '../../services/api';
+import type { CaseStatistics } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 
 interface StatCardProps {

@@ -2,7 +2,8 @@
  * API Service
  * Axios client configured for InvestiGate Backend API
  */
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
+import type { InternalAxiosRequestConfig } from 'axios';
 
 // API Base URL - change based on environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
