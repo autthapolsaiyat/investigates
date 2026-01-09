@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { 
   Filter, Download, RefreshCw, Plus, Loader2, AlertCircle,
-  Trash2, X, DollarSign, User, Building, Wallet
+  Trash2, X, User
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { moneyFlowAPI, casesAPI } from '../../services/api';
