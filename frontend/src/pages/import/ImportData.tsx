@@ -271,7 +271,7 @@ export const ImportData = () => {
     
     // Check data integrity
     let invalidRows = 0;
-    parsedData.forEach((row, idx) => {
+    parsedData.forEach((row) => {
       requiredMappings.forEach(m => {
         if (m.sourceField && !row[m.sourceField]) {
           invalidRows++;
@@ -712,7 +712,7 @@ export const ImportData = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark-700">
-                    {parsedData.slice(0, 5).map((row) => (
+                    {parsedData.slice(0, 5).map((row, idx) => (
                       <tr key={idx} className="hover:bg-dark-800/50">
                         <td className="px-3 py-2 text-dark-400">{idx + 1}</td>
                         {detectedHeaders.slice(0, 6).map(header => (

@@ -104,10 +104,10 @@ export const Sidebar = () => {
       <div className="p-4 border-t border-dark-700">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-            {user?.full_name?.charAt(0) || 'A'}
+            {user?.email?.charAt(0) || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user?.full_name || 'Admin User'}</p>
+            <p className="text-sm font-medium text-white truncate">{user?.email || 'Admin User'}</p>
             <p className="text-xs text-dark-400 truncate">{user?.role || 'super_admin'}</p>
           </div>
         </div>
