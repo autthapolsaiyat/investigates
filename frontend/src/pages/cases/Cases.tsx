@@ -310,3 +310,5 @@ export default function Cases() {
     </div>
   );
 }
+
+export { Cases as CasesPage };

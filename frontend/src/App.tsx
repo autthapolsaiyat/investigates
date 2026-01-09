@@ -23,11 +23,11 @@ const ComingSoon = ({ title }: { title: string }) => (
 );
 
 function App() {
-  const { fetchUser } = useAuthStore();
+  const { checkAuth } = useAuthStore();
 
   useEffect(() => {
-    if (localStorage.getItem('access_token')) fetchUser();
-  }, [fetchUser]);
+    if (localStorage.getItem('access_token')) checkAuth();
+  }, [checkAuth]);
 
   return (
     <BrowserRouter>

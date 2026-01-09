@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { 
   Briefcase, 
   Users, 
-  AlertTriangle, 
+  
   TrendingUp,
   FileText,
   DollarSign,
@@ -188,3 +188,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+export { Dashboard as DashboardPage };

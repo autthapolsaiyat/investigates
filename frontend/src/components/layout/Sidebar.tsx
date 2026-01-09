@@ -78,10 +78,10 @@ export const Sidebar = () => {
       <div className="p-3 border-t border-dark-800">
         <div className="flex items-center gap-3 p-2 rounded-lg bg-dark-800">
           <div className="w-9 h-9 bg-primary-600 rounded-full flex items-center justify-center text-white font-medium">
-            {user?.full_name?.charAt(0) || 'U'}
+            {user?.first_name?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.full_name || 'User'}</p>
+            <p className="text-sm font-medium truncate">{`${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'User'}</p>
             <p className="text-xs text-dark-500 truncate">{user?.role || 'viewer'}</p>
           </div>
           <button onClick={logout} className="p-1.5 hover:bg-dark-700 rounded-lg text-dark-400 hover:text-red-400">
