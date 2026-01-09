@@ -4,10 +4,10 @@
  */
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { 
-  FileText, Download, Printer, Share2, Filter, Search,
-  Users, DollarSign, AlertTriangle, Building, Wallet,
+  FileText, Download, Printer, Share2, Search,
+  Users, AlertTriangle, Building,
   TrendingUp, Calendar, RefreshCw, Loader2, ZoomIn, ZoomOut,
-  Maximize2, ChevronLeft, ChevronRight, Clock, MapPin
+  Maximize2, Clock
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
@@ -570,7 +570,7 @@ export const ForensicReport = () => {
             <div className="space-y-4">
               {edges.slice(0, 50).sort((a, b) => 
                 new Date(b.transaction_date || 0).getTime() - new Date(a.transaction_date || 0).getTime()
-              ).map((edge, i) => {
+              ).map((edge) => {
                 const fromNode = nodes.find(n => n.id === edge.from_node_id);
                 const toNode = nodes.find(n => n.id === edge.to_node_id);
                 return (
@@ -682,7 +682,7 @@ export const ForensicReport = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700">
-                {edges.slice(0, 100).map((edge, i) => {
+                {edges.slice(0, 100).map((edge) => {
                   const fromNode = nodes.find(n => n.id === edge.from_node_id);
                   const toNode = nodes.find(n => n.id === edge.to_node_id);
                   return (
