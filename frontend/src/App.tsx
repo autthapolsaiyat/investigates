@@ -9,6 +9,7 @@ import { MoneyFlowPage } from './pages/money-flow/MoneyFlow';
 import { OrganizationsPage } from './pages/admin/Organizations';
 import { UsersPage } from './pages/admin/Users';
 import { SettingsPage } from './pages/admin/Settings';
+import { ForensicReportPage } from './pages/forensic-report/ForensicReport';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -41,6 +42,7 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="cases" element={<CasesPage />} />
           <Route path="money-flow" element={<MoneyFlowPage />} />
+          <Route path="forensic-report" element={<ForensicReportPage />} />
           <Route path="call-analysis" element={<ComingSoon title="Call Analysis" />} />
           <Route path="crypto" element={<ComingSoon title="Crypto Tracker" />} />
           <Route path="admin/organizations" element={<OrganizationsPage />} />
