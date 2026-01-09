@@ -14,8 +14,6 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
-    env:
-      VITE_API_URL: https://investigates-api.azurewebsites.net/api/v1
     steps:
       - uses: actions/checkout@v3
         with:
@@ -31,6 +29,8 @@ jobs:
           app_location: "/frontend"
           api_location: ""
           output_location: "dist"
+        env:
+          VITE_API_URL: https://investigates-api.azurewebsites.net/api/v1
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
