@@ -4,8 +4,8 @@
  */
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { 
-  FileText, Download, Printer, Search, Users, AlertTriangle, 
-  Building, TrendingUp, Calendar, RefreshCw, Loader2, ZoomIn, ZoomOut,
+  FileText, Download, Printer, Search, Users, 
+  TrendingUp, RefreshCw, Loader2,
   Maximize2, Clock, Eye, Copy, File, Target, Link2, ChevronRight,
   GitBranch, Network, List, BarChart3, ExternalLink
 } from 'lucide-react';
@@ -100,7 +100,7 @@ export const ForensicReport = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'hierarchy' | 'network' | 'timeline' | 'accounts' | 'transactions'>('hierarchy');
-  const [graphLayout, setGraphLayout] = useState<'hierarchical' | 'network'>('hierarchical');
+  const [graphLayout] = useState<'hierarchical' | 'network'>('hierarchical');
   
   const networkRef = useRef<VisNetwork | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
