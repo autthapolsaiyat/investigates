@@ -21,7 +21,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const ComingSoon = ({ title }: { title: string }) => (
   <div className="flex-1 flex items-center justify-center">
     <div className="text-center">
       <h1 className="text-2xl font-bold mb-2">{title}</h1>

@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import {
   Link2, ArrowRight, Database, CheckCircle2, Loader2,
-  Wallet, GitMerge, AlertCircle, Plus, FileText
+  Wallet, GitMerge, AlertCircle, Plus
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { moneyFlowAPI, casesAPI } from '../../services/api';
@@ -51,7 +51,7 @@ export const CryptoMoneyFlowIntegration = ({
 }: CryptoMoneyFlowIntegrationProps) => {
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<IntegrationResult | null>(null);
   const [importOptions, setImportOptions] = useState({
