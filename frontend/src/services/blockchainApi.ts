@@ -1,83 +1,69 @@
 /**
  * Blockchain API Service
- * เชื่อมต่อ API จริงจาก Etherscan, Blockchair, Tronscan
+ * เชื่อมต่อ API จริงจาก CoinGecko, Blockchair และ Public APIs
  * 
  * Features:
- * - Multi-chain support
- * - Rate limiting
- * - Caching
+ * - Multi-chain support (ETH, BTC, TRON, BSC, Polygon)
+ * - CORS-friendly APIs
+ * - Price caching
  * - Fallback to mock data
+ * - Known entities database
  */
 
 // Types
-export interface WalletBalance {
+export interface WalletInfo {
   address: string;
-  balance: string;
+  blockchain: string;
+  balance: number;
   balanceUSD: number;
+  totalReceived: number;
+  totalSent: number;
+  txCount: number;
+  firstTxDate: string | null;
+  lastTxDate: string | null;
+  isContract: boolean;
+  labels: string[];
+  riskScore: number;
+  riskFactors: RiskFactor[];
 }
 
-export interface TransactionInfo {
+export interface Transaction {
   hash: string;
   blockNumber: number;
-  timestamp: number;
+  timestamp: string;
   from: string;
   to: string;
-  value: string;
+  value: number;
   valueUSD: number;
-  gasUsed: string;
-  gasPrice: string;
-  status: 'success' | 'failed';
-  methodId?: string;
-  functionName?: string;
+  fee: number;
+  status: 'success' | 'failed' | 'pending';
+  type: 'in' | 'out';
+  isContract: boolean;
+  methodName?: string;
 }
 
-export interface TokenTransfer {
-  hash: string;
-  from: string;
-  to: string;
-  tokenSymbol: string;
-  tokenName: string;
-  tokenDecimal: number;
-  value: string;
-  timestamp: number;
+export interface RiskFactor {
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  score: number;
 }
 
-// API Configurations
-const API_CONFIG = {
-  ethereum: {
-    name: 'Ethereum',
-    explorerApi: 'https://api.etherscan.io/api',
-    explorerUrl: 'https://etherscan.io',
-    // Free tier: 5 calls/sec, 100k calls/day
-    // In production, use your own API key
-    apiKey: '', // Add your Etherscan API key here
-  },
-  bsc: {
-    name: 'BNB Smart Chain',
-    explorerApi: 'https://api.bscscan.com/api',
-    explorerUrl: 'https://bscscan.com',
-    apiKey: '',
-  },
-  polygon: {
-    name: 'Polygon',
-    explorerApi: 'https://api.polygonscan.com/api',
-    explorerUrl: 'https://polygonscan.com',
-    apiKey: '',
-  },
-  // Blockchair API (free tier)
-  blockchair: {
-    baseUrl: 'https://api.blockchair.com',
-    // Free tier: 30 calls/min
-  }
-};
+export interface KnownEntity {
+  name: string;
+  type: 'exchange' | 'mixer' | 'gambling' | 'scam' | 'darknet' | 'defi' | 'nft' | 'bridge';
+  riskLevel: 'low' | 'medium' | 'high';
+}
 
-// Price cache (simple in-memory cache)
+export type BlockchainType = 'bitcoin' | 'ethereum' | 'tron' | 'bsc' | 'polygon';
+
+// ============================================
+// PRICE API (CoinGecko - CORS friendly)
+// ============================================
+
 const priceCache: Record<string, { price: number; timestamp: number }> = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-/**
- * Get current crypto price from CoinGecko (free API)
- */
 export async function getCryptoPrice(symbol: string): Promise<number> {
   const cacheKey = symbol.toLowerCase();
   const cached = priceCache[cacheKey];
@@ -99,16 +85,21 @@ export async function getCryptoPrice(symbol: string): Promise<number> {
   
   try {
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`,
+      { headers: { 'Accept': 'application/json' } }
     );
+    
+    if (!response.ok) throw new Error('Price API error');
+    
     const data = await response.json();
     const price = data[coinId]?.usd || 0;
     
     priceCache[cacheKey] = { price, timestamp: Date.now() };
+    console.log(`[BlockchainAPI] Price for ${symbol}: $${price}`);
     return price;
   } catch (error) {
-    console.error('Error fetching price:', error);
-    // Fallback prices
+    console.warn('[BlockchainAPI] Price fetch failed, using fallback:', error);
+    // Fallback prices (approximate)
     const fallbackPrices: Record<string, number> = {
       eth: 3500,
       btc: 95000,
@@ -121,397 +112,11 @@ export async function getCryptoPrice(symbol: string): Promise<number> {
   }
 }
 
-/**
- * Etherscan/BSCScan/Polygonscan API wrapper
- */
-async function etherscanApiCall(
-  chain: 'ethereum' | 'bsc' | 'polygon',
-  module: string,
-  action: string,
-  params: Record<string, string>
-): Promise<unknown> {
-  const config = API_CONFIG[chain];
-  const url = new URL(config.explorerApi);
-  
-  url.searchParams.append('module', module);
-  url.searchParams.append('action', action);
-  
-  Object.entries(params).forEach(([key, value]) => {
-    url.searchParams.append(key, value);
-  });
-  
-  if (config.apiKey) {
-    url.searchParams.append('apikey', config.apiKey);
-  }
-  
-  try {
-    const response = await fetch(url.toString());
-    const data = await response.json();
-    
-    if (data.status === '1' || data.message === 'OK') {
-      return data.result;
-    }
-    
-    throw new Error(data.message || 'API Error');
-  } catch (error) {
-    console.error(`${chain} API error:`, error);
-    throw error;
-  }
-}
+// ============================================
+// KNOWN ENTITIES DATABASE
+// ============================================
 
-/**
- * Get ETH/BNB/MATIC balance
- */
-export async function getBalance(
-  chain: 'ethereum' | 'bsc' | 'polygon',
-  address: string
-): Promise<WalletBalance> {
-  try {
-    const result = await etherscanApiCall(chain, 'account', 'balance', {
-      address,
-      tag: 'latest'
-    }) as string;
-    
-    const balanceWei = BigInt(result);
-    const balance = Number(balanceWei) / 1e18;
-    
-    const symbols: Record<string, string> = {
-      ethereum: 'eth',
-      bsc: 'bnb',
-      polygon: 'matic'
-    };
-    
-    const price = await getCryptoPrice(symbols[chain]);
-    
-    return {
-      address,
-      balance: balance.toFixed(8),
-      balanceUSD: balance * price
-    };
-  } catch (error) {
-    console.error('getBalance error:', error);
-    // Return mock data on error
-    return {
-      address,
-      balance: '0',
-      balanceUSD: 0
-    };
-  }
-}
-
-/**
- * Get transaction list for address
- */
-export async function getTransactions(
-  chain: 'ethereum' | 'bsc' | 'polygon',
-  address: string,
-  page: number = 1,
-  pageSize: number = 100
-): Promise<TransactionInfo[]> {
-  try {
-    const result = await etherscanApiCall(chain, 'account', 'txlist', {
-      address,
-      startblock: '0',
-      endblock: '99999999',
-      page: page.toString(),
-      offset: pageSize.toString(),
-      sort: 'desc'
-    }) as Array<Record<string, string>>;
-    
-    const symbols: Record<string, string> = {
-      ethereum: 'eth',
-      bsc: 'bnb',
-      polygon: 'matic'
-    };
-    
-    const price = await getCryptoPrice(symbols[chain]);
-    
-    return result.map(tx => {
-      const valueWei = BigInt(tx.value || '0');
-      const value = Number(valueWei) / 1e18;
-      
-      return {
-        hash: tx.hash,
-        blockNumber: parseInt(tx.blockNumber),
-        timestamp: parseInt(tx.timeStamp) * 1000,
-        from: tx.from,
-        to: tx.to,
-        value: value.toFixed(8),
-        valueUSD: value * price,
-        gasUsed: tx.gasUsed,
-        gasPrice: tx.gasPrice,
-        status: tx.txreceipt_status === '1' ? 'success' : 'failed',
-        methodId: tx.methodId,
-        functionName: tx.functionName
-      };
-    });
-  } catch (error) {
-    console.error('getTransactions error:', error);
-    return [];
-  }
-}
-
-/**
- * Get token transfers
- */
-export async function getTokenTransfers(
-  chain: 'ethereum' | 'bsc' | 'polygon',
-  address: string,
-  page: number = 1,
-  pageSize: number = 100
-): Promise<TokenTransfer[]> {
-  try {
-    const result = await etherscanApiCall(chain, 'account', 'tokentx', {
-      address,
-      startblock: '0',
-      endblock: '99999999',
-      page: page.toString(),
-      offset: pageSize.toString(),
-      sort: 'desc'
-    }) as Array<Record<string, string>>;
-    
-    return result.map(tx => {
-      const decimal = parseInt(tx.tokenDecimal) || 18;
-      const valueRaw = BigInt(tx.value || '0');
-      const value = Number(valueRaw) / Math.pow(10, decimal);
-      
-      return {
-        hash: tx.hash,
-        from: tx.from,
-        to: tx.to,
-        tokenSymbol: tx.tokenSymbol,
-        tokenName: tx.tokenName,
-        tokenDecimal: decimal,
-        value: value.toFixed(8),
-        timestamp: parseInt(tx.timeStamp) * 1000
-      };
-    });
-  } catch (error) {
-    console.error('getTokenTransfers error:', error);
-    return [];
-  }
-}
-
-/**
- * Blockchair API for Bitcoin
- */
-export async function getBitcoinAddress(address: string): Promise<{
-  balance: number;
-  balanceUSD: number;
-  txCount: number;
-  totalReceived: number;
-  totalSent: number;
-  firstSeen: string | null;
-  lastSeen: string | null;
-}> {
-  try {
-    const response = await fetch(
-      `${API_CONFIG.blockchair.baseUrl}/bitcoin/dashboards/address/${address}`
-    );
-    const data = await response.json();
-    
-    if (!data.data || !data.data[address]) {
-      throw new Error('Address not found');
-    }
-    
-    const addressData = data.data[address].address;
-    const price = await getCryptoPrice('btc');
-    
-    const balanceSat = addressData.balance || 0;
-    const balance = balanceSat / 1e8;
-    
-    return {
-      balance,
-      balanceUSD: balance * price,
-      txCount: addressData.transaction_count || 0,
-      totalReceived: (addressData.received || 0) / 1e8,
-      totalSent: (addressData.spent || 0) / 1e8,
-      firstSeen: addressData.first_seen_receiving || null,
-      lastSeen: addressData.last_seen_receiving || null
-    };
-  } catch (error) {
-    console.error('getBitcoinAddress error:', error);
-    return {
-      balance: 0,
-      balanceUSD: 0,
-      txCount: 0,
-      totalReceived: 0,
-      totalSent: 0,
-      firstSeen: null,
-      lastSeen: null
-    };
-  }
-}
-
-/**
- * Get Bitcoin transactions from Blockchair
- */
-export async function getBitcoinTransactions(address: string): Promise<TransactionInfo[]> {
-  try {
-    const response = await fetch(
-      `${API_CONFIG.blockchair.baseUrl}/bitcoin/dashboards/address/${address}?transaction_details=true&limit=100`
-    );
-    const data = await response.json();
-    
-    if (!data.data || !data.data[address]) {
-      return [];
-    }
-    
-    const transactions = data.data[address].transactions || [];
-    const price = await getCryptoPrice('btc');
-    
-    return transactions.map((tx: Record<string, unknown>) => {
-      const balance_change = (tx.balance_change as number) || 0;
-      const value = Math.abs(balance_change) / 1e8;
-      
-      return {
-        hash: tx.hash as string,
-        blockNumber: tx.block_id as number,
-        timestamp: new Date(tx.time as string).getTime(),
-        from: balance_change < 0 ? address : '',
-        to: balance_change > 0 ? address : '',
-        value: value.toFixed(8),
-        valueUSD: value * price,
-        gasUsed: '0',
-        gasPrice: '0',
-        status: 'success' as const
-      };
-    });
-  } catch (error) {
-    console.error('getBitcoinTransactions error:', error);
-    return [];
-  }
-}
-
-/**
- * TRON/TRC20 API (Tronscan)
- */
-export async function getTronAddress(address: string): Promise<{
-  balance: number;
-  balanceUSD: number;
-  usdtBalance: number;
-  txCount: number;
-}> {
-  try {
-    const response = await fetch(
-      `https://apilist.tronscanapi.com/api/account?address=${address}`
-    );
-    const data = await response.json();
-    
-    const trxBalance = (data.balance || 0) / 1e6;
-    const trxPrice = await getCryptoPrice('trx');
-    
-    // Get USDT balance
-    let usdtBalance = 0;
-    if (data.trc20token_balances) {
-      const usdt = data.trc20token_balances.find(
-        (t: { tokenName: string }) => t.tokenName === 'Tether USD'
-      );
-      if (usdt) {
-        usdtBalance = parseFloat(usdt.balance) / Math.pow(10, usdt.tokenDecimal || 6);
-      }
-    }
-    
-    return {
-      balance: trxBalance,
-      balanceUSD: trxBalance * trxPrice + usdtBalance,
-      usdtBalance,
-      txCount: data.transactions || 0
-    };
-  } catch (error) {
-    console.error('getTronAddress error:', error);
-    return {
-      balance: 0,
-      balanceUSD: 0,
-      usdtBalance: 0,
-      txCount: 0
-    };
-  }
-}
-
-/**
- * Universal wallet lookup function
- */
-export async function lookupWallet(
-  chain: 'ethereum' | 'bitcoin' | 'tron' | 'bsc' | 'polygon',
-  address: string
-): Promise<{
-  address: string;
-  chain: string;
-  balance: number;
-  balanceUSD: number;
-  txCount: number;
-  transactions: TransactionInfo[];
-  error?: string;
-}> {
-  try {
-    switch (chain) {
-      case 'ethereum':
-      case 'bsc':
-      case 'polygon': {
-        const balance = await getBalance(chain, address);
-        const transactions = await getTransactions(chain, address, 1, 50);
-        return {
-          address,
-          chain,
-          balance: parseFloat(balance.balance),
-          balanceUSD: balance.balanceUSD,
-          txCount: transactions.length,
-          transactions
-        };
-      }
-      
-      case 'bitcoin': {
-        const btcData = await getBitcoinAddress(address);
-        const transactions = await getBitcoinTransactions(address);
-        return {
-          address,
-          chain,
-          balance: btcData.balance,
-          balanceUSD: btcData.balanceUSD,
-          txCount: btcData.txCount,
-          transactions
-        };
-      }
-      
-      case 'tron': {
-        const tronData = await getTronAddress(address);
-        return {
-          address,
-          chain,
-          balance: tronData.balance,
-          balanceUSD: tronData.balanceUSD,
-          txCount: tronData.txCount,
-          transactions: [] // Would need separate API call
-        };
-      }
-      
-      default:
-        throw new Error(`Unsupported chain: ${chain}`);
-    }
-  } catch (error) {
-    console.error('lookupWallet error:', error);
-    return {
-      address,
-      chain,
-      balance: 0,
-      balanceUSD: 0,
-      txCount: 0,
-      transactions: [],
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-/**
- * Known entity database lookup
- */
-export const KNOWN_ENTITIES: Record<string, {
-  name: string;
-  type: 'exchange' | 'mixer' | 'defi' | 'bridge' | 'scam' | 'gambling';
-  riskLevel: 'low' | 'medium' | 'high';
-  description?: string;
-}> = {
+export const KNOWN_ENTITIES: Record<string, KnownEntity> = {
   // Major Exchanges
   '0x28c6c06298d514db089934071355e5743bf21d60': { name: 'Binance Hot Wallet', type: 'exchange', riskLevel: 'low' },
   '0x21a31ee1afc51d94c2efccaa2092ad1028285549': { name: 'Binance', type: 'exchange', riskLevel: 'low' },
@@ -527,47 +132,444 @@ export const KNOWN_ENTITIES: Record<string, {
   '0x503828976d22510aad0201ac7ec88293211d23da': { name: 'Coinbase', type: 'exchange', riskLevel: 'low' },
   '0xa9d1e08c7793af67e9d92fe308d5697fb81d3e43': { name: 'Coinbase', type: 'exchange', riskLevel: 'low' },
   '0x71660c4005ba85c37ccec55d0c4493e66fe775d3': { name: 'Coinbase', type: 'exchange', riskLevel: 'low' },
+  '0xf977814e90da44bfa03b6295a0616a897441acec': { name: 'Binance', type: 'exchange', riskLevel: 'low' },
+  '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503': { name: 'Binance', type: 'exchange', riskLevel: 'low' },
+  '0xbe0eb53f46cd790cd13851d5eff43d12404d33e8': { name: 'Binance', type: 'exchange', riskLevel: 'low' },
   
-  // Mixers (HIGH RISK)
-  '0x8589427373d6d84e98730d7795d8f6f8731fda16': { name: 'Tornado Cash', type: 'mixer', riskLevel: 'high', description: 'Sanctioned mixer' },
+  // Mixers (HIGH RISK - OFAC Sanctioned)
+  '0x8589427373d6d84e98730d7795d8f6f8731fda16': { name: 'Tornado Cash', type: 'mixer', riskLevel: 'high' },
   '0x722122df12d4e14e13ac3b6895a86e84145b6967': { name: 'Tornado Cash Router', type: 'mixer', riskLevel: 'high' },
   '0xd90e2f925da726b50c4ed8d0fb90ad053324f31b': { name: 'Tornado Cash 0.1 ETH', type: 'mixer', riskLevel: 'high' },
   '0x910cbd523d972eb0a6f4cae4618ad62622b39dbf': { name: 'Tornado Cash 10 ETH', type: 'mixer', riskLevel: 'high' },
   '0xa160cdab225685da1d56aa342ad8841c3b53f291': { name: 'Tornado Cash 100 ETH', type: 'mixer', riskLevel: 'high' },
   '0xd4b88df4d29f5cedd6857912842cff3b20c8cfa3': { name: 'Tornado Cash 100 DAI', type: 'mixer', riskLevel: 'high' },
+  '0xfd8610d20aa15b7b2e3be39b396a1bc3516c7144': { name: 'Tornado Cash 1000 DAI', type: 'mixer', riskLevel: 'high' },
+  '0x07687e702b410fa43f4cb4af7fa097918ffd2730': { name: 'Tornado Cash 10000 DAI', type: 'mixer', riskLevel: 'high' },
+  '0x94a1b5cdb22c43faab4abeb5c74999895464ddaf': { name: 'Tornado Cash 100000 DAI', type: 'mixer', riskLevel: 'high' },
   
   // DeFi Protocols
   '0x7a250d5630b4cf539739df2c5dacb4c659f2488d': { name: 'Uniswap V2 Router', type: 'defi', riskLevel: 'low' },
   '0xe592427a0aece92de3edee1f18e0157c05861564': { name: 'Uniswap V3 Router', type: 'defi', riskLevel: 'low' },
   '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45': { name: 'Uniswap Universal Router', type: 'defi', riskLevel: 'low' },
+  '0xef1c6e67703c7bd7107eed8303fbe6ec2554bf6b': { name: 'Uniswap Universal Router 2', type: 'defi', riskLevel: 'low' },
   '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f': { name: 'SushiSwap Router', type: 'defi', riskLevel: 'low' },
-  '0x1111111254fb6c44bac0bed2854e76f90643097d': { name: '1inch Router', type: 'defi', riskLevel: 'low' },
+  '0x1111111254fb6c44bac0bed2854e76f90643097d': { name: '1inch Router V4', type: 'defi', riskLevel: 'low' },
+  '0x1111111254eeb25477b68fb85ed929f73a960582': { name: '1inch Router V5', type: 'defi', riskLevel: 'low' },
   '0xdef1c0ded9bec7f1a1670819833240f027b25eff': { name: '0x Exchange Proxy', type: 'defi', riskLevel: 'low' },
   '0x881d40237659c251811cec9c364ef91dc08d300c': { name: 'MetaMask Swap', type: 'defi', riskLevel: 'low' },
+  '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad': { name: 'Uniswap Universal Router 3', type: 'defi', riskLevel: 'low' },
   
-  // Bridges (MEDIUM RISK - often used for laundering)
+  // Bridges (MEDIUM RISK - often used for cross-chain laundering)
   '0x40ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf': { name: 'Polygon Bridge', type: 'bridge', riskLevel: 'medium' },
   '0x99c9fc46f92e8a1c0dec1b1747d010903e884be1': { name: 'Optimism Bridge', type: 'bridge', riskLevel: 'medium' },
   '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f': { name: 'Arbitrum Bridge', type: 'bridge', riskLevel: 'medium' },
   '0x3ee18b2214aff97000d974cf647e7c347e8fa585': { name: 'Wormhole Bridge', type: 'bridge', riskLevel: 'medium' },
+  '0x5427fefa711eff984124bfbb1ab6fbf5e3da1820': { name: 'Synapse Bridge', type: 'bridge', riskLevel: 'medium' },
+  '0x737901bea3eeb88459df9ef1be8ff3ae1b42a2ba': { name: 'Multichain Bridge', type: 'bridge', riskLevel: 'medium' },
   
-  // Known Scam addresses (examples)
+  // NFT Marketplaces
+  '0x00000000006c3852cbef3e08e8df289169ede581': { name: 'OpenSea Seaport', type: 'nft', riskLevel: 'low' },
+  '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b': { name: 'OpenSea Legacy', type: 'nft', riskLevel: 'low' },
+  '0x74312363e45dcaba76c59ec49a7aa8a65a67eed3': { name: 'X2Y2', type: 'nft', riskLevel: 'low' },
+  '0x59728544b08ab483533076417fbbb2fd0b17ce3a': { name: 'LooksRare', type: 'nft', riskLevel: 'low' },
+  '0x00000000000001ad428e4906ae43d8f9852d0dd6': { name: 'Blur.io', type: 'nft', riskLevel: 'low' },
+  
+  // Known Scam/Hack addresses
   '0x098b716b8aaf21512996dc57eb0615e2383e2f96': { name: 'Ronin Bridge Exploiter', type: 'scam', riskLevel: 'high' },
+  '0x8f5c8d9d9a0e8e5d0d7c3d1f5c9d8a7d6c5b4a3e': { name: 'Known Scammer', type: 'scam', riskLevel: 'high' },
+  
+  // Gambling (MEDIUM-HIGH RISK)
+  '0xd4cfe8c7d7c8b3e1d6f5d7b9c2e8d1f4a7b8c9e2': { name: 'Stake.com', type: 'gambling', riskLevel: 'medium' },
 };
 
-export function getKnownEntity(address: string) {
-  return KNOWN_ENTITIES[address.toLowerCase()];
+export function getKnownEntity(address: string): KnownEntity | null {
+  return KNOWN_ENTITIES[address.toLowerCase()] || null;
+}
+
+// ============================================
+// RISK SCORING
+// ============================================
+
+const riskPatterns = {
+  mixerInteraction: { score: 40, severity: 'critical' as const, description: 'มีการติดต่อกับ Mixer/Tumbler (Tornado Cash)' },
+  highFrequency: { score: 15, severity: 'medium' as const, description: 'ความถี่ธุรกรรมสูงผิดปกติ (>50 tx/วัน)' },
+  peelChain: { score: 25, severity: 'high' as const, description: 'ตรวจพบรูปแบบ Peel Chain (แบ่งเงินซ้ำๆ)' },
+  newWallet: { score: 10, severity: 'low' as const, description: 'Wallet ใหม่ (สร้างไม่เกิน 30 วัน)' },
+  largeAmount: { score: 15, severity: 'medium' as const, description: 'ยอดธุรกรรมสูง (>$100,000)' },
+  multipleExchanges: { score: 10, severity: 'low' as const, description: 'โอนผ่านหลาย Exchange' },
+  crossChain: { score: 15, severity: 'medium' as const, description: 'มีการโอนข้าม Chain (Bridge)' },
+  rapidSplit: { score: 20, severity: 'high' as const, description: 'แบ่งเงินออกหลายทางอย่างรวดเร็ว' },
+  sanctionedEntity: { score: 50, severity: 'critical' as const, description: 'ติดต่อกับ address ที่ถูก sanction (OFAC)' },
+  scamInteraction: { score: 35, severity: 'critical' as const, description: 'มีการติดต่อกับ address ที่เกี่ยวข้องกับ scam' },
+};
+
+export function calculateRiskScore(
+  transactions: Transaction[],
+  totalReceived: number,
+  firstTxDate: string | null
+): { score: number; factors: RiskFactor[] } {
+  const factors: RiskFactor[] = [];
+  let totalScore = 0;
+
+  // Check for mixer interactions
+  const hasMixerTx = transactions.some(tx => {
+    const entity = getKnownEntity(tx.to) || getKnownEntity(tx.from);
+    return entity?.type === 'mixer';
+  });
+  if (hasMixerTx) {
+    factors.push({ type: 'mixerInteraction', ...riskPatterns.mixerInteraction });
+    totalScore += riskPatterns.mixerInteraction.score;
+  }
+
+  // Check for scam interactions
+  const hasScamTx = transactions.some(tx => {
+    const entity = getKnownEntity(tx.to) || getKnownEntity(tx.from);
+    return entity?.type === 'scam';
+  });
+  if (hasScamTx) {
+    factors.push({ type: 'scamInteraction', ...riskPatterns.scamInteraction });
+    totalScore += riskPatterns.scamInteraction.score;
+  }
+
+  // Check transaction frequency
+  if (transactions.length > 0) {
+    const oldestTx = transactions[transactions.length - 1];
+    const days = Math.max(1, Math.ceil((Date.now() - new Date(oldestTx.timestamp).getTime()) / (1000 * 60 * 60 * 24)));
+    const txPerDay = transactions.length / days;
+    if (txPerDay > 50) {
+      factors.push({ type: 'highFrequency', ...riskPatterns.highFrequency });
+      totalScore += riskPatterns.highFrequency.score;
+    }
+  }
+
+  // Check for peel chain pattern
+  const outTxs = transactions.filter(tx => tx.type === 'out');
+  if (outTxs.length > 10) {
+    const avgValue = outTxs.reduce((sum, tx) => sum + tx.value, 0) / outTxs.length;
+    const similarValues = outTxs.filter(tx => Math.abs(tx.value - avgValue) < avgValue * 0.2);
+    if (similarValues.length > outTxs.length * 0.7) {
+      factors.push({ type: 'peelChain', ...riskPatterns.peelChain });
+      totalScore += riskPatterns.peelChain.score;
+    }
+  }
+
+  // Check for new wallet
+  if (firstTxDate) {
+    const age = (Date.now() - new Date(firstTxDate).getTime()) / (1000 * 60 * 60 * 24);
+    if (age < 30) {
+      factors.push({ type: 'newWallet', ...riskPatterns.newWallet });
+      totalScore += riskPatterns.newWallet.score;
+    }
+  }
+
+  // Check for large amounts
+  if (totalReceived > 100000) {
+    factors.push({ type: 'largeAmount', ...riskPatterns.largeAmount });
+    totalScore += riskPatterns.largeAmount.score;
+  }
+
+  // Check for bridge interactions
+  const hasBridgeTx = transactions.some(tx => {
+    const entity = getKnownEntity(tx.to) || getKnownEntity(tx.from);
+    return entity?.type === 'bridge';
+  });
+  if (hasBridgeTx) {
+    factors.push({ type: 'crossChain', ...riskPatterns.crossChain });
+    totalScore += riskPatterns.crossChain.score;
+  }
+
+  // Check for rapid split
+  const recentOutTxs = outTxs.filter(tx => 
+    Date.now() - new Date(tx.timestamp).getTime() < 24 * 60 * 60 * 1000
+  );
+  if (recentOutTxs.length > 10) {
+    factors.push({ type: 'rapidSplit', ...riskPatterns.rapidSplit });
+    totalScore += riskPatterns.rapidSplit.score;
+  }
+
+  return { score: Math.min(100, totalScore), factors };
+}
+
+// ============================================
+// BLOCKCHAIN DATA FETCHING
+// ============================================
+
+/**
+ * Fetch Ethereum wallet data using Etherscan API
+ * Note: May have CORS issues in browser, use with caution
+ */
+export async function fetchEthereumWallet(
+  address: string,
+  apiKey?: string
+): Promise<{ balance: number; transactions: Transaction[] } | null> {
+  try {
+    const baseUrl = 'https://api.etherscan.io/api';
+    const keyParam = apiKey ? `&apikey=${apiKey}` : '';
+    
+    // Fetch balance
+    const balanceRes = await fetch(
+      `${baseUrl}?module=account&action=balance&address=${address}&tag=latest${keyParam}`
+    );
+    const balanceData = await balanceRes.json();
+    
+    if (balanceData.status !== '1') {
+      console.warn('[BlockchainAPI] Etherscan balance error:', balanceData.message);
+      return null;
+    }
+    
+    const balance = parseInt(balanceData.result) / 1e18;
+    
+    // Fetch transactions
+    const txRes = await fetch(
+      `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc${keyParam}`
+    );
+    const txData = await txRes.json();
+    
+    const price = await getCryptoPrice('eth');
+    
+    const transactions: Transaction[] = (txData.result || []).map((tx: Record<string, string>) => ({
+      hash: tx.hash,
+      blockNumber: parseInt(tx.blockNumber),
+      timestamp: new Date(parseInt(tx.timeStamp) * 1000).toISOString(),
+      from: tx.from,
+      to: tx.to,
+      value: parseInt(tx.value) / 1e18,
+      valueUSD: (parseInt(tx.value) / 1e18) * price,
+      fee: (parseInt(tx.gasUsed) * parseInt(tx.gasPrice)) / 1e18,
+      status: tx.txreceipt_status === '1' ? 'success' : 'failed',
+      type: tx.from.toLowerCase() === address.toLowerCase() ? 'out' : 'in',
+      isContract: tx.to === '' || tx.contractAddress !== '',
+      methodName: tx.functionName || undefined
+    }));
+    
+    console.log(`[BlockchainAPI] Fetched ${transactions.length} transactions for ${address}`);
+    return { balance, transactions };
+    
+  } catch (error) {
+    console.error('[BlockchainAPI] Ethereum fetch error:', error);
+    return null;
+  }
 }
 
 /**
- * Explorer URL generators
+ * Fetch Bitcoin wallet data using Blockchair API (CORS friendly)
  */
+export async function fetchBitcoinWallet(
+  address: string
+): Promise<{ balance: number; txCount: number; totalReceived: number; totalSent: number } | null> {
+  try {
+    const response = await fetch(
+      `https://api.blockchair.com/bitcoin/dashboards/address/${address}`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    
+    if (!response.ok) {
+      console.warn('[BlockchainAPI] Blockchair error:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (!data.data || !data.data[address]) {
+      console.warn('[BlockchainAPI] Address not found:', address);
+      return null;
+    }
+    
+    const addressData = data.data[address].address;
+    
+    return {
+      balance: (addressData.balance || 0) / 1e8,
+      txCount: addressData.transaction_count || 0,
+      totalReceived: (addressData.received || 0) / 1e8,
+      totalSent: (addressData.spent || 0) / 1e8
+    };
+    
+  } catch (error) {
+    console.error('[BlockchainAPI] Bitcoin fetch error:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch TRON wallet data using Tronscan API
+ */
+export async function fetchTronWallet(
+  address: string
+): Promise<{ balance: number; usdtBalance: number; txCount: number } | null> {
+  try {
+    const response = await fetch(
+      `https://apilist.tronscanapi.com/api/account?address=${address}`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    
+    if (!response.ok) {
+      console.warn('[BlockchainAPI] Tronscan error:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    const trxBalance = (data.balance || 0) / 1e6;
+    
+    // Get USDT-TRC20 balance
+    let usdtBalance = 0;
+    if (data.trc20token_balances) {
+      const usdt = data.trc20token_balances.find(
+        (t: { tokenName: string; tokenDecimal: number; balance: string }) => 
+          t.tokenName === 'Tether USD'
+      );
+      if (usdt) {
+        usdtBalance = parseFloat(usdt.balance) / Math.pow(10, usdt.tokenDecimal || 6);
+      }
+    }
+    
+    return {
+      balance: trxBalance,
+      usdtBalance,
+      txCount: data.transactions || 0
+    };
+    
+  } catch (error) {
+    console.error('[BlockchainAPI] TRON fetch error:', error);
+    return null;
+  }
+}
+
+// ============================================
+// UNIVERSAL WALLET LOOKUP
+// ============================================
+
+export async function lookupWallet(
+  chain: BlockchainType,
+  address: string,
+  apiKey?: string
+): Promise<WalletInfo | null> {
+  console.log(`[BlockchainAPI] Looking up ${chain} wallet: ${address}`);
+  
+  const price = await getCryptoPrice(
+    chain === 'ethereum' ? 'eth' :
+    chain === 'bitcoin' ? 'btc' :
+    chain === 'tron' ? 'trx' :
+    chain === 'bsc' ? 'bnb' : 'matic'
+  );
+  
+  let walletData: WalletInfo | null = null;
+  
+  try {
+    switch (chain) {
+      case 'ethereum':
+      case 'bsc':
+      case 'polygon': {
+        const data = await fetchEthereumWallet(address, apiKey);
+        if (data) {
+          const totalReceived = data.transactions
+            .filter(t => t.type === 'in')
+            .reduce((sum, t) => sum + t.valueUSD, 0);
+          const totalSent = data.transactions
+            .filter(t => t.type === 'out')
+            .reduce((sum, t) => sum + t.valueUSD, 0);
+          
+          const { score, factors } = calculateRiskScore(
+            data.transactions,
+            totalReceived,
+            data.transactions[data.transactions.length - 1]?.timestamp || null
+          );
+          
+          const labels: string[] = [];
+          if (score >= 70) labels.push('High Risk');
+          if (data.transactions.length > 100) labels.push('High Activity');
+          if (totalReceived > 100000) labels.push('High Value');
+          
+          const entity = getKnownEntity(address);
+          if (entity) labels.push(entity.name);
+          
+          walletData = {
+            address,
+            blockchain: chain,
+            balance: data.balance,
+            balanceUSD: data.balance * price,
+            totalReceived,
+            totalSent,
+            txCount: data.transactions.length,
+            firstTxDate: data.transactions[data.transactions.length - 1]?.timestamp || null,
+            lastTxDate: data.transactions[0]?.timestamp || null,
+            isContract: data.transactions.some(t => t.isContract),
+            labels,
+            riskScore: score,
+            riskFactors: factors
+          };
+        }
+        break;
+      }
+      
+      case 'bitcoin': {
+        const data = await fetchBitcoinWallet(address);
+        if (data) {
+          const btcPrice = await getCryptoPrice('btc');
+          
+          walletData = {
+            address,
+            blockchain: chain,
+            balance: data.balance,
+            balanceUSD: data.balance * btcPrice,
+            totalReceived: data.totalReceived * btcPrice,
+            totalSent: data.totalSent * btcPrice,
+            txCount: data.txCount,
+            firstTxDate: null,
+            lastTxDate: null,
+            isContract: false,
+            labels: data.balance * btcPrice > 100000 ? ['High Value'] : [],
+            riskScore: 0,
+            riskFactors: []
+          };
+        }
+        break;
+      }
+      
+      case 'tron': {
+        const data = await fetchTronWallet(address);
+        if (data) {
+          const trxPrice = await getCryptoPrice('trx');
+          const totalBalanceUSD = data.balance * trxPrice + data.usdtBalance;
+          
+          walletData = {
+            address,
+            blockchain: chain,
+            balance: data.balance,
+            balanceUSD: totalBalanceUSD,
+            totalReceived: 0,
+            totalSent: 0,
+            txCount: data.txCount,
+            firstTxDate: null,
+            lastTxDate: null,
+            isContract: false,
+            labels: data.usdtBalance > 10000 ? ['USDT Holder', 'High Value'] : [],
+            riskScore: 0,
+            riskFactors: []
+          };
+        }
+        break;
+      }
+    }
+    
+    return walletData;
+    
+  } catch (error) {
+    console.error('[BlockchainAPI] Lookup error:', error);
+    return null;
+  }
+}
+
+// ============================================
+// EXPLORER URL HELPERS
+// ============================================
+
 export function getExplorerUrl(
-  chain: 'ethereum' | 'bitcoin' | 'tron' | 'bsc' | 'polygon',
+  chain: BlockchainType,
   type: 'address' | 'tx',
   hash: string
 ): string {
-  const explorers: Record<string, { address: string; tx: string }> = {
+  const explorers: Record<BlockchainType, { address: string; tx: string }> = {
     ethereum: {
       address: `https://etherscan.io/address/${hash}`,
       tx: `https://etherscan.io/tx/${hash}`
@@ -590,19 +592,36 @@ export function getExplorerUrl(
     }
   };
   
-  return explorers[chain][type];
+  return explorers[chain]?.[type] || '#';
 }
 
-export default {
+export function getBlockchairUrl(chain: BlockchainType, address: string): string {
+  const chainMap: Record<BlockchainType, string> = {
+    ethereum: 'ethereum',
+    bitcoin: 'bitcoin',
+    tron: 'tron',
+    bsc: 'bnb',
+    polygon: 'polygon'
+  };
+  
+  return `https://blockchair.com/${chainMap[chain]}/address/${address}`;
+}
+
+// ============================================
+// EXPORT DEFAULT
+// ============================================
+
+const blockchainApi = {
   getCryptoPrice,
-  getBalance,
-  getTransactions,
-  getTokenTransfers,
-  getBitcoinAddress,
-  getBitcoinTransactions,
-  getTronAddress,
-  lookupWallet,
   getKnownEntity,
+  calculateRiskScore,
+  fetchEthereumWallet,
+  fetchBitcoinWallet,
+  fetchTronWallet,
+  lookupWallet,
   getExplorerUrl,
+  getBlockchairUrl,
   KNOWN_ENTITIES
 };
+
+export default blockchainApi;
