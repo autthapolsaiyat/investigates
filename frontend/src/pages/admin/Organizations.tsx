@@ -106,7 +106,7 @@ export const Organizations = () => {
                   <p className="text-dark-400 text-sm">{org.code}</p>
                 </div>
               </div>
-              <Badge variant={org.is_active ? 'success' : 'error'}>
+              <Badge variant={org.is_active ? 'success' : 'danger'}>
                 {org.is_active ? (
                   <><CheckCircle size={12} className="mr-1" /> Active</>
                 ) : (

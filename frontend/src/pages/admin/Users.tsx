@@ -24,7 +24,7 @@ import type { User as UserType } from '../../services/api';
 const getRoleBadgeVariant = (role: string) => {
   switch (role) {
     case 'super_admin':
-      return 'error';
+      return 'danger';
     case 'admin':
       return 'warning';
     case 'investigator':
@@ -184,7 +184,7 @@ export const Users = () => {
                     </Badge>
                   </td>
                   <td className="px-6 py-4">
-                    <Badge variant={user.is_active ? 'success' : 'error'}>
+                    <Badge variant={user.is_active ? 'success' : 'danger'}>
                       {user.is_active ? (
                         <><CheckCircle size={12} className="mr-1" /> Active</>
                       ) : (
@@ -195,7 +195,7 @@ export const Users = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-sm text-dark-400">
                       <Clock size={14} />
-                      {formatDate(user.last_login_at)}
+                      {formatDate(user.last_login_at || null)}
                     </div>
                   </td>
                   <td className="px-6 py-4">
