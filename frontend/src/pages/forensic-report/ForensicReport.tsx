@@ -7,7 +7,7 @@ import {
   FileText, Download, Printer, Search, Users, 
   TrendingUp, RefreshCw, Loader2, Maximize2, Clock, Eye, Copy, File, Target, Link2, ChevronRight,
   GitBranch, Network, List, BarChart3, ExternalLink, ShieldAlert, ArrowUpRight, ArrowDownLeft,
-  Scale, Fingerprint, MapPin, Activity, AlertCircle, CheckCircle2, Info
+  Fingerprint, Activity, CheckCircle2, Info
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
