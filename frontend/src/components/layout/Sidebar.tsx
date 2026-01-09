@@ -2,8 +2,8 @@
  * Sidebar Component
  * Navigation sidebar with Forensic Report menu
  */
-import { NavLink, useNavigate } from 'react-router-dom';
-import { 
+import { Upload, FileText, NavLink, useNavigate } from 'react-router-dom';
+import { Upload, FileText, 
   LayoutDashboard, 
   Briefcase, 
   DollarSign, 
@@ -16,7 +16,7 @@ import {
   Search,
   FileText
 } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
+import { Upload, FileText, useAuthStore } from '../../store/authStore';
 
 const mainNavItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },

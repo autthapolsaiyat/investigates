@@ -10,6 +10,8 @@ import { OrganizationsPage } from './pages/admin/Organizations';
 import { UsersPage } from './pages/admin/Users';
 import { SettingsPage } from './pages/admin/Settings';
 import { ForensicReportPage } from './pages/forensic-report/ForensicReport';
+import { ImportData } from './pages/import/ImportData';
+import { ReportGenerator } from './pages/report/ReportGenerator';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();

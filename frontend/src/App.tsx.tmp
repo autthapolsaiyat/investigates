@@ -1,0 +1,7 @@
+// เพิ่ม import ใน App.tsx:
+// import { ImportData } from './pages/import/ImportData';
+// import { ReportGenerator } from './pages/report/ReportGenerator';
+
+// เพิ่ม routes:
+// <Route path="/import" element={<ImportData />} />
+// <Route path="/report" element={<ReportGenerator />} />
