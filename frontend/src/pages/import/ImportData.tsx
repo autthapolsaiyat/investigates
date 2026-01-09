@@ -5,11 +5,11 @@
 import { useState, useCallback, useRef } from 'react';
 import {
   Upload, FileSpreadsheet, Users, CreditCard, Phone, Wallet,
-  CheckCircle2, AlertCircle, ArrowRight, Download, Trash2,
+  CheckCircle2, AlertCircle, ArrowRight, Download,
   Loader2, FileText, Link2, Eye, Save, X, ChevronDown, ChevronUp,
   HelpCircle, Database, RefreshCw
 } from 'lucide-react';
-import { Button, Card, Badge, Input } from '../../components/ui';
+import { Button, Card, Badge} from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
 import type { Case } from '../../services/api';
 
@@ -126,7 +126,7 @@ export const ImportData = () => {
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [previewExpanded, setPreviewExpanded] = useState(true);
   const [importErrors, setImportErrors] = useState<string[]>([]);
-  const [importSuccess, setImportSuccess] = useState(false);
+  const [, setImportSuccess] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -712,7 +712,7 @@ export const ImportData = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark-700">
-                    {parsedData.slice(0, 5).map((row, idx) => (
+                    {parsedData.slice(0, 5).map((row) => (
                       <tr key={idx} className="hover:bg-dark-800/50">
                         <td className="px-3 py-2 text-dark-400">{idx + 1}</td>
                         {detectedHeaders.slice(0, 6).map(header => (

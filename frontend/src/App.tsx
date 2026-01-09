@@ -45,6 +45,8 @@ function App() {
           <Route path="cases" element={<CasesPage />} />
           <Route path="money-flow" element={<MoneyFlowPage />} />
           <Route path="forensic-report" element={<ForensicReportPage />} />
+          <Route path="import" element={<ImportData />} />
+          <Route path="report" element={<ReportGenerator />} />
           <Route path="call-analysis" element={<ComingSoon title="Call Analysis" />} />
           <Route path="crypto" element={<ComingSoon title="Crypto Tracker" />} />
           <Route path="admin/organizations" element={<OrganizationsPage />} />

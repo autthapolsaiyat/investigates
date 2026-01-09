@@ -4,11 +4,11 @@
  */
 import { useState, useRef } from 'react';
 import {
-  FileText, Download, Printer, Calendar, User, Building,
+  FileText, Download, Printer, User,
   Scale, FileCheck, Clock, Shield, CheckCircle2, Loader2,
-  Eye, Settings, Hash, MapPin, Phone, CreditCard, AlertTriangle
+  Eye, Settings, CreditCard, AlertTriangle
 } from 'lucide-react';
-import { Button, Card, Badge, Input } from '../../components/ui';
+import { Button, Card, Input } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
 import type { Case, MoneyFlowNode, MoneyFlowEdge } from '../../services/api';
 
@@ -44,10 +44,10 @@ export const ReportGenerator = () => {
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
-  const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
+  const [, setEdges] = useState<MoneyFlowEdge[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [, setShowPreview] = useState(false);
   const [stats, setStats] = useState<ReportStats | null>(null);
   
   const [config, setConfig] = useState<ReportConfig>({
