@@ -682,7 +682,7 @@ export const ForensicReport = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700">
-                {edges.slice(0, 100).map((edge) => {
+                {edges.slice(0, 100).map((edge, i) => {
                   const fromNode = nodes.find(n => n.id === edge.from_node_id);
                   const toNode = nodes.find(n => n.id === edge.to_node_id);
                   return (
