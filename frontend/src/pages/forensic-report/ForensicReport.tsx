@@ -1,13 +1,13 @@
 /**
- * Forensic Report Page - Enhanced with Hierarchical View
+ * Forensic Report Page - Enhanced with Classification Analysis
  * รายงานสรุปสำหรับส่งศาล - มาตรฐาน Digital Forensic
  */
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { 
   FileText, Download, Printer, Search, Users, 
-  TrendingUp, RefreshCw, Loader2,
-  Maximize2, Clock, Eye, Copy, File, Target, Link2, ChevronRight,
-  GitBranch, Network, List, BarChart3, ExternalLink
+  TrendingUp, RefreshCw, Loader2, Maximize2, Clock, Eye, Copy, File, Target, Link2, ChevronRight,
+  GitBranch, Network, List, BarChart3, ExternalLink, ShieldAlert, ArrowUpRight, ArrowDownLeft,
+  Scale, Fingerprint, MapPin, Activity, AlertCircle, CheckCircle2, Info
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
@@ -44,16 +44,24 @@ interface Statistics {
   totalAmount: number;
 }
 
-// Thai labels for node types
+interface NodeAnalysis {
+  incomingAmount: number;
+  outgoingAmount: number;
+  incomingCount: number;
+  outgoingCount: number;
+  connectedNodes: number;
+  networkTier: number;
+  classificationReasons: string[];
+  evidenceSources: string[];
+  riskFactors: { factor: string; score: number }[];
+}
+
+// Thai labels
 const nodeTypeLabels: Record<string, string> = {
   person: 'บุคคล',
   bank_account: 'บัญชีธนาคาร',
   crypto_wallet: 'กระเป๋าคริปโต',
   exchange: 'ศูนย์แลกเปลี่ยน',
-  suspect: 'ผู้ต้องสงสัย',
-  victim: 'ผู้เสียหาย',
-  boss: 'หัวหน้าเครือข่าย',
-  mule: 'บัญชีม้า',
 };
 
 const nodeColors: Record<string, { background: string; border: string }> = {
@@ -66,20 +74,15 @@ const nodeColors: Record<string, { background: string; border: string }> = {
   bank_account: { background: '#F59E0B', border: '#B45309' },
   person: { background: '#6B7280', border: '#374151' },
   crypto_wallet: { background: '#8B5CF6', border: '#6D28D9' },
-  case: { background: '#7C3AED', border: '#5B21B6' },
-  evidence: { background: '#EC4899', border: '#BE185D' },
 };
 
-// Legend items
 const legendItems = [
-  { color: '#DC2626', label: 'หัวหน้าเครือข่าย', labelEn: 'Boss/Leader' },
-  { color: '#F97316', label: 'ผู้ต้องสงสัย', labelEn: 'Suspect' },
-  { color: '#22C55E', label: 'ผู้เสียหาย', labelEn: 'Victim' },
-  { color: '#F59E0B', label: 'บัญชีม้า', labelEn: 'Mule Account' },
-  { color: '#8B5CF6', label: 'กระเป๋าคริปโต', labelEn: 'Crypto Wallet' },
-  { color: '#3B82F6', label: 'ศูนย์แลกเปลี่ยน', labelEn: 'Exchange' },
-  { color: '#7C3AED', label: 'คดีเชื่อมโยง', labelEn: 'Related Case' },
-  { color: '#EC4899', label: 'หลักฐาน/DNA', labelEn: 'Evidence/DNA' },
+  { color: '#DC2626', label: 'หัวหน้าเครือข่าย' },
+  { color: '#F97316', label: 'ผู้ต้องสงสัย' },
+  { color: '#22C55E', label: 'ผู้เสียหาย' },
+  { color: '#F59E0B', label: 'บัญชีม้า' },
+  { color: '#8B5CF6', label: 'กระเป๋าคริปโต' },
+  { color: '#3B82F6', label: 'ศูนย์แลกเปลี่ยน' },
 ];
 
 const edgeLegend = [
@@ -182,6 +185,115 @@ export const ForensicReport = () => {
     });
   };
 
+  // Calculate node analysis for classification reasons
+  const nodeAnalysis = useMemo((): NodeAnalysis | null => {
+    if (!selectedNode) return null;
+
+    const incomingEdges = edges.filter(e => e.to_node_id === selectedNode.id);
+    const outgoingEdges = edges.filter(e => e.from_node_id === selectedNode.id);
+    
+    const incomingAmount = incomingEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const outgoingAmount = outgoingEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
+    
+    const connectedNodeIds = new Set([
+      ...incomingEdges.map(e => e.from_node_id),
+      ...outgoingEdges.map(e => e.to_node_id)
+    ]);
+
+    // Determine network tier based on connections
+    let networkTier = 4; // Default: lowest tier
+    if (selectedNode.label?.includes('หัวหน้า')) {
+      networkTier = 1;
+    } else if (selectedNode.label?.includes('OP-')) {
+      networkTier = 2;
+    } else if (selectedNode.label?.includes('AG-')) {
+      networkTier = 3;
+    }
+
+    // Generate classification reasons
+    const classificationReasons: string[] = [];
+    const riskFactors: { factor: string; score: number }[] = [];
+
+    if (selectedNode.is_suspect) {
+      if (selectedNode.label?.includes('หัวหน้า')) {
+        classificationReasons.push('ระบุตัวตนจากการสืบสวน: เป็นผู้บริหารระดับสูงในเครือข่าย');
+        classificationReasons.push(`มีผู้ใต้บังคับบัญชาในเครือข่าย ${outgoingEdges.length} ราย`);
+        classificationReasons.push('ได้รับเงินโอนรวมจากผู้ดำเนินการ (Operator)');
+        riskFactors.push({ factor: 'ตำแหน่งสูงสุดในลำดับชั้น', score: 30 });
+        riskFactors.push({ factor: 'ยอดเงินผ่านบัญชีสูง', score: 25 });
+        riskFactors.push({ factor: 'เชื่อมโยงกับคริปโตวอลเล็ต', score: 20 });
+      } else if (selectedNode.label?.includes('OP-')) {
+        classificationReasons.push('ระบุเป็นผู้ดูแลระบบเว็บพนัน (Operator)');
+        classificationReasons.push('รับเงินจากเอเย่นต์และส่งต่อให้หัวหน้า');
+        riskFactors.push({ factor: 'เป็นตัวกลางในการโอนเงิน', score: 25 });
+        riskFactors.push({ factor: 'มีการติดต่อกับหลายบัญชี', score: 20 });
+      } else if (selectedNode.label?.includes('AG-')) {
+        classificationReasons.push('ระบุเป็นเอเย่นต์/ตัวแทนรับเดิมพัน');
+        classificationReasons.push('รับเงินจากบัญชีม้าและส่งต่อให้ Operator');
+        riskFactors.push({ factor: 'รับเงินจากหลายแหล่ง', score: 20 });
+        riskFactors.push({ factor: 'มีรูปแบบการโอนผิดปกติ', score: 15 });
+      }
+    }
+
+    if (selectedNode.is_victim) {
+      classificationReasons.push('แจ้งความเป็นผู้เสียหายในคดีพนันออนไลน์');
+      classificationReasons.push('มีหลักฐานการโอนเงินไปยังบัญชีม้า');
+      riskFactors.push({ factor: 'ไม่มีความเสี่ยง (ผู้เสียหาย)', score: 0 });
+    }
+
+    if (selectedNode.node_type === 'bank_account' && !selectedNode.is_suspect) {
+      classificationReasons.push('บัญชีถูกใช้รับ-โอนเงินจากผู้เสียหายหลายราย');
+      classificationReasons.push('ไม่พบความเชื่อมโยงกับเจ้าของบัญชีที่แท้จริง');
+      classificationReasons.push('มีพฤติกรรมการโอนเงินผิดปกติ (หลายครั้งต่อวัน)');
+      riskFactors.push({ factor: 'รูปแบบการใช้งานผิดปกติ', score: 25 });
+      riskFactors.push({ factor: 'รับเงินจากผู้เสียหายหลายราย', score: 20 });
+    }
+
+    if (selectedNode.node_type === 'crypto_wallet') {
+      classificationReasons.push('กระเป๋าคริปโตใช้สำหรับฟอกเงิน');
+      classificationReasons.push('รับเงินจากบัญชีผู้ต้องสงสัยและโอนต่อหลายชั้น');
+      riskFactors.push({ factor: 'ใช้สำหรับฟอกเงินข้ามประเทศ', score: 30 });
+      riskFactors.push({ factor: 'ติดตามยาก', score: 25 });
+    }
+
+    // Add amount-based reasons
+    if (incomingAmount > 1000000) {
+      classificationReasons.push(`รับเงินโอนเข้ารวม ฿${incomingAmount.toLocaleString()}`);
+      riskFactors.push({ factor: 'ยอดรับเงินสูงผิดปกติ', score: 15 });
+    }
+    if (outgoingAmount > 1000000) {
+      classificationReasons.push(`โอนเงินออกรวม ฿${outgoingAmount.toLocaleString()}`);
+    }
+
+    // Evidence sources
+    const evidenceSources: string[] = [
+      'ข้อมูลธุรกรรมธนาคาร',
+      'รายงานการแจ้งความผู้เสียหาย',
+    ];
+
+    if (selectedNode.node_type === 'crypto_wallet') {
+      evidenceSources.push('ข้อมูล Blockchain Analysis');
+    }
+    if (selectedNode.phone_number) {
+      evidenceSources.push('ข้อมูลผู้ใช้โทรศัพท์');
+    }
+    if (selectedNode.identifier) {
+      evidenceSources.push('ฐานข้อมูลทะเบียนราษฎร์');
+    }
+
+    return {
+      incomingAmount,
+      outgoingAmount,
+      incomingCount: incomingEdges.length,
+      outgoingCount: outgoingEdges.length,
+      connectedNodes: connectedNodeIds.size,
+      networkTier,
+      classificationReasons,
+      evidenceSources,
+      riskFactors
+    };
+  }, [selectedNode, edges]);
+
   const getNodeGroup = (node: MoneyFlowNode): string => {
     if (node.is_suspect && node.label?.includes('หัวหน้า')) return 'boss';
     if (node.is_suspect) return 'suspect';
@@ -194,8 +306,11 @@ export const ForensicReport = () => {
 
   const getNodeTypeLabel = (node: MoneyFlowNode): string => {
     if (node.is_suspect && node.label?.includes('หัวหน้า')) return 'หัวหน้าเครือข่าย';
+    if (node.is_suspect && node.label?.includes('OP-')) return 'ผู้ดูแลระบบ';
+    if (node.is_suspect && node.label?.includes('AG-')) return 'เอเย่นต์';
     if (node.is_suspect) return 'ผู้ต้องสงสัย';
     if (node.is_victim) return 'ผู้เสียหาย';
+    if (node.node_type === 'bank_account') return 'บัญชีม้า';
     return nodeTypeLabels[node.node_type] || node.node_type;
   };
 
@@ -293,10 +408,7 @@ export const ForensicReport = () => {
           sortMethod: 'directed',
           levelSeparation: 120,
           nodeSpacing: 100,
-          treeSpacing: 150,
-          blockShifting: true,
-          edgeMinimization: true,
-          parentCentralization: true
+          treeSpacing: 150
         } : { enabled: false }
       },
       interaction: {
@@ -334,8 +446,16 @@ export const ForensicReport = () => {
   };
 
   const getConnectedCases = (node: MoneyFlowNode) => {
-    const connectedEdges = edges.filter(e => e.from_node_id === node.id || e.to_node_id === node.id);
-    return connectedEdges.length;
+    return edges.filter(e => e.from_node_id === node.id || e.to_node_id === node.id).length;
+  };
+
+  const getTierLabel = (tier: number) => {
+    switch(tier) {
+      case 1: return { label: 'ระดับ 1 - หัวหน้า', color: 'bg-red-500' };
+      case 2: return { label: 'ระดับ 2 - ผู้ดูแลระบบ', color: 'bg-orange-500' };
+      case 3: return { label: 'ระดับ 3 - เอเย่นต์', color: 'bg-yellow-500' };
+      default: return { label: 'ระดับ 4 - ปลายทาง', color: 'bg-gray-500' };
+    }
   };
 
   if (loading && cases.length === 0) {
@@ -424,11 +544,11 @@ export const ForensicReport = () => {
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-dark-700">
         {[
-          { id: 'hierarchy', label: 'Hierarchical View', labelTh: 'ผังลำดับชั้น', icon: GitBranch },
-          { id: 'network', label: 'Network Graph', labelTh: 'กราฟเครือข่าย', icon: Network },
-          { id: 'timeline', label: 'Timeline', labelTh: 'ไทม์ไลน์', icon: Clock },
-          { id: 'accounts', label: 'Accounts', labelTh: 'บัญชี', icon: List },
-          { id: 'transactions', label: 'Transactions', labelTh: 'ธุรกรรม', icon: BarChart3 }
+          { id: 'hierarchy', labelTh: 'ผังลำดับชั้น', icon: GitBranch },
+          { id: 'network', labelTh: 'กราฟเครือข่าย', icon: Network },
+          { id: 'timeline', labelTh: 'ไทม์ไลน์', icon: Clock },
+          { id: 'accounts', labelTh: 'บัญชี', icon: List },
+          { id: 'transactions', labelTh: 'ธุรกรรม', icon: BarChart3 }
         ].map(tab => (
           <button
             key={tab.id}
@@ -450,7 +570,6 @@ export const ForensicReport = () => {
         <div className="flex gap-4">
           {/* Main Graph */}
           <Card className="flex-1 p-4">
-            {/* Controls */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -474,26 +593,23 @@ export const ForensicReport = () => {
                   <option value="crypto">กระเป๋าคริปโต</option>
                 </select>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={handleFit}>
-                  <Maximize2 size={16} className="mr-1" />
-                  พอดีหน้าจอ
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" onClick={handleFit}>
+                <Maximize2 size={16} className="mr-1" />
+                พอดีหน้าจอ
+              </Button>
             </div>
 
-            {/* Network Container */}
             <div 
               ref={containerRef} 
               className="bg-dark-950 rounded-lg border border-dark-700"
-              style={{ height: '550px' }}
+              style={{ height: '500px' }}
             />
 
             {/* Legend */}
             <div className="mt-4 p-3 bg-dark-800 rounded-lg">
               <div className="text-sm font-medium mb-2 text-dark-300">สัญลักษณ์</div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                {legendItems.slice(0, 6).map(item => (
+                {legendItems.map(item => (
                   <div key={item.label} className="flex items-center gap-2 text-xs">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: item.color }} />
                     <span className="text-dark-300">{item.label}</span>
@@ -503,13 +619,7 @@ export const ForensicReport = () => {
               <div className="flex items-center gap-6 mt-2 pt-2 border-t border-dark-700">
                 {edgeLegend.map(item => (
                   <div key={item.label} className="flex items-center gap-2 text-xs">
-                    <div 
-                      className="w-8 h-0.5" 
-                      style={{ 
-                        backgroundColor: item.color,
-                        borderStyle: item.style === 'dashed' ? 'dashed' : 'solid'
-                      }} 
-                    />
+                    <div className="w-8 h-0.5" style={{ backgroundColor: item.color }} />
                     <span className="text-dark-300">{item.label}</span>
                   </div>
                 ))}
@@ -517,9 +627,9 @@ export const ForensicReport = () => {
             </div>
           </Card>
 
-          {/* Detail Panel - ForensicLink Style */}
-          <Card className="w-80 p-0 bg-dark-800 overflow-hidden">
-            <div className="p-4 border-b border-dark-700 flex items-center justify-between">
+          {/* Enhanced Detail Panel */}
+          <Card className="w-96 p-0 bg-dark-800 overflow-hidden overflow-y-auto max-h-[750px]">
+            <div className="p-4 border-b border-dark-700 flex items-center justify-between sticky top-0 bg-dark-800 z-10">
               <h3 className="font-semibold flex items-center gap-2">
                 <Search size={18} className="text-primary-400" />
                 รายละเอียด
@@ -567,11 +677,25 @@ export const ForensicReport = () => {
                   </div>
                 </div>
 
-                {/* Phone */}
-                {selectedNode.phone_number && (
+                {/* Network Tier */}
+                {nodeAnalysis && (
                   <div>
-                    <label className="text-xs text-dark-400">เบอร์โทรศัพท์</label>
-                    <p className="font-medium">{selectedNode.phone_number}</p>
+                    <label className="text-xs text-dark-400">ตำแหน่งในเครือข่าย</label>
+                    <div className="mt-1 flex items-center gap-2">
+                      <div className={`px-3 py-1 rounded text-sm font-medium text-white ${getTierLabel(nodeAnalysis.networkTier).color}`}>
+                        {getTierLabel(nodeAnalysis.networkTier).label}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Phone & Location */}
+                {selectedNode.phone_number && (
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs text-dark-400">เบอร์โทรศัพท์</label>
+                      <p className="font-medium">{selectedNode.phone_number}</p>
+                    </div>
                   </div>
                 )}
 
@@ -586,14 +710,30 @@ export const ForensicReport = () => {
                   </div>
                 )}
 
-                {/* Connected Cases */}
-                <div>
-                  <label className="text-xs text-dark-400">พบใน</label>
-                  <p className="font-medium flex items-center gap-2">
-                    <File size={14} className="text-primary-400" />
-                    {getConnectedCases(selectedNode)} ธุรกรรม
-                  </p>
-                </div>
+                {/* Money Flow Stats */}
+                {nodeAnalysis && (
+                  <div className="bg-dark-700 rounded-lg p-3">
+                    <label className="text-xs text-dark-400 mb-2 block">สถิติการเงิน</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <ArrowDownLeft size={16} className="text-green-400" />
+                        <div>
+                          <p className="text-xs text-dark-400">รับเข้า</p>
+                          <p className="font-semibold text-green-400">฿{nodeAnalysis.incomingAmount.toLocaleString()}</p>
+                          <p className="text-xs text-dark-500">{nodeAnalysis.incomingCount} รายการ</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ArrowUpRight size={16} className="text-red-400" />
+                        <div>
+                          <p className="text-xs text-dark-400">ส่งออก</p>
+                          <p className="font-semibold text-red-400">฿{nodeAnalysis.outgoingAmount.toLocaleString()}</p>
+                          <p className="text-xs text-dark-500">{nodeAnalysis.outgoingCount} รายการ</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Risk Score */}
                 <div>
@@ -612,30 +752,98 @@ export const ForensicReport = () => {
                   </div>
                 </div>
 
-                {/* Notes */}
-                {selectedNode.notes && (
+                {/* Risk Factors */}
+                {nodeAnalysis && nodeAnalysis.riskFactors.length > 0 && (
                   <div>
-                    <label className="text-xs text-dark-400">หมายเหตุ</label>
-                    <p className="text-sm bg-dark-700 p-3 rounded mt-1">{selectedNode.notes}</p>
+                    <label className="text-xs text-dark-400 flex items-center gap-1 mb-2">
+                      <Activity size={12} />
+                      ปัจจัยความเสี่ยง
+                    </label>
+                    <div className="space-y-2">
+                      {nodeAnalysis.riskFactors.map((rf, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm bg-dark-700 p-2 rounded">
+                          <span>{rf.factor}</span>
+                          <Badge variant={rf.score > 20 ? 'danger' : rf.score > 10 ? 'warning' : 'default'}>
+                            +{rf.score}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Related Edges */}
+                {/* Classification Reasons - NEW! */}
+                {nodeAnalysis && nodeAnalysis.classificationReasons.length > 0 && (
+                  <div className="bg-dark-900 rounded-lg p-3 border border-dark-600">
+                    <label className="text-xs text-primary-400 flex items-center gap-1 mb-2 font-semibold">
+                      <ShieldAlert size={14} />
+                      เหตุผลการจัดประเภท
+                    </label>
+                    <div className="space-y-2">
+                      {nodeAnalysis.classificationReasons.map((reason, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm">
+                          <CheckCircle2 size={14} className="text-primary-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-dark-200">{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Evidence Sources - NEW! */}
+                {nodeAnalysis && nodeAnalysis.evidenceSources.length > 0 && (
+                  <div>
+                    <label className="text-xs text-dark-400 flex items-center gap-1 mb-2">
+                      <Fingerprint size={12} />
+                      แหล่งหลักฐาน
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {nodeAnalysis.evidenceSources.map((source, idx) => (
+                        <Badge key={idx} variant="default" className="text-xs">
+                          {source}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedNode.notes && (
+                  <div>
+                    <label className="text-xs text-dark-400 flex items-center gap-1">
+                      <Info size={12} />
+                      หมายเหตุจากการสืบสวน
+                    </label>
+                    <p className="text-sm bg-dark-700 p-3 rounded mt-1 border-l-4 border-primary-500">
+                      {selectedNode.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Connected Nodes */}
                 <div>
                   <label className="text-xs text-dark-400 flex items-center gap-1">
                     <Link2 size={12} />
                     เชื่อมโยงกับ ({getConnectedCases(selectedNode)})
                   </label>
-                  <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                  <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
                     {edges
                       .filter(e => e.from_node_id === selectedNode.id || e.to_node_id === selectedNode.id)
                       .slice(0, 5)
                       .map(e => {
                         const otherNodeId = e.from_node_id === selectedNode.id ? e.to_node_id : e.from_node_id;
                         const otherNode = nodes.find(n => n.id === otherNodeId);
+                        const isIncoming = e.to_node_id === selectedNode.id;
                         return (
                           <div key={e.id} className="flex items-center justify-between p-2 bg-dark-700 rounded text-sm">
-                            <span className="truncate flex-1">{otherNode?.label || 'Unknown'}</span>
+                            <div className="flex items-center gap-2">
+                              {isIncoming ? (
+                                <ArrowDownLeft size={12} className="text-green-400" />
+                              ) : (
+                                <ArrowUpRight size={12} className="text-red-400" />
+                              )}
+                              <span className="truncate">{otherNode?.label || 'Unknown'}</span>
+                            </div>
                             {e.amount && (
                               <Badge variant="info" className="text-xs">
                                 ฿{e.amount.toLocaleString()}
@@ -708,9 +916,6 @@ export const ForensicReport = () => {
                           {fromNode?.label || 'ไม่ทราบ'} <ChevronRight className="inline" size={16} /> {toNode?.label || 'ไม่ทราบ'}
                         </p>
                         {edge.label && <p className="text-sm text-dark-400 mt-1">{edge.label}</p>}
-                        {edge.transaction_ref && (
-                          <p className="text-xs text-dark-500 mt-1 font-mono">อ้างอิง: {edge.transaction_ref}</p>
-                        )}
                       </div>
                     </div>
                   );
@@ -825,7 +1030,6 @@ export const ForensicReport = () => {
                         <Badge variant={edge.edge_type === 'crypto_purchase' ? 'info' : 'default'}>
                           {edge.edge_type === 'deposit' ? 'ฝากเงิน' : 
                            edge.edge_type === 'transfer' ? 'โอนเงิน' :
-                           edge.edge_type === 'withdrawal' ? 'ถอนเงิน' :
                            edge.edge_type === 'crypto_purchase' ? 'ซื้อคริปโต' :
                            edge.edge_type === 'crypto_transfer' ? 'โอนคริปโต' :
                            edge.edge_type || 'โอนเงิน'}
