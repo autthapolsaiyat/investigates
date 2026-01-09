@@ -23,17 +23,14 @@ import {
   Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
-import blockchainApi, { 
-  WalletInfo, 
-  Transaction, 
-  RiskFactor, 
-  BlockchainType,
+import blockchainApi, {
   getKnownEntity,
   getExplorerUrl,
   getBlockchairUrl,
   getCryptoPrice,
   calculateRiskScore
 } from '../../services/blockchainApi';
+import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
 
 // Blockchain configurations
 interface BlockchainConfig {
