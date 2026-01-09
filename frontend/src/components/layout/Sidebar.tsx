@@ -8,7 +8,7 @@ import {
   Briefcase, 
   DollarSign, 
   Phone, 
-  Bitcoin,
+  Bitcoin, Wallet,
   Building2,
   Users,
   Settings,
@@ -28,7 +28,7 @@ const mainNavItems = [
   { to: '/import', icon: Upload, label: 'นำเข้าข้อมูล' },
   { to: '/report', icon: FileCheck, label: 'รายงานศาล' },
   { to: '/call-analysis', icon: Phone, label: 'Call Analysis' },
-  { to: '/crypto', icon: Bitcoin, label: 'Crypto' },
+  { to: '/crypto', icon: Wallet, label: 'Crypto Tracker' },
 ];
 
 const adminNavItems = [
