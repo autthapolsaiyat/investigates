@@ -37,7 +37,7 @@ CASE_RESPONSE=$(curl -s -X POST "$API_URL/cases" \
     "description": "คดีพนันออนไลน์ขนาดใหญ่ มีเครือข่ายกระจายใน 15 จังหวัด เชื่อมโยงกับกลุ่มทุนต่างชาติ มีผู้เสียหายกว่า 500 ราย มูลค่าความเสียหายรวมกว่า 150 ล้านบาท",
     "case_type": "online_gambling",
     "priority": "critical",
-    "tags": ["gambling", "network", "cross-border", "money-laundering"]
+    "tags": "gambling,network,cross-border,money-laundering"
   }')
 
 CASE_ID=$(echo $CASE_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
