@@ -11,16 +11,16 @@
  * - Exchange Identification
  * - Court-ready Evidence Export
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Wallet, Search, RefreshCw, Loader2, ExternalLink, Copy, CheckCircle2,
-  AlertTriangle, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft,
+  Wallet, Search, Loader2, ExternalLink, Copy, CheckCircle2,
+  AlertTriangle, ArrowUpRight, ArrowDownLeft,
   Shield, ShieldAlert, ShieldCheck, Eye, FileText, Download, Link2,
-  Clock, Hash, Layers, Activity, Target, Zap, AlertCircle, Info,
-  GitBranch, Network, BarChart3, Filter, ChevronDown, ChevronUp,
-  Fingerprint, Globe, Building, DollarSign, Coins, CircleDollarSign
+  Clock, Hash, Activity, AlertCircle, Info,
+  GitBranch, Network, BarChart3,
+  Fingerprint, Globe, Building
 } from 'lucide-react';
-import { Button, Card, Badge, Input } from '../../components/ui';
+import { Button, Card, Badge } from '../../components/ui';
 
 // Types
 interface WalletInfo {

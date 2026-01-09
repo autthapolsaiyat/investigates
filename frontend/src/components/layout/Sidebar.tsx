@@ -8,7 +8,7 @@ import {
   Briefcase, 
   DollarSign, 
   Phone, 
-  Bitcoin, Wallet,
+  Wallet,
   Building2,
   Users,
   Settings,
