@@ -17,7 +17,7 @@ import {
   AlertTriangle, ArrowUpRight, ArrowDownLeft,
   Shield, ShieldAlert, ShieldCheck, Eye, FileText, Download, Link2,
   Clock, Hash, Activity, AlertCircle, Info,
-  GitBranch, Network, BarChart3,
+  Network, BarChart3,
   Fingerprint, Globe, Building
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
