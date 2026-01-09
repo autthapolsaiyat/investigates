@@ -142,7 +142,7 @@ export interface LoginResponse {
 export const authAPI = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post('/auth/login', data);
-    const { user, tokens } = response.data;
+    const { tokens } = response.data;
     setTokens(tokens.access_token, tokens.refresh_token);
     return response.data;
   },
