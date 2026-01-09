@@ -7,7 +7,7 @@ import {
   X, Link2, ArrowRight, Database, CheckCircle2, Loader2,
   Wallet, GitMerge, AlertCircle, Plus, ExternalLink
 } from 'lucide-react';
-import { Button, Card, Badge } from '../../components/ui';
+import { Button, Badge } from '../../components/ui';
 
 interface WalletData {
   address: string;
