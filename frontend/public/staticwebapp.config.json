@@ -1,15 +1,18 @@
 {
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["*.{css,scss,js,png,gif,ico,jpg,svg,json,woff,woff2}"]
   },
-  "mimeTypes": {
-    ".js": "text/javascript",
-    ".mjs": "text/javascript",
-    ".json": "application/json",
-    ".css": "text/css",
-    ".html": "text/html",
-    ".svg": "image/svg+xml",
-    ".woff": "font/woff",
-    ".woff2": "font/woff2"
-  }
+  "globalHeaders": {
+    "content-security-policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;",
+    "X-Content-Type-Options": "nosniff"
+  },
+  "routes": [
+    {
+      "route": "/*.js",
+      "headers": {
+        "Content-Type": "text/javascript"
+      }
+    }
+  ]
 }
