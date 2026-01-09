@@ -20,7 +20,7 @@ import {
   AlertTriangle, ArrowUpRight, ArrowDownLeft,
   Shield, ShieldAlert, ShieldCheck, Eye, FileText, Download, Link2,
   Clock, Hash, Activity, AlertCircle, Info,
-  Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff
+  Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import blockchainApi, {
@@ -31,6 +31,7 @@ import blockchainApi, {
   calculateRiskScore
 } from '../../services/blockchainApi';
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
+import { CryptoImportModal } from './CryptoImportModal';
 
 // Blockchain configurations
 interface BlockchainConfig {
@@ -178,6 +179,7 @@ export const CryptoTracker = () => {
   const [dataSource, setDataSource] = useState<'api' | 'mock'>('mock');
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [showImportModal, setShowImportModal] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const networkRef = useRef<unknown>(null);
@@ -464,6 +466,12 @@ export const CryptoTracker = () => {
             )}
           </div>
           
+          {walletInfo && (
+            <Button variant="primary" onClick={() => setShowImportModal(true)}>
+              <GitMerge size={18} className="mr-2" />
+              Import to Money Flow
+            </Button>
+          )}
           <Button variant="secondary">
             <FileText size={18} className="mr-2" />
             รายงาน
@@ -1153,6 +1161,14 @@ export const CryptoTracker = () => {
           </div>
         </Card>
       )}
+
+      {/* Import Modal */}
+      <CryptoImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        walletData={walletInfo}
+        transactions={transactions}
+      />
     </div>
   );
 };
