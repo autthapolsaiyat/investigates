@@ -21,14 +21,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-  <div className="flex-1 flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-2xl font-bold mb-2">{title}</h1>
-      <p className="text-dark-400">Coming Soon...</p>
-    </div>
-  </div>
-);
-
 function App() {
   const { checkAuth } = useAuthStore();
 
