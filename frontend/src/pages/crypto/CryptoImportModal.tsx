@@ -71,7 +71,7 @@ export const CryptoImportModal = ({
   const fetchCases = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://investigates-api.azurewebsites.net/api/cases?page=1&page_size=100', {
+      const response = await fetch('https://investigates-api.azurewebsites.net/api/v1/cases?page=1&page_size=100', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -111,7 +111,7 @@ export const CryptoImportModal = ({
       // 1. Create main wallet node
       if (importOptions.importMainWallet) {
         const nodeResponse = await fetch(
-          `https://investigates-api.azurewebsites.net/api/cases/${selectedCaseId}/money-flow/nodes`,
+          `https://investigates-api.azurewebsites.net/api/v1/cases/${selectedCaseId}/money-flow/nodes`,
           {
             method: 'POST',
             headers,
@@ -156,7 +156,7 @@ export const CryptoImportModal = ({
             if (!nodeIdMap.has(cp)) {
               try {
                 const cpResponse = await fetch(
-                  `https://investigates-api.azurewebsites.net/api/cases/${selectedCaseId}/money-flow/nodes`,
+                  `https://investigates-api.azurewebsites.net/api/v1/cases/${selectedCaseId}/money-flow/nodes`,
                   {
                     method: 'POST',
                     headers,
@@ -195,7 +195,7 @@ export const CryptoImportModal = ({
           if (fromNodeId && toNodeId) {
             try {
               const edgeResponse = await fetch(
-                `https://investigates-api.azurewebsites.net/api/cases/${selectedCaseId}/money-flow/edges`,
+                `https://investigates-api.azurewebsites.net/api/v1/cases/${selectedCaseId}/money-flow/edges`,
                 {
                   method: 'POST',
                   headers,

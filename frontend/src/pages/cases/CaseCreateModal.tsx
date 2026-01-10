@@ -36,7 +36,7 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('https://investigates-api.azurewebsites.net/api/cases', {
+      const response = await fetch('https://investigates-api.azurewebsites.net/api/v1/cases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
