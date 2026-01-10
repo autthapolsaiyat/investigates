@@ -12,6 +12,7 @@ import { SettingsPage } from './pages/admin/Settings';
 import { ForensicReportPage } from './pages/forensic-report/ForensicReport';
 import { ImportData } from './pages/import/ImportData';
 import { ReportGenerator } from './pages/report/ReportGenerator';
+import { SilkRoadDemo } from "./pages/silk-road-demo";
 import { CryptoTracker } from './pages/crypto/CryptoTracker';
 import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="import" element={<ImportData />} />
           <Route path="report" element={<ReportGenerator />} />
           <Route path="call-analysis" element={<CallAnalysis />} />
+          <Route path="silk-road-demo" element={<SilkRoadDemo />} />
           <Route path="crypto" element={<CryptoTracker />} />
           <Route path="admin/organizations" element={<OrganizationsPage />} />
           <Route path="admin/users" element={<UsersPage />} />
