@@ -3,9 +3,8 @@
  * Using React Flow for court-ready financial investigation
  */
 import { useCallback, useMemo, useState, useEffect } from 'react';
+import type { Node, Edge } from 'reactflow';
 import ReactFlow, {
-  Node,
-  Edge,
   Controls,
   MiniMap,
   Background,
@@ -15,7 +14,6 @@ import ReactFlow, {
   ConnectionMode,
   Panel,
 } from 'reactflow';
-import 'reactflow/dist/style.css';
 
 import { CustomNode } from './CustomNode';
 import { SummaryPanel } from './SummaryPanel';
@@ -32,7 +30,7 @@ interface MoneyFlowGraphProps {
   nodes: MoneyFlowNode[];
   edges: MoneyFlowEdge[];
   onNodeClick?: (node: MoneyFlowNode) => void;
-  onRefresh?: () => void;
+  _onRefresh?: () => void;
 }
 
 // Color mapping for node types
@@ -110,7 +108,7 @@ export const MoneyFlowGraph = ({
   nodes: apiNodes, 
   edges: apiEdges,
   onNodeClick,
-  onRefresh 
+  _onRefresh 
 }: MoneyFlowGraphProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -138,7 +136,7 @@ export const MoneyFlowGraph = ({
   // Calculate summary statistics
   const summary = useMemo(() => {
     const totalIn = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
-    const totalOut = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const _unusedTotalOut = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
     const suspectCount = apiNodes.filter(n => n.is_suspect).length;
     const victimCount = apiNodes.filter(n => n.is_victim).length;
     const highRiskCount = apiNodes.filter(n => (n.risk_score || 0) >= 70).length;

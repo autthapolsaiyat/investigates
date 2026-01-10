@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Network
 } from 'lucide-react';
-import { Button, Card } from '../../components/ui';
+import { Button } from '../../components/ui';
 import { MoneyFlowGraph } from './MoneyFlowGraph';
 import { AddNodeModal } from './AddNodeModal';
 import type { MoneyFlowNode, MoneyFlowEdge } from './types';
@@ -119,7 +119,6 @@ export const MoneyFlow = () => {
   };
 
   // Selected case info
-  const selectedCase = cases.find(c => c.id === selectedCaseId);
 
   return (
     <div className="h-full flex flex-col">
