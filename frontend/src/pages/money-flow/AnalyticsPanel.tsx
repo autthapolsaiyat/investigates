@@ -52,9 +52,6 @@ export const AnalyticsPanel = ({ nodes, edges, onNodeSelect }: AnalyticsPanelPro
   };
 
   // Get node identifier
-  const getNodeIdentifier = (nodeId: number) => {
-    const node = nodes.find(n => n.id === nodeId);
-    return node?.identifier || '';
   };
 
   // Top 10 transfers by amount
