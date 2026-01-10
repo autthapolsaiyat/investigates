@@ -51,9 +51,6 @@ export const AnalyticsPanel = ({ nodes, edges, onNodeSelect }: AnalyticsPanelPro
     return node?.label || `Node ${nodeId}`;
   };
 
-  // Get node identifier
-  };
-
   // Top 10 transfers by amount
   const topTransfers = useMemo(() => {
     return [...edges]
