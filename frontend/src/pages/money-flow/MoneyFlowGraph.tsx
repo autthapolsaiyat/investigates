@@ -27,7 +27,7 @@ import {
   X,
   TrendingUp,
   CircleDot,
-  Banknote,
+
   ArrowDownLeft,
   ArrowUpRight,
   Copy,
