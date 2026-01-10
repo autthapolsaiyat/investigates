@@ -1,3 +1,4 @@
+import { CaseCreateModal } from './CaseCreateModal';
 /**
  * Cases Page
  * Case listing with CRUD operations
@@ -51,6 +52,7 @@ export default function Cases() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
@@ -129,7 +131,7 @@ export default function Cases() {
           <h1 className="text-2xl font-bold text-white">Cases</h1>
           <p className="text-gray-400 mt-1">Manage investigation cases</p>
         </div>
-        <Button onClick={() => navigate('/cases/new')}>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Case
         </Button>
@@ -182,7 +184,7 @@ export default function Cases() {
       ) : cases.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-gray-400">No cases found</p>
-          <Button onClick={() => navigate('/cases/new')} className="mt-4">
+          <Button onClick={() => setShowCreateModal(true)} className="mt-4">
             <Plus className="w-4 h-4 mr-2" />
             Create First Case
           </Button>
@@ -308,6 +310,13 @@ export default function Cases() {
           )}
         </>
       )}
+
+      {/* Create Case Modal */}
+      <CaseCreateModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={fetchCases}
+      />
     </div>
   );
 }
