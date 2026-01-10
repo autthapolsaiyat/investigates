@@ -9,3 +9,4 @@ export { NodeDetailPanel } from './NodeDetailPanel';
 export { Legend } from './Legend';
 export { AddNodeModal } from './AddNodeModal';
 export * from './types';
+export { AnalyticsPanel } from './AnalyticsPanel';

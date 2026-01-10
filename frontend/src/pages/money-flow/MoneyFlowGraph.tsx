@@ -1,6 +1,6 @@
 /**
- * MoneyFlowGraph V2 - Improved Professional Forensic Money Flow
- * Clean, readable, hierarchical layout
+ * MoneyFlowGraph V3 - With Analytics Panel
+ * Professional Forensic Money Flow with Analysis Features
  */
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import type { Node, Edge } from 'reactflow';
@@ -27,13 +27,13 @@ import {
   X,
   TrendingUp,
   CircleDot,
-
   ArrowDownLeft,
   ArrowUpRight,
   Copy,
   Hash
 } from 'lucide-react';
 import type { MoneyFlowNode, MoneyFlowEdge } from './types';
+import { AnalyticsPanel } from './AnalyticsPanel';
 
 // Color mapping for node types
 const NODE_COLORS: Record<string, string> = {
@@ -74,7 +74,7 @@ interface MoneyFlowGraphProps {
   onNodeClick?: (node: MoneyFlowNode) => void;
 }
 
-// Dagre-like hierarchical layout
+// Hierarchical layout calculation
 const calculateHierarchicalLayout = (
   nodes: MoneyFlowNode[], 
   edges: MoneyFlowEdge[]
@@ -83,7 +83,6 @@ const calculateHierarchicalLayout = (
   
   if (nodes.length === 0) return positions;
 
-  // Build adjacency lists
   const outgoing = new Map<number, number[]>();
   const incoming = new Map<number, number[]>();
   
@@ -97,11 +96,9 @@ const calculateHierarchicalLayout = (
     incoming.get(e.to_node_id)?.push(e.from_node_id);
   });
 
-  // Find root nodes (no incoming edges or most outgoing)
   const roots = nodes.filter(n => incoming.get(n.id)?.length === 0);
   const startNodes = roots.length > 0 ? roots : [nodes[0]];
 
-  // BFS to assign levels
   const levels = new Map<number, number>();
   const queue: number[] = startNodes.map(n => n.id);
   startNodes.forEach(n => levels.set(n.id, 0));
@@ -118,37 +115,27 @@ const calculateHierarchicalLayout = (
     });
   }
 
-  // Assign remaining nodes
   nodes.forEach(n => {
-    if (!levels.has(n.id)) {
-      levels.set(n.id, 0);
-    }
+    if (!levels.has(n.id)) levels.set(n.id, 0);
   });
 
-  // Group nodes by level
   const levelGroups = new Map<number, number[]>();
   nodes.forEach(n => {
     const level = levels.get(n.id) || 0;
-    if (!levelGroups.has(level)) {
-      levelGroups.set(level, []);
-    }
+    if (!levelGroups.has(level)) levelGroups.set(level, []);
     levelGroups.get(level)!.push(n.id);
   });
 
-  // Calculate positions
   const levelWidth = 350;
-  const nodeHeight = 150;
+  const nodeHeight = 140;
   const startX = 100;
-  const startY = 100;
+  const startY = 50;
 
   levelGroups.forEach((nodeIds, level) => {
-    const totalHeight = nodeIds.length * nodeHeight;
-    const offsetY = startY + (500 - totalHeight) / 2;
-    
     nodeIds.forEach((nodeId, index) => {
       positions.set(nodeId, {
         x: startX + level * levelWidth,
-        y: offsetY + index * nodeHeight,
+        y: startY + index * nodeHeight,
         level
       });
     });
@@ -157,7 +144,7 @@ const calculateHierarchicalLayout = (
   return positions;
 };
 
-// Custom Node Component (inline for simplicity)
+// Custom Node Component
 const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string } }) => {
   const Icon = data.is_suspect ? AlertTriangle : 
                data.is_victim ? Shield : 
@@ -172,7 +159,6 @@ const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string }
       className="relative bg-dark-800 rounded-xl border-2 shadow-xl p-4 min-w-[180px]"
       style={{ borderColor: bgColor }}
     >
-      {/* Risk Badge */}
       {(data.risk_score || 0) > 0 && (
         <div 
           className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
@@ -185,7 +171,6 @@ const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string }
         </div>
       )}
 
-      {/* Status Badge */}
       {(data.is_suspect || data.is_victim) && (
         <div 
           className={`absolute -top-3 -left-3 px-2 py-1 rounded-full text-xs font-bold text-white shadow-lg ${
@@ -196,7 +181,6 @@ const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string }
         </div>
       )}
 
-      {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         <div 
           className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -214,7 +198,6 @@ const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string }
         </div>
       </div>
 
-      {/* Details */}
       {data.bank_name && (
         <div className="text-xs text-dark-300 mb-1">
           🏦 {data.bank_name}
@@ -227,34 +210,25 @@ const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string }
         </div>
       )}
 
-      {/* Handles */}
       <div className="absolute left-0 top-1/2 -translate-x-1/2 w-3 h-3 bg-dark-600 border-2 border-dark-400 rounded-full" />
       <div className="absolute right-0 top-1/2 translate-x-1/2 w-3 h-3 bg-dark-600 border-2 border-dark-400 rounded-full" />
     </div>
   );
 };
 
-// Node types registration
-const nodeTypes = {
-  custom: CustomNodeComponent,
-};
+const nodeTypes = { custom: CustomNodeComponent };
 
-// Convert API data to React Flow format
 const convertToReactFlowNodes = (
   nodes: MoneyFlowNode[], 
   positions: Map<number, { x: number; y: number; level: number }>
 ): Node[] => {
   return nodes.map((node) => {
     const pos = positions.get(node.id) || { x: 100, y: 100 };
-    
     return {
       id: String(node.id),
       type: 'custom',
       position: { x: pos.x, y: pos.y },
-      data: {
-        ...node,
-        color: NODE_COLORS[node.node_type] || NODE_COLORS.unknown,
-      },
+      data: { ...node, color: NODE_COLORS[node.node_type] || NODE_COLORS.unknown },
     };
   });
 };
@@ -267,16 +241,9 @@ const convertToReactFlowEdges = (edges: MoneyFlowEdge[]): Edge[] => {
     type: 'smoothstep',
     animated: true,
     label: edge.amount ? `฿${edge.amount.toLocaleString()}` : '',
-    labelStyle: { 
-      fill: '#fff', 
-      fontWeight: 700,
-      fontSize: 12,
-    },
-    labelBgStyle: { 
-      fill: '#1F2937', 
-      fillOpacity: 0.95,
-    },
-    labelBgPadding: [10, 6] as [number, number],
+    labelStyle: { fill: '#fff', fontWeight: 700, fontSize: 11 },
+    labelBgStyle: { fill: '#1F2937', fillOpacity: 0.95 },
+    labelBgPadding: [8, 4] as [number, number],
     labelBgBorderRadius: 6,
     style: { 
       stroke: edge.edge_type === 'crypto_transfer' ? '#F59E0B' : '#3B82F6',
@@ -301,8 +268,8 @@ export const MoneyFlowGraph = ({
   const [selectedNode, setSelectedNode] = useState<MoneyFlowNode | null>(null);
   const [showSummary, setShowSummary] = useState(true);
   const [showLegend, setShowLegend] = useState(false);
+  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
-  // Convert API data to React Flow format with hierarchical layout
   useEffect(() => {
     if (apiNodes.length > 0) {
       const positions = calculateHierarchicalLayout(apiNodes, apiEdges);
@@ -313,7 +280,6 @@ export const MoneyFlowGraph = ({
     }
   }, [apiNodes, apiEdges, setNodes, setEdges]);
 
-  // Handle node click
   const handleNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     const originalNode = apiNodes.find(n => String(n.id) === node.id);
     if (originalNode) {
@@ -322,31 +288,35 @@ export const MoneyFlowGraph = ({
     }
   }, [apiNodes, onNodeClick]);
 
-  // Calculate summary statistics
+  // Focus on node when selected from Analytics
+  const handleNodeSelect = useCallback((nodeId: number) => {
+    const node = apiNodes.find(n => n.id === nodeId);
+    if (node) {
+      setSelectedNode(node);
+      // Focus view on selected node
+      if (reactFlowInstance) {
+        const rfNode = nodes.find(n => n.id === String(nodeId));
+        if (rfNode) {
+          reactFlowInstance.setCenter(rfNode.position.x + 100, rfNode.position.y + 50, { zoom: 1, duration: 500 });
+        }
+      }
+    }
+  }, [apiNodes, reactFlowInstance, nodes]);
+
   const summary = useMemo(() => {
     const totalFlow = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
     const suspectCount = apiNodes.filter(n => n.is_suspect).length;
     const victimCount = apiNodes.filter(n => n.is_victim).length;
     const highRiskCount = apiNodes.filter(n => (n.risk_score || 0) >= 70).length;
-    
-    return {
-      nodeCount: apiNodes.length,
-      edgeCount: apiEdges.length,
-      totalFlow,
-      suspectCount,
-      victimCount,
-      highRiskCount,
-    };
+    return { nodeCount: apiNodes.length, edgeCount: apiEdges.length, totalFlow, suspectCount, victimCount, highRiskCount };
   }, [apiNodes, apiEdges]);
 
-  // Format currency
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) return `฿${(amount / 1000000).toFixed(2)}M`;
     if (amount >= 1000) return `฿${(amount / 1000).toFixed(1)}K`;
     return `฿${amount.toLocaleString()}`;
   };
 
-  // Get transaction summary for selected node
   const getNodeTransactions = (node: MoneyFlowNode) => {
     const incoming = apiEdges.filter(e => e.to_node_id === node.id);
     const outgoing = apiEdges.filter(e => e.from_node_id === node.id);
@@ -363,6 +333,7 @@ export const MoneyFlowGraph = ({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
+        onInit={setReactFlowInstance}
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
         fitView
@@ -370,24 +341,13 @@ export const MoneyFlowGraph = ({
         minZoom={0.2}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-          animated: true,
-        }}
       >
-        {/* Controls */}
-        <Controls 
-          className="bg-dark-800 border border-dark-600 rounded-lg"
-          showInteractive={false}
-        />
-        
-        {/* Background */}
+        <Controls className="bg-dark-800 border border-dark-600 rounded-lg" showInteractive={false} />
         <Background color="#374151" gap={30} size={1} />
 
-        {/* Summary Panel - Top */}
+        {/* Summary Panel - Top Left */}
         <Panel position="top-left" className="m-3">
           <div className="bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-xl shadow-xl overflow-hidden">
-            {/* Header */}
             <button 
               onClick={() => setShowSummary(!showSummary)}
               className="w-full flex items-center justify-between p-3 hover:bg-dark-700 transition-colors"
@@ -399,7 +359,6 @@ export const MoneyFlowGraph = ({
               {showSummary ? <ChevronUp size={16} className="text-dark-400" /> : <ChevronDown size={16} className="text-dark-400" />}
             </button>
 
-            {/* Content */}
             {showSummary && (
               <div className="px-4 pb-4 space-y-2">
                 <div className="grid grid-cols-3 gap-3">
@@ -436,38 +395,42 @@ export const MoneyFlowGraph = ({
           </div>
         </Panel>
 
-        {/* Legend Toggle */}
+        {/* Analytics Panel - Bottom Left */}
         <Panel position="bottom-left" className="m-3">
+          <AnalyticsPanel 
+            nodes={apiNodes} 
+            edges={apiEdges}
+            onNodeSelect={handleNodeSelect}
+          />
+        </Panel>
+
+        {/* Legend Toggle */}
+        <Panel position="top-center" className="m-3">
           <button 
             onClick={() => setShowLegend(!showLegend)}
             className="bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-lg px-3 py-2 text-sm text-white hover:bg-dark-700 transition-colors flex items-center gap-2"
           >
             <CircleDot size={14} />
             สัญลักษณ์
-            {showLegend ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            {showLegend ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
 
           {showLegend && (
             <div className="mt-2 bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-xl p-3 shadow-xl">
-              <div className="space-y-2">
+              <div className="flex flex-wrap gap-3">
                 {Object.entries(NODE_LABELS).map(([key, label]) => (
                   <div key={key} className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded"
-                      style={{ backgroundColor: NODE_COLORS[key] }}
-                    />
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: NODE_COLORS[key] }} />
                     <span className="text-xs text-dark-300">{label}</span>
                   </div>
                 ))}
-                <div className="border-t border-dark-600 pt-2 mt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-red-500" />
-                    <span className="text-xs text-dark-300">ผู้ต้องสงสัย</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-4 h-4 rounded bg-cyan-500" />
-                    <span className="text-xs text-dark-300">ผู้เสียหาย</span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-red-500" />
+                  <span className="text-xs text-dark-300">ผู้ต้องสงสัย</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-cyan-500" />
+                  <span className="text-xs text-dark-300">ผู้เสียหาย</span>
                 </div>
               </div>
             </div>
@@ -478,20 +441,14 @@ export const MoneyFlowGraph = ({
         {selectedNode && (
           <Panel position="top-right" className="m-3">
             <div className="bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-xl shadow-xl w-72 max-h-[80vh] overflow-hidden">
-              {/* Header */}
               <div className="flex items-center justify-between p-3 border-b border-dark-700">
                 <span className="text-sm font-semibold text-white">รายละเอียด</span>
-                <button 
-                  onClick={() => setSelectedNode(null)}
-                  className="p-1 hover:bg-dark-700 rounded"
-                >
+                <button onClick={() => setSelectedNode(null)} className="p-1 hover:bg-dark-700 rounded">
                   <X size={16} className="text-dark-400" />
                 </button>
               </div>
 
-              {/* Content */}
               <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
-                {/* Node Info */}
                 <div className="flex items-center gap-3">
                   <div 
                     className="w-12 h-12 rounded-lg flex items-center justify-center"
@@ -508,7 +465,6 @@ export const MoneyFlowGraph = ({
                   </div>
                 </div>
 
-                {/* Badges */}
                 <div className="flex flex-wrap gap-2">
                   {selectedNode.is_suspect && (
                     <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs flex items-center gap-1">
@@ -531,7 +487,6 @@ export const MoneyFlowGraph = ({
                   )}
                 </div>
 
-                {/* Details */}
                 {selectedNode.bank_name && (
                   <div>
                     <div className="text-xs text-dark-400 mb-1">สถาบัน</div>
@@ -558,7 +513,6 @@ export const MoneyFlowGraph = ({
                   </div>
                 )}
 
-                {/* Transactions */}
                 {(() => {
                   const { totalIn, totalOut, incoming, outgoing } = getNodeTransactions(selectedNode);
                   return (
@@ -568,9 +522,7 @@ export const MoneyFlowGraph = ({
                           <ArrowDownLeft size={14} />
                           <span className="text-xs">รับเข้า</span>
                         </div>
-                        <div className="text-sm font-semibold text-white">
-                          {formatCurrency(totalIn)}
-                        </div>
+                        <div className="text-sm font-semibold text-white">{formatCurrency(totalIn)}</div>
                         <div className="text-xs text-dark-400">{incoming.length} รายการ</div>
                       </div>
                       <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
@@ -578,22 +530,17 @@ export const MoneyFlowGraph = ({
                           <ArrowUpRight size={14} />
                           <span className="text-xs">ส่งออก</span>
                         </div>
-                        <div className="text-sm font-semibold text-white">
-                          {formatCurrency(totalOut)}
-                        </div>
+                        <div className="text-sm font-semibold text-white">{formatCurrency(totalOut)}</div>
                         <div className="text-xs text-dark-400">{outgoing.length} รายการ</div>
                       </div>
                     </div>
                   );
                 })()}
 
-                {/* Notes */}
                 {selectedNode.notes && (
                   <div>
                     <div className="text-xs text-dark-400 mb-1">หมายเหตุ</div>
-                    <div className="text-sm text-dark-300 bg-dark-900 p-2 rounded">
-                      {selectedNode.notes}
-                    </div>
+                    <div className="text-sm text-dark-300 bg-dark-900 p-2 rounded">{selectedNode.notes}</div>
                   </div>
                 )}
               </div>
