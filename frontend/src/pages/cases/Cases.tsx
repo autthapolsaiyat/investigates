@@ -315,7 +315,7 @@ export default function Cases() {
       <CaseCreateModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSuccess={fetchCases}
+        onSuccess={loadCases}
       />
     </div>
   );
