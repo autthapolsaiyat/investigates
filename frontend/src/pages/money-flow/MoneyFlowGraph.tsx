@@ -30,7 +30,6 @@ interface MoneyFlowGraphProps {
   nodes: MoneyFlowNode[];
   edges: MoneyFlowEdge[];
   onNodeClick?: (node: MoneyFlowNode) => void;
-  _onRefresh?: () => void;
 }
 
 // Color mapping for node types
@@ -108,7 +107,6 @@ export const MoneyFlowGraph = ({
   nodes: apiNodes, 
   edges: apiEdges,
   onNodeClick,
-  _onRefresh 
 }: MoneyFlowGraphProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -136,7 +134,7 @@ export const MoneyFlowGraph = ({
   // Calculate summary statistics
   const summary = useMemo(() => {
     const totalIn = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
-    const _unusedTotalOut = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
+    // const totalOut = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
     const suspectCount = apiNodes.filter(n => n.is_suspect).length;
     const victimCount = apiNodes.filter(n => n.is_victim).length;
     const highRiskCount = apiNodes.filter(n => (n.risk_score || 0) >= 70).length;

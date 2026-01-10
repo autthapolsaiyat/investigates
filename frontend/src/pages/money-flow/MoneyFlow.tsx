@@ -229,7 +229,7 @@ export const MoneyFlow = () => {
           <MoneyFlowGraph
             nodes={nodes}
             edges={edges}
-            onRefresh={handleRefresh}
+            
           />
         )}
       </div>
