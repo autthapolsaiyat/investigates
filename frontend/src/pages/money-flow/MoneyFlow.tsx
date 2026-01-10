@@ -1,297 +1,249 @@
 /**
- * Money Flow Page - Connected to API
+ * MoneyFlow Page - Professional Forensic Money Flow Analysis
+ * Main page component integrating all Money Flow features
  */
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
-  Filter, Download, RefreshCw, Plus, Loader2, AlertCircle,
-  Trash2, X, User
+  RefreshCw, 
+  Filter, 
+  Download, 
+  Plus,
+  ChevronDown,
+  Loader2,
+  AlertCircle,
+  Network
 } from 'lucide-react';
-import { Button, Input, Card, Badge } from '../../components/ui';
-import { moneyFlowAPI, casesAPI } from '../../services/api';
-import type { MoneyFlowNode, MoneyFlowEdge, Case } from '../../services/api';
+import { Button, Card } from '../../components/ui';
+import { MoneyFlowGraph } from './MoneyFlowGraph';
+import { AddNodeModal } from './AddNodeModal';
+import type { MoneyFlowNode, MoneyFlowEdge } from './types';
 
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
+interface Case {
+  id: number;
+  case_number: string;
   title: string;
 }
 
-const Modal = ({ isOpen, onClose, children, title }: ModalProps) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-dark-800 rounded-xl p-6 w-full max-w-lg mx-4 border border-dark-700 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <button onClick={onClose} className="text-dark-400 hover:text-white">
-            <X size={20} />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-};
-
-const nodeTypeColors: Record<string, string> = {
-  bank_account: '#3B82F6',
-  person: '#10B981',
-  crypto_wallet: '#F59E0B',
-  exchange: '#8B5CF6',
-  suspect: '#EF4444',
-  victim: '#22C55E',
-  mule: '#F97316',
-};
+const API_BASE = 'https://investigates-api.azurewebsites.net/api/v1';
 
 export const MoneyFlow = () => {
+  // State
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
   const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAddNodeModal, setShowAddNodeModal] = useState(false);
-  const [saving, setSaving] = useState(false);
-  
-  const [nodeForm, setNodeForm] = useState({
-    node_type: 'bank_account',
-    label: '',
-    identifier: '',
-    bank_name: '',
-    account_name: '',
-    is_suspect: false,
-    is_victim: false,
-    notes: ''
-  });
+  const [showAddNode, setShowAddNode] = useState(false);
 
+  // Get auth token
+  const getToken = () => localStorage.getItem('access_token');
+
+  // Fetch cases
   useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/cases?page=1&page_size=100`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCases(data.items || []);
+          if (data.items?.length > 0 && !selectedCaseId) {
+            setSelectedCaseId(data.items[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching cases:', err);
+      }
+    };
     fetchCases();
   }, []);
 
-  const fetchCases = async () => {
+  // Fetch nodes and edges when case changes
+  const fetchMoneyFlowData = useCallback(async () => {
+    if (!selectedCaseId) return;
+    
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const response = await casesAPI.list({ page: 1, page_size: 100 });
-      setCases(response.items);
-      if (response.items.length > 0) {
-        setSelectedCaseId(response.items[0].id);
+      const headers = { 'Authorization': `Bearer ${getToken()}` };
+
+      // Fetch nodes
+      const nodesRes = await fetch(
+        `${API_BASE}/cases/${selectedCaseId}/money-flow/nodes`,
+        { headers }
+      );
+      
+      // Fetch edges
+      const edgesRes = await fetch(
+        `${API_BASE}/cases/${selectedCaseId}/money-flow/edges`,
+        { headers }
+      );
+
+      if (nodesRes.ok && edgesRes.ok) {
+        const nodesData = await nodesRes.json();
+        const edgesData = await edgesRes.json();
+        setNodes(nodesData || []);
+        setEdges(edgesData || []);
+      } else {
+        setError('ไม่สามารถโหลดข้อมูลได้');
       }
     } catch (err) {
-      console.error('Failed to fetch cases:', err);
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ');
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMoneyFlow = useCallback(async () => {
-    if (!selectedCaseId) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const [nodesRes, edgesRes] = await Promise.all([
-        moneyFlowAPI.listNodes(selectedCaseId),
-        moneyFlowAPI.listEdges(selectedCaseId)
-      ]);
-      setNodes(nodesRes);
-      setEdges(edgesRes);
-    } catch (err) {
-      console.error('Failed to fetch money flow:', err);
-      setError('Failed to load money flow data');
-    } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [selectedCaseId]);
 
+  // Fetch data when case changes
   useEffect(() => {
-    if (selectedCaseId) {
-      fetchMoneyFlow();
-    }
-  }, [selectedCaseId, fetchMoneyFlow]);
+    fetchMoneyFlowData();
+  }, [fetchMoneyFlowData]);
 
-  const handleAddNode = async () => {
-    if (!selectedCaseId) return;
-    try {
-      setSaving(true);
-      await moneyFlowAPI.createNode(selectedCaseId, {
-        ...nodeForm,
-        x_position: Math.random() * 600 + 100,
-        y_position: Math.random() * 400 + 100,
-        risk_score: nodeForm.is_suspect ? 80 : 0,
-        size: 40
-      });
-      setShowAddNodeModal(false);
-      setNodeForm({ node_type: 'bank_account', label: '', identifier: '', bank_name: '', account_name: '', is_suspect: false, is_victim: false, notes: '' });
-      fetchMoneyFlow();
-    } catch (err) {
-      console.error('Failed to add node:', err);
-      alert('Failed to add node');
-    } finally {
-      setSaving(false);
-    }
+  // Handle case change
+  const handleCaseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCaseId(Number(e.target.value));
   };
 
-  const handleDeleteNode = async (nodeId: number) => {
-    if (!selectedCaseId || !confirm('Delete this node?')) return;
-    try {
-      await moneyFlowAPI.deleteNode(selectedCaseId, nodeId);
-      fetchMoneyFlow();
-    } catch (err) {
-      console.error('Failed to delete node:', err);
-    }
+  // Handle refresh
+  const handleRefresh = () => {
+    fetchMoneyFlowData();
   };
 
-  const getNodeColor = (node: MoneyFlowNode) => {
-    if (node.is_suspect) return nodeTypeColors.suspect;
-    if (node.is_victim) return nodeTypeColors.victim;
-    return nodeTypeColors[node.node_type] || '#6B7280';
+  // Handle export
+  const handleExport = () => {
+    // TODO: Implement export functionality
+    alert('Export feature coming soon!');
   };
 
-  if (loading && cases.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      </div>
-    );
-  }
+  // Selected case info
+  const selectedCase = cases.find(c => c.id === selectedCaseId);
 
   return (
-    <div className="flex-1 p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-dark-700">
         <div>
-          <h1 className="text-2xl font-bold">Money Flow</h1>
-          <p className="text-dark-400 mt-1">วิเคราะห์เส้นทางการเงิน</p>
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Network className="text-primary-400" />
+            Money Flow
+          </h1>
+          <p className="text-sm text-dark-400">วิเคราะห์เส้นทางการเงิน</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={fetchMoneyFlow}><RefreshCw size={20} className="mr-2" />Refresh</Button>
-          <Button variant="ghost"><Filter size={20} className="mr-2" />Filter</Button>
-          <Button variant="ghost"><Download size={20} className="mr-2" />Export</Button>
-        </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <label className="text-sm font-medium">Select Case:</label>
-        <select
-          className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white min-w-[300px]"
-          value={selectedCaseId || ''}
-          onChange={(e) => setSelectedCaseId(Number(e.target.value))}
-        >
-          {cases.map(c => (
-            <option key={c.id} value={c.id}>{c.case_number} - {c.title}</option>
-          ))}
-        </select>
-        <Button onClick={() => setShowAddNodeModal(true)}><Plus size={20} className="mr-2" />Add Node</Button>
-      </div>
-
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3 text-red-400">
-          <AlertCircle size={20} /><span>{error}</span>
-        </div>
-      )}
-
-      <Card className="relative min-h-[500px] overflow-hidden">
-        {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-          </div>
-        ) : nodes.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-medium mb-2">Money Flow Graph</h3>
-              <p className="text-dark-400 mb-4">No nodes yet. Add nodes to start building the flow.</p>
-              <Button onClick={() => setShowAddNodeModal(true)}><Plus size={20} className="mr-2" />Add First Node</Button>
+        <div className="flex items-center gap-3">
+          {/* Case Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-dark-400">Select Case:</span>
+            <div className="relative">
+              <select
+                value={selectedCaseId || ''}
+                onChange={handleCaseChange}
+                className="appearance-none bg-dark-700 border border-dark-600 rounded-lg px-4 py-2 pr-8 text-white text-sm min-w-[250px] focus:outline-none focus:border-primary-500"
+              >
+                {cases.length === 0 ? (
+                  <option value="">ไม่พบคดี</option>
+                ) : (
+                  cases.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.case_number} - {c.title}
+                    </option>
+                  ))
+                )}
+              </select>
+              <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-400 pointer-events-none" />
             </div>
           </div>
-        ) : (
-          <svg className="w-full h-full min-h-[500px]" viewBox="0 0 800 500">
-            {edges.map(edge => {
-              const fromNode = nodes.find(n => n.id === edge.from_node_id);
-              const toNode = nodes.find(n => n.id === edge.to_node_id);
-              if (!fromNode || !toNode) return null;
-              return (
-                <line key={edge.id} x1={fromNode.x_position || 0} y1={fromNode.y_position || 0} x2={toNode.x_position || 0} y2={toNode.y_position || 0} stroke="#4B5563" strokeWidth={2} />
-              );
-            })}
-            {nodes.map(node => (
-              <g key={node.id}>
-                <circle cx={node.x_position || 100} cy={node.y_position || 100} r={20} fill={getNodeColor(node)} />
-                <text x={node.x_position || 100} y={(node.y_position || 100) + 35} textAnchor="middle" fill="white" fontSize="12">{node.label}</text>
-              </g>
-            ))}
-          </svg>
-        )}
-      </Card>
 
-      <div className="flex items-center gap-6 text-sm">
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: nodeTypeColors.suspect }} /><span>Suspect</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: nodeTypeColors.mule }} /><span>Mule</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: nodeTypeColors.victim }} /><span>Victim</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: nodeTypeColors.exchange }} /><span>Exchange</span></div>
+          {/* Actions */}
+          <Button 
+            variant="ghost" 
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+            Refresh
+          </Button>
+
+          <Button variant="ghost">
+            <Filter size={18} />
+            Filter
+          </Button>
+
+          <Button variant="ghost" onClick={handleExport}>
+            <Download size={18} />
+            Export
+          </Button>
+
+          <Button onClick={() => setShowAddNode(true)}>
+            <Plus size={18} />
+            Add Node
+          </Button>
+        </div>
       </div>
 
-      {nodes.length > 0 && (
-        <Card className="p-4">
-          <h3 className="font-semibold mb-4">Nodes ({nodes.length})</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {nodes.map(node => (
-              <div key={node.id} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: getNodeColor(node) }}>
-                    <User size={16} />
-                  </div>
-                  <div>
-                    <p className="font-medium">{node.label}</p>
-                    <p className="text-xs text-dark-400">{node.identifier || node.node_type}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {node.is_suspect && <Badge variant="danger">Suspect</Badge>}
-                  {node.is_victim && <Badge variant="success">Victim</Badge>}
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteNode(node.id)}><Trash2 size={14} className="text-red-400" /></Button>
-                </div>
-              </div>
-            ))}
+      {/* Main Content */}
+      <div className="flex-1 relative">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-dark-900/80 flex items-center justify-center z-10">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 size={40} className="text-primary-400 animate-spin" />
+              <span className="text-dark-300">กำลังโหลดข้อมูล...</span>
+            </div>
           </div>
-        </Card>
-      )}
+        )}
 
-      <Modal isOpen={showAddNodeModal} onClose={() => setShowAddNodeModal(false)} title="Add Node">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Type</label>
-            <select className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white" value={nodeForm.node_type} onChange={(e) => setNodeForm({ ...nodeForm, node_type: e.target.value })}>
-              <option value="bank_account">Bank Account</option>
-              <option value="person">Person</option>
-              <option value="crypto_wallet">Crypto Wallet</option>
-              <option value="exchange">Exchange</option>
-            </select>
+        {/* Error State */}
+        {error && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+            <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-2 text-red-400">
+              <AlertCircle size={16} />
+              {error}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Label *</label>
-            <Input value={nodeForm.label} onChange={(e) => setNodeForm({ ...nodeForm, label: e.target.value })} placeholder="Name or identifier" />
+        )}
+
+        {/* Empty State */}
+        {!isLoading && nodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <Network size={64} className="text-dark-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">
+                ยังไม่มีข้อมูล Money Flow
+              </h3>
+              <p className="text-dark-400 mb-4">
+                เริ่มต้นโดยการเพิ่ม Node แรกของคุณ
+              </p>
+              <Button onClick={() => setShowAddNode(true)}>
+                <Plus size={18} className="mr-2" />
+                Add First Node
+              </Button>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Identifier</label>
-            <Input value={nodeForm.identifier} onChange={(e) => setNodeForm({ ...nodeForm, identifier: e.target.value })} placeholder="Account number, etc." />
-          </div>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={nodeForm.is_suspect} onChange={(e) => setNodeForm({ ...nodeForm, is_suspect: e.target.checked })} className="rounded" />
-              <span className="text-sm">Suspect</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={nodeForm.is_victim} onChange={(e) => setNodeForm({ ...nodeForm, is_victim: e.target.checked })} className="rounded" />
-              <span className="text-sm">Victim</span>
-            </label>
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Button variant="ghost" className="flex-1" onClick={() => setShowAddNodeModal(false)}>Cancel</Button>
-            <Button className="flex-1" onClick={handleAddNode} disabled={saving || !nodeForm.label}>
-              {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}Add Node
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        )}
+
+        {/* Graph */}
+        {nodes.length > 0 && (
+          <MoneyFlowGraph
+            nodes={nodes}
+            edges={edges}
+            onRefresh={handleRefresh}
+          />
+        )}
+      </div>
+
+      {/* Add Node Modal */}
+      {showAddNode && selectedCaseId && (
+        <AddNodeModal
+          isOpen={showAddNode}
+          onClose={() => setShowAddNode(false)}
+          caseId={selectedCaseId}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 };
