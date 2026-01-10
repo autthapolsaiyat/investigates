@@ -212,7 +212,7 @@ export const SilkRoadDemo = () => {
               </h2>
               
               <div className="space-y-2">
-                {INVESTIGATION_STEPS.map((step, index) => (
+                {INVESTIGATION_STEPS.map((step, _index) => (
                   <button
                     key={step.id}
                     onClick={() => setActiveStep(step.id)}
