@@ -1,6 +1,6 @@
 /**
- * EvidenceManager V2 - ระบบจัดการหลักฐานสำหรับชั้นศาล
- * Features: Upload, SHA-256 Hash, Timestamp, Chain of Custody, Export PDF
+ * EvidenceManager V3 - ระบบจัดการหลักฐานสำหรับชั้นศาล
+ * Features: Upload, SHA-256 Hash, Court Report, Forensic Report
  */
 import { useState, useRef } from 'react';
 import {
@@ -18,8 +18,8 @@ import {
   X,
   Plus,
   Lock,
-
-  Printer
+  Printer,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -29,7 +29,7 @@ interface Evidence {
   fileName: string;
   fileType: string;
   fileSize: number;
-  fileData: string; // base64
+  fileData: string;
   sha256Hash: string;
   uploadedAt: string;
   uploadedBy: string;
@@ -87,6 +87,19 @@ const formatThaiDate = (dateStr: string): string => {
   return `${day} ${month} ${year} เวลา ${time}`;
 };
 
+// Format Thai date (short)
+const formatThaiDateShort = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const thaiMonths = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  ];
+  const day = date.getDate();
+  const month = thaiMonths[date.getMonth()];
+  const year = date.getFullYear() + 543;
+  return `${day} ${month} พ.ศ. ${year}`;
+};
+
 // Get file icon
 const getFileIcon = (fileType: string) => {
   if (fileType.startsWith('image/')) return Image;
@@ -103,7 +116,11 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string; thaiLabel:
   other: { label: 'อื่นๆ', color: 'bg-dark-500/20 text-dark-300', thaiLabel: 'อื่นๆ' }
 };
 
-// Generate Court Report HTML
+// ============================================
+// REPORT GENERATORS
+// ============================================
+
+// Generate Court Report HTML (รายงานหลักฐานดิจิทัล)
 const generateCourtReportHTML = (
   caseId: string,
   caseName: string,
@@ -138,137 +155,30 @@ const generateCourtReportHTML = (
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>รายงานหลักฐานดิจิทัล - ${caseId}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
-    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    body {
-      font-family: 'Sarabun', 'TH Sarabun New', sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
-      color: #333;
-      background: #fff;
-      padding: 20mm;
-    }
-    
-    .header {
-      text-align: center;
-      border-bottom: 3px double #333;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .header-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 5px;
-    }
-    
-    .header-subtitle {
-      font-size: 18px;
-      color: #555;
-    }
-    
-    .report-info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      padding: 15px;
-      background: #f5f5f5;
-      border-radius: 5px;
-    }
-    
+    body { font-family: 'Sarabun', sans-serif; font-size: 16px; line-height: 1.6; color: #333; background: #fff; padding: 20mm; }
+    .header { text-align: center; border-bottom: 3px double #333; padding-bottom: 20px; margin-bottom: 30px; }
+    .header-title { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+    .header-subtitle { font-size: 18px; color: #555; }
+    .report-info { display: flex; justify-content: space-between; margin-bottom: 30px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
     .report-info-item { text-align: center; }
     .report-info-label { font-size: 12px; color: #666; }
     .report-info-value { font-weight: 600; color: #333; }
-    
     .section { margin-bottom: 30px; }
-    
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1a5f7a;
-      border-bottom: 2px solid #1a5f7a;
-      padding-bottom: 5px;
-      margin-bottom: 15px;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    th {
-      background: #1a5f7a;
-      color: #fff;
-      padding: 12px;
-      text-align: left;
-      border: 1px solid #ddd;
-    }
-    
-    .hash-verification {
-      background: #e8f5e9;
-      border: 1px solid #4caf50;
-      border-radius: 5px;
-      padding: 15px;
-      margin-top: 30px;
-    }
-    
-    .hash-verification-title {
-      font-weight: 700;
-      color: #2e7d32;
-      margin-bottom: 10px;
-    }
-    
-    .signature-section {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 60px;
-    }
-    
-    .signature-box {
-      text-align: center;
-      width: 200px;
-    }
-    
-    .signature-line {
-      border-top: 1px solid #333;
-      margin-top: 60px;
-      padding-top: 5px;
-    }
-    
-    .disclaimer {
-      margin-top: 30px;
-      padding: 15px;
-      background: #f0f0f0;
-      border-radius: 5px;
-      font-size: 12px;
-      color: #666;
-    }
-    
-    .print-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 15px 30px;
-      font-size: 16px;
-      background: #1a5f7a;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    .print-btn:hover { background: #154d63; }
-    
-    @media print {
-      body { padding: 15mm; }
-      .print-btn { display: none; }
-    }
+    .section-title { font-size: 18px; font-weight: 700; color: #1a5f7a; border-bottom: 2px solid #1a5f7a; padding-bottom: 5px; margin-bottom: 15px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1a5f7a; color: #fff; padding: 12px; text-align: left; border: 1px solid #ddd; }
+    .hash-verification { background: #e8f5e9; border: 1px solid #4caf50; border-radius: 5px; padding: 15px; margin-top: 30px; }
+    .hash-verification-title { font-weight: 700; color: #2e7d32; margin-bottom: 10px; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 60px; }
+    .signature-box { text-align: center; width: 200px; }
+    .signature-line { border-top: 1px solid #333; margin-top: 60px; padding-top: 5px; }
+    .disclaimer { margin-top: 30px; padding: 15px; background: #f0f0f0; border-radius: 5px; font-size: 12px; color: #666; }
+    .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 15px 30px; font-size: 16px; background: #1a5f7a; color: #fff; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    @media print { body { padding: 15mm; } .print-btn { display: none; } }
   </style>
 </head>
 <body>
@@ -277,104 +187,227 @@ const generateCourtReportHTML = (
     <div class="header-title">รายงานหลักฐานดิจิทัล</div>
     <div class="header-subtitle">Digital Evidence Report</div>
   </div>
-
   <div class="report-info">
-    <div class="report-info-item">
-      <div class="report-info-label">เลขที่รายงาน</div>
-      <div class="report-info-value">${reportId}</div>
-    </div>
-    <div class="report-info-item">
-      <div class="report-info-label">เลขที่คดี</div>
-      <div class="report-info-value">${caseId}</div>
-    </div>
-    <div class="report-info-item">
-      <div class="report-info-label">วันที่จัดทำ</div>
-      <div class="report-info-value">${reportDate}</div>
-    </div>
-    <div class="report-info-item">
-      <div class="report-info-label">จำนวนหลักฐาน</div>
-      <div class="report-info-value">${evidence.length} รายการ</div>
-    </div>
+    <div class="report-info-item"><div class="report-info-label">เลขที่รายงาน</div><div class="report-info-value">${reportId}</div></div>
+    <div class="report-info-item"><div class="report-info-label">เลขที่คดี</div><div class="report-info-value">${caseId}</div></div>
+    <div class="report-info-item"><div class="report-info-label">วันที่จัดทำ</div><div class="report-info-value">${reportDate}</div></div>
+    <div class="report-info-item"><div class="report-info-label">จำนวนหลักฐาน</div><div class="report-info-value">${evidence.length} รายการ</div></div>
   </div>
-
   <div class="section">
     <div class="section-title">📋 ข้อมูลคดี</div>
     <table>
-      <tr>
-        <td style="width: 150px; padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">เลขที่คดี:</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${caseId}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">ชื่อคดี:</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${caseName}</td>
-      </tr>
-      <tr>
-        <td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">วันที่จัดทำรายงาน:</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${reportDate}</td>
-      </tr>
+      <tr><td style="width: 150px; padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">เลขที่คดี:</td><td style="padding: 10px; border: 1px solid #ddd;">${caseId}</td></tr>
+      <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">ชื่อคดี:</td><td style="padding: 10px; border: 1px solid #ddd;">${caseName}</td></tr>
+      <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">วันที่จัดทำรายงาน:</td><td style="padding: 10px; border: 1px solid #ddd;">${reportDate}</td></tr>
     </table>
   </div>
-
   <div class="section">
     <div class="section-title">📁 รายการหลักฐานดิจิทัล</div>
     <table>
-      <thead>
-        <tr>
-          <th style="width: 50px;">ลำดับ</th>
-          <th>ชื่อไฟล์ / คำอธิบาย</th>
-          <th style="width: 120px;">ประเภท</th>
-          <th style="width: 80px;">ขนาด</th>
-          <th style="width: 160px;">วันที่บันทึก</th>
-          <th style="width: 80px;">สถานะ</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${evidenceRows}
-      </tbody>
+      <thead><tr><th style="width: 50px;">ลำดับ</th><th>ชื่อไฟล์ / คำอธิบาย</th><th style="width: 120px;">ประเภท</th><th style="width: 80px;">ขนาด</th><th style="width: 160px;">วันที่บันทึก</th><th style="width: 80px;">สถานะ</th></tr></thead>
+      <tbody>${evidenceRows}</tbody>
     </table>
   </div>
-
   <div class="hash-verification">
     <div class="hash-verification-title">🔐 การรับรองความถูกต้องของหลักฐาน (Hash Verification)</div>
-    <div style="font-size: 14px; color: #333;">
-      หลักฐานทุกรายการในเอกสารนี้ได้รับการตรวจสอบด้วยอัลกอริทึม <strong>SHA-256</strong> (Secure Hash Algorithm 256-bit) 
-      ซึ่งเป็นมาตรฐานการเข้ารหัสที่ใช้ในระบบ Blockchain และได้รับการยอมรับในระดับสากล
-      <br><br>
-      <strong>วิธีตรวจสอบ:</strong> นำไฟล์หลักฐานต้นฉบับไปคำนวณค่า SHA-256 Hash 
-      หากได้ค่าตรงกับที่ระบุในเอกสาร แสดงว่าไฟล์ไม่ถูกแก้ไขหรือเปลี่ยนแปลงใดๆ
+    <div style="font-size: 14px;">หลักฐานทุกรายการได้รับการตรวจสอบด้วย <strong>SHA-256</strong> ซึ่งเป็นมาตรฐานที่ใช้ในระบบ Blockchain<br><br><strong>วิธีตรวจสอบ:</strong> นำไฟล์ต้นฉบับไปคำนวณ SHA-256 Hash หากตรงกัน แสดงว่าไฟล์ไม่ถูกแก้ไข</div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-box"><div class="signature-line">ผู้จัดทำรายงาน</div><div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div></div>
+    <div class="signature-box"><div class="signature-line">ผู้ตรวจสอบ</div><div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div></div>
+    <div class="signature-box"><div class="signature-line">ผู้อนุมัติ</div><div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div></div>
+  </div>
+  <div class="disclaimer"><strong>หมายเหตุ:</strong> เอกสารนี้จัดทำโดยระบบ InvestiGate Investigation Platform<br><strong>Report ID:</strong> ${reportId}</div>
+  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+</body>
+</html>`;
+};
+
+// Generate Forensic Report HTML (รายงานผลการตรวจพิสูจน์)
+const generateForensicReportHTML = (
+  caseId: string,
+  caseName: string,
+  evidence: Evidence[]
+): string => {
+  const reportDate = formatThaiDateShort(new Date().toISOString());
+  const reportNumber = `พฐ.${new Date().getFullYear() + 543}/${String(Date.now()).slice(-6)}`;
+
+  const evidenceRows = evidence.map((item, index) => `
+    <tr>
+      <td style="padding: 8px; border: 1px solid #333; text-align: center;">${index + 1}</td>
+      <td style="padding: 8px; border: 1px solid #333;">${item.fileName}<br><small style="color: #666;">${item.description || '-'}</small></td>
+      <td style="padding: 8px; border: 1px solid #333;">${CATEGORY_LABELS[item.category]?.thaiLabel || item.category}</td>
+      <td style="padding: 8px; border: 1px solid #333;">${formatFileSize(item.fileSize)}</td>
+      <td style="padding: 8px; border: 1px solid #333; font-family: monospace; font-size: 9px; word-break: break-all;">${item.sha256Hash}</td>
+    </tr>
+  `).join('');
+
+  const methods = [
+    'การตรวจสอบความถูกต้องของไฟล์ด้วย SHA-256 Hash Algorithm',
+    'การวิเคราะห์ธุรกรรม Blockchain ด้วยเครื่องมือ Chainalysis/Elliptic',
+    'การติดตามเส้นทางการเงิน (Fund Tracing)',
+    'การตรวจสอบข้อมูล KYC จาก Exchange',
+    'การจัดทำ Timeline เหตุการณ์'
+  ];
+
+  const tools = [
+    'Chainalysis Reactor - วิเคราะห์ธุรกรรม Blockchain',
+    'Blockchain Explorer - ตรวจสอบธุรกรรม',
+    'SHA-256 Hash Calculator - ตรวจสอบความถูกต้องของไฟล์',
+    'InvestiGate Platform - บริหารจัดการคดีและหลักฐาน'
+  ];
+
+  const findings = [
+    'ตรวจพบหลักฐานดิจิทัลที่เกี่ยวข้องกับคดีจำนวน ' + evidence.length + ' รายการ',
+    'หลักฐานทั้งหมดผ่านการตรวจสอบความถูกต้องด้วย SHA-256 Hash',
+    'สามารถใช้เป็นพยานหลักฐานในชั้นศาลได้',
+    'มีการบันทึก Chain of Custody อย่างครบถ้วน'
+  ];
+
+  return `
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>รายงานผลการตรวจพิสูจน์หลักฐาน - ${caseId}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Sarabun', sans-serif; font-size: 16px; line-height: 1.8; color: #333; background: #fff; padding: 15mm 20mm; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .header-logo { font-size: 50px; margin-bottom: 5px; }
+    .header-org { font-size: 18px; font-weight: 600; }
+    .header-unit { font-size: 14px; color: #555; }
+    .document-title { text-align: center; margin: 30px 0; padding: 15px; background: #1a5f7a; color: #fff; }
+    .document-title h1 { font-size: 22px; font-weight: 700; }
+    .document-title h2 { font-size: 16px; font-weight: 400; margin-top: 5px; }
+    .report-number { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 10px 15px; background: #f5f5f5; border-radius: 5px; }
+    .section { margin-bottom: 25px; }
+    .section-title { font-size: 16px; font-weight: 700; color: #1a5f7a; border-left: 4px solid #1a5f7a; padding-left: 10px; margin-bottom: 10px; }
+    .info-grid { display: grid; grid-template-columns: 180px 1fr; gap: 5px 15px; padding: 10px; background: #fafafa; border-radius: 5px; }
+    .info-label { font-weight: 600; color: #555; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: #1a5f7a; color: #fff; padding: 10px 8px; text-align: left; border: 1px solid #333; font-size: 14px; }
+    td { border: 1px solid #333; padding: 8px; font-size: 14px; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .list-section { padding: 10px 15px; background: #fafafa; border-radius: 5px; }
+    .list-section ul { margin-left: 20px; }
+    .list-section li { margin-bottom: 5px; }
+    .opinion-box { padding: 15px; background: #fff8e6; border: 2px solid #ffd700; border-radius: 5px; margin-top: 10px; }
+    .signature-section { margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .signature-box { text-align: center; padding: 20px; }
+    .signature-line { border-top: 1px solid #333; margin-top: 70px; padding-top: 5px; }
+    .signature-name { font-weight: 600; margin-top: 5px; }
+    .signature-position { font-size: 14px; color: #555; }
+    .stamp-area { width: 120px; height: 120px; border: 2px dashed #ccc; margin: 10px auto; display: flex; align-items: center; justify-content: center; color: #999; font-size: 11px; }
+    .hash-notice { background: #e8f5e9; border: 1px solid #4caf50; border-radius: 5px; padding: 10px 15px; margin-top: 15px; font-size: 13px; }
+    .footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+    .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 15px 30px; font-size: 16px; background: #1a5f7a; color: #fff; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    @media print { body { padding: 10mm; } .print-btn { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-logo">🔬</div>
+    <div class="header-org">กลุ่มงานตรวจพิสูจน์หลักฐานดิจิทัล</div>
+    <div class="header-unit">Digital Forensics Division</div>
+  </div>
+  <div class="document-title">
+    <h1>รายงานผลการตรวจพิสูจน์หลักฐานดิจิทัล</h1>
+    <h2>Digital Forensic Examination Report</h2>
+  </div>
+  <div class="report-number">
+    <div><strong>เลขที่รายงาน:</strong> ${reportNumber}</div>
+    <div><strong>วันที่รายงาน:</strong> ${reportDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. ข้อมูลคดี</div>
+    <div class="info-grid">
+      <div class="info-label">เลขที่คดี:</div><div>${caseId}</div>
+      <div class="info-label">ชื่อคดี:</div><div>${caseName}</div>
+      <div class="info-label">ประเภทคดี:</div><div>คดีอาญาเกี่ยวกับสินทรัพย์ดิจิทัล</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. ข้อมูลการส่งตรวจ</div>
+    <div class="info-grid">
+      <div class="info-label">ผู้ส่งตรวจ:</div><div>......................................</div>
+      <div class="info-label">หน่วยงาน:</div><div>......................................</div>
+      <div class="info-label">วันที่ส่งตรวจ:</div><div>......................................</div>
+      <div class="info-label">วันที่ตรวจเสร็จ:</div><div>${reportDate}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. วัตถุพยาน/หลักฐานที่ส่งตรวจ</div>
+    <table>
+      <thead><tr><th style="width: 40px;">ลำดับ</th><th>รายการ</th><th style="width: 120px;">ประเภท</th><th style="width: 80px;">ขนาด</th><th style="width: 200px;">SHA-256 Hash</th></tr></thead>
+      <tbody>${evidenceRows}</tbody>
+    </table>
+    <div class="hash-notice"><strong>🔐 หมายเหตุ:</strong> ค่า SHA-256 Hash ใช้ยืนยันว่าไฟล์ไม่ถูกแก้ไข</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">4. วิธีการตรวจพิสูจน์</div>
+    <div class="list-section">
+      <p><strong>4.1 วิธีการที่ใช้:</strong></p>
+      <ul>${methods.map(m => `<li>${m}</li>`).join('')}</ul>
+      <br>
+      <p><strong>4.2 เครื่องมือที่ใช้:</strong></p>
+      <ul>${tools.map(t => `<li>${t}</li>`).join('')}</ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">5. ผลการตรวจพิสูจน์</div>
+    <div class="list-section">
+      <ul>${findings.map(f => `<li>${f}</li>`).join('')}</ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">6. ความเห็นของผู้ตรวจพิสูจน์</div>
+    <div class="opinion-box">
+      จากการตรวจพิสูจน์หลักฐานดิจิทัลดังกล่าวข้างต้น พบว่าหลักฐานทั้งหมดได้รับการจัดเก็บอย่างถูกต้องตามหลัก Chain of Custody 
+      และผ่านการตรวจสอบความถูกต้องด้วย Cryptographic Hash Function สามารถใช้เป็นพยานหลักฐานในชั้นศาลได้
     </div>
   </div>
 
   <div class="signature-section">
     <div class="signature-box">
-      <div class="signature-line">ผู้จัดทำรายงาน</div>
-      <div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div>
+      <div class="stamp-area">ประทับตรา<br>หน่วยงาน</div>
+      <div class="signature-line">ผู้ตรวจพิสูจน์</div>
+      <div class="signature-name">(......................................)</div>
+      <div class="signature-position">นักวิทยาศาสตร์ (พิสูจน์หลักฐานดิจิทัล)</div>
     </div>
     <div class="signature-box">
-      <div class="signature-line">ผู้ตรวจสอบ</div>
-      <div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">ผู้อนุมัติ</div>
-      <div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div>
+      <div class="stamp-area">ประทับตรา<br>ผู้บังคับบัญชา</div>
+      <div class="signature-line">หัวหน้ากลุ่มงาน</div>
+      <div class="signature-name">(......................................)</div>
+      <div class="signature-position">หัวหน้ากลุ่มงานตรวจพิสูจน์หลักฐานดิจิทัล</div>
     </div>
   </div>
 
-  <div class="disclaimer">
-    <strong>หมายเหตุ:</strong> เอกสารฉบับนี้จัดทำขึ้นโดยระบบ InvestiGate Investigation Platform 
-    ข้อมูลหลักฐานดิจิทัลทั้งหมดได้รับการบันทึกและตรวจสอบด้วยเทคโนโลยี Cryptographic Hash Function 
-    เพื่อรับรองความถูกต้องและความน่าเชื่อถือของหลักฐาน สามารถใช้อ้างอิงในกระบวนการทางกฎหมายได้
-    <br><br>
-    <strong>Report ID:</strong> ${reportId}
+  <div class="footer">
+    <p><strong>หมายเหตุ:</strong></p>
+    <ol style="margin-left: 20px; font-size: 13px;">
+      <li>รายงานนี้จัดทำตามหลักวิชาการด้านนิติวิทยาศาสตร์ดิจิทัล (Digital Forensics)</li>
+      <li>หลักฐานทั้งหมดได้รับการจัดเก็บตามหลัก Chain of Custody</li>
+      <li>ผลการตรวจพิสูจน์นี้เป็นความเห็นทางวิชาการ การวินิจฉัยทางกฎหมายขึ้นอยู่กับดุลพินิจของศาล</li>
+    </ol>
+    <p style="margin-top: 15px; text-align: center;"><strong>เลขที่รายงาน:</strong> ${reportNumber} | <strong>จัดทำโดย:</strong> InvestiGate Platform</p>
   </div>
 
-  <button class="print-btn" onclick="window.print()">
-    🖨️ พิมพ์ / บันทึก PDF
-  </button>
+  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
 </body>
-</html>
-`;
+</html>`;
 };
+
+// ============================================
+// EVIDENCE MANAGER COMPONENT
+// ============================================
 
 export const EvidenceManager = ({ 
   caseId = 'CASE-DEMO', 
@@ -392,6 +425,7 @@ export const EvidenceManager = ({
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingFileData, setPendingFileData] = useState<string | null>(null);
   const [pendingHash, setPendingHash] = useState<string | null>(null);
+  const [showReportMenu, setShowReportMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle file selection
@@ -433,7 +467,6 @@ export const EvidenceManager = ({
     }
   };
 
-  // Confirm upload
   const handleConfirmUpload = () => {
     if (!pendingFile || !pendingFileData || !pendingHash) return;
 
@@ -462,24 +495,18 @@ export const EvidenceManager = ({
     setUploadCategory('screenshot');
     setShowUploadModal(false);
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Cancel upload
   const handleCancelUpload = () => {
     setPendingFile(null);
     setPendingFileData(null);
     setPendingHash(null);
     setUploadDescription('');
     setShowUploadModal(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Delete evidence
   const handleDelete = (id: string) => {
     if (!confirm('ต้องการลบหลักฐานนี้หรือไม่?')) return;
     const updatedList = evidenceList.filter(e => e.id !== id);
@@ -487,13 +514,11 @@ export const EvidenceManager = ({
     onEvidenceChange?.(updatedList);
   };
 
-  // Preview evidence
   const handlePreview = (evidence: Evidence) => {
     setSelectedEvidence(evidence);
     setShowPreviewModal(true);
   };
 
-  // Download evidence
   const handleDownload = (evidence: Evidence) => {
     const link = document.createElement('a');
     link.href = evidence.fileData;
@@ -503,14 +528,26 @@ export const EvidenceManager = ({
     document.body.removeChild(link);
   };
 
-  // Export PDF Court Report
-  const handleExportPDF = () => {
+  // Export Court Report
+  const handleExportCourtReport = () => {
     const html = generateCourtReportHTML(caseId, caseName, evidenceList);
     const newWindow = window.open('', '_blank');
     if (newWindow) {
       newWindow.document.write(html);
       newWindow.document.close();
     }
+    setShowReportMenu(false);
+  };
+
+  // Export Forensic Report
+  const handleExportForensicReport = () => {
+    const html = generateForensicReportHTML(caseId, caseName, evidenceList);
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(html);
+      newWindow.document.close();
+    }
+    setShowReportMenu(false);
   };
 
   return (
@@ -530,10 +567,42 @@ export const EvidenceManager = ({
 
           <div className="flex items-center gap-2">
             {evidenceList.length > 0 && (
-              <Button variant="ghost" onClick={handleExportPDF} className="text-sm">
-                <Printer size={14} className="mr-1" />
-                พิมพ์รายงานศาล
-              </Button>
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowReportMenu(!showReportMenu)} 
+                  className="text-sm"
+                >
+                  <Printer size={14} className="mr-1" />
+                  พิมพ์รายงาน
+                  <ChevronDown size={14} className="ml-1" />
+                </Button>
+                
+                {showReportMenu && (
+                  <div className="absolute right-0 mt-2 w-64 bg-dark-700 border border-dark-600 rounded-lg shadow-xl z-50">
+                    <button
+                      onClick={handleExportCourtReport}
+                      className="w-full px-4 py-3 text-left hover:bg-dark-600 flex items-start gap-3 border-b border-dark-600"
+                    >
+                      <span className="text-2xl">⚖️</span>
+                      <div>
+                        <div className="text-white font-medium">รายงานหลักฐานดิจิทัล</div>
+                        <div className="text-xs text-dark-400">สำหรับยื่นศาล</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={handleExportForensicReport}
+                      className="w-full px-4 py-3 text-left hover:bg-dark-600 flex items-start gap-3"
+                    >
+                      <span className="text-2xl">🔬</span>
+                      <div>
+                        <div className="text-white font-medium">รายงานผลการตรวจพิสูจน์</div>
+                        <div className="text-xs text-dark-400">สำหรับพนักงานสอบสวน</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
             {!readOnly && (
               <>
@@ -551,15 +620,9 @@ export const EvidenceManager = ({
                   className="text-sm"
                 >
                   {isUploading ? (
-                    <>
-                      <span className="animate-spin mr-1">⏳</span>
-                      กำลังประมวลผล...
-                    </>
+                    <><span className="animate-spin mr-1">⏳</span>กำลังประมวลผล...</>
                   ) : (
-                    <>
-                      <Plus size={14} className="mr-1" />
-                      เพิ่มหลักฐาน
-                    </>
+                    <><Plus size={14} className="mr-1" />เพิ่มหลักฐาน</>
                   )}
                 </Button>
               </>
@@ -576,9 +639,7 @@ export const EvidenceManager = ({
               <Upload size={24} className="text-dark-500" />
             </div>
             <div className="text-dark-400 mb-2">ยังไม่มีหลักฐาน</div>
-            <div className="text-xs text-dark-500">
-              กด "เพิ่มหลักฐาน" เพื่อ Upload ไฟล์ (PNG, JPG, PDF)
-            </div>
+            <div className="text-xs text-dark-500">กด "เพิ่มหลักฐาน" เพื่อ Upload ไฟล์ (PNG, JPG, PDF)</div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -587,87 +648,45 @@ export const EvidenceManager = ({
               const categoryInfo = CATEGORY_LABELS[evidence.category];
               
               return (
-                <div
-                  key={evidence.id}
-                  className="bg-dark-900 rounded-lg border border-dark-700 p-4 hover:border-dark-600 transition-colors"
-                >
+                <div key={evidence.id} className="bg-dark-900 rounded-lg border border-dark-700 p-4 hover:border-dark-600 transition-colors">
                   <div className="flex items-start gap-4">
-                    {/* Thumbnail */}
                     <div className="w-16 h-16 bg-dark-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {evidence.fileType.startsWith('image/') ? (
-                        <img 
-                          src={evidence.fileData} 
-                          alt={evidence.fileName}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                        <img src={evidence.fileData} alt={evidence.fileName} className="w-full h-full object-cover rounded-lg" />
                       ) : (
                         <FileIcon size={24} className="text-dark-400" />
                       )}
                     </div>
-
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-white font-medium truncate">{evidence.fileName}</span>
-                        <span className={`px-2 py-0.5 rounded text-xs ${categoryInfo.color}`}>
-                          {categoryInfo.label}
-                        </span>
+                        <span className={`px-2 py-0.5 rounded text-xs ${categoryInfo.color}`}>{categoryInfo.label}</span>
                         {evidence.verified && (
                           <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400 flex items-center gap-1">
-                            <CheckCircle size={10} />
-                            Verified
+                            <CheckCircle size={10} />Verified
                           </span>
                         )}
                       </div>
-                      
                       <p className="text-sm text-dark-400 mb-2 truncate">{evidence.description}</p>
-
                       <div className="flex flex-wrap items-center gap-3 text-xs text-dark-500">
-                        <span className="flex items-center gap-1">
-                          <File size={10} />
-                          {formatFileSize(evidence.fileSize)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock size={10} />
-                          {formatDate(evidence.uploadedAt)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <User size={10} />
-                          {evidence.uploadedBy}
-                        </span>
+                        <span className="flex items-center gap-1"><File size={10} />{formatFileSize(evidence.fileSize)}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} />{formatDate(evidence.uploadedAt)}</span>
+                        <span className="flex items-center gap-1"><User size={10} />{evidence.uploadedBy}</span>
                       </div>
-
-                      {/* Hash */}
                       <div className="mt-2 p-2 bg-dark-800 rounded flex items-center gap-2">
                         <Lock size={12} className="text-amber-400 flex-shrink-0" />
-                        <code className="text-xs text-amber-400 font-mono truncate">
-                          SHA-256: {evidence.sha256Hash}
-                        </code>
+                        <code className="text-xs text-amber-400 font-mono truncate">SHA-256: {evidence.sha256Hash}</code>
                       </div>
                     </div>
-
-                    {/* Actions */}
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handlePreview(evidence)}
-                        className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
-                        title="ดูตัวอย่าง"
-                      >
+                      <button onClick={() => handlePreview(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="ดูตัวอย่าง">
                         <Eye size={16} className="text-dark-400" />
                       </button>
-                      <button
-                        onClick={() => handleDownload(evidence)}
-                        className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
-                        title="ดาวน์โหลด"
-                      >
+                      <button onClick={() => handleDownload(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="ดาวน์โหลด">
                         <Download size={16} className="text-dark-400" />
                       </button>
                       {!readOnly && (
-                        <button
-                          onClick={() => handleDelete(evidence.id)}
-                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                          title="ลบ"
-                        >
+                        <button onClick={() => handleDelete(evidence.id)} className="p-2 hover:bg-red-500/20 rounded-lg transition-colors" title="ลบ">
                           <Trash2 size={16} className="text-red-400" />
                         </button>
                       )}
@@ -687,9 +706,7 @@ export const EvidenceManager = ({
             <Shield size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
             <div>
               <div className="text-sm font-medium text-green-400">พร้อมใช้ในชั้นศาล</div>
-              <div className="text-xs text-dark-300 mt-1">
-                หลักฐานทุกชิ้นถูกตรวจสอบด้วย SHA-256 Hash พร้อม Timestamp และ Chain of Custody
-              </div>
+              <div className="text-xs text-dark-300 mt-1">หลักฐานทุกชิ้นถูกตรวจสอบด้วย SHA-256 Hash พร้อม Timestamp และ Chain of Custody</div>
             </div>
           </div>
         </div>
@@ -701,28 +718,17 @@ export const EvidenceManager = ({
           <div className="bg-dark-800 rounded-xl border border-dark-700 p-6 w-[500px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Upload size={20} className="text-primary-400" />
-                เพิ่มหลักฐาน
+                <Upload size={20} className="text-primary-400" />เพิ่มหลักฐาน
               </h3>
-              <button onClick={handleCancelUpload} className="p-1 hover:bg-dark-700 rounded">
-                <X size={18} className="text-dark-400" />
-              </button>
+              <button onClick={handleCancelUpload} className="p-1 hover:bg-dark-700 rounded"><X size={18} className="text-dark-400" /></button>
             </div>
-
-            {/* File Preview */}
             <div className="mb-4">
               <div className="bg-dark-900 rounded-lg p-4 border border-dark-700">
                 <div className="flex items-center gap-3 mb-3">
                   {pendingFile.type.startsWith('image/') && pendingFileData ? (
-                    <img 
-                      src={pendingFileData} 
-                      alt="Preview" 
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
+                    <img src={pendingFileData} alt="Preview" className="w-20 h-20 object-cover rounded-lg" />
                   ) : (
-                    <div className="w-20 h-20 bg-dark-800 rounded-lg flex items-center justify-center">
-                      <FileText size={32} className="text-dark-400" />
-                    </div>
+                    <div className="w-20 h-20 bg-dark-800 rounded-lg flex items-center justify-center"><FileText size={32} className="text-dark-400" /></div>
                   )}
                   <div>
                     <div className="text-white font-medium">{pendingFile.name}</div>
@@ -730,29 +736,19 @@ export const EvidenceManager = ({
                     <div className="text-xs text-dark-500">{pendingFile.type}</div>
                   </div>
                 </div>
-
-                {/* Hash */}
                 <div className="p-3 bg-dark-800 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <Lock size={14} className="text-green-400" />
                     <span className="text-xs text-dark-400">SHA-256 Hash (คำนวณอัตโนมัติ)</span>
                   </div>
-                  <code className="text-xs text-green-400 font-mono break-all">
-                    {pendingHash}
-                  </code>
+                  <code className="text-xs text-green-400 font-mono break-all">{pendingHash}</code>
                 </div>
               </div>
             </div>
-
-            {/* Form */}
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-dark-400 mb-1 block">หมวดหมู่:</label>
-                <select
-                  value={uploadCategory}
-                  onChange={(e) => setUploadCategory(e.target.value as Evidence['category'])}
-                  className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white"
-                >
+                <select value={uploadCategory} onChange={(e) => setUploadCategory(e.target.value as Evidence['category'])} className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white">
                   <option value="screenshot">📸 Screenshot</option>
                   <option value="blockchain">⛓️ Blockchain Transaction</option>
                   <option value="document">📄 เอกสาร</option>
@@ -760,19 +756,10 @@ export const EvidenceManager = ({
                   <option value="other">📁 อื่นๆ</option>
                 </select>
               </div>
-
               <div>
                 <label className="text-sm text-dark-400 mb-1 block">คำอธิบาย:</label>
-                <textarea
-                  value={uploadDescription}
-                  onChange={(e) => setUploadDescription(e.target.value)}
-                  placeholder="อธิบายหลักฐานนี้..."
-                  rows={3}
-                  className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none"
-                />
+                <textarea value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} placeholder="อธิบายหลักฐานนี้..." rows={3} className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none" />
               </div>
-
-              {/* Metadata */}
               <div className="p-3 bg-dark-900 rounded-lg">
                 <div className="text-xs text-dark-400 mb-2">ข้อมูลที่จะบันทึก:</div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -782,15 +769,9 @@ export const EvidenceManager = ({
                   <div><span className="text-dark-500">สถานะ:</span> <span className="text-green-400">Verified ✓</span></div>
                 </div>
               </div>
-
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={handleCancelUpload} className="flex-1">
-                  ยกเลิก
-                </Button>
-                <Button variant="primary" onClick={handleConfirmUpload} className="flex-1">
-                  <CheckCircle size={14} className="mr-1" />
-                  บันทึกหลักฐาน
-                </Button>
+                <Button variant="ghost" onClick={handleCancelUpload} className="flex-1">ยกเลิก</Button>
+                <Button variant="primary" onClick={handleConfirmUpload} className="flex-1"><CheckCircle size={14} className="mr-1" />บันทึกหลักฐาน</Button>
               </div>
             </div>
           </div>
@@ -801,77 +782,38 @@ export const EvidenceManager = ({
       {showPreviewModal && selectedEvidence && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-dark-800 rounded-xl border border-dark-700 w-[900px] max-h-[90vh] overflow-hidden">
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-dark-700">
               <div className="flex items-center gap-3">
                 <Shield size={20} className="text-green-400" />
                 <div>
                   <div className="text-white font-medium">{selectedEvidence.fileName}</div>
-                  <div className="text-xs text-dark-400">
-                    {formatDate(selectedEvidence.uploadedAt)} • {selectedEvidence.uploadedBy}
-                  </div>
+                  <div className="text-xs text-dark-400">{formatDate(selectedEvidence.uploadedAt)} • {selectedEvidence.uploadedBy}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={() => handleDownload(selectedEvidence)}>
-                  <Download size={14} className="mr-1" />
-                  ดาวน์โหลด
-                </Button>
-                <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-dark-700 rounded">
-                  <X size={18} className="text-dark-400" />
-                </button>
+                <Button variant="ghost" onClick={() => handleDownload(selectedEvidence)}><Download size={14} className="mr-1" />ดาวน์โหลด</Button>
+                <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-dark-700 rounded"><X size={18} className="text-dark-400" /></button>
               </div>
             </div>
-
-            {/* Preview Content */}
             <div className="p-4 max-h-[60vh] overflow-auto bg-dark-900">
               {selectedEvidence.fileType.startsWith('image/') ? (
-                <img 
-                  src={selectedEvidence.fileData} 
-                  alt={selectedEvidence.fileName}
-                  className="max-w-full mx-auto rounded-lg"
-                />
+                <img src={selectedEvidence.fileData} alt={selectedEvidence.fileName} className="max-w-full mx-auto rounded-lg" />
               ) : selectedEvidence.fileType === 'application/pdf' ? (
-                <iframe
-                  src={selectedEvidence.fileData}
-                  className="w-full h-[500px] rounded-lg"
-                  title={selectedEvidence.fileName}
-                />
+                <iframe src={selectedEvidence.fileData} className="w-full h-[500px] rounded-lg" title={selectedEvidence.fileName} />
               ) : (
-                <div className="text-center py-12 text-dark-400">
-                  ไม่สามารถแสดงตัวอย่างไฟล์นี้ได้
-                </div>
+                <div className="text-center py-12 text-dark-400">ไม่สามารถแสดงตัวอย่างไฟล์นี้ได้</div>
               )}
             </div>
-
-            {/* Metadata Footer */}
             <div className="p-4 border-t border-dark-700 bg-dark-800">
               <div className="grid grid-cols-4 gap-4 text-sm">
-                <div>
-                  <div className="text-xs text-dark-400">ID</div>
-                  <div className="text-white font-mono text-xs">{selectedEvidence.id}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-dark-400">ขนาดไฟล์</div>
-                  <div className="text-white">{formatFileSize(selectedEvidence.fileSize)}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-dark-400">หมวดหมู่</div>
-                  <div className="text-white">{CATEGORY_LABELS[selectedEvidence.category].label}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-dark-400">สถานะ</div>
-                  <div className="text-green-400 flex items-center gap-1">
-                    <CheckCircle size={12} />
-                    Verified
-                  </div>
-                </div>
+                <div><div className="text-xs text-dark-400">ID</div><div className="text-white font-mono text-xs">{selectedEvidence.id}</div></div>
+                <div><div className="text-xs text-dark-400">ขนาดไฟล์</div><div className="text-white">{formatFileSize(selectedEvidence.fileSize)}</div></div>
+                <div><div className="text-xs text-dark-400">หมวดหมู่</div><div className="text-white">{CATEGORY_LABELS[selectedEvidence.category].label}</div></div>
+                <div><div className="text-xs text-dark-400">สถานะ</div><div className="text-green-400 flex items-center gap-1"><CheckCircle size={12} />Verified</div></div>
               </div>
               <div className="mt-3 p-2 bg-dark-900 rounded flex items-center gap-2">
                 <Lock size={12} className="text-amber-400 flex-shrink-0" />
-                <code className="text-xs text-amber-400 font-mono truncate">
-                  SHA-256: {selectedEvidence.sha256Hash}
-                </code>
+                <code className="text-xs text-amber-400 font-mono truncate">SHA-256: {selectedEvidence.sha256Hash}</code>
               </div>
             </div>
           </div>
