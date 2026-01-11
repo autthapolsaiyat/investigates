@@ -256,22 +256,6 @@ export const EvidenceManager = ({
   };
 
   // Verify hash
-  const _verifyHash = async (evidence: Evidence): Promise<boolean> => {
-    try {
-      // Convert base64 to ArrayBuffer
-      const base64Data = evidence.fileData.split(',')[1];
-      const binaryString = atob(base64Data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      const calculatedHash = await calculateSHA256(bytes.buffer);
-      return calculatedHash === evidence.sha256Hash;
-    } catch {
-      return false;
-    }
-  };
 
   return (
     <div className="bg-dark-800 rounded-xl border border-dark-700">
