@@ -1,8 +1,9 @@
 /**
- * SilkRoadDemo - Investigation Flow Demo
- * แสดงขั้นตอนการสืบสวนคดี Silk Road
+ * SilkRoadDemo V2 - Complete Investigation Demo
+ * Features: Export PDF, Save to Case, Link to Money Flow, Evidence Attachments
  */
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   ArrowRight,
@@ -18,7 +19,16 @@ import {
   ExternalLink,
   Copy,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Download,
+  Save,
+  Share2,
+  Image,
+  Plus,
+  X,
+  FileDown,
+  FolderPlus,
+  LinkIcon
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -121,7 +131,7 @@ const INVESTIGATION_STEPS = [
   }
 ];
 
-// KYC Information (Mock - based on real case)
+// KYC Information
 const KYC_INFO = {
   individual_x: {
     realName: 'James Zhong',
@@ -150,13 +160,24 @@ const KYC_INFO = {
 const WALLETS = {
   silkroad_hacked: '1HQ3Go3ggs8pFnXuHVHRytPCq5fGG8Hbhx',
   fbi_current: 'bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6',
-  zhong_seized: '(หลายกระเป๋า - ยึดจากบ้าน)'
 };
 
 export const SilkRoadDemo = () => {
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState<number>(1);
   const [showKYC, setShowKYC] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [evidenceFiles, setEvidenceFiles] = useState<string[]>([
+    'blockchain_transaction_1HQ3.png',
+    'chainalysis_report.pdf',
+    'court_filing_2020.pdf'
+  ]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const copyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -166,18 +187,80 @@ export const SilkRoadDemo = () => {
 
   const currentStep = INVESTIGATION_STEPS.find(s => s.id === activeStep);
 
+  // Export to PDF
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    // Simulate PDF generation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsExporting(false);
+    setExportSuccess(true);
+    setTimeout(() => {
+      setExportSuccess(false);
+      setShowExportModal(false);
+    }, 2000);
+  };
+
+  // Save to Case
+  const handleSaveToCase = async () => {
+    setIsSaving(true);
+    // Simulate saving
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => {
+      setSaveSuccess(false);
+      setShowSaveModal(false);
+    }, 2000);
+  };
+
+  // Navigate to Money Flow
+  const handleLinkToMoneyFlow = () => {
+    // Navigate to Money Flow with wallet pre-loaded
+    navigate('/money-flow');
+  };
+
   return (
     <div className="min-h-screen bg-dark-900 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header with Actions */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="text-red-400" size={24} />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="text-red-400" size={24} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">คดี Silk Road</h1>
+                <p className="text-dark-400">การยึด Bitcoin มูลค่า $6.5 Billion - ใหญ่ที่สุดในประวัติศาสตร์</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">คดี Silk Road</h1>
-              <p className="text-dark-400">การยึด Bitcoin มูลค่า $6.5 Billion - ใหญ่ที่สุดในประวัติศาสตร์</p>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowExportModal(true)}
+                className="flex items-center gap-2"
+              >
+                <FileDown size={16} />
+                Export PDF
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setShowSaveModal(true)}
+                className="flex items-center gap-2"
+              >
+                <FolderPlus size={16} />
+                Save to Case
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleLinkToMoneyFlow}
+                className="flex items-center gap-2"
+              >
+                <LinkIcon size={16} />
+                เปิดใน Money Flow
+              </Button>
             </div>
           </div>
           
@@ -203,8 +286,9 @@ export const SilkRoadDemo = () => {
         </div>
 
         <div className="grid grid-cols-3 gap-6">
-          {/* Timeline */}
-          <div className="col-span-1">
+          {/* Left Column - Timeline & Wallets */}
+          <div className="col-span-1 space-y-4">
+            {/* Timeline */}
             <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Clock size={18} className="text-primary-400" />
@@ -212,7 +296,7 @@ export const SilkRoadDemo = () => {
               </h2>
               
               <div className="space-y-2">
-                {INVESTIGATION_STEPS.map((step, _index) => (
+                {INVESTIGATION_STEPS.map((step) => (
                   <button
                     key={step.id}
                     onClick={() => setActiveStep(step.id)}
@@ -243,7 +327,7 @@ export const SilkRoadDemo = () => {
             </div>
 
             {/* Wallet Addresses */}
-            <div className="bg-dark-800 rounded-xl border border-dark-700 p-4 mt-4">
+            <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Wallet size={18} className="text-amber-400" />
                 กระเป๋าที่เกี่ยวข้อง
@@ -303,6 +387,31 @@ export const SilkRoadDemo = () => {
                     </a>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Evidence Files */}
+            <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Image size={18} className="text-green-400" />
+                  หลักฐานแนบ
+                </h2>
+                <button className="p-1 hover:bg-dark-700 rounded text-primary-400">
+                  <Plus size={16} />
+                </button>
+              </div>
+              
+              <div className="space-y-2">
+                {evidenceFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-dark-900 rounded-lg">
+                    <FileText size={14} className="text-dark-400" />
+                    <span className="text-xs text-dark-300 flex-1 truncate">{file}</span>
+                    <button className="p-1 hover:bg-dark-700 rounded">
+                      <Download size={12} className="text-dark-400" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -583,6 +692,146 @@ export const SilkRoadDemo = () => {
           </div>
         </div>
       </div>
+
+      {/* Export PDF Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-dark-800 rounded-xl border border-dark-700 p-6 w-[500px]">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FileDown size={20} className="text-primary-400" />
+                Export รายงาน PDF
+              </h3>
+              <button onClick={() => setShowExportModal(false)} className="p-1 hover:bg-dark-700 rounded">
+                <X size={18} className="text-dark-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-dark-900 rounded-lg">
+                <h4 className="text-sm font-medium text-white mb-2">เนื้อหาที่จะรวม:</h4>
+                <div className="space-y-2">
+                  {['สรุปคดี (Stats)', 'Timeline การสืบสวน', 'Wallet Addresses', 'ข้อมูล KYC', 'เส้นทางเงิน (Flow)', 'หลักฐานแนบ'].map((item, i) => (
+                    <label key={i} className="flex items-center gap-2 text-sm text-dark-300">
+                      <input type="checkbox" defaultChecked className="rounded" />
+                      {item}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 bg-dark-900 rounded-lg">
+                <h4 className="text-sm font-medium text-white mb-2">รูปแบบ:</h4>
+                <select className="w-full bg-dark-800 border border-dark-600 rounded-lg p-2 text-white text-sm">
+                  <option>รายงานสำหรับศาล (Court Report)</option>
+                  <option>รายงานสรุป (Executive Summary)</option>
+                  <option>รายงานฉบับเต็ม (Full Report)</option>
+                </select>
+              </div>
+
+              {exportSuccess ? (
+                <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+                  <CheckCircle size={32} className="text-green-400 mx-auto mb-2" />
+                  <div className="text-green-400 font-semibold">Export สำเร็จ!</div>
+                  <div className="text-sm text-dark-300">ไฟล์กำลังดาวน์โหลด...</div>
+                </div>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      กำลังสร้าง PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={16} className="mr-2" />
+                      ดาวน์โหลด PDF
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save to Case Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-dark-800 rounded-xl border border-dark-700 p-6 w-[500px]">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FolderPlus size={20} className="text-primary-400" />
+                บันทึกลงคดี
+              </h3>
+              <button onClick={() => setShowSaveModal(false)} className="p-1 hover:bg-dark-700 rounded">
+                <X size={18} className="text-dark-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-dark-400 mb-1 block">เลือกคดี:</label>
+                <select className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white">
+                  <option>➕ สร้างคดีใหม่</option>
+                  <option>CASE-20260110-6A7EF6 - คดีทดสอบ Crypto</option>
+                  <option>CASE-20260109-ABC123 - คดีฟอกเงิน</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm text-dark-400 mb-1 block">ชื่อคดีใหม่:</label>
+                <input 
+                  type="text" 
+                  defaultValue="คดี Silk Road - US Government Seizure"
+                  className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-dark-400 mb-1 block">หมายเหตุ:</label>
+                <textarea 
+                  rows={3}
+                  placeholder="รายละเอียดเพิ่มเติม..."
+                  className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none"
+                />
+              </div>
+
+              {saveSuccess ? (
+                <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+                  <CheckCircle size={32} className="text-green-400 mx-auto mb-2" />
+                  <div className="text-green-400 font-semibold">บันทึกสำเร็จ!</div>
+                  <div className="text-sm text-dark-300">ข้อมูลถูกบันทึกลงคดีแล้ว</div>
+                </div>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleSaveToCase}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      กำลังบันทึก...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} className="mr-2" />
+                      บันทึกลงคดี
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
