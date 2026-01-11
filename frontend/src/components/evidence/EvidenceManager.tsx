@@ -15,13 +15,13 @@ import {
   CheckCircle,
   Clock,
   User,
-  Hash,
+
   X,
   Plus,
-  AlertTriangle,
+
   Lock,
   FileDown,
-  Maximize2
+
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -256,7 +256,7 @@ export const EvidenceManager = ({
   };
 
   // Verify hash
-  const verifyHash = async (evidence: Evidence): Promise<boolean> => {
+  const _verifyHash = async (evidence: Evidence): Promise<boolean> => {
     try {
       // Convert base64 to ArrayBuffer
       const base64Data = evidence.fileData.split(',')[1];
