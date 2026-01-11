@@ -22,7 +22,7 @@ import {
   ChevronUp,
   Download,
   Save,
-  Share2,
+
   Image,
   Plus,
   X,
@@ -169,7 +169,7 @@ export const SilkRoadDemo = () => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [evidenceFiles, setEvidenceFiles] = useState<string[]>([
+  const [evidenceFiles, _setEvidenceFiles] = useState<string[]>([
     'blockchain_transaction_1HQ3.png',
     'chainalysis_report.pdf',
     'court_filing_2020.pdf'
