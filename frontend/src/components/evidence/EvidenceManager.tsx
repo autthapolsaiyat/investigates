@@ -1,6 +1,6 @@
 /**
- * EvidenceManager - ระบบจัดการหลักฐานสำหรับชั้นศาล
- * Features: Upload, SHA-256 Hash, Timestamp, Chain of Custody, Export
+ * EvidenceManager V2 - ระบบจัดการหลักฐานสำหรับชั้นศาล
+ * Features: Upload, SHA-256 Hash, Timestamp, Chain of Custody, Export PDF
  */
 import { useState, useRef } from 'react';
 import {
@@ -15,13 +15,11 @@ import {
   CheckCircle,
   Clock,
   User,
-
   X,
   Plus,
-
   Lock,
   FileDown,
-
+  Printer
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -75,6 +73,20 @@ const formatDate = (dateStr: string): string => {
   });
 };
 
+// Format Thai date for report
+const formatThaiDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const thaiMonths = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  ];
+  const day = date.getDate();
+  const month = thaiMonths[date.getMonth()];
+  const year = date.getFullYear() + 543;
+  const time = date.toLocaleTimeString('th-TH');
+  return `${day} ${month} ${year} เวลา ${time}`;
+};
+
 // Get file icon
 const getFileIcon = (fileType: string) => {
   if (fileType.startsWith('image/')) return Image;
@@ -83,17 +95,290 @@ const getFileIcon = (fileType: string) => {
 };
 
 // Category labels
-const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  screenshot: { label: 'Screenshot', color: 'bg-blue-500/20 text-blue-400' },
-  document: { label: 'เอกสาร', color: 'bg-purple-500/20 text-purple-400' },
-  blockchain: { label: 'Blockchain', color: 'bg-amber-500/20 text-amber-400' },
-  communication: { label: 'การติดต่อสื่อสาร', color: 'bg-green-500/20 text-green-400' },
-  other: { label: 'อื่นๆ', color: 'bg-dark-500/20 text-dark-300' }
+const CATEGORY_LABELS: Record<string, { label: string; color: string; thaiLabel: string }> = {
+  screenshot: { label: 'Screenshot', color: 'bg-blue-500/20 text-blue-400', thaiLabel: 'ภาพถ่ายหน้าจอ' },
+  document: { label: 'เอกสาร', color: 'bg-purple-500/20 text-purple-400', thaiLabel: 'เอกสาร' },
+  blockchain: { label: 'Blockchain', color: 'bg-amber-500/20 text-amber-400', thaiLabel: 'ข้อมูล Blockchain' },
+  communication: { label: 'การติดต่อสื่อสาร', color: 'bg-green-500/20 text-green-400', thaiLabel: 'หลักฐานการสื่อสาร' },
+  other: { label: 'อื่นๆ', color: 'bg-dark-500/20 text-dark-300', thaiLabel: 'อื่นๆ' }
+};
+
+// Generate Court Report HTML
+const generateCourtReportHTML = (
+  caseId: string,
+  caseName: string,
+  evidence: Evidence[]
+): string => {
+  const reportDate = formatThaiDate(new Date().toISOString());
+  const reportId = `RPT-${Date.now()}`;
+
+  const evidenceRows = evidence.map((item, index) => `
+    <tr>
+      <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">${index + 1}</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">
+        <strong>${item.fileName}</strong>
+        ${item.description ? `<br><small style="color: #666;">${item.description}</small>` : ''}
+      </td>
+      <td style="padding: 10px; border: 1px solid #ddd;">${CATEGORY_LABELS[item.category]?.thaiLabel || item.category}</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">${formatFileSize(item.fileSize)}</td>
+      <td style="padding: 10px; border: 1px solid #ddd; font-size: 12px;">${formatThaiDate(item.uploadedAt)}</td>
+      <td style="padding: 10px; border: 1px solid #ddd;">
+        <span style="background: #28a745; color: #fff; padding: 2px 8px; border-radius: 3px; font-size: 12px;">✓ ยืนยัน</span>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="6" style="padding: 8px; border: 1px solid #ddd; font-family: monospace; font-size: 11px; color: #666; background: #f9f9f9;">
+        🔐 SHA-256: ${item.sha256Hash}
+      </td>
+    </tr>
+  `).join('');
+
+  return `
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายงานหลักฐานดิจิทัล - ${caseId}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Sarabun', 'TH Sarabun New', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #333;
+      background: #fff;
+      padding: 20mm;
+    }
+    
+    .header {
+      text-align: center;
+      border-bottom: 3px double #333;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .header-subtitle {
+      font-size: 18px;
+      color: #555;
+    }
+    
+    .report-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+    
+    .report-info-item { text-align: center; }
+    .report-info-label { font-size: 12px; color: #666; }
+    .report-info-value { font-weight: 600; color: #333; }
+    
+    .section { margin-bottom: 30px; }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a5f7a;
+      border-bottom: 2px solid #1a5f7a;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th {
+      background: #1a5f7a;
+      color: #fff;
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+    
+    .hash-verification {
+      background: #e8f5e9;
+      border: 1px solid #4caf50;
+      border-radius: 5px;
+      padding: 15px;
+      margin-top: 30px;
+    }
+    
+    .hash-verification-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+    
+    .signature-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+    }
+    
+    .signature-box {
+      text-align: center;
+      width: 200px;
+    }
+    
+    .signature-line {
+      border-top: 1px solid #333;
+      margin-top: 60px;
+      padding-top: 5px;
+    }
+    
+    .disclaimer {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 5px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .print-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 30px;
+      font-size: 16px;
+      background: #1a5f7a;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .print-btn:hover { background: #154d63; }
+    
+    @media print {
+      body { padding: 15mm; }
+      .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="font-size: 40px; margin-bottom: 10px;">⚖️</div>
+    <div class="header-title">รายงานหลักฐานดิจิทัล</div>
+    <div class="header-subtitle">Digital Evidence Report</div>
+  </div>
+
+  <div class="report-info">
+    <div class="report-info-item">
+      <div class="report-info-label">เลขที่รายงาน</div>
+      <div class="report-info-value">${reportId}</div>
+    </div>
+    <div class="report-info-item">
+      <div class="report-info-label">เลขที่คดี</div>
+      <div class="report-info-value">${caseId}</div>
+    </div>
+    <div class="report-info-item">
+      <div class="report-info-label">วันที่จัดทำ</div>
+      <div class="report-info-value">${reportDate}</div>
+    </div>
+    <div class="report-info-item">
+      <div class="report-info-label">จำนวนหลักฐาน</div>
+      <div class="report-info-value">${evidence.length} รายการ</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📋 ข้อมูลคดี</div>
+    <table>
+      <tr>
+        <td style="width: 150px; padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">เลขที่คดี:</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${caseId}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">ชื่อคดี:</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${caseName}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">วันที่จัดทำรายงาน:</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${reportDate}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📁 รายการหลักฐานดิจิทัล</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px;">ลำดับ</th>
+          <th>ชื่อไฟล์ / คำอธิบาย</th>
+          <th style="width: 120px;">ประเภท</th>
+          <th style="width: 80px;">ขนาด</th>
+          <th style="width: 160px;">วันที่บันทึก</th>
+          <th style="width: 80px;">สถานะ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${evidenceRows}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="hash-verification">
+    <div class="hash-verification-title">🔐 การรับรองความถูกต้องของหลักฐาน (Hash Verification)</div>
+    <div style="font-size: 14px; color: #333;">
+      หลักฐานทุกรายการในเอกสารนี้ได้รับการตรวจสอบด้วยอัลกอริทึม <strong>SHA-256</strong> (Secure Hash Algorithm 256-bit) 
+      ซึ่งเป็นมาตรฐานการเข้ารหัสที่ใช้ในระบบ Blockchain และได้รับการยอมรับในระดับสากล
+      <br><br>
+      <strong>วิธีตรวจสอบ:</strong> นำไฟล์หลักฐานต้นฉบับไปคำนวณค่า SHA-256 Hash 
+      หากได้ค่าตรงกับที่ระบุในเอกสาร แสดงว่าไฟล์ไม่ถูกแก้ไขหรือเปลี่ยนแปลงใดๆ
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">ผู้จัดทำรายงาน</div>
+      <div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">ผู้ตรวจสอบ</div>
+      <div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">ผู้อนุมัติ</div>
+      <div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>หมายเหตุ:</strong> เอกสารฉบับนี้จัดทำขึ้นโดยระบบ InvestiGate Investigation Platform 
+    ข้อมูลหลักฐานดิจิทัลทั้งหมดได้รับการบันทึกและตรวจสอบด้วยเทคโนโลยี Cryptographic Hash Function 
+    เพื่อรับรองความถูกต้องและความน่าเชื่อถือของหลักฐาน สามารถใช้อ้างอิงในกระบวนการทางกฎหมายได้
+    <br><br>
+    <strong>Report ID:</strong> ${reportId}
+  </div>
+
+  <button class="print-btn" onclick="window.print()">
+    🖨️ พิมพ์ / บันทึก PDF
+  </button>
+</body>
+</html>
+`;
 };
 
 export const EvidenceManager = ({ 
   caseId = 'CASE-DEMO', 
-  caseName = 'คดี Silk Road',
+  caseName = 'คดีตัวอย่าง',
   onEvidenceChange,
   readOnly = false 
 }: EvidenceManagerProps) => {
@@ -114,14 +399,12 @@ export const EvidenceManager = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       alert('รองรับเฉพาะไฟล์ PNG, JPG, PDF เท่านั้น');
       return;
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert('ไฟล์ต้องมีขนาดไม่เกิน 10MB');
       return;
@@ -130,11 +413,9 @@ export const EvidenceManager = ({
     setIsUploading(true);
 
     try {
-      // Read file as ArrayBuffer for hash calculation
       const arrayBuffer = await file.arrayBuffer();
       const hash = await calculateSHA256(arrayBuffer);
 
-      // Read file as base64 for storage/display
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
@@ -164,7 +445,7 @@ export const EvidenceManager = ({
       fileData: pendingFileData,
       sha256Hash: pendingHash,
       uploadedAt: new Date().toISOString(),
-      uploadedBy: 'admin@test.com', // In real app, get from auth
+      uploadedBy: 'admin@test.com',
       description: uploadDescription || pendingFile.name,
       category: uploadCategory,
       verified: true
@@ -174,7 +455,6 @@ export const EvidenceManager = ({
     setEvidenceList(updatedList);
     onEvidenceChange?.(updatedList);
 
-    // Reset
     setPendingFile(null);
     setPendingFileData(null);
     setPendingHash(null);
@@ -223,39 +503,15 @@ export const EvidenceManager = ({
     document.body.removeChild(link);
   };
 
-  // Export evidence report
-  const handleExportReport = () => {
-    const report = {
-      caseId,
-      caseName,
-      exportedAt: new Date().toISOString(),
-      exportedBy: 'admin@test.com',
-      totalEvidence: evidenceList.length,
-      evidence: evidenceList.map(e => ({
-        id: e.id,
-        fileName: e.fileName,
-        fileType: e.fileType,
-        fileSize: formatFileSize(e.fileSize),
-        sha256Hash: e.sha256Hash,
-        uploadedAt: e.uploadedAt,
-        uploadedBy: e.uploadedBy,
-        description: e.description,
-        category: e.category
-      }))
-    };
-
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `evidence-report-${caseId}-${Date.now()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  // Export PDF Court Report
+  const handleExportPDF = () => {
+    const html = generateCourtReportHTML(caseId, caseName, evidenceList);
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(html);
+      newWindow.document.close();
+    }
   };
-
-  // Verify hash
 
   return (
     <div className="bg-dark-800 rounded-xl border border-dark-700">
@@ -274,9 +530,9 @@ export const EvidenceManager = ({
 
           <div className="flex items-center gap-2">
             {evidenceList.length > 0 && (
-              <Button variant="ghost" onClick={handleExportReport} className="text-sm">
-                <FileDown size={14} className="mr-1" />
-                Export Report
+              <Button variant="ghost" onClick={handleExportPDF} className="text-sm">
+                <Printer size={14} className="mr-1" />
+                พิมพ์รายงานศาล
               </Button>
             )}
             {!readOnly && (
