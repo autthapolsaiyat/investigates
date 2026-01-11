@@ -153,13 +153,23 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string; thaiLabel:
 const STORAGE_KEY = 'investigates_evidence';
 
 // ============================================
-// QR CODE GENERATOR (Using QR Server API)
+// QR CODE GENERATOR (Points to verify page)
 // ============================================
 
-const generateQRDataURL = (data: string, size: number = 150): string => {
-  // Use QR Server API - free and reliable
-  const encodedData = encodeURIComponent(data);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedData}`;
+const generateQRDataURL = (hash: string, fileName: string, caseId: string, timestamp: string, size: number = 150): string => {
+  // Build verify URL with all params
+  const baseUrl = window.location.origin;
+  const params = new URLSearchParams({
+    hash: hash,
+    file: fileName,
+    case: caseId,
+    ts: timestamp
+  });
+  const verifyUrl = `${baseUrl}/verify?${params.toString()}`;
+  
+  // Use QR Server API
+  const encodedUrl = encodeURIComponent(verifyUrl);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedUrl}`;
 };
 
 // ============================================
@@ -179,7 +189,8 @@ const generateCourtReportHTML = (
 
   // Evidence rows with optional images
   const evidenceRows = evidence.map((item, index) => {
-    const qrDataUrl = generateQRDataURL(item.sha256Hash, 60);
+    // For PDF report, use direct hash (can't use dynamic URL in print)
+    const qrDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(item.sha256Hash)}`;
     return `
     <tr>
       <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">${index + 1}</td>
@@ -342,7 +353,8 @@ const generateForensicReportHTML = (
   const reportNumber = `พฐ.${new Date().getFullYear() + 543}/${String(Date.now()).slice(-6)}`;
 
   const evidenceRows = evidence.map((item, index) => {
-    const qrDataUrl = generateQRDataURL(item.sha256Hash, 50);
+    // For PDF report, use direct hash (can't use dynamic URL in print)
+    const qrDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=${encodeURIComponent(item.sha256Hash)}`;
     return `
     <tr>
       <td style="padding: 8px; border: 1px solid #333; text-align: center;">${index + 1}</td>
@@ -1121,7 +1133,7 @@ export const EvidenceManager = ({
             <div className="text-center">
               <div className="bg-white p-4 rounded-lg inline-block mb-4">
                 <img 
-                  src={generateQRDataURL(selectedEvidence.sha256Hash, 150)} 
+                  src={generateQRDataURL(selectedEvidence.sha256Hash, selectedEvidence.fileName, selectedEvidence.caseId || caseId, selectedEvidence.uploadedAt, 150)} 
                   alt="QR Code"
                   width={150}
                   height={150}
@@ -1137,8 +1149,8 @@ export const EvidenceManager = ({
               
               <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-left">
                 <div className="text-xs text-green-400">
-                  <strong>วิธีใช้:</strong> สแกน QR Code นี้เพื่อเปรียบเทียบกับ Hash ของไฟล์ต้นฉบับ
-                  หาก Hash ตรงกัน แสดงว่าไฟล์ไม่ถูกแก้ไข
+                  <strong>วิธีใช้:</strong> สแกน QR Code จะเปิดหน้ายืนยันหลักฐาน
+                  แสดงข้อมูล Hash และรายละเอียดไฟล์
                 </div>
               </div>
             </div>

@@ -15,6 +15,7 @@ import { ReportGenerator } from './pages/report/ReportGenerator';
 import { SilkRoadDemo } from "./pages/silk-road-demo";
 import { CryptoTracker } from './pages/crypto/CryptoTracker';
 import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
+import { HashVerify } from './pages/verify';  // ← เพิ่มบรรทัดนี้
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -33,6 +34,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/verify" element={<HashVerify />} />  {/* ← เพิ่มบรรทัดนี้ (Public) */}
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
