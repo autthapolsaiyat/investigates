@@ -153,40 +153,13 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string; thaiLabel:
 const STORAGE_KEY = 'investigates_evidence';
 
 // ============================================
-// QR CODE GENERATOR (Simple SVG-based)
+// QR CODE GENERATOR (Using QR Server API)
 // ============================================
 
-const generateQRCodeSVG = (data: string, size: number = 100): string => {
-  // Simple QR-like pattern based on hash (not a real QR code, but visual representation)
-  const hash = data.slice(0, 32);
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 33 33">`;
-  svg += `<rect width="33" height="33" fill="white"/>`;
-  
-  // Create pattern based on hash characters
-  for (let i = 0; i < 32; i++) {
-    const charCode = hash.charCodeAt(i);
-    const x = (i % 8) * 4 + 1;
-    const y = Math.floor(i / 8) * 4 + 1;
-    if (charCode % 2 === 0) {
-      svg += `<rect x="${x}" y="${y}" width="3" height="3" fill="black"/>`;
-    }
-  }
-  
-  // Add corner patterns (QR code style)
-  svg += `<rect x="0" y="0" width="7" height="7" fill="none" stroke="black" stroke-width="1"/>`;
-  svg += `<rect x="2" y="2" width="3" height="3" fill="black"/>`;
-  svg += `<rect x="26" y="0" width="7" height="7" fill="none" stroke="black" stroke-width="1"/>`;
-  svg += `<rect x="28" y="2" width="3" height="3" fill="black"/>`;
-  svg += `<rect x="0" y="26" width="7" height="7" fill="none" stroke="black" stroke-width="1"/>`;
-  svg += `<rect x="2" y="28" width="3" height="3" fill="black"/>`;
-  
-  svg += `</svg>`;
-  return svg;
-};
-
-const generateQRDataURL = (data: string, size: number = 100): string => {
-  const svg = generateQRCodeSVG(data, size);
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
+const generateQRDataURL = (data: string, size: number = 150): string => {
+  // Use QR Server API - free and reliable
+  const encodedData = encodeURIComponent(data);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedData}`;
 };
 
 // ============================================
