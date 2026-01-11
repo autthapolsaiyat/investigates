@@ -1,6 +1,6 @@
 /**
- * SilkRoadDemo V2 - Complete Investigation Demo
- * Features: Export PDF, Save to Case, Link to Money Flow, Evidence Attachments
+ * SilkRoadDemo V3 - Complete Investigation Demo with Evidence Manager
+ * Features: Export PDF, Save to Case, Evidence Management System
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,15 +22,13 @@ import {
   ChevronUp,
   Download,
   Save,
-
-  Image,
-  Plus,
   X,
   FileDown,
   FolderPlus,
   LinkIcon
 } from 'lucide-react';
 import { Button } from '../../components/ui';
+import { EvidenceManager } from '../../components/evidence';
 
 // Investigation Timeline Steps
 const INVESTIGATION_STEPS = [
@@ -169,11 +167,7 @@ export const SilkRoadDemo = () => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [evidenceFiles, _setEvidenceFiles] = useState<string[]>([
-    'blockchain_transaction_1HQ3.png',
-    'chainalysis_report.pdf',
-    'court_filing_2020.pdf'
-  ]);
+  const [showEvidencePanel, setShowEvidencePanel] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
@@ -190,7 +184,6 @@ export const SilkRoadDemo = () => {
   // Export to PDF
   const handleExportPDF = async () => {
     setIsExporting(true);
-    // Simulate PDF generation
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsExporting(false);
     setExportSuccess(true);
@@ -203,7 +196,6 @@ export const SilkRoadDemo = () => {
   // Save to Case
   const handleSaveToCase = async () => {
     setIsSaving(true);
-    // Simulate saving
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsSaving(false);
     setSaveSuccess(true);
@@ -215,7 +207,6 @@ export const SilkRoadDemo = () => {
 
   // Navigate to Money Flow
   const handleLinkToMoneyFlow = () => {
-    // Navigate to Money Flow with wallet pre-loaded
     navigate('/money-flow');
   };
 
@@ -389,31 +380,6 @@ export const SilkRoadDemo = () => {
                 </div>
               </div>
             </div>
-
-            {/* Evidence Files */}
-            <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Image size={18} className="text-green-400" />
-                  หลักฐานแนบ
-                </h2>
-                <button className="p-1 hover:bg-dark-700 rounded text-primary-400">
-                  <Plus size={16} />
-                </button>
-              </div>
-              
-              <div className="space-y-2">
-                {evidenceFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-dark-900 rounded-lg">
-                    <FileText size={14} className="text-dark-400" />
-                    <span className="text-xs text-dark-300 flex-1 truncate">{file}</span>
-                    <button className="p-1 hover:bg-dark-700 rounded">
-                      <Download size={12} className="text-dark-400" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Main Content */}
@@ -432,10 +398,8 @@ export const SilkRoadDemo = () => {
                   </div>
                 </div>
 
-                {/* Description */}
                 <p className="text-dark-300 mb-6">{currentStep.description}</p>
 
-                {/* Details */}
                 {currentStep.details && (
                   <div className="mb-6">
                     <h4 className="text-sm font-semibold text-white mb-3">รายละเอียด:</h4>
@@ -450,7 +414,6 @@ export const SilkRoadDemo = () => {
                   </div>
                 )}
 
-                {/* Wallets Flow */}
                 {currentStep.wallets && (
                   <div className="mb-6">
                     <h4 className="text-sm font-semibold text-white mb-3">เส้นทางเงิน:</h4>
@@ -478,7 +441,6 @@ export const SilkRoadDemo = () => {
                   </div>
                 )}
 
-                {/* Suspect Info */}
                 {currentStep.suspect && (
                   <div className="mb-6">
                     <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
@@ -526,7 +488,6 @@ export const SilkRoadDemo = () => {
                   </div>
                 )}
 
-                {/* Evidence */}
                 {currentStep.evidence && (
                   <div>
                     <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
@@ -544,7 +505,6 @@ export const SilkRoadDemo = () => {
                   </div>
                 )}
 
-                {/* Navigation */}
                 <div className="flex justify-between mt-8 pt-6 border-t border-dark-700">
                   <Button
                     variant="ghost"
@@ -578,7 +538,6 @@ export const SilkRoadDemo = () => {
 
               {showKYC && (
                 <div className="mt-4 grid grid-cols-2 gap-4">
-                  {/* James Zhong */}
                   <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <AlertTriangle size={16} className="text-red-400" />
@@ -593,7 +552,6 @@ export const SilkRoadDemo = () => {
                     </div>
                   </div>
 
-                  {/* Ross Ulbricht */}
                   <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <User size={16} className="text-purple-400" />
@@ -614,12 +572,34 @@ export const SilkRoadDemo = () => {
           </div>
         </div>
 
+        {/* Evidence Manager Section */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Shield size={24} className="text-green-400" />
+              ระบบจัดการหลักฐาน (Court-Ready)
+            </h2>
+            <Button
+              variant="ghost"
+              onClick={() => setShowEvidencePanel(!showEvidencePanel)}
+            >
+              {showEvidencePanel ? 'ซ่อน' : 'แสดง'}
+            </Button>
+          </div>
+          
+          {showEvidencePanel && (
+            <EvidenceManager 
+              caseId="CASE-SILKROAD-2024"
+              caseName="คดี Silk Road - US Government Seizure"
+            />
+          )}
+        </div>
+
         {/* Investigation Flow Diagram */}
         <div className="mt-6 bg-dark-800 rounded-xl border border-dark-700 p-6">
           <h2 className="text-lg font-semibold text-white mb-4">📊 สรุปเส้นทางการสืบสวน</h2>
           
           <div className="flex items-center justify-center gap-4 overflow-x-auto py-4">
-            {/* Wallet Address */}
             <div className="text-center min-w-[120px]">
               <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Wallet size={24} className="text-amber-400" />
@@ -630,7 +610,6 @@ export const SilkRoadDemo = () => {
 
             <ArrowRight size={24} className="text-dark-500" />
 
-            {/* Track to Exchange */}
             <div className="text-center min-w-[120px]">
               <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Search size={24} className="text-blue-400" />
@@ -641,7 +620,6 @@ export const SilkRoadDemo = () => {
 
             <ArrowRight size={24} className="text-dark-500" />
 
-            {/* Found Exchange */}
             <div className="text-center min-w-[120px]">
               <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Building2 size={24} className="text-purple-400" />
@@ -652,7 +630,6 @@ export const SilkRoadDemo = () => {
 
             <ArrowRight size={24} className="text-dark-500" />
 
-            {/* Court Order */}
             <div className="text-center min-w-[120px]">
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Scale size={24} className="text-red-400" />
@@ -663,7 +640,6 @@ export const SilkRoadDemo = () => {
 
             <ArrowRight size={24} className="text-dark-500" />
 
-            {/* Get KYC */}
             <div className="text-center min-w-[120px]">
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <FileText size={24} className="text-green-400" />
@@ -674,7 +650,6 @@ export const SilkRoadDemo = () => {
 
             <ArrowRight size={24} className="text-dark-500" />
 
-            {/* Arrest */}
             <div className="text-center min-w-[120px]">
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Shield size={24} className="text-red-400" />
@@ -711,7 +686,7 @@ export const SilkRoadDemo = () => {
               <div className="p-4 bg-dark-900 rounded-lg">
                 <h4 className="text-sm font-medium text-white mb-2">เนื้อหาที่จะรวม:</h4>
                 <div className="space-y-2">
-                  {['สรุปคดี (Stats)', 'Timeline การสืบสวน', 'Wallet Addresses', 'ข้อมูล KYC', 'เส้นทางเงิน (Flow)', 'หลักฐานแนบ'].map((item, i) => (
+                  {['สรุปคดี (Stats)', 'Timeline การสืบสวน', 'Wallet Addresses', 'ข้อมูล KYC', 'เส้นทางเงิน (Flow)', 'หลักฐานดิจิทัล (พร้อม Hash)'].map((item, i) => (
                     <label key={i} className="flex items-center gap-2 text-sm text-dark-300">
                       <input type="checkbox" defaultChecked className="rounded" />
                       {item}
