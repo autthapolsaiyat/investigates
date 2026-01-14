@@ -9,42 +9,42 @@
  * 6. Status workflow
  * 7. Create/Edit case
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Plus,
   Search,
-  Filter,
+
   Briefcase,
   Calendar,
   Users,
   DollarSign,
   Clock,
-  ChevronRight,
-  ChevronDown,
+
+
   Edit,
-  Trash2,
+
   Eye,
   X,
   CheckCircle,
   AlertTriangle,
   FileText,
   Shield,
-  Wallet,
-  Phone,
+
+
   Globe,
-  MapPin,
+
   User,
-  Building2,
-  ArrowRight,
-  ExternalLink,
-  Download,
-  Upload,
-  MoreVertical,
+
+
+
+
+
+
   Flag,
   Target,
   Activity
 } from 'lucide-react';
-import { Button, Input, Card, Badge } from '../../components/ui';
+import { Button, Input } from '../../components/ui';
 
 // ============================================
 // TYPES
@@ -562,7 +562,7 @@ const CaseDetailModal = ({ case_, onClose }: { case_: CaseItem; onClose: () => v
               ) : (
                 <div className="relative">
                   <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-dark-700" />
-                  {case_.timeline.map((item, index) => (
+                  {case_.timeline.map((item, _index) => (
                     <div key={item.id} className="relative flex gap-4 pb-6">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
                         item.type === 'created' ? 'bg-green-500/20' :
@@ -829,7 +829,7 @@ export const Cases = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCase, setSelectedCase] = useState<CaseItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [_viewMode, _setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredCases = cases.filter(case_ => {
     const matchesSearch = case_.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
