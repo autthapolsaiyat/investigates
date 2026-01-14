@@ -206,7 +206,7 @@ const MOCK_CASES: CaseItem[] = [
     description: 'แอบอ้างเป็นบริษัทลงทุน Forex ที่ไม่มีใบอนุญาต',
     type: 'Investment Fraud',
     status: 'investigating',
-    priority: 'medium',
+    priority: 'medium' as const,
     amount: 45000000,
     currency: 'THB',
     suspects: [],
@@ -715,7 +715,7 @@ const CreateCaseModal = ({ onClose, onSave }: { onClose: () => void; onSave: (ca
     name: '',
     description: '',
     type: 'Cryptocurrency Fraud',
-    priority: 'medium',
+    priority: 'medium' as const,
     amount: '',
     dueDate: ''
   });

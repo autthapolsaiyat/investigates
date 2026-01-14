@@ -37,7 +37,6 @@ import {
   Zap,
 
   ChevronRight,
-  ExternalLink
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 import {
@@ -53,7 +52,6 @@ import {
   Cell,
   BarChart,
   Bar,
-  Legend
 } from 'recharts';
 
 // ============================================
