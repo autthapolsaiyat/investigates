@@ -777,7 +777,7 @@ const CreateCaseModal = ({ onClose, onSave }: { onClose: () => void; onSave: (ca
               <label className="text-sm text-dark-400 mb-1 block">ความสำคัญ</label>
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as "critical" | "high" | "medium" | "low" })}
                 className="w-full bg-dark-900 border border-dark-700 rounded-lg p-3 text-white focus:outline-none focus:border-primary-500"
               >
                 <option value="critical">Critical</option>
