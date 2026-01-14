@@ -16,30 +16,30 @@ import {
   Briefcase,
   Users,
   DollarSign,
-  AlertTriangle,
-  Clock,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
+
+
+
+
+
   Plus,
-  Search,
+
   FileText,
   Shield,
   Activity,
   Wallet,
   Phone,
-  Globe,
-  Eye,
-  Calendar,
+
+
+
   BarChart3,
   PieChart,
-  Target,
+
   Zap,
-  Bell,
+
   ChevronRight,
   ExternalLink
 } from 'lucide-react';
-import { Button, Card } from '../../components/ui';
+import { Button } from '../../components/ui';
 import {
   AreaChart,
   Area,

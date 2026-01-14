@@ -288,7 +288,7 @@ const getStatusStyle = (status: string) => {
   return styles[status] || styles.draft;
 };
 
-const getPriorityStyle = (priority: string) => {
+const getPriorityStyle = (priority: "critical" | "high" | "medium" | "low") => {
   const styles: Record<string, { bg: string; text: string; icon: typeof AlertTriangle }> = {
     critical: { bg: 'bg-red-500/20', text: 'text-red-400', icon: AlertTriangle },
     high: { bg: 'bg-orange-500/20', text: 'text-orange-400', icon: Flag },
