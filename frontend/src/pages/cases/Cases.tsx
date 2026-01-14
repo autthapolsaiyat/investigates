@@ -206,7 +206,7 @@ const MOCK_CASES: CaseItem[] = [
     description: 'แอบอ้างเป็นบริษัทลงทุน Forex ที่ไม่มีใบอนุญาต',
     type: 'Investment Fraud',
     status: 'investigating',
-    priority: 'medium' as const,
+    priority: 'medium',
     amount: 45000000,
     currency: 'THB',
     suspects: [],
@@ -711,11 +711,11 @@ const CaseDetailModal = ({ case_, onClose }: { case_: CaseItem; onClose: () => v
 };
 
 const CreateCaseModal = ({ onClose, onSave }: { onClose: () => void; onSave: (case_: Partial<CaseItem>) => void }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ name: string; description: string; type: string; priority: 'critical' | 'high' | 'medium' | 'low'; amount: string; dueDate: string; }>({
     name: '',
     description: '',
     type: 'Cryptocurrency Fraud',
-    priority: 'medium' as const,
+    priority: 'medium',
     amount: '',
     dueDate: ''
   });
