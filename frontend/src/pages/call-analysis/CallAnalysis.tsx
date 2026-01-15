@@ -133,7 +133,7 @@ const SAMPLE_ENTITIES: Entity[] = [
 
 const SAMPLE_LINKS: Link[] = [
   // Boss Network internal
-  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: true } },
+  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: 1 } },
   { id: 'L002', source: 'P001', target: 'PH002', type: 'call', weight: 45, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L003', source: 'P001', target: 'ACC001', type: 'transfer', weight: 89, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { totalAmount: 45000000 } },
   { id: 'L004', source: 'P001', target: 'ADDR001', type: 'meeting', weight: 30, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
@@ -142,7 +142,7 @@ const SAMPLE_LINKS: Link[] = [
   // Boss to Coordinators
   { id: 'L006', source: 'PH001', target: 'PH003', type: 'call', weight: 85, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { avgDuration: 180 } },
   { id: 'L007', source: 'PH001', target: 'PH004', type: 'call', weight: 42, firstSeen: '2025-07-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: true } },
+  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: 1 } },
   { id: 'L009', source: 'ACC001', target: 'ACC002', type: 'transfer', weight: 56, firstSeen: '2025-06-15', lastSeen: '2026-01-08', metadata: { totalAmount: 28000000 } },
   
   // Coordinators internal
@@ -166,7 +166,7 @@ const SAMPLE_LINKS: Link[] = [
   { id: 'L023', source: 'PH005', target: 'PH006', type: 'call', weight: 35, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: { note: 'emergency contact' } },
   
   // Myanmar Connection
-  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: true, avgDuration: 300 } },
+  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: 1, avgDuration: 300 } },
   { id: 'L025', source: 'CRYPTO001', target: 'CRYPTO002', type: 'transfer', weight: 18, firstSeen: '2025-09-01', lastSeen: '2026-01-05', metadata: { totalAmount: '180 ETH → USDT' } },
   { id: 'L026', source: 'P007', target: 'PH008', type: 'call', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L027', source: 'P007', target: 'CRYPTO002', type: 'transfer', weight: 50, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
@@ -180,7 +180,7 @@ const SAMPLE_LINKS: Link[] = [
   { id: 'L033', source: 'ADDR003', target: 'ADDR002', type: 'transfer', weight: 12, firstSeen: '2025-11-01', lastSeen: '2026-01-08', metadata: { note: 'shipment route' } },
   
   // Unknown connections
-  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: true } },
+  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: 1 } },
   { id: 'L035', source: 'PH010', target: 'P009', type: 'call', weight: 15, firstSeen: '2026-01-10', lastSeen: '2026-01-14', metadata: {} },
 ];
 
