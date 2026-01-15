@@ -709,13 +709,13 @@ export const CallAnalysis = () => {
       if (cyRef.current) {
         cyRef.current.layout({
           name: "cose",
-          animate: true,
+          animate: false,
           animationDuration: 500,
           fit: true,
           padding: 50,
-          nodeRepulsion: 8000,
-          idealEdgeLength: 100,
-          gravity: 0.25,
+          
+          
+          
         }).run();
       }
     }, 100);
@@ -748,14 +748,14 @@ export const CallAnalysis = () => {
     if (cyRef.current) {
       cyRef.current.layout({
         name: newLayout,
-        animate: true,
+        animate: false,
         animationDuration: 500,
         fit: true,
         padding: 50,
         ...(newLayout === 'cose' ? {
-          nodeRepulsion: 8000,
-          idealEdgeLength: 100,
-          gravity: 0.25,
+          
+          
+          
         } : {}),
         ...(newLayout === 'concentric' ? {
           concentric: (n: any) => n.data('clusterId') || 0,
