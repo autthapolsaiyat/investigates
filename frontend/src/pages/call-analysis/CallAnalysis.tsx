@@ -12,8 +12,9 @@
  * - Community detection
  * - Tooltips
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
-import cytoscape, { Core, NodeSingular, EdgeSingular } from 'cytoscape';
+import { useState, useRef, useEffect } from 'react';
+import cytoscape from 'cytoscape';
+import type { Core, NodeSingular } from 'cytoscape';
 import {
   Clock,
   Users,
@@ -32,7 +33,7 @@ import {
   Maximize2,
   Minimize2,
   Search,
-  ZoomIn,
+
   ZoomOut,
   Image,
   Filter,
@@ -556,15 +557,15 @@ export const CallAnalysis = () => {
             'text-valign': 'bottom',
             'text-halign': 'center',
             'text-margin-y': 8,
-            'font-size': 10,
+            
             'color': '#e5e7eb',
             'text-outline-color': '#111827',
             'text-outline-width': 2,
             'text-max-width': '100px',
             'text-wrap': 'ellipsis',
             'content': 'data(emoji)',
-            'text-valign': 'center',
-            'text-halign': 'center',
+            
+            
             'font-size': 24,
           }
         },
@@ -686,7 +687,7 @@ export const CallAnalysis = () => {
         } else if (!pathEnd && entityId !== pathStart) {
           setPathEnd(entityId);
           // Find and highlight shortest path
-          const dijkstra = cy.elements().dijkstra('#' + pathStart);
+          const dijkstra = cy.elements().dijkstra({ root: '#' + pathStart, directed: false });
           const pathToEnd = dijkstra.pathTo(node);
           pathToEnd.addClass('path');
           cy.elements().not(pathToEnd).addClass('faded');
