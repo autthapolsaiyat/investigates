@@ -648,27 +648,7 @@ export const CallAnalysis = () => {
           }
         },
       ],
-      layout: {
-        name: layoutType,
-        animate: true,
-        animationDuration: 500,
-        fit: true,
-        padding: 50,
-        ...(layoutType === 'cose' ? {
-          nodeRepulsion: 8000,
-          idealEdgeLength: 100,
-          edgeElasticity: 100,
-          gravity: 0.25,
-        } : {}),
-        ...(layoutType === 'concentric' ? {
-          concentric: (n: any) => n.data('clusterId') || 0,
-          levelWidth: 2,
-        } : {}),
-        ...(layoutType === 'breadthfirst' ? {
-          directed: true,
-          roots: '#P001',
-        } : {}),
-      },
+      layout: { name: "preset" },
       minZoom: 0.2,
       maxZoom: 3,
       
@@ -723,6 +703,22 @@ export const CallAnalysis = () => {
     });
 
     cyRef.current = cy;
+
+    // Run layout after init
+    setTimeout(() => {
+      if (cyRef.current) {
+        cyRef.current.layout({
+          name: "cose",
+          animate: true,
+          animationDuration: 500,
+          fit: true,
+          padding: 50,
+          nodeRepulsion: 8000,
+          idealEdgeLength: 100,
+          gravity: 0.25,
+        }).run();
+      }
+    }, 100);
 
     return () => {
       cy.destroy();
