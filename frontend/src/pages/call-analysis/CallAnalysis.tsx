@@ -27,7 +27,9 @@ import {
   Share2,
   Shield,
   Zap,
-  Play
+  Play,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -131,7 +133,7 @@ const SAMPLE_ENTITIES: Entity[] = [
 
 const SAMPLE_LINKS: Link[] = [
   // Boss Network internal
-  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: 1 } },
+  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: true } },
   { id: 'L002', source: 'P001', target: 'PH002', type: 'call', weight: 45, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L003', source: 'P001', target: 'ACC001', type: 'transfer', weight: 89, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { totalAmount: 45000000 } },
   { id: 'L004', source: 'P001', target: 'ADDR001', type: 'meeting', weight: 30, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
@@ -140,7 +142,7 @@ const SAMPLE_LINKS: Link[] = [
   // Boss to Coordinators
   { id: 'L006', source: 'PH001', target: 'PH003', type: 'call', weight: 85, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { avgDuration: 180 } },
   { id: 'L007', source: 'PH001', target: 'PH004', type: 'call', weight: 42, firstSeen: '2025-07-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: 1 } },
+  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: true } },
   { id: 'L009', source: 'ACC001', target: 'ACC002', type: 'transfer', weight: 56, firstSeen: '2025-06-15', lastSeen: '2026-01-08', metadata: { totalAmount: 28000000 } },
   
   // Coordinators internal
@@ -164,7 +166,7 @@ const SAMPLE_LINKS: Link[] = [
   { id: 'L023', source: 'PH005', target: 'PH006', type: 'call', weight: 35, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: { note: 'emergency contact' } },
   
   // Myanmar Connection
-  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: 1, avgDuration: 300 } },
+  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: true, avgDuration: 300 } },
   { id: 'L025', source: 'CRYPTO001', target: 'CRYPTO002', type: 'transfer', weight: 18, firstSeen: '2025-09-01', lastSeen: '2026-01-05', metadata: { totalAmount: '180 ETH → USDT' } },
   { id: 'L026', source: 'P007', target: 'PH008', type: 'call', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L027', source: 'P007', target: 'CRYPTO002', type: 'transfer', weight: 50, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
@@ -178,7 +180,7 @@ const SAMPLE_LINKS: Link[] = [
   { id: 'L033', source: 'ADDR003', target: 'ADDR002', type: 'transfer', weight: 12, firstSeen: '2025-11-01', lastSeen: '2026-01-08', metadata: { note: 'shipment route' } },
   
   // Unknown connections
-  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: 1 } },
+  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: true } },
   { id: 'L035', source: 'PH010', target: 'P009', type: 'call', weight: 15, firstSeen: '2026-01-10', lastSeen: '2026-01-14', metadata: {} },
 ];
 
@@ -388,7 +390,8 @@ const NetworkCanvas = ({
   clusters,
   selectedCluster,
   selectedEntity,
-  onSelectEntity 
+  onSelectEntity,
+  showClusterBoxes
 }: {
   entities: Entity[];
   links: Link[];
@@ -396,12 +399,15 @@ const NetworkCanvas = ({
   selectedCluster: number | null;
   selectedEntity: string | null;
   onSelectEntity: (id: string | null) => void;
+  showClusterBoxes: boolean;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [nodes, setNodes] = useState<Entity[]>([]);
   const [isSimulating, setIsSimulating] = useState(true);
   const animationRef = useRef<number | null>(null);
   const frameCountRef = useRef(0);
+  const draggedNodeRef = useRef<string | null>(null);
+  const isDraggingRef = useRef(false);
   
   // Filter entities based on selected cluster
   const filteredEntities = selectedCluster 
@@ -486,9 +492,10 @@ const NetworkCanvas = ({
     };
     
     const simulate = () => {
-      if (!isSimulating || frameCountRef.current > 150) {
-        // Just render without simulation
+      if (!isSimulating || frameCountRef.current > 300) {
+        // Still render but don't simulate physics
         render();
+        animationRef.current = requestAnimationFrame(simulate);
         return;
       }
       
@@ -581,8 +588,8 @@ const NetworkCanvas = ({
     const render = () => {
       ctx.clearRect(0, 0, width, height);
       
-      // Draw cluster backgrounds
-      if (!selectedCluster) {
+      // Draw cluster backgrounds (only if enabled)
+      if (showClusterBoxes && !selectedCluster) {
         clusters.forEach(cluster => {
           const clusterNodes = nodes.filter(n => n.clusterId === cluster.id);
           if (clusterNodes.length < 2) return;
@@ -689,25 +696,70 @@ const NetworkCanvas = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [nodes.length, isSimulating, selectedEntity]);
+  }, [nodes.length, isSimulating, selectedEntity, showClusterBoxes]);
   
-  // Handle click
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Get mouse position helper
+  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    
+    if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-    
-    // Find clicked node
-    const clickedNode = nodes.find(node => {
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  };
+
+  // Find node at position
+  const findNodeAtPos = (x: number, y: number) => {
+    return nodes.find(node => {
       const dx = node.x! - x;
       const dy = node.y! - y;
       return Math.sqrt(dx * dx + dy * dy) < 25;
     });
+  };
+
+  // Mouse down - start drag
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const { x, y } = getMousePos(e);
+    const node = findNodeAtPos(x, y);
+    if (node) {
+      draggedNodeRef.current = node.id;
+      isDraggingRef.current = true;
+      // Stop simulation when dragging
+      frameCountRef.current = 200;
+    }
+  };
+
+  // Mouse move - drag node
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDraggingRef.current || !draggedNodeRef.current) return;
     
-    onSelectEntity(clickedNode?.id || null);
+    const { x, y } = getMousePos(e);
+    setNodes(prev => prev.map(node => 
+      node.id === draggedNodeRef.current 
+        ? { ...node, x, y, vx: 0, vy: 0 }
+        : node
+    ));
+  };
+
+  // Mouse up - end drag
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isDraggingRef.current && draggedNodeRef.current) {
+      // If it was just a click (not much movement), select the node
+      const { x, y } = getMousePos(e);
+      const node = findNodeAtPos(x, y);
+      if (node && node.id === draggedNodeRef.current) {
+        onSelectEntity(node.id === selectedEntity ? null : node.id);
+      }
+    }
+    draggedNodeRef.current = null;
+    isDraggingRef.current = false;
+  };
+
+  // Mouse leave - cancel drag
+  const handleMouseLeave = () => {
+    draggedNodeRef.current = null;
+    isDraggingRef.current = false;
   };
 
   return (
@@ -716,8 +768,11 @@ const NetworkCanvas = ({
         ref={canvasRef}
         width={900}
         height={600}
-        className="w-full bg-dark-950 rounded-xl border border-dark-700 cursor-pointer"
-        onClick={handleCanvasClick}
+        className="w-full bg-dark-950 rounded-xl border border-dark-700 cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       />
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <Button
@@ -881,6 +936,7 @@ export const CallAnalysis = () => {
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [showClusterBoxes, setShowClusterBoxes] = useState(true);
   const [activeTab, setActiveTab] = useState<'network' | 'patterns' | 'timeline'>('network');
   
   const selectedEntityData = selectedEntity ? entities.find(e => e.id === selectedEntity) : null;
@@ -944,6 +1000,17 @@ export const CallAnalysis = () => {
       {activeTab === 'network' && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">
+            <div className="mb-3 flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowClusterBoxes(!showClusterBoxes)}
+                className={showClusterBoxes ? 'text-primary-400' : 'text-dark-400'}
+              >
+                {showClusterBoxes ? <Eye size={16} className="mr-2" /> : <EyeOff size={16} className="mr-2" />}
+                {showClusterBoxes ? 'ซ่อนกรอบกลุ่ม' : 'แสดงกรอบกลุ่ม'}
+              </Button>
+            </div>
             <NetworkCanvas
               entities={entities}
               links={links}
@@ -951,6 +1018,7 @@ export const CallAnalysis = () => {
               selectedCluster={selectedCluster}
               selectedEntity={selectedEntity}
               onSelectEntity={setSelectedEntity}
+              showClusterBoxes={showClusterBoxes}
             />
             
             {/* Link Type Legend */}
