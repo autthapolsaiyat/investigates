@@ -12,12 +12,12 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import {
-  Phone, MessageSquare, Clock, Users, MapPin, Activity,
+  Phone, MessageSquare, Clocks, MapPin,
   Search, Upload, Download, FileText, Network, BarChart3,
   ArrowUpRight, ArrowDownLeft, PhoneIncoming, PhoneOutgoing,
-  PhoneMissed, Calendar, Filter, Eye, AlertTriangle,
-  Loader2, CheckCircle2, User, Building, Globe, Hash,
-  TrendingUp, Smartphone, Radio, ExternalLink
+  PhoneMissed, Calendar, Eye, AlertTriangle,
+  Loader2,
+  TrendingUp, Smartphone
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 
