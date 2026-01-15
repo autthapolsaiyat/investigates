@@ -14,7 +14,7 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import cytoscape from 'cytoscape';
-import type { Core, NodeSingular } from 'cytoscape';
+import type { Core } from 'cytoscape';
 import {
   Clock,
   Users,
