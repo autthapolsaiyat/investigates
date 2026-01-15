@@ -15,42 +15,19 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import {
-
-
-
-
   Upload,
   Download,
-
   Clock,
   Users,
-
-
-
   AlertTriangle,
-
   Network,
-
   ChevronRight,
   X,
-
   Target,
   Share2,
-  User,
-  Building2,
-  CreditCard,
-  MapPin,
-  Smartphone,
-  Globe,
   Shield,
   Zap,
-
-  Play,
-
-
-
-
-
+  Play
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -154,7 +131,7 @@ const SAMPLE_ENTITIES: Entity[] = [
 
 const SAMPLE_LINKS: Link[] = [
   // Boss Network internal
-  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: 1 } },
+  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: true } },
   { id: 'L002', source: 'P001', target: 'PH002', type: 'call', weight: 45, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L003', source: 'P001', target: 'ACC001', type: 'transfer', weight: 89, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { totalAmount: 45000000 } },
   { id: 'L004', source: 'P001', target: 'ADDR001', type: 'meeting', weight: 30, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
@@ -163,7 +140,7 @@ const SAMPLE_LINKS: Link[] = [
   // Boss to Coordinators
   { id: 'L006', source: 'PH001', target: 'PH003', type: 'call', weight: 85, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { avgDuration: 180 } },
   { id: 'L007', source: 'PH001', target: 'PH004', type: 'call', weight: 42, firstSeen: '2025-07-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: 1 } },
+  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: true } },
   { id: 'L009', source: 'ACC001', target: 'ACC002', type: 'transfer', weight: 56, firstSeen: '2025-06-15', lastSeen: '2026-01-08', metadata: { totalAmount: 28000000 } },
   
   // Coordinators internal
@@ -187,7 +164,7 @@ const SAMPLE_LINKS: Link[] = [
   { id: 'L023', source: 'PH005', target: 'PH006', type: 'call', weight: 35, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: { note: 'emergency contact' } },
   
   // Myanmar Connection
-  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: 1, avgDuration: 300 } },
+  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: true, avgDuration: 300 } },
   { id: 'L025', source: 'CRYPTO001', target: 'CRYPTO002', type: 'transfer', weight: 18, firstSeen: '2025-09-01', lastSeen: '2026-01-05', metadata: { totalAmount: '180 ETH → USDT' } },
   { id: 'L026', source: 'P007', target: 'PH008', type: 'call', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L027', source: 'P007', target: 'CRYPTO002', type: 'transfer', weight: 50, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
@@ -201,7 +178,7 @@ const SAMPLE_LINKS: Link[] = [
   { id: 'L033', source: 'ADDR003', target: 'ADDR002', type: 'transfer', weight: 12, firstSeen: '2025-11-01', lastSeen: '2026-01-08', metadata: { note: 'shipment route' } },
   
   // Unknown connections
-  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: 1 } },
+  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: true } },
   { id: 'L035', source: 'PH010', target: 'P009', type: 'call', weight: 15, firstSeen: '2026-01-10', lastSeen: '2026-01-14', metadata: {} },
 ];
 
@@ -260,19 +237,6 @@ const SAMPLE_PATTERNS: SuspiciousPattern[] = [
 // HELPER FUNCTIONS
 // ============================================
 
-const getEntityIcon = (type: EntityType) => {
-  const icons: Record<EntityType, typeof User> = {
-    person: User,
-    phone: Smartphone,
-    account: CreditCard,
-    address: MapPin,
-    organization: Building2,
-    crypto: Globe,
-    vehicle: Target
-  };
-  return icons[type] || User;
-};
-
 const getEntityColor = (entity: Entity, clusters: Cluster[]): string => {
   if (entity.clusterId) {
     const cluster = clusters.find(c => c.id === entity.clusterId);
@@ -302,17 +266,17 @@ const getLinkColor = (type: LinkType): string => {
   return colors[type] || '#6b7280';
 };
 
-const getEntityShape = (type: EntityType): 'circle' | 'diamond' | 'square' | 'triangle' => {
-  const shapes: Record<EntityType, 'circle' | 'diamond' | 'square' | 'triangle'> = {
-    person: 'circle',
-    phone: 'diamond',
-    account: 'square',
-    address: 'triangle',
-    organization: 'square',
-    crypto: 'diamond',
-    vehicle: 'triangle'
+const getEntityEmoji = (type: EntityType): string => {
+  const emojis: Record<EntityType, string> = {
+    person: '👤',
+    phone: '📱',
+    account: '🏦',
+    address: '🏠',
+    organization: '🏢',
+    crypto: '₿',
+    vehicle: '🚗'
   };
-  return shapes[type] || 'circle';
+  return emojis[type] || '●';
 };
 
 // ============================================
@@ -365,22 +329,19 @@ const EntityTypeLegend = () => (
     </h3>
     <div className="grid grid-cols-2 gap-2 text-xs">
       {[
-        { type: 'person', label: 'บุคคล', icon: User },
-        { type: 'phone', label: 'เบอร์โทร', icon: Smartphone },
-        { type: 'account', label: 'บัญชี', icon: CreditCard },
-        { type: 'address', label: 'ที่อยู่', icon: MapPin },
-        { type: 'organization', label: 'องค์กร', icon: Building2 },
-        { type: 'crypto', label: 'Crypto', icon: Globe },
-        { type: 'vehicle', label: 'ยานพาหนะ', icon: Target },
-      ].map(item => {
-        const Icon = item.icon;
-        return (
-          <div key={item.type} className="flex items-center gap-2 text-dark-400">
-            <Icon size={14} />
-            <span>{item.label}</span>
-          </div>
-        );
-      })}
+        { type: 'person', label: 'บุคคล', emoji: '👤' },
+        { type: 'phone', label: 'เบอร์โทร', emoji: '📱' },
+        { type: 'account', label: 'บัญชี', emoji: '🏦' },
+        { type: 'address', label: 'ที่อยู่', emoji: '🏠' },
+        { type: 'organization', label: 'องค์กร', emoji: '🏢' },
+        { type: 'crypto', label: 'Crypto', emoji: '₿' },
+        { type: 'vehicle', label: 'ยานพาหนะ', emoji: '🚗' },
+      ].map(item => (
+        <div key={item.type} className="flex items-center gap-2 text-dark-400">
+          <span className="text-base">{item.emoji}</span>
+          <span>{item.label}</span>
+        </div>
+      ))}
     </div>
   </div>
 );
@@ -500,34 +461,28 @@ const NetworkCanvas = ({
     const width = canvas.width;
     const height = canvas.height;
     
-    const drawShape = (x: number, y: number, size: number, shape: string, color: string, isSelected: boolean) => {
-      ctx.fillStyle = color;
-      ctx.strokeStyle = isSelected ? '#fff' : color;
-      ctx.lineWidth = isSelected ? 3 : 1;
-      
+    const drawIcon = (x: number, y: number, size: number, emoji: string, color: string, isSelected: boolean) => {
+      // Draw background circle
       ctx.beginPath();
-      switch (shape) {
-        case 'diamond':
-          ctx.moveTo(x, y - size);
-          ctx.lineTo(x + size, y);
-          ctx.lineTo(x, y + size);
-          ctx.lineTo(x - size, y);
-          ctx.closePath();
-          break;
-        case 'square':
-          ctx.rect(x - size * 0.8, y - size * 0.8, size * 1.6, size * 1.6);
-          break;
-        case 'triangle':
-          ctx.moveTo(x, y - size);
-          ctx.lineTo(x + size, y + size * 0.7);
-          ctx.lineTo(x - size, y + size * 0.7);
-          ctx.closePath();
-          break;
-        default: // circle
-          ctx.arc(x, y, size, 0, Math.PI * 2);
-      }
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = color + '40';
       ctx.fill();
-      if (isSelected) ctx.stroke();
+      
+      if (isSelected) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      
+      // Draw emoji
+      ctx.font = `${size * 1.2}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, x, y);
     };
     
     const simulate = () => {
@@ -713,7 +668,7 @@ const NetworkCanvas = ({
         }
         
         ctx.globalAlpha = opacity;
-        drawShape(node.x!, node.y!, size, getEntityShape(node.type), color, isSelected);
+        drawIcon(node.x!, node.y!, size, getEntityEmoji(node.type), color, isSelected);
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
         
@@ -786,7 +741,7 @@ const EntityDetailPanel = ({ entity, links, entities, onClose }: {
   entities: Entity[];
   onClose: () => void;
 }) => {
-  const Icon = getEntityIcon(entity.type);
+  const emoji = getEntityEmoji(entity.type);
   const connectedLinks = links.filter(l => l.source === entity.id || l.target === entity.id);
   
   const riskColors: Record<RiskLevel, string> = {
@@ -801,8 +756,8 @@ const EntityDetailPanel = ({ entity, links, entities, onClose }: {
     <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${riskColors[entity.risk]}`}>
-            <Icon size={24} />
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${riskColors[entity.risk]}`}>
+            {emoji}
           </div>
           <div>
             <h3 className="text-white font-semibold">{entity.label}</h3>
