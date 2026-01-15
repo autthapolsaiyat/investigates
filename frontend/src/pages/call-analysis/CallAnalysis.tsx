@@ -655,14 +655,14 @@ export const CallAnalysis = () => {
         fit: true,
         padding: 50,
         ...(layoutType === 'cose' ? {
-          nodeRepulsion: () => 8000,
-          idealEdgeLength: () => 100,
-          edgeElasticity: () => 100,
+          nodeRepulsion: 8000,
+          idealEdgeLength: 100,
+          edgeElasticity: 100,
           gravity: 0.25,
         } : {}),
         ...(layoutType === 'concentric' ? {
-          concentric: (node: NodeSingular) => node.data('clusterId') || 0,
-          levelWidth: () => 2,
+          concentric: (n: any) => n.data('clusterId') || 0,
+          levelWidth: 2,
         } : {}),
         ...(layoutType === 'breadthfirst' ? {
           directed: true,
@@ -671,7 +671,7 @@ export const CallAnalysis = () => {
       },
       minZoom: 0.2,
       maxZoom: 3,
-      wheelSensitivity: 0.3,
+      
     });
 
     // Event handlers
@@ -757,13 +757,13 @@ export const CallAnalysis = () => {
         fit: true,
         padding: 50,
         ...(newLayout === 'cose' ? {
-          nodeRepulsion: () => 8000,
-          idealEdgeLength: () => 100,
+          nodeRepulsion: 8000,
+          idealEdgeLength: 100,
           gravity: 0.25,
         } : {}),
         ...(newLayout === 'concentric' ? {
-          concentric: (node: NodeSingular) => node.data('clusterId') || 0,
-          levelWidth: () => 2,
+          concentric: (n: any) => n.data('clusterId') || 0,
+          levelWidth: 2,
         } : {}),
       }).run();
     }
