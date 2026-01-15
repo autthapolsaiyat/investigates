@@ -21,8 +21,8 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import {
-  Upload,
-  Download,
+
+
   Clock,
   Users,
   AlertTriangle,
@@ -36,7 +36,7 @@ import {
   Share2,
   Shield,
   Zap,
-  Play,
+
   Eye,
   EyeOff,
   Maximize2,
@@ -558,7 +558,7 @@ const SuspiciousPatternCard = ({ pattern }: { pattern: SuspiciousPattern }) => {
   );
 };
 
-const Tooltip = ({ data, clusters }: { data: TooltipData | null; clusters: Cluster[] }) => {
+const Tooltip = ({ data, clusters: _clusters }: { data: TooltipData | null; clusters: Cluster[] }) => {
   if (!data || (!data.entity && !data.link)) return null;
   
   return (
