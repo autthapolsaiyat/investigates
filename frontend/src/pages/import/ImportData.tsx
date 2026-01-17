@@ -2,7 +2,7 @@
  * Import Data Page - นำเข้าข้อมูลสำหรับวิเคราะห์
  * รองรับ CSV, Excel พร้อม Auto-Link Detection
  */
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Upload, FileSpreadsheet, Users, CreditCard, Phone, Wallet,
   CheckCircle2, AlertCircle, ArrowRight, Download,
@@ -131,14 +131,14 @@ export const ImportData = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch cases on mount
-  useState(() => {
+  useEffect(() => {
     casesAPI.list({ page: 1, page_size: 100 }).then(res => {
       setCases(res.items);
       if (res.items.length > 0) {
         setSelectedCaseId(res.items[0].id);
       }
     });
-  });
+  }, []);
 
   // Auto-detect field mapping based on header names
   const autoDetectFieldMapping = (headers: string[], template: ImportTemplate): FieldMapping[] => {
