@@ -29,6 +29,43 @@ from app.utils.security import (
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+@router.post("/seed-admin")
+async def seed_admin(db: Session = Depends(get_db)):
+    """
+    Create or reset admin user for development/testing
+    Creates: admin@test.com / admin123
+    """
+    admin_email = "admin@test.com"
+    admin_password = "admin123"
+    
+    # Check if admin exists
+    existing = db.query(User).filter(User.email == admin_email).first()
+    
+    if existing:
+        # Update password
+        existing.hashed_password = get_password_hash(admin_password)
+        existing.role = UserRole.SUPER_ADMIN
+        existing.is_active = True
+        existing.failed_login_attempts = 0
+        existing.locked_until = None
+        db.commit()
+        return {"message": "Admin user password reset", "email": admin_email, "password": admin_password}
+    else:
+        # Create new admin
+        user = User(
+            email=admin_email,
+            hashed_password=get_password_hash(admin_password),
+            first_name="Admin",
+            last_name="User",
+            role=UserRole.SUPER_ADMIN,
+            is_active=True,
+            is_verified=True
+        )
+        db.add(user)
+        db.commit()
+        return {"message": "Admin user created", "email": admin_email, "password": admin_password}
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     request: LoginRequest,
