@@ -32,6 +32,7 @@ import blockchainApi, {
 } from '../../services/blockchainApi';
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
 import { CryptoImportModal } from './CryptoImportModal';
+import { CryptoGraph } from './CryptoGraph';
 
 // Blockchain configurations
 interface BlockchainConfig {
@@ -181,8 +182,8 @@ export const CryptoTracker = () => {
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   const [showImportModal, setShowImportModal] = useState(false);
   
-  const containerRef = useRef<HTMLDivElement>(null);
-  const networkRef = useRef<unknown>(null);
+  
+  
 
   // Get current blockchain config
   const currentChain = blockchains.find(b => b.id === selectedChain)!;
@@ -314,93 +315,6 @@ export const CryptoTracker = () => {
     }
   };
 
-  // Render network graph
-  useEffect(() => {
-    if (activeTab === 'graph' && walletInfo && transactions.length > 0 && containerRef.current && window.vis) {
-      renderTransactionGraph();
-    }
-  }, [activeTab, walletInfo, transactions]);
-
-  const renderTransactionGraph = () => {
-    if (!containerRef.current || !window.vis || !walletInfo) return;
-
-    const nodeMap = new Map<string, { id: string; label: string; group: string; value: number }>();
-    
-    nodeMap.set(walletInfo.address, {
-      id: walletInfo.address,
-      label: formatAddress(walletInfo.address, 6),
-      group: 'main',
-      value: walletInfo.balanceUSD
-    });
-    
-    transactions.slice(0, 50).forEach(tx => {
-      const counterparty = tx.type === 'in' ? tx.from : tx.to;
-      if (!nodeMap.has(counterparty)) {
-        const entity = getKnownEntity(counterparty);
-        let group = 'unknown';
-        if (entity) group = entity.type;
-        nodeMap.set(counterparty, {
-          id: counterparty,
-          label: entity?.name || formatAddress(counterparty, 6),
-          group,
-          value: tx.valueUSD
-        });
-      }
-    });
-
-    const nodeColors: Record<string, { background: string; border: string }> = {
-      main: { background: '#3B82F6', border: '#1D4ED8' },
-      exchange: { background: '#22C55E', border: '#15803D' },
-      mixer: { background: '#DC2626', border: '#991B1B' },
-      defi: { background: '#8B5CF6', border: '#6D28D9' },
-      bridge: { background: '#F59E0B', border: '#B45309' },
-      unknown: { background: '#6B7280', border: '#374151' },
-      scam: { background: '#DC2626', border: '#991B1B' },
-      gambling: { background: '#F97316', border: '#C2410C' },
-      nft: { background: '#EC4899', border: '#BE185D' },
-    };
-
-    const visNodes = Array.from(nodeMap.values()).map(n => ({
-      id: n.id,
-      label: n.label,
-      color: nodeColors[n.group] || nodeColors.unknown,
-      size: n.group === 'main' ? 40 : 25,
-      font: { color: '#fff', size: 10 },
-      shape: n.group === 'main' ? 'diamond' : 'dot',
-      borderWidth: 2,
-      shadow: true
-    }));
-
-    const visEdges = transactions.slice(0, 50).map(tx => ({
-      id: tx.hash,
-      from: tx.from,
-      to: tx.to,
-      label: formatUSD(tx.valueUSD),
-      width: Math.min(Math.max(tx.valueUSD / 10000, 1), 5),
-      color: { color: tx.type === 'in' ? '#22C55E' : '#EF4444' },
-      arrows: 'to',
-      font: { color: '#fff', size: 8, strokeWidth: 0 },
-      smooth: { type: 'curvedCW', roundness: 0.2 }
-    }));
-
-    const data = {
-      nodes: new window.vis.DataSet(visNodes),
-      edges: new window.vis.DataSet(visEdges)
-    };
-
-    const options = {
-      nodes: { font: { color: '#fff', size: 10 }, borderWidth: 2, shadow: true },
-      edges: { font: { color: '#fff', size: 8, strokeWidth: 0, align: 'middle' }, smooth: { type: 'curvedCW', roundness: 0.2 }, arrows: { to: { enabled: true, scaleFactor: 0.8 } }, shadow: true },
-      physics: { barnesHut: { gravitationalConstant: -3000, springLength: 150, springConstant: 0.04 } },
-      interaction: { hover: true, tooltipDelay: 100, navigationButtons: true }
-    };
-
-    if (networkRef.current) {
-      (networkRef.current as { destroy: () => void }).destroy();
-    }
-
-    networkRef.current = new window.vis.Network(containerRef.current, data, options);
-  };
 
   // Risk helpers
   const getRiskColor = (score: number) => {
@@ -929,33 +843,12 @@ export const CryptoTracker = () => {
           )}
 
           {/* Tab: Graph */}
-          {activeTab === 'graph' && (
-            <Card className="p-4">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <Network className="text-primary-400" />
-                Transaction Flow Graph
-              </h3>
-              <div ref={containerRef} className="bg-dark-950 rounded-lg border border-dark-700" style={{ height: '500px' }} />
-              <div className="mt-4 p-3 bg-dark-800 rounded-lg">
-                <div className="text-sm font-medium mb-2 text-dark-300">สัญลักษณ์</div>
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                  {[
-                    { color: 'bg-blue-500', label: 'Wallet หลัก' },
-                    { color: 'bg-green-500', label: 'Exchange' },
-                    { color: 'bg-red-500', label: 'Mixer (High Risk)' },
-                    { color: 'bg-purple-500', label: 'DeFi' },
-                    { color: 'bg-yellow-500', label: 'Bridge' },
-                    { color: 'bg-pink-500', label: 'NFT' },
-                    { color: 'bg-gray-500', label: 'Unknown' },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-center gap-2 text-xs">
-                      <div className={`w-4 h-4 rounded ${item.color}`} />
-                      <span>{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
+          {activeTab === "graph" && walletInfo && (
+            <CryptoGraph
+              walletInfo={walletInfo}
+              transactions={transactions}
+              getKnownEntity={getKnownEntity}
+            />
           )}
 
           {/* Tab: Risk */}
