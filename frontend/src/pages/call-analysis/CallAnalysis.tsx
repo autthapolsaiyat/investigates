@@ -3,6 +3,7 @@
  * Proper React integration with Cytoscape.js
  */
 import { useState, useMemo, useCallback } from 'react';
+// @ts-ignore
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
 import {
@@ -20,15 +21,15 @@ import {
   Zap,
   Eye,
   EyeOff,
-  Maximize2,
-  Minimize2,
+
+
   Search,
-  ZoomIn,
+
   ZoomOut,
   Image,
   Filter,
   RotateCcw,
-  Route,
+
   Layout,
   Circle,
   GitBranch,
@@ -223,7 +224,7 @@ const getClusterColor = (clusterId: number | undefined, clusters: Cluster[]): st
 // CYTOSCAPE STYLESHEET
 // ============================================
 
-const cytoscapeStylesheet: cytoscape.Stylesheet[] = [
+const cytoscapeStylesheet: any[] = [
   {
     selector: 'node',
     style: {
