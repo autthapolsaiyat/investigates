@@ -19,7 +19,8 @@ import {
   FileCheck,
   MapPin,
   FileSearch,
-  Link2
+  Link2,
+  Sparkles
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -42,6 +43,7 @@ const navSections = [
     title: 'INPUT',
     items: [
       { to: '/import', icon: Upload, label: 'นำเข้าข้อมูล' },
+      { to: '/smart-import', icon: Sparkles, label: 'Smart Import' },
     ]
   },
   {

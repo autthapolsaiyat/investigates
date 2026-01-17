@@ -11,6 +11,7 @@ import { UsersPage } from './pages/admin/Users';
 import { SettingsPage } from './pages/admin/Settings';
 import { ForensicReportPage } from './pages/forensic-report/ForensicReport';
 import { ImportData } from './pages/import/ImportData';
+import SmartImport from './pages/import/SmartImport';
 import { ReportGenerator } from './pages/report/ReportGenerator';
 import { SilkRoadDemo } from "./pages/silk-road-demo";
 import { LocationTimeline } from "./pages/location-timeline";
@@ -44,6 +45,7 @@ function App() {
           <Route path="money-flow" element={<MoneyFlowPage />} />
           <Route path="forensic-report" element={<ForensicReportPage />} />
           <Route path="import" element={<ImportData />} />
+          <Route path="smart-import" element={<SmartImport />} />
           <Route path="report" element={<ReportGenerator />} />
           <Route path="call-analysis" element={<CallAnalysis />} />
           <Route path="silk-road-demo" element={<SilkRoadDemo />} />
