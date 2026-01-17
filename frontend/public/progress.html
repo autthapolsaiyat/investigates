@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvestiGate - Project Progress Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .progress-bar { transition: width 0.8s ease-in-out; }
+    .status-done { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .status-progress { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .status-pending { background: linear-gradient(90deg, #6b7280, #4b5563); }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.8); }
+    }
+    .pulse-glow { animation: pulse-glow 2s infinite; }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+  
+  <!-- Header -->
+  <header class="border-b border-white/10 backdrop-blur-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-xl">🔍</div>
+          <div>
+            <h1 class="text-xl font-bold">InvestiGate</h1>
+            <p class="text-xs text-gray-400">Investigation Platform - Progress Tracker</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 text-sm">
+          <div class="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg flex items-center gap-2">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            Production
+          </div>
+          <span class="text-gray-400">Last Updated: January 17, 2026</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    
+    <!-- Overall Progress -->
+    <section class="mb-10">
+      <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">📈 Overall Progress</h2>
+          <span class="text-4xl font-bold text-green-400">87%</span>
+        </div>
+        <div class="w-full h-4 bg-gray-700 rounded-full overflow-hidden">
+          <div class="progress-bar h-full status-done rounded-full" style="width: 87%"></div>
+        </div>
+        <div class="grid grid-cols-4 gap-4 mt-6 text-center">
+          <div class="bg-green-500/10 rounded-xl p-4">
+            <div class="text-3xl font-bold text-green-400">8</div>
+            <div class="text-xs text-gray-400 mt-1">Completed</div>
+          </div>
+          <div class="bg-yellow-500/10 rounded-xl p-4">
+            <div class="text-3xl font-bold text-yellow-400">1</div>
+            <div class="text-xs text-gray-400 mt-1">In Progress</div>
+          </div>
+          <div class="bg-gray-500/10 rounded-xl p-4">
+            <div class="text-3xl font-bold text-gray-400">1</div>
+            <div class="text-xs text-gray-400 mt-1">Pending</div>
+          </div>
+          <div class="bg-blue-500/10 rounded-xl p-4">
+            <div class="text-3xl font-bold text-blue-400">10</div>
+            <div class="text-xs text-gray-400 mt-1">Total Pages</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Links -->
+    <section class="mb-10">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="https://wonderful-wave-0486dd100.6.azurestaticapps.net" target="_blank" 
+           class="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-xl p-4 flex items-center gap-3 transition-all card-hover">
+          <span class="text-2xl">🌐</span>
+          <div>
+            <div class="font-semibold">Frontend</div>
+            <div class="text-xs text-gray-400">Azure Static Web Apps</div>
+          </div>
+        </a>
+        <a href="https://investigates-api.azurewebsites.net" target="_blank"
+           class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl p-4 flex items-center gap-3 transition-all card-hover">
+          <span class="text-2xl">⚡</span>
+          <div>
+            <div class="font-semibold">Backend API</div>
+            <div class="text-xs text-gray-400">Azure Web Services</div>
+          </div>
+        </a>
+        <a href="https://github.com/autthapolsaiyat/investigates" target="_blank"
+           class="bg-gray-500/20 hover:bg-gray-500/30 border border-gray-500/30 rounded-xl p-4 flex items-center gap-3 transition-all card-hover">
+          <span class="text-2xl">📦</span>
+          <div>
+            <div class="font-semibold">GitHub Repository</div>
+            <div class="text-xs text-gray-400">Source Code</div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Pages Progress -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+        📄 Pages Development Status
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Dashboard -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📊</span>
+              <div>
+                <h3 class="font-semibold text-lg">Dashboard</h3>
+                <p class="text-xs text-gray-400">หน้าภาพรวมระบบ</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">95%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 95%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Stats Cards</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Recent Cases</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Activity Timeline</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Charts & Analytics</li>
+          </ul>
+        </div>
+
+        <!-- Cases -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📁</span>
+              <div>
+                <h3 class="font-semibold text-lg">Cases</h3>
+                <p class="text-xs text-gray-400">จัดการคดี</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">95%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 95%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Case List & Filters</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Case Details</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Evidence Management</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Timeline View</li>
+          </ul>
+        </div>
+
+        <!-- Evidence System -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">🔐</span>
+              <div>
+                <h3 class="font-semibold text-lg">Evidence System V4</h3>
+                <p class="text-xs text-gray-400">ระบบจัดการหลักฐาน</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">100%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 100%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Upload & Preview</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Chain of Custody</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Integrity Verification</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> AI Analysis Integration</li>
+          </ul>
+        </div>
+
+        <!-- Call Analysis - HIGHLIGHT -->
+        <div class="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-sm rounded-xl border border-green-500/30 p-5 card-hover transition-all pulse-glow">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">🕸️</span>
+              <div>
+                <h3 class="font-semibold text-lg">Intelligence Network V6</h3>
+                <p class="text-xs text-gray-400">Cytoscape.js Edition</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">99%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 99%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Drag & Drop Nodes</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Zoom & Pan</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> 5 Layout Types (Force/Circle/Grid/Tree/Cluster)</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Emoji Icons (👤📱🏦🏠🏢₿🚗)</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Search & Filter</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Export PNG & SVG</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Dark/Light Mode</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Fullscreen Mode</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Suspicious Patterns Detection</li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-white/10">
+            <span class="text-xs text-blue-400">Tech: react-cytoscapejs + cytoscape-svg</span>
+          </div>
+        </div>
+
+        <!-- Money Flow -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">💰</span>
+              <div>
+                <h3 class="font-semibold text-lg">Money Flow</h3>
+                <p class="text-xs text-gray-400">ติดตามกระแสเงิน</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">90%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 90%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Transaction Graph</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Account Linking</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Anomaly Detection</li>
+          </ul>
+        </div>
+
+        <!-- Forensic Report -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📋</span>
+              <div>
+                <h3 class="font-semibold text-lg">Forensic Report</h3>
+                <p class="text-xs text-gray-400">รายงานการสืบสวน</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">85%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 85%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Report Templates</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> PDF Export</li>
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Digital Signatures</li>
+          </ul>
+        </div>
+
+        <!-- Import/Export -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📥</span>
+              <div>
+                <h3 class="font-semibold text-lg">นำเข้าข้อมูล</h3>
+                <p class="text-xs text-gray-400">Import System</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">80%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 80%"></div>
+          </div>
+        </div>
+
+        <!-- Crypto Tracker -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">₿</span>
+              <div>
+                <h3 class="font-semibold text-lg">Crypto Tracker</h3>
+                <p class="text-xs text-gray-400">ติดตาม Cryptocurrency</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-500/20 text-yellow-400">60%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-progress rounded-full" style="width: 60%"></div>
+          </div>
+          <ul class="mt-4 space-y-1 text-xs text-gray-300">
+            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Wallet Search</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">◐</span> Transaction Tracing</li>
+            <li class="flex items-center gap-2"><span class="text-gray-500">○</span> Blockchain Analytics</li>
+          </ul>
+        </div>
+
+        <!-- Admin Pages -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">⚙️</span>
+              <div>
+                <h3 class="font-semibold text-lg">Admin Panel</h3>
+                <p class="text-xs text-gray-400">Organizations, Users, Settings</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">90%</span>
+          </div>
+          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="progress-bar h-full status-done rounded-full" style="width: 90%"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+        🛠️ Technology Stack
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">⚛️</div>
+          <div class="text-xs font-medium">React 18</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">📘</div>
+          <div class="text-xs font-medium">TypeScript</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🎨</div>
+          <div class="text-xs font-medium">Tailwind CSS</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">⚡</div>
+          <div class="text-xs font-medium">Vite</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🕸️</div>
+          <div class="text-xs font-medium">Cytoscape.js</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">☁️</div>
+          <div class="text-xs font-medium">Azure</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🐍</div>
+          <div class="text-xs font-medium">Python/FastAPI</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🗃️</div>
+          <div class="text-xs font-medium">PostgreSQL</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🐙</div>
+          <div class="text-xs font-medium">GitHub Actions</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🔒</div>
+          <div class="text-xs font-medium">JWT Auth</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">📊</div>
+          <div class="text-xs font-medium">Recharts</div>
+        </div>
+        <div class="bg-white/5 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">📱</div>
+          <div class="text-xs font-medium">Lucide Icons</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Updates -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+        🕐 Recent Updates
+      </h2>
+      <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5">
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 pb-4 border-b border-white/10">
+            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 flex-shrink-0">✓</div>
+            <div>
+              <div class="font-medium">Intelligence Network V6 - Cytoscape.js</div>
+              <div class="text-sm text-gray-400 mt-1">Migrated to react-cytoscapejs with proper React integration. Added emoji icons, dark/light mode, fullscreen, export PNG/SVG.</div>
+              <div class="text-xs text-gray-500 mt-2">January 17, 2026</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 pb-4 border-b border-white/10">
+            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 flex-shrink-0">✓</div>
+            <div>
+              <div class="font-medium">Evidence System V4</div>
+              <div class="text-sm text-gray-400 mt-1">Complete evidence management with chain of custody, integrity verification, and AI analysis integration.</div>
+              <div class="text-xs text-gray-500 mt-2">January 15, 2026</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 pb-4 border-b border-white/10">
+            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 flex-shrink-0">✓</div>
+            <div>
+              <div class="font-medium">Dashboard V2 & Cases V2</div>
+              <div class="text-sm text-gray-400 mt-1">Redesigned dashboard with improved analytics and case management system.</div>
+              <div class="text-xs text-gray-500 mt-2">January 14, 2026</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 flex-shrink-0">🚀</div>
+            <div>
+              <div class="font-medium">Initial Deployment</div>
+              <div class="text-sm text-gray-400 mt-1">First deployment to Azure Static Web Apps with CI/CD pipeline.</div>
+              <div class="text-xs text-gray-500 mt-2">January 10, 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison with Industry Tools -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+        🎯 Industry Standards Comparison
+      </h2>
+      <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-white/5">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold">Feature</th>
+              <th class="px-4 py-3 text-center font-semibold">InvestiGate</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-400">i2 Analyst's Notebook</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-400">Palantir</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr>
+              <td class="px-4 py-3">Network Visualization</td>
+              <td class="px-4 py-3 text-center text-green-400">✓ Cytoscape.js</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Drag & Drop</td>
+              <td class="px-4 py-3 text-center text-green-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Multiple Layouts</td>
+              <td class="px-4 py-3 text-center text-green-400">✓ 5 Types</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Export PNG/SVG</td>
+              <td class="px-4 py-3 text-center text-green-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Pattern Detection</td>
+              <td class="px-4 py-3 text-center text-green-400">✓ AI-based</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Web-based</td>
+              <td class="px-4 py-3 text-center text-green-400">✓</td>
+              <td class="px-4 py-3 text-center text-gray-400">✗ Desktop</td>
+              <td class="px-4 py-3 text-center text-gray-400">✓</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Open Source</td>
+              <td class="px-4 py-3 text-center text-green-400">✓ Custom</td>
+              <td class="px-4 py-3 text-center text-gray-400">✗ Proprietary</td>
+              <td class="px-4 py-3 text-center text-gray-400">✗ Proprietary</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Price</td>
+              <td class="px-4 py-3 text-center text-green-400">Free</td>
+              <td class="px-4 py-3 text-center text-gray-400">$$$</td>
+              <td class="px-4 py-3 text-center text-gray-400">$$$$</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 py-6 text-center text-sm text-gray-500">
+    <p>InvestiGate - Professional Investigation Platform</p>
+    <p class="mt-1">Built with ❤️ using React, TypeScript, Cytoscape.js & Azure</p>
+  </footer>
+
+</body>
+</html>
