@@ -466,7 +466,7 @@ export const ForensicReportV2 = () => {
             <RefreshCw size={18} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
             รีเฟรช
           </Button>
-          <Button variant="secondary" onClick={() => window.print()}>
+          <Button variant="secondary" onClick={exportToPDF} disabled={exporting || !stats}>
             <Printer size={18} className="mr-2" />
             พิมพ์
           </Button>
