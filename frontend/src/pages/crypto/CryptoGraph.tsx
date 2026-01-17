@@ -12,8 +12,8 @@ import {
   Download,
   Sun,
   Moon,
-  Maximize2,
-  Minimize2,
+
+
   Layout,
   Circle,
   GitBranch,
@@ -106,7 +106,7 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
   const [cyInstance, setCyInstance] = useState<Core | null>(null);
   const [layoutType, setLayoutType] = useState<LayoutType>('cose');
   const [darkMode, setDarkMode] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  
 
   // Build nodes and edges from transactions
   const elements = useMemo(() => {
@@ -392,8 +392,8 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
 
         {/* Stats overlay */}
         <div className={`absolute top-3 left-3 px-3 py-2 rounded-lg text-xs ${darkMode ? 'bg-dark-900/90 text-dark-300' : 'bg-white/90 text-gray-600'}`}>
-          <div><strong>{elements.filter(e => !e.data.source).length}</strong> Wallets</div>
-          <div><strong>{elements.filter(e => e.data.source).length}</strong> Transactions</div>
+          <div><strong>{elements.filter(e => "source" in e.data === false).length}</strong> Wallets</div>
+          <div><strong>{elements.filter(e => "source" in e.data).length}</strong> Transactions</div>
         </div>
 
         {/* Instructions */}

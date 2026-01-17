@@ -14,7 +14,7 @@
  * 
  * @version 2.0 - Real API Integration
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Wallet, Search, Loader2, ExternalLink, Copy, CheckCircle2,
   AlertTriangle, ArrowUpRight, ArrowDownLeft,
@@ -33,6 +33,7 @@ import blockchainApi, {
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
 import { CryptoImportModal } from './CryptoImportModal';
 import { CryptoGraph } from './CryptoGraph';
+import type { Transaction as CryptoTransaction } from '../../services/blockchainApi';
 
 // Blockchain configurations
 interface BlockchainConfig {
