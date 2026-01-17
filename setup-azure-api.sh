@@ -52,27 +52,18 @@ echo -e "Docs at /api/v1/docs: $DOCS_API"
 echo ""
 
 # ===========================================
-# 2. REGISTER USER
+# 2. SEED ADMIN USER
 # ===========================================
 
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
-echo -e "${BLUE}  2. Register Admin User${NC}"
+echo -e "${BLUE}  2. Seed Admin User${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 echo ""
 
-echo -e "${YELLOW}▶ POST /auth/register${NC}"
+echo -e "${YELLOW}▶ POST /auth/seed-admin${NC}"
 
-REGISTER_DATA='{
-    "email": "admin@test.com",
-    "password": "admin123",
-    "first_name": "Admin",
-    "last_name": "User",
-    "role": "super_admin"
-}'
-
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/auth/register" \
-    -H "Content-Type: application/json" \
-    -d "$REGISTER_DATA" 2>&1)
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/auth/seed-admin" \
+    -H "Content-Type: application/json" 2>&1)
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -1)
 BODY=$(echo "$RESPONSE" | sed '$d')
@@ -80,12 +71,22 @@ BODY=$(echo "$RESPONSE" | sed '$d')
 echo -e "  Status: $HTTP_CODE"
 echo -e "  Response: $BODY"
 
-if [ "$HTTP_CODE" == "200" ] || [ "$HTTP_CODE" == "201" ]; then
-    echo -e "  ${GREEN}✓ User registered successfully${NC}"
-elif [ "$HTTP_CODE" == "400" ] && [[ "$BODY" == *"already"* ]]; then
-    echo -e "  ${YELLOW}⚠ User already exists${NC}"
+if [ "$HTTP_CODE" == "200" ]; then
+    echo -e "  ${GREEN}✓ Admin user ready${NC}"
 else
-    echo -e "  ${RED}✗ Registration failed${NC}"
+    echo -e "  ${RED}✗ Seed failed - trying register instead${NC}"
+    
+    # Try register as fallback
+    REGISTER_DATA='{
+        "email": "admin@test.com",
+        "password": "admin123",
+        "first_name": "Admin",
+        "last_name": "User"
+    }'
+    
+    curl -s -X POST "$API_URL/auth/register" \
+        -H "Content-Type: application/json" \
+        -d "$REGISTER_DATA" > /dev/null 2>&1
 fi
 echo ""
 
@@ -127,7 +128,7 @@ if [ "$HTTP_CODE" != "200" ]; then
 fi
 
 if [ "$HTTP_CODE" == "200" ]; then
-    TOKEN=$(echo "$BODY" | jq -r '.access_token // .token' 2>/dev/null)
+    TOKEN=$(echo "$BODY" | jq -r '.tokens.access_token // .access_token // .token' 2>/dev/null)
     if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
         echo -e "  ${GREEN}✓ Login successful!${NC}"
         echo -e "  ${GREEN}Token: ${TOKEN:0:50}...${NC}"

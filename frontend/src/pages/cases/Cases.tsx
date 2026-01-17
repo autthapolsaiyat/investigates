@@ -885,38 +885,78 @@ export const Cases = () => {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleCreateCase = (newCase: Partial<CaseItem>) => {
-    const caseNumber = `CASE-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Date.now()).slice(-3)}`;
-    const fullCase: CaseItem = {
-      id: String(Date.now()),
-      caseNumber,
-      name: newCase.name || '',
-      description: newCase.description || '',
-      type: newCase.type || 'Other',
-      status: 'draft',
-      priority: (newCase.priority as CaseItem['priority']) || 'medium',
-      amount: newCase.amount || 0,
-      currency: 'THB',
-      suspects: [],
-      team: [],
-      evidence: [],
-      timeline: [
-        {
-          id: '1',
-          date: new Date().toISOString().slice(0, 10),
-          title: 'สร้างคดี',
-          description: 'เริ่มต้นการสืบสวน',
-          type: 'created',
-          user: 'Current User'
-        }
-      ],
-      createdAt: new Date().toISOString().slice(0, 10),
-      updatedAt: new Date().toISOString().slice(0, 10),
-      dueDate: newCase.dueDate || '',
-      progress: 0,
-      tags: []
+  const handleCreateCase = async (newCase: Partial<CaseItem>) => {
+    try {
+      // If editing, update existing case
+      if (newCase.id) {
+        // TODO: Implement update API
+        const updatedCases = cases.map(c => 
+          c.id === newCase.id ? { ...c, ...newCase, name: newCase.name || c.name } : c
+        );
+        setCases(updatedCases);
+        setEditingCase(null);
+        return;
+      }
+
+      // Create new case via API
+      const response = await casesAPI.create({
+        title: newCase.name || '',
+        description: newCase.description || '',
+        case_type: mapCaseType(newCase.type || 'Other'),
+        priority: newCase.priority || 'medium',
+        total_amount: newCase.amount || 0,
+        tags: ''
+      });
+
+      // Add to local state with API response
+      const fullCase: CaseItem = {
+        id: String(response.id),
+        caseNumber: response.case_number || `CASE-${response.id}`,
+        name: response.title,
+        description: response.description || '',
+        type: newCase.type || 'Other',
+        status: 'draft',
+        priority: (newCase.priority as CaseItem['priority']) || 'medium',
+        amount: response.total_amount || 0,
+        currency: 'THB',
+        suspects: [],
+        team: [],
+        evidence: [],
+        timeline: [
+          {
+            id: '1',
+            date: new Date().toISOString().slice(0, 10),
+            title: 'สร้างคดี',
+            description: 'เริ่มต้นการสืบสวน',
+            type: 'created',
+            user: 'Current User'
+          }
+        ],
+        createdAt: new Date().toISOString().slice(0, 10),
+        updatedAt: new Date().toISOString().slice(0, 10),
+        dueDate: newCase.dueDate || '',
+        progress: 0,
+        tags: []
+      };
+      setCases([fullCase, ...cases]);
+    } catch (error) {
+      console.error('Failed to create case:', error);
+      alert('ไม่สามารถสร้างคดีได้ กรุณาลองใหม่');
+    }
+  };
+
+  // Map frontend case type to API enum
+  const mapCaseType = (type: string): string => {
+    const typeMap: Record<string, string> = {
+      'Online Gambling': 'online_gambling',
+      'Money Laundering': 'money_laundering',
+      'Cryptocurrency Fraud': 'fraud',
+      'Investment Fraud': 'investment_scam',
+      'Romance Scam': 'romance_scam',
+      'Call Center Scam': 'call_center_scam',
+      'Other': 'other'
     };
-    setCases([fullCase, ...cases]);
+    return typeMap[type] || 'other';
   };
 
   return (
