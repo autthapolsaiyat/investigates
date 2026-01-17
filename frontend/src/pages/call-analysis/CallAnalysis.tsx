@@ -233,22 +233,10 @@ const cytoscapeStylesheet: any[] = [
       "border-width": 3,
       "width": 55,
       "height": 55,
-      "content": "data(emoji)",
+      "label": "data(emoji)",
       "font-size": 26,
       "text-valign": "center",
       "text-halign": "center",
-    }
-  },
-  {
-    selector: "node[label]",
-    style: {
-      "label": "data(label)",
-      "text-valign": "bottom",
-      "text-margin-y": 8,
-      "font-size": 10,
-      "color": "#e5e7eb",
-      "text-outline-color": "#111827",
-      "text-outline-width": 2,
     }
   },
   {
