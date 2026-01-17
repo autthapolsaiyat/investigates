@@ -5,7 +5,7 @@
 // @ts-ignore
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   ZoomOut,
   RotateCcw,
@@ -17,7 +17,9 @@ import {
   GitBranch,
   Grid3X3,
   Workflow,
-  Target
+  Target,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 import type { WalletInfo, Transaction, KnownEntity } from '../../services/blockchainApi';
@@ -87,7 +89,33 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
   const [cyInstance, setCyInstance] = useState<Core | null>(null);
   const [layoutType, setLayoutType] = useState<LayoutType>('cose');
   const [darkMode, setDarkMode] = useState(true);
-  
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Toggle fullscreen
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+    
+    if (!isFullscreen) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
+
+  // Listen for fullscreen change (when user presses ESC)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Build nodes and edges from transactions
   const elements = useMemo(() => {
@@ -316,7 +344,10 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
   ];
 
   return (
-    <div className={`rounded-xl border ${darkMode ? 'bg-dark-900 border-dark-700' : 'bg-white border-gray-300'}`}>
+    <div 
+      ref={containerRef}
+      className={`rounded-xl border ${darkMode ? 'bg-dark-900 border-dark-700' : 'bg-white border-gray-300'} ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}
+    >
       {/* Toolbar */}
       <div className={`p-3 border-b ${darkMode ? 'border-dark-700' : 'border-gray-200'} flex items-center justify-between flex-wrap gap-2`}>
         <div className="flex items-center gap-2">
@@ -354,11 +385,17 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
           <Button variant="ghost" size="sm" onClick={handleReset}>
             <RotateCcw size={14} />
           </Button>
+          <Button variant="ghost" size="sm" onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
+            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </Button>
         </div>
       </div>
 
       {/* Graph */}
-      <div className={`relative ${darkMode ? 'bg-dark-950' : 'bg-gray-50'}`} style={{ height: '500px' }}>
+      <div 
+        className={`relative ${darkMode ? 'bg-dark-950' : 'bg-gray-50'} ${isFullscreen ? 'flex-1' : ''}`} 
+        style={{ height: isFullscreen ? 'calc(100vh - 120px)' : '500px' }}
+      >
         <CytoscapeComponent
           elements={elements}
           stylesheet={stylesheet}
