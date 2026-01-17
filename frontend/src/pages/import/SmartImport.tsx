@@ -481,14 +481,22 @@ const SmartImport: React.FC = () => {
         const sourceId = nodeIdMap.get(edge.source);
         const targetId = nodeIdMap.get(edge.target);
         if (sourceId && targetId) {
+          // Map edge type to backend format
+          const edgeTypeMap: Record<string, string> = {
+            'money_transfer': 'bank_transfer',
+            'phone_call': 'other',
+            'crypto_transfer': 'crypto_transfer',
+            'ownership': 'other'
+          };
+          
           try {
             const response = await fetch(`${baseUrl}/cases/${selectedCase}/money-flow/edges`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify({
-                source_node_id: sourceId,
-                target_node_id: targetId,
-                edge_type: edge.edgeType,
+                from_node_id: sourceId,
+                to_node_id: targetId,
+                edge_type: edgeTypeMap[edge.edgeType] || 'other',
                 label: edge.label,
                 amount: edge.amount || 0,
                 transaction_date: edge.date
