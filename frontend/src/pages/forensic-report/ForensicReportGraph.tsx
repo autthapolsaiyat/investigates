@@ -32,7 +32,8 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { Button, Input } from '../../components/ui';
+import { Button } from '../../components/ui';
+import type { MoneyFlowNode, MoneyFlowEdge } from '../../services/api';
 // @ts-ignore
 import cytoscape from 'cytoscape';
 // @ts-ignore
@@ -41,29 +42,6 @@ import cytoscapeSvg from 'cytoscape-svg';
 cytoscape.use(cytoscapeSvg);
 
 type LayoutType = 'breadthfirst' | 'cose' | 'circle' | 'grid' | 'concentric';
-
-// Node classification
-interface ForensicNode {
-  id: number;
-  label: string;
-  node_type: string;
-  identifier?: string;
-  bank_name?: string;
-  is_suspect: boolean;
-  is_victim: boolean;
-  risk_score?: number;
-  notes?: string;
-}
-
-interface ForensicEdge {
-  id: number;
-  from_node_id: number;
-  to_node_id: number;
-  edge_type?: string;
-  amount?: number;
-  label?: string;
-  transaction_date?: string;
-}
 
 // Node type configuration
 const NODE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
@@ -95,7 +73,7 @@ const formatCurrency = (amount: number | undefined): string => {
 };
 
 // Get node group/type
-const getNodeGroup = (node: ForensicNode): string => {
+const getNodeGroup = (node: MoneyFlowNode): string => {
   if (node.is_suspect && node.label?.includes('หัวหน้า')) return 'boss';
   if (node.is_suspect) return 'suspect';
   if (node.is_victim) return 'victim';
@@ -106,22 +84,22 @@ const getNodeGroup = (node: ForensicNode): string => {
 };
 
 // Get node display properties
-const getNodeDisplay = (node: ForensicNode) => {
+const getNodeDisplay = (node: MoneyFlowNode) => {
   const group = getNodeGroup(node);
   return NODE_CONFIG[group] || NODE_CONFIG.person;
 };
 
 // Format node label
-const formatNodeLabel = (node: ForensicNode): string => {
+const formatNodeLabel = (node: MoneyFlowNode): string => {
   const display = getNodeDisplay(node);
   const riskBadge = node.risk_score && node.risk_score > 0 ? ` [${node.risk_score}]` : '';
   return `${display.emoji}\n${node.label}${riskBadge}`;
 };
 
 interface ForensicReportGraphProps {
-  nodes: ForensicNode[];
-  edges: ForensicEdge[];
-  onNodeClick?: (node: ForensicNode) => void;
+  nodes: MoneyFlowNode[];
+  edges: MoneyFlowEdge[];
+  onNodeClick?: (node: MoneyFlowNode) => void;
 }
 
 export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicReportGraphProps) => {
@@ -129,7 +107,7 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
   const [layoutType, setLayoutType] = useState<LayoutType>('breadthfirst');
   const [darkMode, setDarkMode] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<ForensicNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<MoneyFlowNode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -376,7 +354,7 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
       cy.elements().not(connected).addClass('faded');
       
       // Get node data
-      const nodeData = node.data('nodeData') as ForensicNode;
+      const nodeData = node.data('nodeData') as MoneyFlowNode;
       setSelectedNode(nodeData);
       if (onNodeClick) onNodeClick(nodeData);
     });
