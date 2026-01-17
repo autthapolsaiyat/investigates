@@ -1,35 +1,39 @@
 /**
- * Intelligence Network Analysis V3
- * Professional-grade link analysis inspired by:
- * - i2 Analyst's Notebook (FBI standard)
- * - Palantir Gotham (CIA/NSA)
- * - FinCEN (Financial Crimes)
- * 
- * Features:
- * 1. Community/Cluster Detection
- * 2. Multiple Entity Types
- * 3. Link Strength Visualization
- * 4. Suspicious Pattern Detection
- * 5. Timeline Analysis
- * 6. Sample Drug Trafficking Case
+ * Intelligence Network Analysis V6 - react-cytoscapejs
+ * Proper React integration with Cytoscape.js
  */
-import { useState, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import CytoscapeComponent from 'react-cytoscapejs';
+import type { Core } from 'cytoscape';
 import {
-  Upload,
-  Download,
   Clock,
   Users,
   AlertTriangle,
   Network,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   X,
   Target,
   Share2,
   Shield,
   Zap,
-  Play,
   Eye,
-  EyeOff
+  EyeOff,
+  Maximize2,
+  Minimize2,
+  Search,
+  ZoomIn,
+  ZoomOut,
+  Image,
+  Filter,
+  RotateCcw,
+  Route,
+  Layout,
+  Circle,
+  GitBranch,
+  Grid3X3,
+  Workflow
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 
@@ -40,6 +44,7 @@ import { Button } from '../../components/ui';
 type EntityType = 'person' | 'phone' | 'account' | 'address' | 'organization' | 'crypto' | 'vehicle';
 type LinkType = 'call' | 'sms' | 'transfer' | 'meeting' | 'family' | 'business' | 'criminal';
 type RiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'unknown';
+type LayoutType = 'cose' | 'circle' | 'grid' | 'breadthfirst' | 'concentric';
 
 interface Entity {
   id: string;
@@ -49,11 +54,6 @@ interface Entity {
   risk: RiskLevel;
   clusterId?: number;
   metadata: Record<string, string | number>;
-  x?: number;
-  y?: number;
-  vx?: number;
-  vy?: number;
-  fixed?: boolean;
 }
 
 interface Link {
@@ -86,737 +86,356 @@ interface SuspiciousPattern {
 }
 
 // ============================================
-// SAMPLE CASE: DRUG TRAFFICKING NETWORK
+// SAMPLE DATA
 // ============================================
 
 const SAMPLE_ENTITIES: Entity[] = [
-  // === CLUSTER 1: หัวหน้าเครือข่าย (Boss Network) ===
-  { id: 'P001', type: 'person', label: 'นาย ก. (Big Boss)', subLabel: 'หัวหน้าเครือข่าย', risk: 'critical', clusterId: 1, metadata: { age: 45, nationality: 'Thai', priors: 3 } },
-  { id: 'PH001', type: 'phone', label: '081-XXX-1111', subLabel: 'เบอร์หลัก Boss', risk: 'critical', clusterId: 1, metadata: { carrier: 'AIS', registered: 'นอมินี' } },
-  { id: 'PH002', type: 'phone', label: '082-XXX-2222', subLabel: 'เบอร์สำรอง', risk: 'high', clusterId: 1, metadata: { carrier: 'TRUE', registered: 'นอมินี' } },
-  { id: 'ACC001', type: 'account', label: 'xxx-x-x1234-x', subLabel: 'บัญชี KBank', risk: 'critical', clusterId: 1, metadata: { bank: 'KBank', balance: 15000000 } },
-  { id: 'ADDR001', type: 'address', label: 'คอนโด ABC Tower', subLabel: 'พระราม 9', risk: 'high', clusterId: 1, metadata: { floor: 32, unit: 'Penthouse' } },
-  { id: 'CRYPTO001', type: 'crypto', label: '0x7a2B...9c3D', subLabel: 'ETH Wallet', risk: 'critical', clusterId: 1, metadata: { chain: 'Ethereum', balance: '45.2 ETH' } },
+  // CLUSTER 1: หัวหน้าเครือข่าย
+  { id: 'P001', type: 'person', label: 'นาย ก. (Big Boss)', subLabel: 'หัวหน้าเครือข่าย', risk: 'critical', clusterId: 1, metadata: { age: 45, priors: 3 } },
+  { id: 'PH001', type: 'phone', label: '081-XXX-1111', subLabel: 'เบอร์หลัก', risk: 'critical', clusterId: 1, metadata: {} },
+  { id: 'PH002', type: 'phone', label: '082-XXX-2222', subLabel: 'เบอร์สำรอง', risk: 'high', clusterId: 1, metadata: {} },
+  { id: 'ACC001', type: 'account', label: 'xxx-x-x1234-x', subLabel: 'KBank', risk: 'critical', clusterId: 1, metadata: { balance: 15000000 } },
+  { id: 'ADDR001', type: 'address', label: 'คอนโด ABC Tower', subLabel: 'พระราม 9', risk: 'high', clusterId: 1, metadata: {} },
+  { id: 'CRYPTO001', type: 'crypto', label: '0x7a2B...9c3D', subLabel: 'ETH Wallet', risk: 'critical', clusterId: 1, metadata: {} },
   
-  // === CLUSTER 2: ผู้ประสานงาน (Coordinators) ===
-  { id: 'P002', type: 'person', label: 'นาย ข. (Coordinator)', subLabel: 'ผู้ประสานงาน', risk: 'high', clusterId: 2, metadata: { age: 38, nationality: 'Thai', priors: 1 } },
-  { id: 'P003', type: 'person', label: 'น.ส. ค. (Money)', subLabel: 'ดูแลการเงิน', risk: 'high', clusterId: 2, metadata: { age: 35, nationality: 'Thai', priors: 0 } },
-  { id: 'PH003', type: 'phone', label: '083-XXX-3333', subLabel: 'เบอร์ ข.', risk: 'high', clusterId: 2, metadata: { carrier: 'DTAC' } },
-  { id: 'PH004', type: 'phone', label: '084-XXX-4444', subLabel: 'เบอร์ ค.', risk: 'high', clusterId: 2, metadata: { carrier: 'AIS' } },
-  { id: 'ACC002', type: 'account', label: 'xxx-x-x5678-x', subLabel: 'บัญชี SCB', risk: 'high', clusterId: 2, metadata: { bank: 'SCB', balance: 8500000 } },
-  { id: 'ORG001', type: 'organization', label: 'บ.นำเข้าส่งออก XYZ', subLabel: 'บังหน้า', risk: 'high', clusterId: 2, metadata: { registered: '2020', employees: 5 } },
+  // CLUSTER 2: ผู้ประสานงาน
+  { id: 'P002', type: 'person', label: 'นาย ข. (Coordinator)', subLabel: 'ผู้ประสานงาน', risk: 'high', clusterId: 2, metadata: { age: 38 } },
+  { id: 'P003', type: 'person', label: 'น.ส. ค. (Money)', subLabel: 'ดูแลการเงิน', risk: 'high', clusterId: 2, metadata: { age: 35 } },
+  { id: 'PH003', type: 'phone', label: '083-XXX-3333', subLabel: 'เบอร์ ข.', risk: 'high', clusterId: 2, metadata: {} },
+  { id: 'PH004', type: 'phone', label: '084-XXX-4444', subLabel: 'เบอร์ ค.', risk: 'high', clusterId: 2, metadata: {} },
+  { id: 'ACC002', type: 'account', label: 'xxx-x-x5678-x', subLabel: 'SCB', risk: 'high', clusterId: 2, metadata: {} },
+  { id: 'ORG001', type: 'organization', label: 'บ.XYZ', subLabel: 'บังหน้า', risk: 'high', clusterId: 2, metadata: {} },
   
-  // === CLUSTER 3: ผู้ค้ารายย่อย (Street Dealers) ===
-  { id: 'P004', type: 'person', label: 'นาย ง. (Dealer 1)', subLabel: 'พ่อค้ารายย่อย', risk: 'medium', clusterId: 3, metadata: { age: 28, area: 'คลองเตย' } },
-  { id: 'P005', type: 'person', label: 'นาย จ. (Dealer 2)', subLabel: 'พ่อค้ารายย่อย', risk: 'medium', clusterId: 3, metadata: { age: 25, area: 'หนองจอก' } },
-  { id: 'P006', type: 'person', label: 'น.ส. ฉ. (Dealer 3)', subLabel: 'พ่อค้ารายย่อย', risk: 'medium', clusterId: 3, metadata: { age: 22, area: 'บางกะปิ' } },
+  // CLUSTER 3: ผู้ค้ารายย่อย
+  { id: 'P004', type: 'person', label: 'นาย ง. (Dealer 1)', subLabel: 'คลองเตย', risk: 'medium', clusterId: 3, metadata: {} },
+  { id: 'P005', type: 'person', label: 'นาย จ. (Dealer 2)', subLabel: 'หนองจอก', risk: 'medium', clusterId: 3, metadata: {} },
+  { id: 'P006', type: 'person', label: 'น.ส. ฉ. (Dealer 3)', subLabel: 'บางกะปิ', risk: 'medium', clusterId: 3, metadata: {} },
   { id: 'PH005', type: 'phone', label: '085-XXX-5555', risk: 'medium', clusterId: 3, metadata: {} },
   { id: 'PH006', type: 'phone', label: '086-XXX-6666', risk: 'medium', clusterId: 3, metadata: {} },
   { id: 'PH007', type: 'phone', label: '087-XXX-7777', risk: 'medium', clusterId: 3, metadata: {} },
   
-  // === CLUSTER 4: ผู้ผลิต/Supplier (Myanmar Connection) ===
-  { id: 'P007', type: 'person', label: 'Mr. Z (Supplier)', subLabel: 'แหล่งผลิต Myanmar', risk: 'critical', clusterId: 4, metadata: { nationality: 'Myanmar', alias: 'The Snake' } },
-  { id: 'PH008', type: 'phone', label: '+95-XXX-8888', subLabel: 'เบอร์ Myanmar', risk: 'critical', clusterId: 4, metadata: { country: 'Myanmar' } },
-  { id: 'CRYPTO002', type: 'crypto', label: 'TRX...abc123', subLabel: 'USDT TRC20', risk: 'critical', clusterId: 4, metadata: { chain: 'Tron', balance: '250,000 USDT' } },
-  { id: 'ADDR002', type: 'address', label: 'Warehouse Tachileik', subLabel: 'ชายแดน Myanmar', risk: 'critical', clusterId: 4, metadata: { type: 'warehouse' } },
+  // CLUSTER 4: Myanmar Connection
+  { id: 'P007', type: 'person', label: 'Mr. Z (Supplier)', subLabel: 'Myanmar', risk: 'critical', clusterId: 4, metadata: {} },
+  { id: 'PH008', type: 'phone', label: '+95-XXX-8888', subLabel: 'Myanmar', risk: 'critical', clusterId: 4, metadata: {} },
+  { id: 'CRYPTO002', type: 'crypto', label: 'TRX...abc123', subLabel: 'USDT', risk: 'critical', clusterId: 4, metadata: {} },
+  { id: 'ADDR002', type: 'address', label: 'Warehouse Tachileik', subLabel: 'ชายแดน', risk: 'critical', clusterId: 4, metadata: {} },
   
-  // === CLUSTER 5: ขนส่ง/Logistics ===
-  { id: 'P008', type: 'person', label: 'นาย ช. (Driver)', subLabel: 'คนขนส่ง', risk: 'medium', clusterId: 5, metadata: { age: 40, license: 'truck' } },
-  { id: 'VEH001', type: 'vehicle', label: 'กข 1234', subLabel: 'รถบรรทุก 6 ล้อ', risk: 'high', clusterId: 5, metadata: { brand: 'HINO', color: 'white' } },
+  // CLUSTER 5: Logistics
+  { id: 'P008', type: 'person', label: 'นาย ช. (Driver)', subLabel: 'คนขนส่ง', risk: 'medium', clusterId: 5, metadata: {} },
+  { id: 'VEH001', type: 'vehicle', label: 'กข 1234', subLabel: 'รถบรรทุก', risk: 'high', clusterId: 5, metadata: {} },
   { id: 'PH009', type: 'phone', label: '089-XXX-9999', risk: 'medium', clusterId: 5, metadata: {} },
-  { id: 'ADDR003', type: 'address', label: 'โกดังเชียงราย', subLabel: 'จุดพักสินค้า', risk: 'high', clusterId: 5, metadata: { size: '500 sqm' } },
+  { id: 'ADDR003', type: 'address', label: 'โกดังเชียงราย', subLabel: 'จุดพัก', risk: 'high', clusterId: 5, metadata: {} },
   
-  // === Outside Entities ===
-  { id: 'P009', type: 'person', label: 'Unknown Male', subLabel: 'ยังไม่ระบุตัวตน', risk: 'unknown', metadata: {} },
-  { id: 'PH010', type: 'phone', label: '090-XXX-0000', subLabel: 'Burner phone', risk: 'high', metadata: { note: 'ใช้ 3 วันแล้วทิ้ง' } },
+  // Unknown
+  { id: 'P009', type: 'person', label: 'Unknown Male', subLabel: 'ไม่ระบุตัวตน', risk: 'unknown', metadata: {} },
+  { id: 'PH010', type: 'phone', label: '090-XXX-0000', subLabel: 'Burner', risk: 'high', metadata: {} },
 ];
 
 const SAMPLE_LINKS: Link[] = [
-  // Boss Network internal
-  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { primary: 1 } },
+  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L002', source: 'P001', target: 'PH002', type: 'call', weight: 45, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L003', source: 'P001', target: 'ACC001', type: 'transfer', weight: 89, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { totalAmount: 45000000 } },
+  { id: 'L003', source: 'P001', target: 'ACC001', type: 'transfer', weight: 89, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: {} },
   { id: 'L004', source: 'P001', target: 'ADDR001', type: 'meeting', weight: 30, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L005', source: 'P001', target: 'CRYPTO001', type: 'transfer', weight: 35, firstSeen: '2025-09-01', lastSeen: '2026-01-12', metadata: { totalAmount: '120 ETH' } },
-  
-  // Boss to Coordinators
-  { id: 'L006', source: 'PH001', target: 'PH003', type: 'call', weight: 85, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { avgDuration: 180 } },
+  { id: 'L005', source: 'P001', target: 'CRYPTO001', type: 'transfer', weight: 35, firstSeen: '2025-09-01', lastSeen: '2026-01-12', metadata: {} },
+  { id: 'L006', source: 'PH001', target: 'PH003', type: 'call', weight: 85, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L007', source: 'PH001', target: 'PH004', type: 'call', weight: 42, firstSeen: '2025-07-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: { encrypted: 1 } },
-  { id: 'L009', source: 'ACC001', target: 'ACC002', type: 'transfer', weight: 56, firstSeen: '2025-06-15', lastSeen: '2026-01-08', metadata: { totalAmount: 28000000 } },
-  
-  // Coordinators internal
+  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
+  { id: 'L009', source: 'ACC001', target: 'ACC002', type: 'transfer', weight: 56, firstSeen: '2025-06-15', lastSeen: '2026-01-08', metadata: {} },
   { id: 'L010', source: 'P002', target: 'PH003', type: 'call', weight: 200, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L011', source: 'P003', target: 'PH004', type: 'call', weight: 180, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L012', source: 'P002', target: 'P003', type: 'meeting', weight: 45, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: { location: 'office' } },
+  { id: 'L012', source: 'P002', target: 'P003', type: 'meeting', weight: 45, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L013', source: 'P003', target: 'ACC002', type: 'transfer', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L014', source: 'P002', target: 'ORG001', type: 'business', weight: 1, firstSeen: '2020-01-01', lastSeen: '2026-01-14', metadata: { role: 'Director' } },
-  { id: 'L015', source: 'P003', target: 'ORG001', type: 'business', weight: 1, firstSeen: '2020-01-01', lastSeen: '2026-01-14', metadata: { role: 'Accountant' } },
-  
-  // Coordinators to Dealers
+  { id: 'L014', source: 'P002', target: 'ORG001', type: 'business', weight: 1, firstSeen: '2020-01-01', lastSeen: '2026-01-14', metadata: {} },
+  { id: 'L015', source: 'P003', target: 'ORG001', type: 'business', weight: 1, firstSeen: '2020-01-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L016', source: 'PH003', target: 'PH005', type: 'call', weight: 65, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L017', source: 'PH003', target: 'PH006', type: 'call', weight: 58, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L018', source: 'PH004', target: 'PH007', type: 'call', weight: 72, firstSeen: '2025-09-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L019', source: 'PH003', target: 'PH007', type: 'sms', weight: 45, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  
-  // Dealers internal
   { id: 'L020', source: 'P004', target: 'PH005', type: 'call', weight: 300, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L021', source: 'P005', target: 'PH006', type: 'call', weight: 280, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L022', source: 'P006', target: 'PH007', type: 'call', weight: 250, firstSeen: '2025-09-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L023', source: 'PH005', target: 'PH006', type: 'call', weight: 35, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: { note: 'emergency contact' } },
-  
-  // Myanmar Connection
-  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: { international: 1, avgDuration: 300 } },
-  { id: 'L025', source: 'CRYPTO001', target: 'CRYPTO002', type: 'transfer', weight: 18, firstSeen: '2025-09-01', lastSeen: '2026-01-05', metadata: { totalAmount: '180 ETH → USDT' } },
+  { id: 'L023', source: 'PH005', target: 'PH006', type: 'call', weight: 35, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
+  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: {} },
+  { id: 'L025', source: 'CRYPTO001', target: 'CRYPTO002', type: 'transfer', weight: 18, firstSeen: '2025-09-01', lastSeen: '2026-01-05', metadata: {} },
   { id: 'L026', source: 'P007', target: 'PH008', type: 'call', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L027', source: 'P007', target: 'CRYPTO002', type: 'transfer', weight: 50, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L028', source: 'P007', target: 'ADDR002', type: 'meeting', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
-  
-  // Logistics
-  { id: 'L029', source: 'PH003', target: 'PH009', type: 'call', weight: 40, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: { timing: 'night only' } },
+  { id: 'L029', source: 'PH003', target: 'PH009', type: 'call', weight: 40, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L030', source: 'P008', target: 'PH009', type: 'call', weight: 150, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L031', source: 'P008', target: 'VEH001', type: 'meeting', weight: 80, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: { role: 'driver' } },
+  { id: 'L031', source: 'P008', target: 'VEH001', type: 'meeting', weight: 80, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
   { id: 'L032', source: 'VEH001', target: 'ADDR003', type: 'meeting', weight: 25, firstSeen: '2025-11-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L033', source: 'ADDR003', target: 'ADDR002', type: 'transfer', weight: 12, firstSeen: '2025-11-01', lastSeen: '2026-01-08', metadata: { note: 'shipment route' } },
-  
-  // Unknown connections
-  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: { suspicious: 1 } },
+  { id: 'L033', source: 'ADDR003', target: 'ADDR002', type: 'transfer', weight: 12, firstSeen: '2025-11-01', lastSeen: '2026-01-08', metadata: {} },
+  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: {} },
   { id: 'L035', source: 'PH010', target: 'P009', type: 'call', weight: 15, firstSeen: '2026-01-10', lastSeen: '2026-01-14', metadata: {} },
 ];
 
 const SAMPLE_CLUSTERS: Cluster[] = [
-  { id: 1, name: 'หัวหน้าเครือข่าย', color: '#ef4444', entities: ['P001', 'PH001', 'PH002', 'ACC001', 'ADDR001', 'CRYPTO001'], risk: 'critical', description: 'กลุ่มบัญชาการหลัก - ควบคุมการเงินและการสื่อสารระดับสูง' },
-  { id: 2, name: 'ผู้ประสานงาน', color: '#f97316', entities: ['P002', 'P003', 'PH003', 'PH004', 'ACC002', 'ORG001'], risk: 'high', description: 'กลุ่มประสานงาน - เชื่อมต่อระหว่างหัวหน้าและผู้ค้ารายย่อย' },
-  { id: 3, name: 'ผู้ค้ารายย่อย', color: '#22c55e', entities: ['P004', 'P005', 'P006', 'PH005', 'PH006', 'PH007'], risk: 'medium', description: 'กลุ่มค้าปลีก - จำหน่ายสินค้าในพื้นที่ต่างๆ' },
-  { id: 4, name: 'แหล่งผลิต Myanmar', color: '#8b5cf6', entities: ['P007', 'PH008', 'CRYPTO002', 'ADDR002'], risk: 'critical', description: 'กลุ่มผู้ผลิต/Supplier - ฐานปฏิบัติการในเมียนมา' },
-  { id: 5, name: 'ขนส่ง/Logistics', color: '#3b82f6', entities: ['P008', 'VEH001', 'PH009', 'ADDR003'], risk: 'high', description: 'กลุ่มขนส่ง - รับผิดชอบการเคลื่อนย้ายสินค้า' },
+  { id: 1, name: 'หัวหน้าเครือข่าย', color: '#ef4444', entities: [], risk: 'critical', description: 'กลุ่มบัญชาการหลัก' },
+  { id: 2, name: 'ผู้ประสานงาน', color: '#f97316', entities: [], risk: 'high', description: 'กลุ่มประสานงาน' },
+  { id: 3, name: 'ผู้ค้ารายย่อย', color: '#22c55e', entities: [], risk: 'medium', description: 'กลุ่มค้าปลีก' },
+  { id: 4, name: 'แหล่งผลิต Myanmar', color: '#8b5cf6', entities: [], risk: 'critical', description: 'กลุ่ม Supplier' },
+  { id: 5, name: 'ขนส่ง/Logistics', color: '#3b82f6', entities: [], risk: 'high', description: 'กลุ่มขนส่ง' },
 ];
 
 const SAMPLE_PATTERNS: SuspiciousPattern[] = [
-  {
-    id: 'SP001',
-    type: 'Burner Phone Pattern',
-    severity: 'critical',
-    description: 'พบการใช้เบอร์โทรศัพท์แบบใช้แล้วทิ้ง (Burner) ติดต่อกับหัวหน้าเครือข่าย',
-    entities: ['PH002', 'PH010', 'P009'],
-    evidence: ['ใช้งานเพียง 3 วัน', 'โทรเฉพาะช่วงกลางคืน', 'ลงทะเบียนด้วยข้อมูลปลอม']
-  },
-  {
-    id: 'SP002',
-    type: 'Layered Communication',
-    severity: 'high',
-    description: 'การสื่อสารแบบหลายชั้น - หัวหน้าไม่ติดต่อผู้ค้าโดยตรง ผ่านผู้ประสานงานเท่านั้น',
-    entities: ['P001', 'P002', 'P003', 'P004', 'P005', 'P006'],
-    evidence: ['ไม่มีการโทรตรงระหว่าง Boss กับ Dealers', 'ทุกการสื่อสารผ่าน Coordinator']
-  },
-  {
-    id: 'SP003',
-    type: 'Crypto Money Flow',
-    severity: 'critical',
-    description: 'การโอนเงินผ่าน Cryptocurrency ระหว่างประเทศ - หลบเลี่ยงระบบธนาคาร',
-    entities: ['CRYPTO001', 'CRYPTO002', 'P001', 'P007'],
-    evidence: ['ETH → USDT conversion', 'โอนข้ามประเทศไม่ผ่านธนาคาร', 'ใช้ Mixer/Tumbler']
-  },
-  {
-    id: 'SP004',
-    type: 'Timing Pattern',
-    severity: 'medium',
-    description: 'รูปแบบเวลาการติดต่อผิดปกติ - โทรเฉพาะช่วง 22:00-04:00',
-    entities: ['PH003', 'PH009', 'P008'],
-    evidence: ['95% ของการโทรเกิดขึ้นหลังเที่ยงคืน', 'สอดคล้องกับเวลาขนส่งสินค้า']
-  },
-  {
-    id: 'SP005',
-    type: 'Shell Company',
-    severity: 'high',
-    description: 'บริษัทบังหน้า - ใช้สำหรับฟอกเงินและปกปิดกิจกรรมผิดกฎหมาย',
-    entities: ['ORG001', 'P002', 'P003', 'ACC002'],
-    evidence: ['พนักงานจริงเพียง 2 คน', 'รายได้ไม่สอดคล้องกับธุรกิจ', 'การโอนเงินผิดปกติ']
-  },
+  { id: 'SP001', type: 'Burner Phone Pattern', severity: 'critical', description: 'พบการใช้เบอร์โทรศัพท์แบบใช้แล้วทิ้ง', entities: ['PH002', 'PH010', 'P009'], evidence: ['ใช้งานเพียง 3 วัน', 'โทรเฉพาะช่วงกลางคืน'] },
+  { id: 'SP002', type: 'Layered Communication', severity: 'high', description: 'การสื่อสารแบบหลายชั้น', entities: ['P001', 'P002', 'P003'], evidence: ['ไม่มีการโทรตรง Boss-Dealers'] },
+  { id: 'SP003', type: 'Crypto Money Flow', severity: 'critical', description: 'การโอนเงินผ่าน Crypto ข้ามประเทศ', entities: ['CRYPTO001', 'CRYPTO002'], evidence: ['ETH → USDT conversion'] },
+  { id: 'SP004', type: 'Timing Pattern', severity: 'medium', description: 'โทรเฉพาะช่วง 22:00-04:00', entities: ['PH003', 'PH009'], evidence: ['95% โทรหลังเที่ยงคืน'] },
+  { id: 'SP005', type: 'Shell Company', severity: 'high', description: 'บริษัทบังหน้า', entities: ['ORG001', 'P002', 'P003'], evidence: ['พนักงานจริง 2 คน'] },
 ];
 
 // ============================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================
 
-const getEntityColor = (entity: Entity, clusters: Cluster[]): string => {
-  if (entity.clusterId) {
-    const cluster = clusters.find(c => c.id === entity.clusterId);
-    if (cluster) return cluster.color;
-  }
-  
-  const riskColors: Record<RiskLevel, string> = {
-    critical: '#ef4444',
-    high: '#f97316',
-    medium: '#eab308',
-    low: '#22c55e',
-    unknown: '#6b7280'
+const getEntityEmoji = (type: EntityType): string => {
+  const emojis: Record<EntityType, string> = {
+    person: '👤', phone: '📱', account: '🏦', address: '🏠',
+    organization: '🏢', crypto: '₿', vehicle: '🚗'
   };
-  return riskColors[entity.risk];
+  return emojis[type] || '●';
+};
+
+const getRiskColor = (risk: RiskLevel): string => {
+  const colors: Record<RiskLevel, string> = {
+    critical: '#ef4444', high: '#f97316', medium: '#eab308',
+    low: '#22c55e', unknown: '#6b7280'
+  };
+  return colors[risk];
 };
 
 const getLinkColor = (type: LinkType): string => {
   const colors: Record<LinkType, string> = {
-    call: '#3b82f6',
-    sms: '#22c55e',
-    transfer: '#f59e0b',
-    meeting: '#8b5cf6',
-    family: '#ec4899',
-    business: '#6366f1',
-    criminal: '#ef4444'
+    call: '#3b82f6', sms: '#22c55e', transfer: '#f59e0b',
+    meeting: '#8b5cf6', family: '#ec4899', business: '#6366f1', criminal: '#ef4444'
   };
   return colors[type] || '#6b7280';
 };
 
-const getEntityEmoji = (type: EntityType): string => {
-  const emojis: Record<EntityType, string> = {
-    person: '👤',
-    phone: '📱',
-    account: '🏦',
-    address: '🏠',
-    organization: '🏢',
-    crypto: '₿',
-    vehicle: '🚗'
-  };
-  return emojis[type] || '●';
+const getClusterColor = (clusterId: number | undefined, clusters: Cluster[]): string => {
+  if (!clusterId) return '#6b7280';
+  const cluster = clusters.find(c => c.id === clusterId);
+  return cluster?.color || '#6b7280';
 };
+
+// ============================================
+// CYTOSCAPE STYLESHEET
+// ============================================
+
+const cytoscapeStylesheet: cytoscape.Stylesheet[] = [
+  {
+    selector: 'node',
+    style: {
+      'background-color': 'data(color)',
+      'border-color': 'data(riskColor)',
+      'border-width': 3,
+      'width': 50,
+      'height': 50,
+      'label': 'data(label)',
+      'text-valign': 'bottom',
+      'text-halign': 'center',
+      'text-margin-y': 8,
+      'font-size': 10,
+      'color': '#e5e7eb',
+      'text-outline-color': '#111827',
+      'text-outline-width': 2,
+      'text-max-width': '100px',
+      'text-wrap': 'ellipsis',
+    }
+  },
+  {
+    selector: 'node:selected',
+    style: {
+      'border-color': '#ffffff',
+      'border-width': 5,
+    }
+  },
+  {
+    selector: 'node.highlighted',
+    style: {
+      'border-color': '#00ff00',
+      'border-width': 5,
+    }
+  },
+  {
+    selector: 'node.searched',
+    style: {
+      'border-color': '#ffff00',
+      'border-width': 5,
+      'border-style': 'dashed',
+    }
+  },
+  {
+    selector: 'node.faded',
+    style: {
+      'opacity': 0.3,
+    }
+  },
+  {
+    selector: 'edge',
+    style: {
+      'width': 'mapData(weight, 1, 300, 1, 8)',
+      'line-color': 'data(color)',
+      'target-arrow-color': 'data(color)',
+      'target-arrow-shape': 'triangle',
+      'curve-style': 'bezier',
+      'opacity': 0.7,
+    }
+  },
+  {
+    selector: 'edge:selected',
+    style: {
+      'line-color': '#ffffff',
+      'target-arrow-color': '#ffffff',
+      'opacity': 1,
+    }
+  },
+  {
+    selector: 'edge.faded',
+    style: {
+      'opacity': 0.1,
+    }
+  },
+];
 
 // ============================================
 // COMPONENTS
 // ============================================
 
-const ClusterLegend = ({ clusters, selectedCluster, onSelectCluster }: {
+const ClusterLegend = ({ clusters, selectedCluster, onSelectCluster, collapsed, onToggle }: {
   clusters: Cluster[];
   selectedCluster: number | null;
   onSelectCluster: (id: number | null) => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }) => (
-  <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-      <Users size={16} className="text-primary-400" />
-      กลุ่ม/เก๊ง (Clusters)
-    </h3>
-    <div className="space-y-2">
-      <button
-        onClick={() => onSelectCluster(null)}
-        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-          selectedCluster === null ? 'bg-dark-600' : 'hover:bg-dark-700'
-        }`}
-      >
-        <span className="text-dark-300">ทั้งหมด</span>
-      </button>
-      {clusters.map(cluster => (
+  <div className="bg-dark-800 rounded-xl border border-dark-700">
+    <button onClick={onToggle} className="w-full p-3 flex items-center justify-between text-sm font-semibold text-white hover:bg-dark-700 rounded-t-xl">
+      <span className="flex items-center gap-2">
+        <Users size={16} className="text-primary-400" />
+        กลุ่ม/เก๊ง ({clusters.length})
+      </span>
+      {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+    </button>
+    {!collapsed && (
+      <div className="p-3 pt-0 space-y-1">
         <button
-          key={cluster.id}
-          onClick={() => onSelectCluster(cluster.id)}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-            selectedCluster === cluster.id ? 'bg-dark-600' : 'hover:bg-dark-700'
-          }`}
+          onClick={() => onSelectCluster(null)}
+          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCluster === null ? 'bg-primary-500/20 text-primary-400' : 'hover:bg-dark-700 text-dark-300'}`}
         >
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cluster.color }} />
-            <span className="text-white">{cluster.name}</span>
-            <span className="text-dark-500 text-xs ml-auto">{cluster.entities.length}</span>
-          </div>
+          ทั้งหมด
         </button>
-      ))}
-    </div>
-  </div>
-);
-
-const EntityTypeLegend = () => (
-  <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-      <Target size={16} className="text-primary-400" />
-      ประเภท Entity
-    </h3>
-    <div className="grid grid-cols-2 gap-2 text-xs">
-      {[
-        { type: 'person', label: 'บุคคล', emoji: '👤' },
-        { type: 'phone', label: 'เบอร์โทร', emoji: '📱' },
-        { type: 'account', label: 'บัญชี', emoji: '🏦' },
-        { type: 'address', label: 'ที่อยู่', emoji: '🏠' },
-        { type: 'organization', label: 'องค์กร', emoji: '🏢' },
-        { type: 'crypto', label: 'Crypto', emoji: '₿' },
-        { type: 'vehicle', label: 'ยานพาหนะ', emoji: '🚗' },
-      ].map(item => (
-        <div key={item.type} className="flex items-center gap-2 text-dark-400">
-          <span className="text-base">{item.emoji}</span>
-          <span>{item.label}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const SuspiciousPatternCard = ({ pattern }: { pattern: SuspiciousPattern }) => {
-  const severityColors: Record<RiskLevel, { bg: string; text: string; border: string }> = {
-    critical: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
-    high: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30' },
-    medium: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' },
-    low: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30' },
-    unknown: { bg: 'bg-gray-500/10', text: 'text-gray-400', border: 'border-gray-500/30' }
-  };
-  const colors = severityColors[pattern.severity];
-  
-  return (
-    <div className={`${colors.bg} ${colors.border} border rounded-xl p-4`}>
-      <div className="flex items-start gap-3">
-        <AlertTriangle size={20} className={colors.text} />
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-white font-medium">{pattern.type}</h4>
-            <span className={`px-2 py-0.5 rounded text-xs uppercase ${colors.bg} ${colors.text}`}>
-              {pattern.severity}
-            </span>
-          </div>
-          <p className="text-sm text-dark-400 mb-2">{pattern.description}</p>
-          <div className="space-y-1">
-            {pattern.evidence.map((ev, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-dark-500">
-                <ChevronRight size={12} />
-                <span>{ev}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {clusters.map(cluster => (
+          <button
+            key={cluster.id}
+            onClick={() => onSelectCluster(cluster.id)}
+            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCluster === cluster.id ? 'bg-dark-600' : 'hover:bg-dark-700'}`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cluster.color }} />
+              <span className="text-white truncate">{cluster.name}</span>
+            </div>
+          </button>
+        ))}
       </div>
-    </div>
-  );
-};
+    )}
+  </div>
+);
 
-const NetworkCanvas = ({ 
-  entities, 
-  links, 
-  clusters,
-  selectedCluster,
-  selectedEntity,
-  onSelectEntity,
-  showClusterBoxes
-}: {
-  entities: Entity[];
-  links: Link[];
-  clusters: Cluster[];
-  selectedCluster: number | null;
-  selectedEntity: string | null;
-  onSelectEntity: (id: string | null) => void;
-  showClusterBoxes: boolean;
+const FilterPanel = ({ riskFilter, setRiskFilter, typeFilter, setTypeFilter, collapsed, onToggle }: {
+  riskFilter: RiskLevel[];
+  setRiskFilter: (f: RiskLevel[]) => void;
+  typeFilter: EntityType[];
+  setTypeFilter: (f: EntityType[]) => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [nodes, setNodes] = useState<Entity[]>([]);
-  const [isSimulating, setIsSimulating] = useState(true);
-  const animationRef = useRef<number | null>(null);
-  const frameCountRef = useRef(0);
-  const draggedNodeRef = useRef<string | null>(null);
-  const isDraggingRef = useRef(false);
+  const risks: { level: RiskLevel; label: string; color: string }[] = [
+    { level: 'critical', label: 'Critical', color: '#ef4444' },
+    { level: 'high', label: 'High', color: '#f97316' },
+    { level: 'medium', label: 'Medium', color: '#eab308' },
+    { level: 'low', label: 'Low', color: '#22c55e' },
+    { level: 'unknown', label: 'Unknown', color: '#6b7280' },
+  ];
   
-  // Filter entities based on selected cluster
-  const filteredEntities = selectedCluster 
-    ? entities.filter(e => e.clusterId === selectedCluster || 
-        links.some(l => 
-          (l.source === e.id || l.target === e.id) && 
-          entities.some(e2 => e2.id === (l.source === e.id ? l.target : l.source) && e2.clusterId === selectedCluster)
-        ))
-    : entities;
-    
-  const filteredLinks = links.filter(l => 
-    filteredEntities.some(e => e.id === l.source) && 
-    filteredEntities.some(e => e.id === l.target)
-  );
-
-  useEffect(() => {
-    // Initialize node positions
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    // Position nodes in cluster groups
-    const clusterCenters: Record<number, { x: number; y: number }> = {
-      1: { x: width * 0.5, y: height * 0.3 },  // Boss - top center
-      2: { x: width * 0.35, y: height * 0.5 }, // Coordinators - middle left
-      3: { x: width * 0.2, y: height * 0.75 }, // Dealers - bottom left
-      4: { x: width * 0.75, y: height * 0.3 }, // Myanmar - top right
-      5: { x: width * 0.7, y: height * 0.7 },  // Logistics - bottom right
-    };
-    
-    const newNodes = filteredEntities.map(entity => ({
-      ...entity,
-      x: entity.clusterId 
-        ? clusterCenters[entity.clusterId]?.x + (Math.random() - 0.5) * 100 || Math.random() * width
-        : Math.random() * width,
-      y: entity.clusterId 
-        ? clusterCenters[entity.clusterId]?.y + (Math.random() - 0.5) * 80 || Math.random() * height
-        : Math.random() * height,
-      vx: 0,
-      vy: 0
-    }));
-    
-    setNodes(newNodes);
-    frameCountRef.current = 0;
-    setIsSimulating(true);
-  }, [filteredEntities.length, selectedCluster]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || nodes.length === 0) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    const drawIcon = (x: number, y: number, size: number, emoji: string, color: string, isSelected: boolean) => {
-      // Draw background circle
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fillStyle = color + '40';
-      ctx.fill();
-      
-      if (isSelected) {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      } else {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-      
-      // Draw emoji
-      ctx.font = `${size * 1.2}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(emoji, x, y);
-    };
-    
-    const simulate = () => {
-      if (!isSimulating || frameCountRef.current > 300) {
-        // Still render but don't simulate physics
-        render();
-        animationRef.current = requestAnimationFrame(simulate);
-        return;
-      }
-      
-      const nodesCopy = [...nodes];
-      
-      // Repulsion between nodes
-      for (let i = 0; i < nodesCopy.length; i++) {
-        for (let j = i + 1; j < nodesCopy.length; j++) {
-          const dx = nodesCopy[j].x! - nodesCopy[i].x!;
-          const dy = nodesCopy[j].y! - nodesCopy[i].y!;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const force = 2000 / (dist * dist);
-          
-          nodesCopy[i].vx! -= (dx / dist) * force * 0.1;
-          nodesCopy[i].vy! -= (dy / dist) * force * 0.1;
-          nodesCopy[j].vx! += (dx / dist) * force * 0.1;
-          nodesCopy[j].vy! += (dy / dist) * force * 0.1;
-        }
-      }
-      
-      // Attraction along links
-      filteredLinks.forEach(link => {
-        const source = nodesCopy.find(n => n.id === link.source);
-        const target = nodesCopy.find(n => n.id === link.target);
-        if (!source || !target) return;
-        
-        const dx = target.x! - source.x!;
-        const dy = target.y! - source.y!;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const idealDist = 80 + (100 - Math.min(link.weight, 100));
-        const force = (dist - idealDist) * 0.02;
-        
-        source.vx! += (dx / dist) * force;
-        source.vy! += (dy / dist) * force;
-        target.vx! -= (dx / dist) * force;
-        target.vy! -= (dy / dist) * force;
-      });
-      
-      // Cluster cohesion
-      const clusterCenters: Record<number, { x: number; y: number; count: number }> = {};
-      nodesCopy.forEach(node => {
-        if (node.clusterId) {
-          if (!clusterCenters[node.clusterId]) {
-            clusterCenters[node.clusterId] = { x: 0, y: 0, count: 0 };
-          }
-          clusterCenters[node.clusterId].x += node.x!;
-          clusterCenters[node.clusterId].y += node.y!;
-          clusterCenters[node.clusterId].count++;
-        }
-      });
-      
-      Object.keys(clusterCenters).forEach(key => {
-        const c = clusterCenters[parseInt(key)];
-        c.x /= c.count;
-        c.y /= c.count;
-      });
-      
-      nodesCopy.forEach(node => {
-        if (node.clusterId && clusterCenters[node.clusterId]) {
-          const center = clusterCenters[node.clusterId];
-          node.vx! += (center.x - node.x!) * 0.01;
-          node.vy! += (center.y - node.y!) * 0.01;
-        }
-        
-        // Center gravity
-        node.vx! += (width / 2 - node.x!) * 0.0005;
-        node.vy! += (height / 2 - node.y!) * 0.0005;
-        
-        // Damping
-        node.vx! *= 0.85;
-        node.vy! *= 0.85;
-        
-        // Update position
-        node.x! += node.vx!;
-        node.y! += node.vy!;
-        
-        // Bounds
-        const margin = 50;
-        node.x = Math.max(margin, Math.min(width - margin, node.x!));
-        node.y = Math.max(margin, Math.min(height - margin, node.y!));
-      });
-      
-      setNodes(nodesCopy);
-      frameCountRef.current++;
-      
-      render();
-      animationRef.current = requestAnimationFrame(simulate);
-    };
-    
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-      
-      // Draw cluster backgrounds (only if enabled)
-      if (showClusterBoxes && !selectedCluster) {
-        clusters.forEach(cluster => {
-          const clusterNodes = nodes.filter(n => n.clusterId === cluster.id);
-          if (clusterNodes.length < 2) return;
-          
-          // Calculate convex hull / bounding area
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-          clusterNodes.forEach(n => {
-            minX = Math.min(minX, n.x! - 30);
-            minY = Math.min(minY, n.y! - 30);
-            maxX = Math.max(maxX, n.x! + 30);
-            maxY = Math.max(maxY, n.y! + 30);
-          });
-          
-          const padding = 30;
-          ctx.fillStyle = cluster.color + '15';
-          ctx.strokeStyle = cluster.color + '40';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 5]);
-          
-          ctx.beginPath();
-          ctx.roundRect(minX - padding, minY - padding, maxX - minX + padding * 2, maxY - minY + padding * 2, 15);
-          ctx.fill();
-          ctx.stroke();
-          ctx.setLineDash([]);
-          
-          // Cluster label
-          ctx.fillStyle = cluster.color;
-          ctx.font = 'bold 11px sans-serif';
-          ctx.fillText(cluster.name, minX - padding + 10, minY - padding + 18);
-        });
-      }
-      
-      // Draw links
-      filteredLinks.forEach(link => {
-        const source = nodes.find(n => n.id === link.source);
-        const target = nodes.find(n => n.id === link.target);
-        if (!source || !target) return;
-        
-        const isHighlighted = selectedEntity && (link.source === selectedEntity || link.target === selectedEntity);
-        
-        ctx.beginPath();
-        ctx.moveTo(source.x!, source.y!);
-        ctx.lineTo(target.x!, target.y!);
-        ctx.strokeStyle = isHighlighted 
-          ? getLinkColor(link.type) 
-          : getLinkColor(link.type) + (selectedEntity ? '30' : '60');
-        ctx.lineWidth = Math.min(Math.max(link.weight / 30, 1), 5) * (isHighlighted ? 2 : 1);
-        ctx.stroke();
-        
-        // Arrow for direction
-        if (link.type === 'transfer' || link.type === 'call') {
-          const angle = Math.atan2(target.y! - source.y!, target.x! - source.x!);
-          const midX = (source.x! + target.x!) / 2;
-          const midY = (source.y! + target.y!) / 2;
-          
-          ctx.beginPath();
-          ctx.moveTo(midX, midY);
-          ctx.lineTo(midX - 8 * Math.cos(angle - Math.PI / 6), midY - 8 * Math.sin(angle - Math.PI / 6));
-          ctx.lineTo(midX - 8 * Math.cos(angle + Math.PI / 6), midY - 8 * Math.sin(angle + Math.PI / 6));
-          ctx.closePath();
-          ctx.fillStyle = isHighlighted ? getLinkColor(link.type) : getLinkColor(link.type) + '60';
-          ctx.fill();
-        }
-      });
-      
-      // Draw nodes
-      nodes.forEach(node => {
-        const isSelected = node.id === selectedEntity;
-        const isConnected = selectedEntity && filteredLinks.some(l => 
-          (l.source === selectedEntity && l.target === node.id) ||
-          (l.target === selectedEntity && l.source === node.id)
-        );
-        const opacity = selectedEntity && !isSelected && !isConnected ? 0.3 : 1;
-        
-        const baseSize = node.type === 'person' ? 18 : 14;
-        const size = baseSize * (isSelected ? 1.3 : 1);
-        const color = getEntityColor(node, clusters);
-        
-        // Glow effect for selected
-        if (isSelected) {
-          ctx.shadowColor = color;
-          ctx.shadowBlur = 20;
-        }
-        
-        ctx.globalAlpha = opacity;
-        drawIcon(node.x!, node.y!, size, getEntityEmoji(node.type), color, isSelected);
-        ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
-        
-        // Label
-        ctx.fillStyle = selectedEntity && !isSelected && !isConnected ? '#6b728080' : '#e5e7eb';
-        ctx.font = `${isSelected ? 'bold ' : ''}10px sans-serif`;
-        ctx.textAlign = 'center';
-        
-        const label = node.label.length > 15 ? node.label.slice(0, 15) + '...' : node.label;
-        ctx.fillText(label, node.x!, node.y! + size + 14);
-      });
-    };
-    
-    simulate();
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [nodes.length, isSimulating, selectedEntity, showClusterBoxes]);
+  const types: { type: EntityType; label: string; emoji: string }[] = [
+    { type: 'person', label: 'บุคคล', emoji: '👤' },
+    { type: 'phone', label: 'เบอร์โทร', emoji: '📱' },
+    { type: 'account', label: 'บัญชี', emoji: '🏦' },
+    { type: 'address', label: 'ที่อยู่', emoji: '🏠' },
+    { type: 'organization', label: 'องค์กร', emoji: '🏢' },
+    { type: 'crypto', label: 'Crypto', emoji: '₿' },
+    { type: 'vehicle', label: 'ยานพาหนะ', emoji: '🚗' },
+  ];
   
-  // Get mouse position helper
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height)
-    };
-  };
-
-  // Find node at position
-  const findNodeAtPos = (x: number, y: number) => {
-    return nodes.find(node => {
-      const dx = node.x! - x;
-      const dy = node.y! - y;
-      return Math.sqrt(dx * dx + dy * dy) < 25;
-    });
-  };
-
-  // Mouse down - start drag
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const { x, y } = getMousePos(e);
-    const node = findNodeAtPos(x, y);
-    if (node) {
-      draggedNodeRef.current = node.id;
-      isDraggingRef.current = true;
-      // Stop simulation when dragging
-      frameCountRef.current = 200;
-    }
-  };
-
-  // Mouse move - drag node
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDraggingRef.current || !draggedNodeRef.current) return;
-    
-    const { x, y } = getMousePos(e);
-    setNodes(prev => prev.map(node => 
-      node.id === draggedNodeRef.current 
-        ? { ...node, x, y, vx: 0, vy: 0 }
-        : node
-    ));
-  };
-
-  // Mouse up - end drag
-  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDraggingRef.current && draggedNodeRef.current) {
-      // If it was just a click (not much movement), select the node
-      const { x, y } = getMousePos(e);
-      const node = findNodeAtPos(x, y);
-      if (node && node.id === draggedNodeRef.current) {
-        onSelectEntity(node.id === selectedEntity ? null : node.id);
-      }
-    }
-    draggedNodeRef.current = null;
-    isDraggingRef.current = false;
-  };
-
-  // Mouse leave - cancel drag
-  const handleMouseLeave = () => {
-    draggedNodeRef.current = null;
-    isDraggingRef.current = false;
-  };
-
   return (
-    <div className="relative">
-      <canvas
-        ref={canvasRef}
-        width={900}
-        height={600}
-        className="w-full bg-dark-950 rounded-xl border border-dark-700 cursor-grab active:cursor-grabbing"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-      />
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            frameCountRef.current = 0;
-            setIsSimulating(true);
-          }}
-        >
-          <Play size={16} className="mr-1" /> Simulate
-        </Button>
-      </div>
+    <div className="bg-dark-800 rounded-xl border border-dark-700">
+      <button onClick={onToggle} className="w-full p-3 flex items-center justify-between text-sm font-semibold text-white hover:bg-dark-700 rounded-t-xl">
+        <span className="flex items-center gap-2">
+          <Filter size={16} className="text-primary-400" />
+          ตัวกรอง
+        </span>
+        {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+      </button>
+      {!collapsed && (
+        <div className="p-3 pt-0 space-y-3">
+          <div>
+            <p className="text-xs text-dark-400 mb-2">ระดับความเสี่ยง</p>
+            <div className="flex flex-wrap gap-1">
+              {risks.map(r => (
+                <button
+                  key={r.level}
+                  onClick={() => riskFilter.includes(r.level) ? setRiskFilter(riskFilter.filter(x => x !== r.level)) : setRiskFilter([...riskFilter, r.level])}
+                  className={`px-2 py-1 rounded text-xs transition-colors ${riskFilter.includes(r.level) ? 'text-white' : 'text-dark-500 opacity-50'}`}
+                  style={{ backgroundColor: riskFilter.includes(r.level) ? r.color + '40' : 'transparent' }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-dark-400 mb-2">ประเภท Entity</p>
+            <div className="grid grid-cols-2 gap-1">
+              {types.map(t => (
+                <button
+                  key={t.type}
+                  onClick={() => typeFilter.includes(t.type) ? setTypeFilter(typeFilter.filter(x => x !== t.type)) : setTypeFilter([...typeFilter, t.type])}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${typeFilter.includes(t.type) ? 'bg-dark-600 text-white' : 'text-dark-500 opacity-50'}`}
+                >
+                  <span>{t.emoji}</span>
+                  <span>{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const EntityDetailPanel = ({ entity, links, entities, onClose }: {
+const EntityDetailPanel = ({ entity, links, entities, clusters, onClose }: {
   entity: Entity;
   links: Link[];
   entities: Entity[];
+  clusters: Cluster[];
   onClose: () => void;
 }) => {
-  const emoji = getEntityEmoji(entity.type);
   const connectedLinks = links.filter(l => l.source === entity.id || l.target === entity.id);
-  
-  const riskColors: Record<RiskLevel, string> = {
-    critical: 'text-red-400 bg-red-500/20',
-    high: 'text-orange-400 bg-orange-500/20',
-    medium: 'text-yellow-400 bg-yellow-500/20',
-    low: 'text-green-400 bg-green-500/20',
-    unknown: 'text-gray-400 bg-gray-500/20'
-  };
+  const cluster = clusters.find(c => c.id === entity.clusterId);
   
   return (
     <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${riskColors[entity.risk]}`}>
-            {emoji}
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ backgroundColor: getRiskColor(entity.risk) + '30' }}>
+            {getEntityEmoji(entity.type)}
           </div>
           <div>
-            <h3 className="text-white font-semibold">{entity.label}</h3>
-            {entity.subLabel && <p className="text-sm text-dark-400">{entity.subLabel}</p>}
+            <h3 className="text-white font-semibold text-sm">{entity.label}</h3>
+            {entity.subLabel && <p className="text-xs text-dark-400">{entity.subLabel}</p>}
           </div>
         </div>
         <button onClick={onClose} className="p-1 hover:bg-dark-700 rounded">
@@ -824,41 +443,30 @@ const EntityDetailPanel = ({ entity, links, entities, onClose }: {
         </button>
       </div>
       
-      <div className="space-y-4">
-        <div>
-          <span className={`px-2 py-1 rounded text-xs uppercase ${riskColors[entity.risk]}`}>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-1 rounded text-xs uppercase" style={{ backgroundColor: getRiskColor(entity.risk) + '30', color: getRiskColor(entity.risk) }}>
             Risk: {entity.risk}
           </span>
+          {cluster && (
+            <span className="px-2 py-1 rounded text-xs" style={{ backgroundColor: cluster.color + '30', color: cluster.color }}>
+              {cluster.name}
+            </span>
+          )}
         </div>
         
-        {Object.keys(entity.metadata).length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold text-dark-400 mb-2">Metadata</h4>
-            <div className="space-y-1">
-              {Object.entries(entity.metadata).map(([key, value]) => (
-                <div key={key} className="flex justify-between text-sm">
-                  <span className="text-dark-400">{key}:</span>
-                  <span className="text-white">{String(value)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
         <div>
-          <h4 className="text-xs font-semibold text-dark-400 mb-2">Connections ({connectedLinks.length})</h4>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {connectedLinks.map(link => {
+          <h4 className="text-xs font-semibold text-dark-400 mb-1">Connections ({connectedLinks.length})</h4>
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {connectedLinks.slice(0, 10).map(link => {
               const otherId = link.source === entity.id ? link.target : link.source;
               const other = entities.find(e => e.id === otherId);
               if (!other) return null;
-              
               return (
-                <div key={link.id} className="flex items-center gap-2 text-sm bg-dark-900 rounded-lg p-2">
+                <div key={link.id} className="flex items-center gap-2 text-xs bg-dark-900 rounded p-1.5">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getLinkColor(link.type) }} />
-                  <span className="text-dark-300 flex-1">{other.label}</span>
-                  <span className="text-dark-500 text-xs">{link.type}</span>
-                  <span className="text-dark-400 text-xs">×{link.weight}</span>
+                  <span className="text-dark-300 truncate flex-1">{other.label}</span>
+                  <span className="text-dark-500">{link.type}</span>
                 </div>
               );
             })}
@@ -869,55 +477,25 @@ const EntityDetailPanel = ({ entity, links, entities, onClose }: {
   );
 };
 
-const StatsOverview = ({ entities, links, clusters }: {
-  entities: Entity[];
-  links: Link[];
-  clusters: Cluster[];
-}) => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
-          <Users size={20} className="text-primary-400" />
+const SuspiciousPatternCard = ({ pattern }: { pattern: SuspiciousPattern }) => (
+  <div className="border border-dark-700 rounded-xl p-4" style={{ backgroundColor: getRiskColor(pattern.severity) + '10' }}>
+    <div className="flex items-start gap-3">
+      <AlertTriangle size={18} style={{ color: getRiskColor(pattern.severity) }} />
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <h4 className="text-white font-medium text-sm">{pattern.type}</h4>
+          <span className="px-2 py-0.5 rounded text-xs uppercase" style={{ backgroundColor: getRiskColor(pattern.severity) + '30', color: getRiskColor(pattern.severity) }}>
+            {pattern.severity}
+          </span>
         </div>
-        <div>
-          <p className="text-2xl font-bold text-white">{entities.length}</p>
-          <p className="text-xs text-dark-400">Entities</p>
-        </div>
-      </div>
-    </div>
-    <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-          <Share2 size={20} className="text-blue-400" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-white">{links.length}</p>
-          <p className="text-xs text-dark-400">Connections</p>
-        </div>
-      </div>
-    </div>
-    <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
-          <Target size={20} className="text-amber-400" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-white">{clusters.length}</p>
-          <p className="text-xs text-dark-400">Clusters</p>
-        </div>
-      </div>
-    </div>
-    <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-          <AlertTriangle size={20} className="text-red-400" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-white">
-            {entities.filter(e => e.risk === 'critical' || e.risk === 'high').length}
-          </p>
-          <p className="text-xs text-dark-400">High Risk</p>
+        <p className="text-xs text-dark-400 mb-2">{pattern.description}</p>
+        <div className="space-y-1">
+          {pattern.evidence.map((ev, i) => (
+            <div key={i} className="flex items-center gap-1 text-xs text-dark-500">
+              <ChevronRight size={10} />
+              <span>{ev}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -935,42 +513,210 @@ export const CallAnalysis = () => {
   const [patterns] = useState<SuspiciousPattern[]>(SAMPLE_PATTERNS);
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
-  const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
-  const [showClusterBoxes, setShowClusterBoxes] = useState(true);
+  const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [activeTab, setActiveTab] = useState<'network' | 'patterns' | 'timeline'>('network');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [clusterPanelCollapsed, setClusterPanelCollapsed] = useState(false);
+  const [filterPanelCollapsed, setFilterPanelCollapsed] = useState(false);
   
-  const selectedEntityData = selectedEntity ? entities.find(e => e.id === selectedEntity) : null;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [layoutType, setLayoutType] = useState<LayoutType>('cose');
+  const [showLabels, setShowLabels] = useState(true);
+  const [cyInstance, setCyInstance] = useState<Core | null>(null);
+  
+  const [riskFilter, setRiskFilter] = useState<RiskLevel[]>(['critical', 'high', 'medium', 'low', 'unknown']);
+  const [typeFilter, setTypeFilter] = useState<EntityType[]>(['person', 'phone', 'account', 'address', 'organization', 'crypto', 'vehicle']);
+
+  // Memoized filtered data
+  const filteredEntities = useMemo(() => 
+    entities.filter(e => {
+      if (selectedCluster && e.clusterId !== selectedCluster) return false;
+      if (!riskFilter.includes(e.risk)) return false;
+      if (!typeFilter.includes(e.type)) return false;
+      return true;
+    }), [entities, selectedCluster, riskFilter, typeFilter]
+  );
+  
+  const filteredEntityIds = useMemo(() => new Set(filteredEntities.map(e => e.id)), [filteredEntities]);
+  
+  const filteredLinks = useMemo(() => 
+    links.filter(l => filteredEntityIds.has(l.source) && filteredEntityIds.has(l.target)),
+    [links, filteredEntityIds]
+  );
+
+  // Memoized cytoscape elements
+  const elements = useMemo(() => {
+    const nodes = filteredEntities.map(entity => ({
+      data: {
+        id: entity.id,
+        label: showLabels ? entity.label : '',
+        type: entity.type,
+        risk: entity.risk,
+        clusterId: entity.clusterId,
+        color: getClusterColor(entity.clusterId, clusters),
+        riskColor: getRiskColor(entity.risk),
+      }
+    }));
+
+    const edges = filteredLinks.map(link => ({
+      data: {
+        id: link.id,
+        source: link.source,
+        target: link.target,
+        type: link.type,
+        weight: link.weight,
+        color: getLinkColor(link.type),
+      }
+    }));
+
+    return [...nodes, ...edges];
+  }, [filteredEntities, filteredLinks, clusters, showLabels]);
+
+  // Layout config
+  const layoutConfig = useMemo(() => ({
+    name: layoutType,
+    animate: false,
+    fit: true,
+    padding: 50,
+    ...(layoutType === 'cose' ? {
+      nodeRepulsion: 8000,
+      idealEdgeLength: 100,
+      gravity: 0.25,
+    } : {}),
+  }), [layoutType]);
+
+  // Cytoscape ready handler
+  const handleCyReady = useCallback((cy: Core) => {
+    setCyInstance(cy);
+    
+    // Node click handler
+    cy.on('tap', 'node', (evt) => {
+      const nodeId = evt.target.id();
+      const entity = entities.find(e => e.id === nodeId);
+      setSelectedEntity(entity || null);
+      
+      // Highlight connections
+      cy.elements().removeClass('highlighted faded');
+      if (entity) {
+        const node = evt.target;
+        const connected = node.neighborhood().add(node);
+        connected.addClass('highlighted');
+        cy.elements().not(connected).addClass('faded');
+      }
+    });
+    
+    // Background click
+    cy.on('tap', (evt) => {
+      if (evt.target === cy) {
+        setSelectedEntity(null);
+        cy.elements().removeClass('highlighted faded');
+      }
+    });
+  }, [entities]);
+
+  // Search effect
+  const handleSearch = useCallback(() => {
+    if (!cyInstance) return;
+    cyInstance.nodes().removeClass('searched');
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      cyInstance.nodes().forEach(node => {
+        if (node.data('label')?.toLowerCase().includes(searchLower)) {
+          node.addClass('searched');
+        }
+      });
+    }
+  }, [cyInstance, searchTerm]);
+
+  // Run search when term changes
+  useMemo(() => handleSearch(), [handleSearch]);
+
+  // Change layout
+  const changeLayout = useCallback((newLayout: LayoutType) => {
+    setLayoutType(newLayout);
+    if (cyInstance) {
+      cyInstance.layout({
+        name: newLayout,
+        animate: true,
+        animationDuration: 500,
+        fit: true,
+        padding: 50,
+        ...(newLayout === 'cose' ? { nodeRepulsion: 8000, idealEdgeLength: 100, gravity: 0.25 } : {}),
+      }).run();
+    }
+  }, [cyInstance]);
+
+  // Export PNG
+  const handleExportPNG = useCallback(() => {
+    if (!cyInstance) return;
+    const png = cyInstance.png({ full: true, scale: 2, bg: '#111827' });
+    const link = document.createElement('a');
+    link.download = `network-analysis-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = png;
+    link.click();
+  }, [cyInstance]);
+
+  // Reset
+  const handleReset = useCallback(() => {
+    if (cyInstance) {
+      cyInstance.fit();
+      cyInstance.elements().removeClass('highlighted faded searched');
+    }
+    setSelectedEntity(null);
+    setSearchTerm('');
+  }, [cyInstance]);
+
+  const layouts: { id: LayoutType; label: string; icon: typeof Layout }[] = [
+    { id: 'cose', label: 'Force', icon: Workflow },
+    { id: 'circle', label: 'Circle', icon: Circle },
+    { id: 'grid', label: 'Grid', icon: Grid3X3 },
+    { id: 'breadthfirst', label: 'Tree', icon: GitBranch },
+    { id: 'concentric', label: 'Cluster', icon: Target },
+  ];
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-dark-900 min-h-screen">
+    <div className="flex-1 flex flex-col bg-dark-900 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Shield className="text-primary-400" />
-            Intelligence Network Analysis
-          </h1>
-          <p className="text-dark-400 mt-1">
-            Link Analysis แบบ FBI/CIA - คดีเครือข่ายค้ายาเสพติดข้ามชาติ
-          </p>
+      <div className="p-4 border-b border-dark-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+              <Shield className="text-primary-400" size={24} />
+              Intelligence Network Analysis
+              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded ml-2">react-cytoscapejs</span>
+            </h1>
+            <p className="text-sm text-dark-400">Link Analysis - คดีเครือข่ายค้ายาเสพติด</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleExportPNG}>
+              <Image size={16} className="mr-1" />
+              Export PNG
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost">
-            <Upload size={18} className="mr-2" />
-            Import Data
-          </Button>
-          <Button variant="primary">
-            <Download size={18} className="mr-2" />
-            Export Report
-          </Button>
+        
+        {/* Stats */}
+        <div className="mt-3 flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-800 rounded-lg">
+            <Users size={14} className="text-primary-400" />
+            <span className="text-white">{filteredEntities.length}</span>
+            <span className="text-dark-400">Entities</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-800 rounded-lg">
+            <Share2 size={14} className="text-blue-400" />
+            <span className="text-white">{filteredLinks.length}</span>
+            <span className="text-dark-400">Links</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-800 rounded-lg">
+            <Target size={14} className="text-amber-400" />
+            <span className="text-white">{clusters.length}</span>
+            <span className="text-dark-400">Clusters</span>
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <StatsOverview entities={entities} links={links} clusters={clusters} />
-
       {/* Tabs */}
-      <div className="border-b border-dark-700">
+      <div className="px-4 border-b border-dark-700">
         <div className="flex gap-1">
           {[
             { id: 'network', label: 'Network Graph', icon: Network },
@@ -982,11 +728,7 @@ export const CallAnalysis = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-primary-400 border-primary-400'
-                    : 'text-dark-400 border-transparent hover:text-white'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? 'text-primary-400 border-primary-400' : 'text-dark-400 border-transparent hover:text-white'}`}
               >
                 <Icon size={16} />
                 {tab.label}
@@ -997,94 +739,175 @@ export const CallAnalysis = () => {
       </div>
 
       {/* Content */}
-      {activeTab === 'network' && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
-            <div className="mb-3 flex items-center justify-end gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowClusterBoxes(!showClusterBoxes)}
-                className={showClusterBoxes ? 'text-primary-400' : 'text-dark-400'}
-              >
-                {showClusterBoxes ? <Eye size={16} className="mr-2" /> : <EyeOff size={16} className="mr-2" />}
-                {showClusterBoxes ? 'ซ่อนกรอบกลุ่ม' : 'แสดงกรอบกลุ่ม'}
-              </Button>
-            </div>
-            <NetworkCanvas
-              entities={entities}
-              links={links}
-              clusters={clusters}
-              selectedCluster={selectedCluster}
-              selectedEntity={selectedEntity}
-              onSelectEntity={setSelectedEntity}
-              showClusterBoxes={showClusterBoxes}
-            />
-            
-            {/* Link Type Legend */}
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs">
-              <span className="text-dark-400">Link Types:</span>
-              {[
-                { type: 'call', label: 'โทรศัพท์' },
-                { type: 'sms', label: 'SMS' },
-                { type: 'transfer', label: 'โอนเงิน' },
-                { type: 'meeting', label: 'พบปะ' },
-                { type: 'business', label: 'ธุรกิจ' },
-              ].map(item => (
-                <div key={item.type} className="flex items-center gap-1">
-                  <div className="w-4 h-1 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
-                  <span className="text-dark-400">{item.label}</span>
+      <div className="flex-1 flex overflow-hidden">
+        {activeTab === 'network' && (
+          <>
+            {/* Graph Area */}
+            <div className="flex-1 p-4 flex flex-col overflow-hidden">
+              {/* Toolbar */}
+              <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-400" size={14} />
+                    <input
+                      type="text"
+                      placeholder="ค้นหา Entity..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-48 pl-8 pr-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-500 focus:outline-none focus:border-primary-500"
+                    />
+                    {searchTerm && (
+                      <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <X size={12} className="text-dark-400" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Layout selector */}
+                  <div className="flex items-center bg-dark-800 rounded-lg p-1">
+                    {layouts.map(l => {
+                      const Icon = l.icon;
+                      return (
+                        <button
+                          key={l.id}
+                          onClick={() => changeLayout(l.id)}
+                          className={`p-1.5 rounded transition-colors ${layoutType === l.id ? 'bg-primary-500/20 text-primary-400' : 'text-dark-400 hover:text-white'}`}
+                          title={l.label}
+                        >
+                          <Icon size={14} />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              ))}
+                
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setShowLabels(!showLabels)}>
+                    {showLabels ? <Eye size={14} className="mr-1" /> : <EyeOff size={14} className="mr-1" />}
+                    Labels
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => cyInstance?.fit()}>
+                    <ZoomOut size={14} className="mr-1" />
+                    Fit
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleReset}>
+                    <RotateCcw size={14} className="mr-1" />
+                    Reset
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+                    {sidebarCollapsed ? <ChevronRight size={14} /> : <X size={14} />}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Cytoscape Graph */}
+              <div className="flex-1 relative min-h-0 bg-dark-950 rounded-xl border border-dark-700">
+                <CytoscapeComponent
+                  elements={elements}
+                  stylesheet={cytoscapeStylesheet}
+                  layout={layoutConfig}
+                  cy={handleCyReady}
+                  style={{ width: '100%', height: '100%' }}
+                  minZoom={0.2}
+                  maxZoom={3}
+                  boxSelectionEnabled={true}
+                  autounselectify={false}
+                  userZoomingEnabled={true}
+                  userPanningEnabled={true}
+                />
+                
+                {/* Instructions */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-4 text-xs text-dark-500 bg-dark-900/80 px-3 py-2 rounded-lg">
+                  <span>🖱️ ลาก Node</span>
+                  <span>📍 Pan พื้นหลัง</span>
+                  <span>🔍 Scroll ซูม</span>
+                  <span>👆 คลิกเลือก</span>
+                </div>
+              </div>
+              
+              {/* Legend */}
+              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
+                <span className="text-dark-400">Link Types:</span>
+                {[
+                  { type: 'call', label: 'โทรศัพท์' },
+                  { type: 'sms', label: 'SMS' },
+                  { type: 'transfer', label: 'โอนเงิน' },
+                  { type: 'meeting', label: 'พบปะ' },
+                  { type: 'business', label: 'ธุรกิจ' },
+                ].map(item => (
+                  <div key={item.type} className="flex items-center gap-1">
+                    <div className="w-4 h-1 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
+                    <span className="text-dark-400">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Sidebar */}
+            {!sidebarCollapsed && (
+              <div className="w-72 border-l border-dark-700 p-4 space-y-4 overflow-y-auto">
+                <ClusterLegend
+                  clusters={clusters}
+                  selectedCluster={selectedCluster}
+                  onSelectCluster={setSelectedCluster}
+                  collapsed={clusterPanelCollapsed}
+                  onToggle={() => setClusterPanelCollapsed(!clusterPanelCollapsed)}
+                />
+                
+                <FilterPanel
+                  riskFilter={riskFilter}
+                  setRiskFilter={setRiskFilter}
+                  typeFilter={typeFilter}
+                  setTypeFilter={setTypeFilter}
+                  collapsed={filterPanelCollapsed}
+                  onToggle={() => setFilterPanelCollapsed(!filterPanelCollapsed)}
+                />
+                
+                {selectedEntity && (
+                  <EntityDetailPanel
+                    entity={selectedEntity}
+                    links={links}
+                    entities={entities}
+                    clusters={clusters}
+                    onClose={() => {
+                      setSelectedEntity(null);
+                      cyInstance?.elements().removeClass('highlighted faded');
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'patterns' && (
+          <div className="flex-1 p-4 overflow-y-auto">
+            <div className="max-w-4xl mx-auto space-y-4">
+              <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
+                <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                  <Zap className="text-amber-400" />
+                  AI Pattern Detection
+                </h3>
+                <p className="text-sm text-dark-400">พบ {patterns.length} รูปแบบที่น่าสงสัย</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {patterns.map(pattern => (
+                  <SuspiciousPatternCard key={pattern.id} pattern={pattern} />
+                ))}
+              </div>
             </div>
           </div>
-          
-          <div className="space-y-4">
-            <ClusterLegend
-              clusters={clusters}
-              selectedCluster={selectedCluster}
-              onSelectCluster={setSelectedCluster}
-            />
-            <EntityTypeLegend />
-            
-            {selectedEntityData && (
-              <EntityDetailPanel
-                entity={selectedEntityData}
-                links={links}
-                entities={entities}
-                onClose={() => setSelectedEntity(null)}
-              />
-            )}
-          </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === 'patterns' && (
-        <div className="space-y-4">
-          <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-              <Zap className="text-amber-400" />
-              AI Pattern Detection
-            </h3>
-            <p className="text-sm text-dark-400">
-              ระบบตรวจจับรูปแบบพฤติกรรมผิดปกติอัตโนมัติ พบ {patterns.length} รูปแบบที่น่าสงสัย
-            </p>
+        {activeTab === 'timeline' && (
+          <div className="flex-1 p-4 flex items-center justify-center">
+            <div className="text-center text-dark-400">
+              <Clock size={48} className="mx-auto mb-4 opacity-50" />
+              <p>Timeline Analysis - Coming Soon</p>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {patterns.map(pattern => (
-              <SuspiciousPatternCard key={pattern.id} pattern={pattern} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'timeline' && (
-        <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Timeline Analysis</h3>
-          <p className="text-dark-400">Coming soon - แสดงลำดับเหตุการณ์ตามเวลา</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
