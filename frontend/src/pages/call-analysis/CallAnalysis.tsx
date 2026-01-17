@@ -684,7 +684,7 @@ export const CallAnalysis = () => {
   // Export SVG
   const handleExportSVG = useCallback(() => {
     if (!cyInstance) return;
-    const svg = cyInstance.svg({ full: true, scale: 2, bg: darkMode ? "#111827" : "#ffffff" });
+    const svg = (cyInstance as any).svg({ full: true, scale: 2, bg: darkMode ? "#111827" : "#ffffff" });
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
