@@ -9,7 +9,7 @@
  * 6. Status workflow
  * 7. Create/Edit case
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus,
   Search,
@@ -45,6 +45,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
+import { casesAPI } from '../../services/api';
 
 // ============================================
 // TYPES
@@ -385,7 +386,7 @@ const CaseCard = ({ case_, onClick }: { case_: CaseItem; onClick: () => void }) 
   );
 };
 
-const CaseDetailModal = ({ case_, onClose }: { case_: CaseItem; onClose: () => void }) => {
+const CaseDetailModal = ({ case_, onClose, onEdit }: { case_: CaseItem; onClose: () => void; onEdit: () => void }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'evidence' | 'suspects' | 'team'>('overview');
   const statusStyle = getStatusStyle(case_.status);
   const priorityStyle = getPriorityStyle(case_.priority);
@@ -422,7 +423,7 @@ const CaseDetailModal = ({ case_, onClose }: { case_: CaseItem; onClose: () => v
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={onEdit}>
                 <Edit size={16} className="mr-1" /> แก้ไข
               </Button>
               <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
@@ -710,15 +711,17 @@ const CaseDetailModal = ({ case_, onClose }: { case_: CaseItem; onClose: () => v
   );
 };
 
-const CreateCaseModal = ({ onClose, onSave }: { onClose: () => void; onSave: (case_: Partial<CaseItem>) => void }) => {
+const CreateCaseModal = ({ onClose, onSave, editingCase }: { onClose: () => void; onSave: (case_: Partial<CaseItem>) => void; editingCase?: CaseItem | null }) => {
   const [formData, setFormData] = useState<{ name: string; description: string; type: string; priority: 'critical' | 'high' | 'medium' | 'low'; amount: string; dueDate: string; }>({
-    name: '',
-    description: '',
-    type: 'Cryptocurrency Fraud',
-    priority: 'medium',
-    amount: '',
-    dueDate: ''
+    name: editingCase?.name || '',
+    description: editingCase?.description || '',
+    type: editingCase?.type || 'Cryptocurrency Fraud',
+    priority: editingCase?.priority || 'medium',
+    amount: editingCase?.amount?.toString() || '',
+    dueDate: editingCase?.dueDate || ''
   });
+
+  const isEditing = !!editingCase;
 
   const handleSubmit = () => {
     if (!formData.name) {
@@ -727,6 +730,7 @@ const CreateCaseModal = ({ onClose, onSave }: { onClose: () => void; onSave: (ca
     }
     onSave({
       ...formData,
+      id: editingCase?.id,
       amount: parseFloat(formData.amount) || 0
     });
     onClose();
@@ -736,7 +740,7 @@ const CreateCaseModal = ({ onClose, onSave }: { onClose: () => void; onSave: (ca
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-dark-800 rounded-2xl border border-dark-700 w-full max-w-lg">
         <div className="p-6 border-b border-dark-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">สร้างคดีใหม่</h2>
+          <h2 className="text-xl font-bold text-white">{isEditing ? 'แก้ไขคดี' : 'สร้างคดีใหม่'}</h2>
           <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
             <X size={20} className="text-dark-400" />
           </button>
@@ -829,7 +833,49 @@ export const Cases = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCase, setSelectedCase] = useState<CaseItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCase, setEditingCase] = useState<CaseItem | null>(null);
   const [_viewMode, _setViewMode] = useState<'grid' | 'list'>('grid');
+  const [_loading, setLoading] = useState(true);
+
+  // Fetch cases from API on mount
+  useEffect(() => {
+    fetchCases();
+  }, []);
+
+  const fetchCases = async () => {
+    try {
+      setLoading(true);
+      const response = await casesAPI.list({ page: 1, page_size: 100 });
+      // Map API response to CaseItem format
+      const apiCases: CaseItem[] = response.items.map(item => ({
+        id: String(item.id),
+        caseNumber: item.case_number || `CASE-${item.id}`,
+        name: item.title,
+        description: item.description || '',
+        type: item.case_type || 'Other',
+        status: item.status as CaseItem['status'] || 'draft',
+        priority: item.priority as CaseItem['priority'] || 'medium',
+        amount: item.total_amount || 0,
+        currency: 'THB',
+        suspects: [],
+        team: [],
+        evidence: [],
+        timeline: [],
+        createdAt: item.created_at?.slice(0, 10) || '',
+        updatedAt: item.updated_at?.slice(0, 10) || '',
+        dueDate: '',
+        progress: 0,
+        tags: item.tags?.split(',') || []
+      }));
+      // Combine API cases with mock cases for demo
+      setCases([...apiCases, ...MOCK_CASES.filter(m => !apiCases.find(a => a.caseNumber === m.caseNumber))]);
+    } catch (err) {
+      console.error('Failed to fetch cases:', err);
+      setCases(MOCK_CASES);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCases = cases.filter(case_ => {
     const matchesSearch = case_.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -950,14 +996,23 @@ export const Cases = () => {
         <CaseDetailModal
           case_={selectedCase}
           onClose={() => setSelectedCase(null)}
+          onEdit={() => {
+            setEditingCase(selectedCase);
+            setSelectedCase(null);
+            setShowCreateModal(true);
+          }}
         />
       )}
 
-      {/* Create Case Modal */}
+      {/* Create/Edit Case Modal */}
       {showCreateModal && (
         <CreateCaseModal
-          onClose={() => setShowCreateModal(false)}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingCase(null);
+          }}
           onSave={handleCreateCase}
+          editingCase={editingCase}
         />
       )}
     </div>

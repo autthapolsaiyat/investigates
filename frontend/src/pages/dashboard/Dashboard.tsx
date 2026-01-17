@@ -412,40 +412,44 @@ const RiskLevelChart = () => (
   </div>
 );
 
-const RecentActivities = () => (
-  <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
-    <div className="flex items-center justify-between mb-6">
-      <div>
-        <h3 className="text-lg font-semibold text-white">กิจกรรมล่าสุด</h3>
-        <p className="text-sm text-dark-400">อัพเดตจากทีม</p>
+const RecentActivities = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white">กิจกรรมล่าสุด</h3>
+          <p className="text-sm text-dark-400">อัพเดตจากทีม</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/cases')}>
+          ดูทั้งหมด <ChevronRight size={16} />
+        </Button>
       </div>
-      <Button variant="ghost" size="sm">
-        ดูทั้งหมด <ChevronRight size={16} />
-      </Button>
-    </div>
-    <div className="space-y-4">
-      {RECENT_ACTIVITIES.map((activity) => {
-        const Icon = activity.icon;
-        return (
-          <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-dark-700/50 transition-colors">
-            <div className={`w-10 h-10 ${activity.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-              <Icon size={20} className={activity.color} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-medium">{activity.title}</p>
-              <p className="text-sm text-dark-400 truncate">{activity.description}</p>
-              <div className="flex items-center gap-2 mt-1 text-xs text-dark-500">
-                <span>{activity.user}</span>
-                <span>•</span>
-                <span>{activity.time}</span>
+      <div className="space-y-4">
+        {RECENT_ACTIVITIES.map((activity) => {
+          const Icon = activity.icon;
+          return (
+            <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-dark-700/50 transition-colors">
+              <div className={`w-10 h-10 ${activity.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <Icon size={20} className={activity.color} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium">{activity.title}</p>
+                <p className="text-sm text-dark-400 truncate">{activity.description}</p>
+                <div className="flex items-center gap-2 mt-1 text-xs text-dark-500">
+                  <span>{activity.user}</span>
+                  <span>•</span>
+                  <span>{activity.time}</span>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const QuickActions = () => {
   const navigate = useNavigate();
