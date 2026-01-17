@@ -185,6 +185,9 @@ export const SilkRoadDemo = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [caseName, setCaseName] = useState('คดี Silk Road - US Government Seizure');
+  const [caseNotes, setCaseNotes] = useState('');
+  const [savedCaseId, setSavedCaseId] = useState<number | null>(null);
 
   const copyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -196,7 +199,159 @@ export const SilkRoadDemo = () => {
 
   const handleExportPDF = async () => {
     setIsExporting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Generate PDF Report HTML
+    const reportHTML = `
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>รายงานการสืบสวน - คดี Silk Road</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+    * { font-family: 'Sarabun', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+    body { padding: 40px; background: white; color: #1a1a1a; line-height: 1.6; }
+    .header { text-align: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 30px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .header p { color: #666; }
+    .section { margin-bottom: 30px; }
+    .section h2 { font-size: 18px; color: #1a1a1a; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; margin-bottom: 15px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; text-align: center; }
+    .stat-box .value { font-size: 24px; font-weight: bold; color: #3b82f6; }
+    .stat-box .label { font-size: 12px; color: #64748b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 14px; }
+    th { background: #f1f5f9; font-weight: 600; }
+    .timeline-item { padding: 15px; background: #f8fafc; border-left: 4px solid #22c55e; margin-bottom: 10px; }
+    .timeline-item.active { border-left-color: #3b82f6; }
+    .timeline-item h4 { font-size: 14px; margin-bottom: 5px; }
+    .timeline-item p { font-size: 12px; color: #64748b; }
+    .wallet-box { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+    .wallet-box .label { font-size: 12px; color: #92400e; }
+    .wallet-box .address { font-family: monospace; font-size: 12px; color: #1a1a1a; word-break: break-all; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔍 รายงานการสืบสวน</h1>
+    <p>คดี Silk Road - การยึด Bitcoin มูลค่า $6.5 Billion</p>
+    <p style="font-size: 12px; margin-top: 10px;">วันที่ออกรายงาน: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-box">
+      <div class="value">69,370</div>
+      <div class="label">BTC ยึดได้</div>
+    </div>
+    <div class="stat-box">
+      <div class="value">$6.5B</div>
+      <div class="label">มูลค่าปัจจุบัน</div>
+    </div>
+    <div class="stat-box">
+      <div class="value">2</div>
+      <div class="label">ผู้ต้องหา</div>
+    </div>
+    <div class="stat-box">
+      <div class="value">11 ปี</div>
+      <div class="label">ระยะเวลาสืบสวน</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📋 ขั้นตอนการสืบสวน</h2>
+    ${INVESTIGATION_STEPS.map(step => `
+      <div class="timeline-item">
+        <h4>${step.id}. ${step.title} (${step.date})</h4>
+        <p>${step.description}</p>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="section">
+    <h2>💼 กระเป๋าที่เกี่ยวข้อง</h2>
+    ${CASE_WALLETS.map(wallet => `
+      <div class="wallet-box">
+        <div class="label">${wallet.label}</div>
+        <div class="address">${wallet.address}</div>
+        <div style="font-size: 12px; color: #666; margin-top: 5px;">ยอด: ${wallet.balance}</div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="section">
+    <h2>👤 ข้อมูลผู้ต้องหา</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ชื่อ</th>
+          <th>บทบาท</th>
+          <th>สัญชาติ</th>
+          <th>สถานะ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>James Zhong</strong></td>
+          <td>Individual X - ขโมย Bitcoin จาก Silk Road</td>
+          <td>American</td>
+          <td>ถูกจับกุม (พ.ย. 2022)</td>
+        </tr>
+        <tr>
+          <td><strong>Ross William Ulbricht</strong></td>
+          <td>Founder - Silk Road (Dread Pirate Roberts)</td>
+          <td>American</td>
+          <td>จำคุกตลอดชีวิต</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>📊 สรุปเส้นทางการสืบสวน</h2>
+    <div style="text-align: center; padding: 20px; background: #f0fdf4; border-radius: 8px; border: 1px solid #22c55e;">
+      <p style="font-size: 14px;">
+        <strong>Wallet Address</strong> → <strong>ติดตามเงิน</strong> → <strong>พบ Exchange</strong> → <strong>หมายศาล</strong> → <strong>ได้ข้อมูล KYC</strong> → <strong>จับกุม!</strong>
+      </p>
+      <p style="margin-top: 10px; color: #16a34a; font-weight: bold;">
+        ✅ สืบสวนสำเร็จ - ยึดทรัพย์ $6.5 Billion
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>รายงานนี้สร้างโดยระบบ InvestiGate - Digital Forensics Investigation Platform</p>
+    <p>เอกสารนี้เป็นความลับ ห้ามเผยแพร่โดยไม่ได้รับอนุญาต</p>
+  </div>
+</body>
+</html>`;
+
+    // Create blob and download
+    const blob = new Blob([reportHTML], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    // Open in new window for print
+    const printWindow = window.open(url, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      };
+    }
+
+    // Also download as HTML file
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = `SilkRoad-Report-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    
     setIsExporting(false);
     setExportSuccess(true);
     setTimeout(() => {
@@ -207,17 +362,92 @@ export const SilkRoadDemo = () => {
 
   const handleSaveToCase = async () => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => {
-      setSaveSuccess(false);
-      setShowSaveModal(false);
-    }, 2000);
+    try {
+      // Import API
+      const { casesAPI, moneyFlowAPI } = await import('../../services/api');
+      
+      // Create new case
+      const newCase = await casesAPI.create({
+        title: caseName || 'คดี Silk Road - US Government Seizure',
+        description: `การยึด Bitcoin มูลค่า $6.5 Billion จาก Silk Road\n\n${caseNotes || 'บันทึกจาก Silk Road Demo'}`,
+        case_type: 'cryptocurrency',
+        priority: 'high',
+        total_amount: 6500000000, // $6.5B
+        currency: 'USD',
+        victims_count: 0,
+        suspects_count: 2,
+        tags: 'silk-road,bitcoin,cryptocurrency,us-government,seizure',
+      });
+
+      // Add nodes to the case
+      const nodePromises = [
+        // Individual X Wallet
+        moneyFlowAPI.createNode(newCase.id, {
+          label: 'Individual X (James Zhong)',
+          node_type: 'crypto_wallet',
+          identifier: '1HQ3Go3ggs8pFnXuHVHRytPCq5fGG8Hbhx',
+          is_suspect: true,
+          is_victim: false,
+          risk_score: 95,
+          notes: 'Hacker - ขโมย 50,676 BTC จาก Silk Road ปี 2012',
+        }),
+        // FBI Seizure Wallet
+        moneyFlowAPI.createNode(newCase.id, {
+          label: 'FBI Seizure Wallet',
+          node_type: 'crypto_wallet',
+          identifier: 'bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6',
+          is_suspect: false,
+          is_victim: false,
+          risk_score: 0,
+          notes: 'กระเป๋ายึดทรัพย์ของ FBI - 69,370 BTC',
+        }),
+        // Ross Ulbricht
+        moneyFlowAPI.createNode(newCase.id, {
+          label: 'Ross Ulbricht (Dread Pirate Roberts)',
+          node_type: 'person',
+          identifier: 'US Passport',
+          is_suspect: true,
+          is_victim: false,
+          risk_score: 100,
+          notes: 'ผู้ก่อตั้ง Silk Road - ถูกจับ 1 ต.ค. 2013 - จำคุกตลอดชีวิต',
+        }),
+        // Silk Road Platform
+        moneyFlowAPI.createNode(newCase.id, {
+          label: 'Silk Road Marketplace',
+          node_type: 'exchange',
+          identifier: 'Dark Web Marketplace',
+          is_suspect: true,
+          is_victim: false,
+          risk_score: 100,
+          notes: 'ตลาดมืดบน Tor Network - ดำเนินการ 2011-2013 - ยอดขาย 9.5M BTC',
+        }),
+      ];
+
+      await Promise.all(nodePromises);
+
+      setSavedCaseId(newCase.id);
+      setIsSaving(false);
+      setSaveSuccess(true);
+      
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setShowSaveModal(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to save case:', error);
+      setIsSaving(false);
+      alert('เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง');
+    }
   };
 
   const handleLinkToMoneyFlow = () => {
-    navigate('/money-flow');
+    // Navigate to Money Flow with wallet addresses as state
+    navigate('/money-flow', {
+      state: {
+        wallets: CASE_WALLETS.map(w => w.address),
+        caseTitle: 'Silk Road Investigation',
+      }
+    });
   };
 
   return (
@@ -584,25 +814,39 @@ export const SilkRoadDemo = () => {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">เลือกคดี:</label>
-                <select className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white">
-                  <option>➕ สร้างคดีใหม่</option>
-                  {AVAILABLE_CASES.map(c => <option key={c.id}>{c.id} - {c.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-dark-400 mb-1 block">ชื่อคดีใหม่:</label>
-                <input type="text" defaultValue="คดี Silk Road - US Government Seizure" className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white" />
+                <label className="text-sm text-dark-400 mb-1 block">ชื่อคดี:</label>
+                <input 
+                  type="text" 
+                  value={caseName}
+                  onChange={(e) => setCaseName(e.target.value)}
+                  className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white" 
+                />
               </div>
               <div>
                 <label className="text-sm text-dark-400 mb-1 block">หมายเหตุ:</label>
-                <textarea rows={3} placeholder="รายละเอียดเพิ่มเติม..." className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none" />
+                <textarea 
+                  rows={3} 
+                  value={caseNotes}
+                  onChange={(e) => setCaseNotes(e.target.value)}
+                  placeholder="รายละเอียดเพิ่มเติม..." 
+                  className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none" 
+                />
               </div>
               {saveSuccess ? (
                 <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
                   <CheckCircle size={32} className="text-green-400 mx-auto mb-2" />
                   <div className="text-green-400 font-semibold">บันทึกสำเร็จ!</div>
-                  <div className="text-sm text-dark-300">ข้อมูลถูกบันทึกลงคดีแล้ว</div>
+                  <div className="text-sm text-dark-300 mb-3">ข้อมูลถูกบันทึกลงคดีแล้ว</div>
+                  {savedCaseId && (
+                    <Button 
+                      variant="ghost" 
+                      className="text-primary-400"
+                      onClick={() => navigate(`/cases/${savedCaseId}`)}
+                    >
+                      <ExternalLink size={16} className="mr-2" />
+                      เปิดดูคดี
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <Button variant="primary" className="w-full" onClick={handleSaveToCase} disabled={isSaving}>

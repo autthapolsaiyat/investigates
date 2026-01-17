@@ -16,7 +16,8 @@ import {
   Search,
   FileText,
   Upload,
-  FileCheck
+  FileCheck,
+  MapPin
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -29,6 +30,8 @@ const mainNavItems = [
   { to: '/report', icon: FileCheck, label: 'รายงานศาล' },
   { to: '/call-analysis', icon: Phone, label: 'Call Analysis' },
   { to: '/crypto', icon: Wallet, label: 'Crypto Tracker' },
+  { to: '/location-timeline', icon: MapPin, label: 'Location Timeline' },
+  { to: '/kyc-request', icon: FileText, label: 'KYC Request' },
 ];
 
 const adminNavItems = [
