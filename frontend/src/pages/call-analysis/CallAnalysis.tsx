@@ -5,6 +5,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 // @ts-ignore
 import cytoscapeSvg from 'cytoscape-svg';
+// @ts-ignore
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
 import {
