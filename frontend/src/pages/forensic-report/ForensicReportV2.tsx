@@ -1,17 +1,18 @@
 /**
  * Forensic Report V2 - รายงานวิเคราะห์เครือข่ายอาชญากรรม
  * มาตรฐาน Digital Forensic สำหรับส่งศาล
- * Features: Risk Score Analysis, PDF Export, Auto Summary
+ * Features: Risk Score Analysis, PDF Export, Auto Summary, Network Graph
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   FileText, Download, Printer, Users, TrendingUp, RefreshCw, Loader2, 
   AlertTriangle, Phone, Wallet, Building2, Shield, ChevronRight,
-  Target, ArrowRightLeft, Globe, Shuffle, CheckCircle
+  Target, ArrowRightLeft, Globe, Shuffle, CheckCircle, Network
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
 import type { Case, MoneyFlowNode, MoneyFlowEdge } from '../../services/api';
+import { ForensicReportGraph } from './ForensicReportGraph';
 
 // ==================== TYPES ====================
 interface RiskFactor {
@@ -105,11 +106,14 @@ export const ForensicReportV2 = () => {
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
+  const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<Statistics | null>(null);
   const [highRiskPersons, setHighRiskPersons] = useState<HighRiskPerson[]>([]);
   const [keyTransactions, setKeyTransactions] = useState<KeyTransaction[]>([]);
+  const [showGraph, setShowGraph] = useState(true);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Fetch cases
@@ -141,6 +145,8 @@ export const ForensicReportV2 = () => {
         moneyFlowAPI.listNodes(selectedCaseId),
         moneyFlowAPI.listEdges(selectedCaseId)
       ]);
+      setNodes(nodesRes);
+      setEdges(edgesRes);
       analyzeData(nodesRes, edgesRes);
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -531,6 +537,37 @@ export const ForensicReportV2 = () => {
                 </div>
               </div>
             </div>
+          </Card>
+
+          {/* Network Graph Section */}
+          <Card className="mb-6">
+            <div className="flex items-center justify-between p-4 border-b border-dark-700">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Network className="text-primary-400" />
+                แผนผังเครือข่าย (Network Diagram)
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowGraph(!showGraph)}
+              >
+                {showGraph ? 'ซ่อน' : 'แสดง'}
+              </Button>
+            </div>
+            {showGraph && nodes.length > 0 && (
+              <div style={{ height: '500px' }}>
+                <ForensicReportGraph
+                  nodes={nodes}
+                  edges={edges}
+                  onNodeClick={() => {}}
+                />
+              </div>
+            )}
+            {showGraph && nodes.length === 0 && (
+              <div className="p-8 text-center text-dark-400">
+                ไม่มีข้อมูลเครือข่าย
+              </div>
+            )}
           </Card>
 
           {/* Main Content Grid */}
