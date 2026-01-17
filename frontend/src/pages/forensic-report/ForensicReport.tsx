@@ -12,6 +12,7 @@ import {
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
 import type { Case, MoneyFlowNode, MoneyFlowEdge } from '../../services/api';
+import { ForensicReportGraph } from './ForensicReportGraph';
 
 declare global {
   interface Window {
@@ -565,9 +566,20 @@ export const ForensicReport = () => {
         ))}
       </div>
 
-      {/* Graph Views */}
+      {/* Graph Views - Using Cytoscape.js */}
       {(activeTab === 'hierarchy' || activeTab === 'network') && (
-        <div className="flex gap-4">
+        <div className="rounded-xl overflow-hidden" style={{ height: '650px' }}>
+          <ForensicReportGraph
+            nodes={nodes}
+            edges={edges}
+            onNodeClick={(node) => setSelectedNode(node)}
+          />
+        </div>
+      )}
+
+      {/* REMOVED OLD VIS-NETWORK SECTION - Replaced by ForensicReportGraph above */}
+      {false && (
+        <div className="flex gap-4 hidden">
           {/* Main Graph */}
           <Card className="flex-1 p-4">
             <div className="flex items-center justify-between mb-4">
