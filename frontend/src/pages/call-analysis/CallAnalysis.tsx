@@ -2,7 +2,7 @@
  * Intelligence Network Analysis V6 - react-cytoscapejs
  * Proper React integration with Cytoscape.js
  */
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 // @ts-ignore
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
@@ -26,6 +26,10 @@ import {
   Search,
 
   ZoomOut,
+  Maximize2,
+  Minimize2,
+  Sun,
+  Moon,
   Image,
   Filter,
   RotateCcw,
@@ -517,7 +521,10 @@ export const CallAnalysis = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [layoutType, setLayoutType] = useState<LayoutType>('cose');
   const [showLabels, setShowLabels] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [cyInstance, setCyInstance] = useState<Core | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const [riskFilter, setRiskFilter] = useState<RiskLevel[]>(['critical', 'high', 'medium', 'low', 'unknown']);
   const [typeFilter, setTypeFilter] = useState<EntityType[]>(['person', 'phone', 'account', 'address', 'organization', 'crypto', 'vehicle']);
@@ -662,6 +669,37 @@ export const CallAnalysis = () => {
     setSearchTerm('');
   }, [cyInstance]);
 
+
+  // Fullscreen
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  // Export SVG
+  const handleExportSVG = useCallback(() => {
+    if (!cyInstance) return;
+    const svg = cyInstance.svg({ full: true, scale: 2, bg: darkMode ? "#111827" : "#ffffff" });
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = "network-" + new Date().toISOString().slice(0, 10) + ".svg";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [cyInstance, darkMode]);
+
+  // Fullscreen listener
+  useEffect(() => {
+    const h = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", h);
+    return () => document.removeEventListener("fullscreenchange", h);
+  }, []);
   const layouts: { id: LayoutType; label: string; icon: typeof Layout }[] = [
     { id: 'cose', label: 'Force', icon: Workflow },
     { id: 'circle', label: 'Circle', icon: Circle },
@@ -671,7 +709,7 @@ export const CallAnalysis = () => {
   ];
 
   return (
-    <div className="flex-1 flex flex-col bg-dark-900 min-h-screen">
+    <div ref={containerRef} className={`flex-1 flex flex-col min-h-screen ${darkMode ? "bg-dark-900" : "bg-gray-100"}`}>
       {/* Header */}
       <div className="p-4 border-b border-dark-700">
         <div className="flex items-center justify-between">
@@ -687,6 +725,17 @@ export const CallAnalysis = () => {
             <Button variant="ghost" size="sm" onClick={handleExportPNG}>
               <Image size={16} className="mr-1" />
               Export PNG
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleExportSVG}>
+              <Image size={16} className="mr-1" />
+              Export SVG
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setDarkMode(!darkMode)}>
+              {darkMode ? <Sun size={16} className="mr-1" /> : <Moon size={16} className="mr-1" />}
+              {darkMode ? "Light" : "Dark"}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </Button>
           </div>
         </div>
@@ -797,7 +846,7 @@ export const CallAnalysis = () => {
               </div>
               
               {/* Cytoscape Graph */}
-              <div className="flex-1 relative min-h-0 bg-dark-950 rounded-xl border border-dark-700">
+              <div className={`flex-1 relative min-h-0 ${darkMode ? "bg-dark-950 border-dark-700" : "bg-white border-gray-300"} rounded-xl border`}>
                 <CytoscapeComponent
                   elements={elements}
                   stylesheet={cytoscapeStylesheet}
