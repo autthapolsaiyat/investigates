@@ -4,6 +4,7 @@
  */
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 // @ts-ignore
+import cytoscapeSvg from 'cytoscape-svg';
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
 import {
@@ -41,6 +42,10 @@ import {
   Workflow
 } from 'lucide-react';
 import { Button } from '../../components/ui';
+import cytoscape from "cytoscape";
+// @ts-ignore
+import cytoscapeSvg from "cytoscape-svg";
+cytoscape.use(cytoscapeSvg);
 
 // ============================================
 // TYPES
@@ -647,17 +652,17 @@ export const CallAnalysis = () => {
         ...(newLayout === 'cose' ? { nodeRepulsion: 8000, idealEdgeLength: 100, gravity: 0.25 } : {}),
       }).run();
     }
-  }, [cyInstance]);
+  }, [cyInstance, darkMode]);
 
   // Export PNG
   const handleExportPNG = useCallback(() => {
     if (!cyInstance) return;
-    const png = cyInstance.png({ full: true, scale: 2, bg: '#111827' });
+    const png = cyInstance.png({ full: true, scale: 2, bg: darkMode ? '#111827' : '#ffffff' });
     const link = document.createElement('a');
     link.download = `network-analysis-${new Date().toISOString().slice(0, 10)}.png`;
     link.href = png;
     link.click();
-  }, [cyInstance]);
+  }, [cyInstance, darkMode]);
 
   // Reset
   const handleReset = useCallback(() => {
@@ -667,7 +672,7 @@ export const CallAnalysis = () => {
     }
     setSelectedEntity(null);
     setSearchTerm('');
-  }, [cyInstance]);
+  }, [cyInstance, darkMode]);
 
 
   // Fullscreen
