@@ -1,71 +1,86 @@
 /**
- * MoneyFlowGraph V3 - With Analytics Panel
- * Professional Forensic Money Flow with Analysis Features
+ * MoneyFlowGraph - Professional Forensic Money Flow Visualization
+ * Using Cytoscape.js - Industry Standard (like FBI/CIA tools)
+ * 
+ * Features:
+ * - Multiple layouts (Force, Circle, Grid, Tree, Radial)
+ * - Risk scoring with color coding
+ * - Suspect/Victim markers
+ * - Transaction flow visualization
+ * - Fullscreen mode
+ * - PNG/SVG export
+ * - Click to highlight connections
  */
-import { useCallback, useMemo, useState, useEffect } from 'react';
-import type { Node, Edge } from 'reactflow';
-import ReactFlow, {
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  MarkerType,
-  ConnectionMode,
-  Panel,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import { 
-  Building2, 
-  Wallet, 
-  User, 
-  Building, 
-  ArrowLeftRight,
-  AlertTriangle,
-  Shield,
-  ChevronDown,
-  ChevronUp,
-  X,
-  TrendingUp,
-  CircleDot,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Copy,
-  Hash
+// @ts-ignore
+import CytoscapeComponent from 'react-cytoscapejs';
+import type { Core } from 'cytoscape';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import {
+  ZoomOut,
+  RotateCcw,
+  Download,
+  Sun,
+  Moon,
+  Layout,
+  Circle,
+  GitBranch,
+  Grid3X3,
+  Workflow,
+  Target,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
+import { Button } from '../../components/ui';
+// @ts-ignore
+import cytoscape from 'cytoscape';
+// @ts-ignore
+import cytoscapeSvg from 'cytoscape-svg';
 import type { MoneyFlowNode, MoneyFlowEdge } from './types';
-import { AnalyticsPanel } from './AnalyticsPanel';
 
-// Color mapping for node types
-const NODE_COLORS: Record<string, string> = {
-  bank_account: '#3B82F6',
-  crypto_wallet: '#F59E0B',
-  person: '#10B981',
-  company: '#8B5CF6',
-  exchange: '#EC4899',
-  suspect: '#EF4444',
-  victim: '#06B6D4',
-  unknown: '#6B7280',
+cytoscape.use(cytoscapeSvg);
+
+type LayoutType = 'cose' | 'circle' | 'grid' | 'breadthfirst' | 'concentric';
+
+// Node type configuration
+const NODE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
+  bank_account: { emoji: '🏦', color: '#3B82F6', label: 'บัญชีธนาคาร' },
+  crypto_wallet: { emoji: '💰', color: '#F59E0B', label: 'Crypto Wallet' },
+  person: { emoji: '👤', color: '#10B981', label: 'บุคคล' },
+  company: { emoji: '🏢', color: '#8B5CF6', label: 'บริษัท' },
+  exchange: { emoji: '🔄', color: '#EC4899', label: 'Exchange' },
+  suspect: { emoji: '⚠️', color: '#EF4444', label: 'ผู้ต้องสงสัย' },
+  victim: { emoji: '🛡️', color: '#06B6D4', label: 'ผู้เสียหาย' },
+  unknown: { emoji: '❓', color: '#6B7280', label: 'ไม่ระบุ' },
 };
 
-const NODE_LABELS: Record<string, string> = {
-  bank_account: 'บัญชีธนาคาร',
-  crypto_wallet: 'Crypto',
-  person: 'บุคคล',
-  company: 'บริษัท',
-  exchange: 'Exchange',
-  unknown: 'อื่นๆ',
+// Edge type colors
+const EDGE_COLORS: Record<string, string> = {
+  bank_transfer: '#3B82F6',
+  crypto_transfer: '#F59E0B',
+  cash: '#10B981',
+  other: '#6B7280',
 };
 
-// Get icon component
-const getNodeIcon = (nodeType: string) => {
-  switch (nodeType) {
-    case 'bank_account': return Building2;
-    case 'crypto_wallet': return Wallet;
-    case 'person': return User;
-    case 'company': return Building;
-    case 'exchange': return ArrowLeftRight;
-    default: return CircleDot;
-  }
+// Format currency
+const formatCurrency = (amount: number | undefined): string => {
+  if (!amount) return '฿0';
+  if (amount >= 1000000) return `฿${(amount / 1000000).toFixed(2)}M`;
+  if (amount >= 1000) return `฿${(amount / 1000).toFixed(1)}K`;
+  return `฿${amount.toLocaleString()}`;
+};
+
+// Get node display properties
+const getNodeDisplay = (node: MoneyFlowNode) => {
+  if (node.is_suspect) return NODE_CONFIG.suspect;
+  if (node.is_victim) return NODE_CONFIG.victim;
+  return NODE_CONFIG[node.node_type] || NODE_CONFIG.unknown;
+};
+
+// Format node label
+const formatNodeLabel = (node: MoneyFlowNode): string => {
+  const display = getNodeDisplay(node);
+  const riskBadge = node.risk_score && node.risk_score > 0 ? ` [${node.risk_score}]` : '';
+  return `${display.emoji}\n${node.label}${riskBadge}`;
 };
 
 interface MoneyFlowGraphProps {
@@ -74,480 +89,464 @@ interface MoneyFlowGraphProps {
   onNodeClick?: (node: MoneyFlowNode) => void;
 }
 
-// Hierarchical layout calculation
-const calculateHierarchicalLayout = (
-  nodes: MoneyFlowNode[], 
-  edges: MoneyFlowEdge[]
-): Map<number, { x: number; y: number; level: number }> => {
-  const positions = new Map<number, { x: number; y: number; level: number }>();
-  
-  if (nodes.length === 0) return positions;
+export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProps) => {
+  const [cyInstance, setCyInstance] = useState<Core | null>(null);
+  const [layoutType, setLayoutType] = useState<LayoutType>('cose');
+  const [darkMode, setDarkMode] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<MoneyFlowNode | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const outgoing = new Map<number, number[]>();
-  const incoming = new Map<number, number[]>();
-  
-  nodes.forEach(n => {
-    outgoing.set(n.id, []);
-    incoming.set(n.id, []);
-  });
-  
-  edges.forEach(e => {
-    outgoing.get(e.from_node_id)?.push(e.to_node_id);
-    incoming.get(e.to_node_id)?.push(e.from_node_id);
-  });
-
-  const roots = nodes.filter(n => incoming.get(n.id)?.length === 0);
-  const startNodes = roots.length > 0 ? roots : [nodes[0]];
-
-  const levels = new Map<number, number>();
-  const queue: number[] = startNodes.map(n => n.id);
-  startNodes.forEach(n => levels.set(n.id, 0));
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const currentLevel = levels.get(current) || 0;
+  // Toggle fullscreen
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
     
-    outgoing.get(current)?.forEach(target => {
-      if (!levels.has(target)) {
-        levels.set(target, currentLevel + 1);
-        queue.push(target);
+    if (!isFullscreen) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
+
+  // Listen for fullscreen change
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Calculate summary
+  const summary = useMemo(() => {
+    const totalFlow = edges.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const suspectCount = nodes.filter(n => n.is_suspect).length;
+    const victimCount = nodes.filter(n => n.is_victim).length;
+    const highRiskCount = nodes.filter(n => (n.risk_score || 0) >= 70).length;
+    return {
+      nodeCount: nodes.length,
+      edgeCount: edges.length,
+      totalFlow,
+      suspectCount,
+      victimCount,
+      highRiskCount,
+    };
+  }, [nodes, edges]);
+
+  // Build Cytoscape elements
+  const elements = useMemo(() => {
+    // Create nodes
+    const cyNodes = nodes.map(node => {
+      const display = getNodeDisplay(node);
+      const riskColor = node.risk_score && node.risk_score >= 70 ? '#EF4444' :
+                       node.risk_score && node.risk_score >= 40 ? '#F59E0B' : display.color;
+      
+      return {
+        data: {
+          id: String(node.id),
+          label: formatNodeLabel(node),
+          type: node.node_type,
+          color: display.color,
+          borderColor: node.is_suspect ? '#EF4444' : node.is_victim ? '#06B6D4' : riskColor,
+          size: node.is_suspect || node.is_victim ? 80 : 60,
+          nodeData: node,
+        }
+      };
+    });
+
+    // Create edges
+    const cyEdges = edges.map(edge => ({
+      data: {
+        id: `edge-${edge.id}`,
+        source: String(edge.from_node_id),
+        target: String(edge.to_node_id),
+        label: edge.amount ? formatCurrency(edge.amount) : '',
+        color: EDGE_COLORS[edge.edge_type] || EDGE_COLORS.other,
+        width: edge.amount ? Math.min(Math.max(edge.amount / 50000, 2), 10) : 2,
+        edgeData: edge,
+      }
+    }));
+
+    return [...cyNodes, ...cyEdges];
+  }, [nodes, edges]);
+
+  // Cytoscape stylesheet
+  const stylesheet: cytoscape.Stylesheet[] = [
+    {
+      selector: 'node',
+      style: {
+        'background-color': 'data(color)',
+        'border-color': 'data(borderColor)',
+        'border-width': 3,
+        'width': 'data(size)',
+        'height': 'data(size)',
+        'label': 'data(label)',
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'font-size': 11,
+        'color': '#ffffff',
+        'text-outline-color': '#000000',
+        'text-outline-width': 2,
+        'text-wrap': 'wrap',
+        'text-max-width': '100px',
+      }
+    },
+    {
+      selector: 'node:selected',
+      style: {
+        'border-color': '#fbbf24',
+        'border-width': 5,
+      }
+    },
+    {
+      selector: 'node.highlighted',
+      style: {
+        'border-color': '#00ff00',
+        'border-width': 5,
+      }
+    },
+    {
+      selector: 'node.faded',
+      style: {
+        'opacity': 0.2,
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'width': 'data(width)',
+        'line-color': 'data(color)',
+        'target-arrow-color': 'data(color)',
+        'target-arrow-shape': 'triangle',
+        'curve-style': 'bezier',
+        'opacity': 0.8,
+        'label': 'data(label)',
+        'font-size': 9,
+        'color': '#ffffff',
+        'text-outline-color': '#000000',
+        'text-outline-width': 1,
+        'text-rotation': 'autorotate',
+        'text-margin-y': -10,
+      }
+    },
+    {
+      selector: 'edge:selected',
+      style: {
+        'line-color': '#fbbf24',
+        'target-arrow-color': '#fbbf24',
+        'width': 5,
+      }
+    },
+    {
+      selector: 'edge.highlighted',
+      style: {
+        'line-color': '#00ff00',
+        'target-arrow-color': '#00ff00',
+        'opacity': 1,
+      }
+    },
+    {
+      selector: 'edge.faded',
+      style: {
+        'opacity': 0.1,
+      }
+    },
+  ];
+
+  // Layout config
+  const layoutConfig = useMemo(() => ({
+    name: layoutType,
+    animate: false,
+    fit: true,
+    padding: 50,
+    ...(layoutType === 'cose' ? {
+      nodeRepulsion: 15000,
+      idealEdgeLength: 150,
+      gravity: 0.25,
+      numIter: 1000,
+    } : {}),
+    ...(layoutType === 'breadthfirst' ? {
+      directed: true,
+      spacingFactor: 1.5,
+    } : {}),
+    ...(layoutType === 'concentric' ? {
+      minNodeSpacing: 80,
+    } : {}),
+  }), [layoutType]);
+
+  // Cytoscape ready handler
+  const handleCyReady = useCallback((cy: Core) => {
+    setCyInstance(cy);
+
+    // Node click - highlight connections
+    cy.on('tap', 'node', (evt) => {
+      cy.elements().removeClass('highlighted faded');
+      const node = evt.target;
+      const connected = node.neighborhood().add(node);
+      connected.addClass('highlighted');
+      cy.elements().not(connected).addClass('faded');
+      
+      // Get node data
+      const nodeData = node.data('nodeData') as MoneyFlowNode;
+      setSelectedNode(nodeData);
+      if (onNodeClick) onNodeClick(nodeData);
+    });
+
+    // Background click - reset
+    cy.on('tap', (evt) => {
+      if (evt.target === cy) {
+        cy.elements().removeClass('highlighted faded');
+        setSelectedNode(null);
       }
     });
-  }
+  }, [onNodeClick]);
 
-  nodes.forEach(n => {
-    if (!levels.has(n.id)) levels.set(n.id, 0);
-  });
+  // Change layout
+  const changeLayout = useCallback((newLayout: LayoutType) => {
+    setLayoutType(newLayout);
+    if (cyInstance) {
+      cyInstance.layout({
+        name: newLayout,
+        animate: true,
+        animationDuration: 500,
+        fit: true,
+        padding: 50,
+        ...(newLayout === 'cose' ? { nodeRepulsion: 15000, idealEdgeLength: 150, gravity: 0.25 } : {}),
+        ...(newLayout === 'breadthfirst' ? { directed: true, spacingFactor: 1.5 } : {}),
+        ...(newLayout === 'concentric' ? { minNodeSpacing: 80 } : {}),
+      }).run();
+    }
+  }, [cyInstance]);
 
-  const levelGroups = new Map<number, number[]>();
-  nodes.forEach(n => {
-    const level = levels.get(n.id) || 0;
-    if (!levelGroups.has(level)) levelGroups.set(level, []);
-    levelGroups.get(level)!.push(n.id);
-  });
+  // Export PNG
+  const handleExportPNG = useCallback(() => {
+    if (!cyInstance) return;
+    const png = cyInstance.png({ full: true, scale: 2, bg: darkMode ? '#0f172a' : '#ffffff' });
+    const link = document.createElement('a');
+    link.download = `money-flow-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = png;
+    link.click();
+  }, [cyInstance, darkMode]);
 
-  const levelWidth = 350;
-  const nodeHeight = 140;
-  const startX = 100;
-  const startY = 50;
+  // Export SVG
+  const handleExportSVG = useCallback(() => {
+    if (!cyInstance) return;
+    const svg = (cyInstance as any).svg({ full: true, scale: 2, bg: darkMode ? '#0f172a' : '#ffffff' });
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `money-flow-${new Date().toISOString().slice(0, 10)}.svg`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [cyInstance, darkMode]);
 
-  levelGroups.forEach((nodeIds, level) => {
-    nodeIds.forEach((nodeId, index) => {
-      positions.set(nodeId, {
-        x: startX + level * levelWidth,
-        y: startY + index * nodeHeight,
-        level
-      });
-    });
-  });
+  // Reset view
+  const handleReset = useCallback(() => {
+    if (cyInstance) {
+      cyInstance.fit();
+      cyInstance.elements().removeClass('highlighted faded');
+      setSelectedNode(null);
+    }
+  }, [cyInstance]);
 
-  return positions;
-};
+  const layouts: { id: LayoutType; label: string; icon: typeof Layout }[] = [
+    { id: 'cose', label: 'Force', icon: Workflow },
+    { id: 'circle', label: 'Circle', icon: Circle },
+    { id: 'grid', label: 'Grid', icon: Grid3X3 },
+    { id: 'breadthfirst', label: 'Tree', icon: GitBranch },
+    { id: 'concentric', label: 'Radial', icon: Target },
+  ];
 
-// Custom Node Component
-const CustomNodeComponent = ({ data }: { data: MoneyFlowNode & { color: string } }) => {
-  const Icon = data.is_suspect ? AlertTriangle : 
-               data.is_victim ? Shield : 
-               getNodeIcon(data.node_type);
-  
-  const bgColor = data.is_suspect ? NODE_COLORS.suspect :
-                  data.is_victim ? NODE_COLORS.victim :
-                  data.color;
+  const legends = [
+    { ...NODE_CONFIG.bank_account },
+    { ...NODE_CONFIG.crypto_wallet },
+    { ...NODE_CONFIG.person },
+    { ...NODE_CONFIG.company },
+    { ...NODE_CONFIG.exchange },
+    { ...NODE_CONFIG.suspect },
+    { ...NODE_CONFIG.victim },
+  ];
 
   return (
     <div 
-      className="relative bg-dark-800 rounded-xl border-2 shadow-xl p-4 min-w-[180px]"
-      style={{ borderColor: bgColor }}
+      ref={containerRef}
+      className={`h-full flex flex-col ${darkMode ? 'bg-dark-900' : 'bg-gray-100'} ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
     >
-      {(data.risk_score || 0) > 0 && (
-        <div 
-          className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
-          style={{ 
-            backgroundColor: data.risk_score! >= 70 ? '#EF4444' : 
-                            data.risk_score! >= 40 ? '#F59E0B' : '#10B981' 
-          }}
-        >
-          {data.risk_score}
-        </div>
-      )}
-
-      {(data.is_suspect || data.is_victim) && (
-        <div 
-          className={`absolute -top-3 -left-3 px-2 py-1 rounded-full text-xs font-bold text-white shadow-lg ${
-            data.is_suspect ? 'bg-red-500' : 'bg-cyan-500'
-          }`}
-        >
-          {data.is_suspect ? '⚠️ ผู้ต้องสงสัย' : '🛡️ ผู้เสียหาย'}
-        </div>
-      )}
-
-      <div className="flex items-center gap-3 mb-3">
-        <div 
-          className="w-10 h-10 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: bgColor }}
-        >
-          <Icon className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white truncate">
-            {data.label}
+      {/* Toolbar */}
+      <div className={`p-3 border-b ${darkMode ? 'border-dark-700 bg-dark-800' : 'border-gray-200 bg-white'} flex items-center justify-between flex-wrap gap-2`}>
+        <div className="flex items-center gap-4">
+          {/* Layout selector */}
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-medium ${darkMode ? 'text-dark-300' : 'text-gray-600'}`}>Layout:</span>
+            <div className={`flex items-center rounded-lg p-1 ${darkMode ? 'bg-dark-700' : 'bg-gray-100'}`}>
+              {layouts.map(l => {
+                const Icon = l.icon;
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => changeLayout(l.id)}
+                    className={`p-1.5 rounded transition-colors ${layoutType === l.id ? 'bg-primary-500/20 text-primary-400' : darkMode ? 'text-dark-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                    title={l.label}
+                  >
+                    <Icon size={14} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="text-xs text-dark-400">
-            {NODE_LABELS[data.node_type] || data.node_type}
+
+          {/* Summary badges */}
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'}`}>
+              {summary.nodeCount} Nodes
+            </span>
+            <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'}`}>
+              {summary.edgeCount} ธุรกรรม
+            </span>
+            <span className={`px-2 py-1 rounded text-xs bg-amber-500/20 text-amber-400`}>
+              {formatCurrency(summary.totalFlow)}
+            </span>
+            {summary.suspectCount > 0 && (
+              <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">
+                ⚠️ {summary.suspectCount} ผู้ต้องสงสัย
+              </span>
+            )}
+            {summary.highRiskCount > 0 && (
+              <span className="px-2 py-1 rounded text-xs bg-orange-500/20 text-orange-400">
+                🔥 {summary.highRiskCount} เสี่ยงสูง
+              </span>
+            )}
           </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleExportPNG}>
+            <Download size={14} className="mr-1" /> PNG
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleExportSVG}>
+            <Download size={14} className="mr-1" /> SVG
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setDarkMode(!darkMode)}>
+            {darkMode ? <Sun size={14} /> : <Moon size={14} />}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => cyInstance?.fit()}>
+            <ZoomOut size={14} />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleReset}>
+            <RotateCcw size={14} />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
+            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </Button>
         </div>
       </div>
 
-      {data.bank_name && (
-        <div className="text-xs text-dark-300 mb-1">
-          🏦 {data.bank_name}
-        </div>
-      )}
-      
-      {data.identifier && (
-        <div className="text-xs text-dark-400 font-mono truncate">
-          {data.identifier.slice(0, 12)}...
-        </div>
-      )}
-
-      <div className="absolute left-0 top-1/2 -translate-x-1/2 w-3 h-3 bg-dark-600 border-2 border-dark-400 rounded-full" />
-      <div className="absolute right-0 top-1/2 translate-x-1/2 w-3 h-3 bg-dark-600 border-2 border-dark-400 rounded-full" />
-    </div>
-  );
-};
-
-const nodeTypes = { custom: CustomNodeComponent };
-
-const convertToReactFlowNodes = (
-  nodes: MoneyFlowNode[], 
-  positions: Map<number, { x: number; y: number; level: number }>
-): Node[] => {
-  return nodes.map((node) => {
-    const pos = positions.get(node.id) || { x: 100, y: 100 };
-    return {
-      id: String(node.id),
-      type: 'custom',
-      position: { x: pos.x, y: pos.y },
-      data: { ...node, color: NODE_COLORS[node.node_type] || NODE_COLORS.unknown },
-    };
-  });
-};
-
-const convertToReactFlowEdges = (edges: MoneyFlowEdge[]): Edge[] => {
-  return edges.map((edge) => ({
-    id: String(edge.id),
-    source: String(edge.from_node_id),
-    target: String(edge.to_node_id),
-    type: 'smoothstep',
-    animated: true,
-    label: edge.amount ? `฿${edge.amount.toLocaleString()}` : '',
-    labelStyle: { fill: '#fff', fontWeight: 700, fontSize: 11 },
-    labelBgStyle: { fill: '#1F2937', fillOpacity: 0.95 },
-    labelBgPadding: [8, 4] as [number, number],
-    labelBgBorderRadius: 6,
-    style: { 
-      stroke: edge.edge_type === 'crypto_transfer' ? '#F59E0B' : '#3B82F6',
-      strokeWidth: 2,
-    },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: edge.edge_type === 'crypto_transfer' ? '#F59E0B' : '#3B82F6',
-      width: 20,
-      height: 20,
-    },
-  }));
-};
-
-export const MoneyFlowGraph = ({ 
-  nodes: apiNodes, 
-  edges: apiEdges,
-  onNodeClick,
-}: MoneyFlowGraphProps) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedNode, setSelectedNode] = useState<MoneyFlowNode | null>(null);
-  const [showSummary, setShowSummary] = useState(true);
-  const [showLegend, setShowLegend] = useState(false);
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-
-  useEffect(() => {
-    if (apiNodes.length > 0) {
-      const positions = calculateHierarchicalLayout(apiNodes, apiEdges);
-      setNodes(convertToReactFlowNodes(apiNodes, positions));
-    }
-    if (apiEdges.length > 0) {
-      setEdges(convertToReactFlowEdges(apiEdges));
-    }
-  }, [apiNodes, apiEdges, setNodes, setEdges]);
-
-  const handleNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    const originalNode = apiNodes.find(n => String(n.id) === node.id);
-    if (originalNode) {
-      setSelectedNode(originalNode);
-      onNodeClick?.(originalNode);
-    }
-  }, [apiNodes, onNodeClick]);
-
-  // Focus on node when selected from Analytics
-  const handleNodeSelect = useCallback((nodeId: number) => {
-    const node = apiNodes.find(n => n.id === nodeId);
-    if (node) {
-      setSelectedNode(node);
-      // Focus view on selected node
-      if (reactFlowInstance) {
-        const rfNode = nodes.find(n => n.id === String(nodeId));
-        if (rfNode) {
-          reactFlowInstance.setCenter(rfNode.position.x + 100, rfNode.position.y + 50, { zoom: 1, duration: 500 });
-        }
-      }
-    }
-  }, [apiNodes, reactFlowInstance, nodes]);
-
-  const summary = useMemo(() => {
-    const totalFlow = apiEdges.reduce((sum, e) => sum + (e.amount || 0), 0);
-    const suspectCount = apiNodes.filter(n => n.is_suspect).length;
-    const victimCount = apiNodes.filter(n => n.is_victim).length;
-    const highRiskCount = apiNodes.filter(n => (n.risk_score || 0) >= 70).length;
-    return { nodeCount: apiNodes.length, edgeCount: apiEdges.length, totalFlow, suspectCount, victimCount, highRiskCount };
-  }, [apiNodes, apiEdges]);
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `฿${(amount / 1000000).toFixed(2)}M`;
-    if (amount >= 1000) return `฿${(amount / 1000).toFixed(1)}K`;
-    return `฿${amount.toLocaleString()}`;
-  };
-
-  const getNodeTransactions = (node: MoneyFlowNode) => {
-    const incoming = apiEdges.filter(e => e.to_node_id === node.id);
-    const outgoing = apiEdges.filter(e => e.from_node_id === node.id);
-    const totalIn = incoming.reduce((sum, e) => sum + (e.amount || 0), 0);
-    const totalOut = outgoing.reduce((sum, e) => sum + (e.amount || 0), 0);
-    return { incoming, outgoing, totalIn, totalOut };
-  };
-
-  return (
-    <div className="w-full h-full relative bg-dark-900">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        onInit={setReactFlowInstance}
-        nodeTypes={nodeTypes}
-        connectionMode={ConnectionMode.Loose}
-        fitView
-        fitViewOptions={{ padding: 0.3 }}
-        minZoom={0.2}
-        maxZoom={2}
-        proOptions={{ hideAttribution: true }}
+      {/* Graph */}
+      <div 
+        className={`flex-1 relative ${darkMode ? 'bg-dark-950' : 'bg-gray-50'}`}
+        style={{ minHeight: isFullscreen ? 'calc(100vh - 120px)' : '500px' }}
       >
-        <Controls className="bg-dark-800 border border-dark-600 rounded-lg" showInteractive={false} />
-        <Background color="#374151" gap={30} size={1} />
+        <CytoscapeComponent
+          elements={elements}
+          stylesheet={stylesheet}
+          layout={layoutConfig}
+          cy={handleCyReady}
+          style={{ width: '100%', height: '100%' }}
+          minZoom={0.2}
+          maxZoom={3}
+          boxSelectionEnabled={true}
+          userZoomingEnabled={true}
+          userPanningEnabled={true}
+        />
 
-        {/* Summary Panel - Top Left */}
-        <Panel position="top-left" className="m-3">
-          <div className="bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-xl shadow-xl overflow-hidden">
-            <button 
-              onClick={() => setShowSummary(!showSummary)}
-              className="w-full flex items-center justify-between p-3 hover:bg-dark-700 transition-colors"
-            >
-              <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                <TrendingUp size={16} className="text-primary-400" />
-                สรุปภาพรวม
-              </span>
-              {showSummary ? <ChevronUp size={16} className="text-dark-400" /> : <ChevronDown size={16} className="text-dark-400" />}
-            </button>
+        {/* Instructions */}
+        <div className={`absolute bottom-3 left-3 flex items-center gap-3 text-xs px-3 py-2 rounded-lg ${darkMode ? 'bg-dark-900/90 text-dark-400' : 'bg-white/90 text-gray-500'}`}>
+          <span>🖱️ ลาก Node</span>
+          <span>🔍 Scroll ซูม</span>
+          <span>👆 คลิกดู Connections</span>
+        </div>
 
-            {showSummary && (
-              <div className="px-4 pb-4 space-y-2">
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center p-2 bg-dark-900 rounded-lg">
-                    <div className="text-lg font-bold text-white">{summary.nodeCount}</div>
-                    <div className="text-xs text-dark-400">Nodes</div>
-                  </div>
-                  <div className="text-center p-2 bg-dark-900 rounded-lg">
-                    <div className="text-lg font-bold text-white">{summary.edgeCount}</div>
-                    <div className="text-xs text-dark-400">ธุรกรรม</div>
-                  </div>
-                  <div className="text-center p-2 bg-dark-900 rounded-lg">
-                    <div className="text-lg font-bold text-amber-400">{formatCurrency(summary.totalFlow)}</div>
-                    <div className="text-xs text-dark-400">มูลค่า</div>
-                  </div>
-                </div>
-                
-                {(summary.suspectCount > 0 || summary.highRiskCount > 0) && (
-                  <div className="flex gap-2 pt-2 border-t border-dark-700">
-                    {summary.suspectCount > 0 && (
-                      <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">
-                        ⚠️ {summary.suspectCount} ผู้ต้องสงสัย
-                      </span>
-                    )}
-                    {summary.highRiskCount > 0 && (
-                      <span className="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">
-                        🔥 {summary.highRiskCount} ความเสี่ยงสูง
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </Panel>
-
-        {/* Analytics Panel - Bottom Left */}
-        <Panel position="bottom-left" className="m-3">
-          <AnalyticsPanel 
-            nodes={apiNodes} 
-            edges={apiEdges}
-            onNodeSelect={handleNodeSelect}
-          />
-        </Panel>
-
-        {/* Legend Toggle */}
-        <Panel position="top-center" className="m-3">
-          <button 
-            onClick={() => setShowLegend(!showLegend)}
-            className="bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-lg px-3 py-2 text-sm text-white hover:bg-dark-700 transition-colors flex items-center gap-2"
-          >
-            <CircleDot size={14} />
-            สัญลักษณ์
-            {showLegend ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-
-          {showLegend && (
-            <div className="mt-2 bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-xl p-3 shadow-xl">
-              <div className="flex flex-wrap gap-3">
-                {Object.entries(NODE_LABELS).map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: NODE_COLORS[key] }} />
-                    <span className="text-xs text-dark-300">{label}</span>
-                  </div>
-                ))}
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-red-500" />
-                  <span className="text-xs text-dark-300">ผู้ต้องสงสัย</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-cyan-500" />
-                  <span className="text-xs text-dark-300">ผู้เสียหาย</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </Panel>
-
-        {/* Node Detail Panel - Right */}
+        {/* Selected Node Info */}
         {selectedNode && (
-          <Panel position="top-right" className="m-3">
-            <div className="bg-dark-800/95 backdrop-blur-sm border border-dark-600 rounded-xl shadow-xl w-72 max-h-[80vh] overflow-hidden">
-              <div className="flex items-center justify-between p-3 border-b border-dark-700">
-                <span className="text-sm font-semibold text-white">รายละเอียด</span>
-                <button onClick={() => setSelectedNode(null)} className="p-1 hover:bg-dark-700 rounded">
-                  <X size={16} className="text-dark-400" />
-                </button>
-              </div>
-
-              <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-12 h-12 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: NODE_COLORS[selectedNode.node_type] }}
-                  >
-                    {(() => {
-                      const Icon = getNodeIcon(selectedNode.node_type);
-                      return <Icon className="w-6 h-6 text-white" />;
-                    })()}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">{selectedNode.label}</div>
-                    <div className="text-xs text-dark-400">{NODE_LABELS[selectedNode.node_type]}</div>
+          <div className={`absolute top-3 right-3 w-72 rounded-xl border shadow-xl ${darkMode ? 'bg-dark-800/95 border-dark-600' : 'bg-white/95 border-gray-200'}`}>
+            <div className={`p-3 border-b ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                  style={{ backgroundColor: getNodeDisplay(selectedNode).color }}
+                >
+                  {getNodeDisplay(selectedNode).emoji}
+                </div>
+                <div>
+                  <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{selectedNode.label}</div>
+                  <div className={`text-xs ${darkMode ? 'text-dark-400' : 'text-gray-500'}`}>
+                    {getNodeDisplay(selectedNode).label}
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {selectedNode.is_suspect && (
-                    <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs flex items-center gap-1">
-                      <AlertTriangle size={12} /> ผู้ต้องสงสัย
-                    </span>
-                  )}
-                  {selectedNode.is_victim && (
-                    <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs flex items-center gap-1">
-                      <Shield size={12} /> ผู้เสียหาย
-                    </span>
-                  )}
-                  {(selectedNode.risk_score || 0) > 0 && (
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      selectedNode.risk_score! >= 70 ? 'bg-red-500/20 text-red-400' :
-                      selectedNode.risk_score! >= 40 ? 'bg-amber-500/20 text-amber-400' :
-                      'bg-green-500/20 text-green-400'
-                    }`}>
-                      Risk: {selectedNode.risk_score}
-                    </span>
-                  )}
-                </div>
-
-                {selectedNode.bank_name && (
-                  <div>
-                    <div className="text-xs text-dark-400 mb-1">สถาบัน</div>
-                    <div className="text-sm text-white">{selectedNode.bank_name}</div>
-                  </div>
-                )}
-
-                {selectedNode.identifier && (
-                  <div>
-                    <div className="text-xs text-dark-400 mb-1 flex items-center gap-1">
-                      <Hash size={10} /> Identifier
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs text-primary-400 bg-dark-900 px-2 py-1 rounded truncate flex-1">
-                        {selectedNode.identifier}
-                      </code>
-                      <button 
-                        onClick={() => navigator.clipboard.writeText(selectedNode.identifier || '')}
-                        className="p-1 hover:bg-dark-700 rounded"
-                      >
-                        <Copy size={12} className="text-dark-400" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {(() => {
-                  const { totalIn, totalOut, incoming, outgoing } = getNodeTransactions(selectedNode);
-                  return (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                        <div className="flex items-center gap-1 text-green-400 mb-1">
-                          <ArrowDownLeft size={14} />
-                          <span className="text-xs">รับเข้า</span>
-                        </div>
-                        <div className="text-sm font-semibold text-white">{formatCurrency(totalIn)}</div>
-                        <div className="text-xs text-dark-400">{incoming.length} รายการ</div>
-                      </div>
-                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <div className="flex items-center gap-1 text-red-400 mb-1">
-                          <ArrowUpRight size={14} />
-                          <span className="text-xs">ส่งออก</span>
-                        </div>
-                        <div className="text-sm font-semibold text-white">{formatCurrency(totalOut)}</div>
-                        <div className="text-xs text-dark-400">{outgoing.length} รายการ</div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {selectedNode.notes && (
-                  <div>
-                    <div className="text-xs text-dark-400 mb-1">หมายเหตุ</div>
-                    <div className="text-sm text-dark-300 bg-dark-900 p-2 rounded">{selectedNode.notes}</div>
-                  </div>
-                )}
               </div>
             </div>
-          </Panel>
+            <div className="p-3 space-y-2">
+              {selectedNode.bank_name && (
+                <div className={`text-xs ${darkMode ? 'text-dark-300' : 'text-gray-600'}`}>
+                  🏦 {selectedNode.bank_name}
+                </div>
+              )}
+              {selectedNode.identifier && (
+                <div className={`text-xs font-mono ${darkMode ? 'text-primary-400' : 'text-blue-600'}`}>
+                  {selectedNode.identifier}
+                </div>
+              )}
+              {selectedNode.risk_score !== undefined && selectedNode.risk_score > 0 && (
+                <div className={`inline-block px-2 py-1 rounded text-xs ${
+                  selectedNode.risk_score >= 70 ? 'bg-red-500/20 text-red-400' :
+                  selectedNode.risk_score >= 40 ? 'bg-amber-500/20 text-amber-400' :
+                  'bg-green-500/20 text-green-400'
+                }`}>
+                  Risk Score: {selectedNode.risk_score}
+                </div>
+              )}
+              {selectedNode.notes && (
+                <div className={`text-xs ${darkMode ? 'text-dark-400 bg-dark-900' : 'text-gray-500 bg-gray-100'} p-2 rounded`}>
+                  {selectedNode.notes}
+                </div>
+              )}
+            </div>
+          </div>
         )}
-      </ReactFlow>
+      </div>
+
+      {/* Legend */}
+      <div className={`p-3 border-t ${darkMode ? 'border-dark-700 bg-dark-800' : 'border-gray-200 bg-white'}`}>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {legends.map(item => (
+            <div key={item.label} className="flex items-center gap-2 text-xs">
+              <span className="text-lg">{item.emoji}</span>
+              <span className={darkMode ? 'text-dark-300' : 'text-gray-600'}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className={`flex items-center gap-4 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>โอนธนาคาร</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Crypto</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.cash }} />
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>เงินสด</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
