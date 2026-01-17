@@ -1,6 +1,6 @@
 /**
  * Sidebar Component
- * Navigation sidebar with Import and Report menus
+ * Navigation sidebar organized by workflow
  */
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
@@ -17,21 +17,61 @@ import {
   FileText,
   Upload,
   FileCheck,
-  MapPin
+  MapPin,
+  FileSearch,
+  Link2
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-const mainNavItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/cases', icon: Briefcase, label: 'Cases' },
-  { to: '/money-flow', icon: DollarSign, label: 'Money Flow' },
-  { to: '/forensic-report', icon: FileText, label: 'Forensic Report' },
-  { to: '/import', icon: Upload, label: 'นำเข้าข้อมูล' },
-  { to: '/report', icon: FileCheck, label: 'รายงานศาล' },
-  { to: '/call-analysis', icon: Phone, label: 'Call Analysis' },
-  { to: '/crypto', icon: Wallet, label: 'Crypto Tracker' },
-  { to: '/location-timeline', icon: MapPin, label: 'Location Timeline' },
-  { to: '/kyc-request', icon: FileText, label: 'KYC Request' },
+// จัดเรียงตาม Flow: สร้างคดี → นำเข้าข้อมูล → วิเคราะห์ → ขอข้อมูลเพิ่ม → สรุปผล → รายงาน
+
+const navSections = [
+  {
+    title: 'OVERVIEW',
+    items: [
+      { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    ]
+  },
+  {
+    title: 'CASE',
+    items: [
+      { to: '/cases', icon: Briefcase, label: 'Cases' },
+    ]
+  },
+  {
+    title: 'INPUT',
+    items: [
+      { to: '/import', icon: Upload, label: 'นำเข้าข้อมูล' },
+    ]
+  },
+  {
+    title: 'ANALYSIS',
+    items: [
+      { to: '/money-flow', icon: DollarSign, label: 'Money Flow' },
+      { to: '/crypto', icon: Wallet, label: 'Crypto Tracker' },
+      { to: '/call-analysis', icon: Phone, label: 'Call Analysis' },
+      { to: '/location-timeline', icon: MapPin, label: 'Location Timeline' },
+    ]
+  },
+  {
+    title: 'INVESTIGATE',
+    items: [
+      { to: '/kyc-request', icon: FileSearch, label: 'KYC Request' },
+    ]
+  },
+  {
+    title: 'REPORTS',
+    items: [
+      { to: '/forensic-report', icon: FileText, label: 'Forensic Report' },
+      { to: '/report', icon: FileCheck, label: 'รายงานศาล' },
+    ]
+  },
+  {
+    title: 'DEMO',
+    items: [
+      { to: '/silk-road-demo', icon: Link2, label: 'Silk Road Demo' },
+    ]
+  },
 ];
 
 const adminNavItems = [
@@ -66,41 +106,50 @@ export const Sidebar = () => {
 
       {/* Main Navigation */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        <p className="text-xs text-dark-500 uppercase tracking-wider mb-2">Main</p>
-        {mainNavItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary-500/20 text-primary-400'
-                  : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-              }`
-            }
-          >
-            <item.icon size={18} />
-            <span className="text-sm">{item.label}</span>
-          </NavLink>
+        {navSections.map((section, sectionIndex) => (
+          <div key={section.title} className={sectionIndex > 0 ? 'mt-4' : ''}>
+            <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-3">
+              {section.title}
+            </p>
+            {section.items.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-primary-500/20 text-primary-400'
+                      : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+                  }`
+                }
+              >
+                <item.icon size={18} />
+                <span className="text-sm">{item.label}</span>
+              </NavLink>
+            ))}
+          </div>
         ))}
 
-        <p className="text-xs text-dark-500 uppercase tracking-wider mt-6 mb-2">Admin</p>
-        {adminNavItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary-500/20 text-primary-400'
-                  : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-              }`
-            }
-          >
-            <item.icon size={18} />
-            <span className="text-sm">{item.label}</span>
-          </NavLink>
-        ))}
+        {/* Admin Section */}
+        <div className="mt-4">
+          <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-3">Admin</p>
+          {adminNavItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-500/20 text-primary-400'
+                    : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+                }`
+              }
+            >
+              <item.icon size={18} />
+              <span className="text-sm">{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
       {/* User Info */}
