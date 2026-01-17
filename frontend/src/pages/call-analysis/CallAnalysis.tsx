@@ -226,23 +226,29 @@ const getClusterColor = (clusterId: number | undefined, clusters: Cluster[]): st
 
 const cytoscapeStylesheet: any[] = [
   {
-    selector: 'node',
+    selector: "node",
     style: {
-      'background-color': 'data(color)',
-      'border-color': 'data(riskColor)',
-      'border-width': 3,
-      'width': 50,
-      'height': 50,
-      'label': 'data(label)',
-      'text-valign': 'bottom',
-      'text-halign': 'center',
-      'text-margin-y': 8,
-      'font-size': 10,
-      'color': '#e5e7eb',
-      'text-outline-color': '#111827',
-      'text-outline-width': 2,
-      'text-max-width': '100px',
-      'text-wrap': 'ellipsis',
+      "background-color": "data(color)",
+      "border-color": "data(riskColor)",
+      "border-width": 3,
+      "width": 55,
+      "height": 55,
+      "content": "data(emoji)",
+      "font-size": 26,
+      "text-valign": "center",
+      "text-halign": "center",
+    }
+  },
+  {
+    selector: "node[label]",
+    style: {
+      "label": "data(label)",
+      "text-valign": "bottom",
+      "text-margin-y": 8,
+      "font-size": 10,
+      "color": "#e5e7eb",
+      "text-outline-color": "#111827",
+      "text-outline-width": 2,
     }
   },
   {
@@ -555,6 +561,7 @@ export const CallAnalysis = () => {
         risk: entity.risk,
         clusterId: entity.clusterId,
         color: getClusterColor(entity.clusterId, clusters),
+        emoji: getEntityEmoji(entity.type),
         riskColor: getRiskColor(entity.risk),
       }
     }));
