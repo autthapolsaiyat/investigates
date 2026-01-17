@@ -400,6 +400,7 @@ export interface MoneyFlowNode {
   size: number;
   notes?: string;
   source?: string;
+  metadata?: string;
   created_at: string;
   updated_at: string;
 }
