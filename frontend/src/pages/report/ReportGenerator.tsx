@@ -2,7 +2,7 @@
  * PDF Report Generator - สร้างรายงานส่งศาล
  * มาตรฐาน Digital Forensic
  */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   FileText, Download, Printer, User,
   Scale, FileCheck, Clock, Shield, CheckCircle2, Loader2,
@@ -71,14 +71,14 @@ export const ReportGenerator = () => {
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Fetch cases on mount
-  useState(() => {
+  useEffect(() => {
     casesAPI.list({ page: 1, page_size: 100 }).then(res => {
       setCases(res.items);
       if (res.items.length > 0) {
         selectCase(res.items[0].id);
       }
     });
-  });
+  }, []);
 
   const selectCase = async (caseId: number) => {
     setSelectedCaseId(caseId);

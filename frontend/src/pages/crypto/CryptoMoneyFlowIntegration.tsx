@@ -2,7 +2,7 @@
  * CryptoMoneyFlowIntegration - เชื่อมโยง Crypto Wallet กับ Money Flow
  * ช่วยให้สามารถ import wallet เข้าระบบ Money Flow ได้
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Link2, ArrowRight, Database, CheckCircle2, Loader2,
   Wallet, GitMerge, AlertCircle, Plus
@@ -63,14 +63,14 @@ export const CryptoMoneyFlowIntegration = ({
   });
 
   // Fetch cases on mount
-  useState(() => {
+  useEffect(() => {
     casesAPI.list({ page: 1, page_size: 100 }).then(res => {
       setCases(res.items);
       if (res.items.length > 0) {
         setSelectedCaseId(res.items[0].id);
       }
     });
-  });
+  }, []);
 
   // Import wallet data to Money Flow
   const importToMoneyFlow = async () => {
