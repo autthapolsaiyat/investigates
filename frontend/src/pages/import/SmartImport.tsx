@@ -95,15 +95,18 @@ const REQUIRED_FIELDS: Record<string, { required: string[]; optional: string[]; 
 
 // Column aliases from various sources (Cellebrite, UFED, XRY, Thai, etc.)
 const COLUMN_ALIASES: Record<string, string[]> = {
-  // Person fields
-  first_name: ['firstname', 'fname', 'first', 'given_name', 'ชื่อ', 'ชื่อจริง', 'name', 'contact_name'],
+  // Person fields (ไม่รวม contact_name เพราะจะ conflict กับ phone records)
+  first_name: ['firstname', 'fname', 'first', 'given_name', 'ชื่อ', 'ชื่อจริง'],
   last_name: ['lastname', 'lname', 'last', 'surname', 'family_name', 'นามสกุล'],
+  prefix: ['คำนำหน้า', 'title', 'salutation'],
   id_card: ['idcard', 'id_number', 'citizen_id', 'national_id', 'thai_id', 'เลขบัตรประชาชน', 'รหัสประชาชน'],
-  phone: ['phone_number', 'mobile', 'tel', 'telephone', 'msisdn', 'contact_phone', 'เบอร์โทร', 'เบอร์', 'หมายเลขโทรศัพท์'],
+  phone: ['phone_number', 'mobile', 'tel', 'telephone', 'contact_phone', 'เบอร์โทร', 'เบอร์', 'หมายเลขโทรศัพท์'],
   email: ['email_address', 'mail', 'e-mail', 'อีเมล'],
   bank_account: ['account_number', 'account_no', 'acc_no', 'bank_acc', 'เลขบัญชี', 'บัญชี'],
   wallet_address: ['wallet', 'crypto_address', 'btc_address', 'eth_address', 'address_crypto'],
-  role: ['type', 'person_type', 'classification', 'บทบาท', 'ประเภท'],
+  role: ['person_type', 'classification', 'บทบาท', 'ประเภท'],
+  occupation: ['job', 'work', 'อาชีพ'],
+  address: ['ที่อยู่', 'home_address'],
   
   // Bank transaction fields
   from_account: ['source_account', 'sender_account', 'debit_account', 'from_acc', 'บัญชีต้นทาง', 'บัญชีผู้โอน'],
@@ -111,20 +114,22 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   from_name: ['sender_name', 'source_name', 'payer_name', 'ชื่อผู้โอน'],
   to_name: ['receiver_name', 'target_name', 'payee_name', 'beneficiary_name', 'ชื่อผู้รับ'],
   amount: ['value', 'sum', 'transaction_amount', 'transfer_amount', 'จำนวนเงิน', 'ยอดเงิน'],
+  bank: ['ธนาคาร', 'bank_name'],
   
-  // Phone record fields
-  from_number: ['caller', 'calling_number', 'source_number', 'originating_number', 'a_number', 'msisdn_a', 'เบอร์ต้นทาง', 'เบอร์โทรออก'],
+  // Phone record fields (Cellebrite, UFED specific)
+  from_number: ['caller', 'calling_number', 'source_number', 'originating_number', 'a_number', 'msisdn_a', 'msisdn', 'เบอร์ต้นทาง', 'เบอร์โทรออก'],
   to_number: ['called', 'called_number', 'target_number', 'destination_number', 'b_number', 'msisdn_b', 'เบอร์ปลายทาง', 'เบอร์รับสาย'],
   duration_sec: ['duration', 'call_duration', 'length', 'seconds', 'duration_seconds', 'ระยะเวลา'],
-  call_type: ['type', 'direction', 'call_direction', 'ประเภทการโทร'],
+  call_type: ['direction', 'call_direction', 'ประเภทการโทร'],
   cell_tower: ['cell_id', 'tower_id', 'lac', 'cgi', 'เสาสัญญาณ'],
-  location: ['loc', 'address', 'place', 'ที่อยู่', 'สถานที่'],
+  location: ['loc', 'place', 'สถานที่'],
+  contact_name: ['called_name', 'caller_name'],  // Phone contact names
   
-  // Crypto fields
+  // Crypto fields (XRY, Chainalysis specific)
   from_wallet: ['source_wallet', 'sender_wallet', 'from_address', 'source_address'],
-  to_wallet: ['target_wallet', 'receiver_wallet', 'to_address', 'dest_address', 'destination_wallet'],
-  from_label: ['source_label', 'sender_label', 'from_name'],
-  to_label: ['target_label', 'receiver_label', 'to_name'],
+  to_wallet: ['target_wallet', 'receiver_wallet', 'to_address', 'dest_address', 'destination_wallet', 'destination_address'],
+  from_label: ['source_label', 'sender_label'],
+  to_label: ['target_label', 'receiver_label'],
   tx_hash: ['transaction_hash', 'hash', 'txid', 'transaction_id'],
   currency: ['coin', 'token', 'crypto', 'asset'],
   
@@ -189,22 +194,30 @@ const autoMapColumns = (columns: string[], _fileType: string): ColumnMapping[] =
   });
 };
 
-// Detect file type from mapped columns
+// Detect file type from mapped columns (ลำดับสำคัญ: specific types ก่อน generic)
 const detectFileType = (mappings: ColumnMapping[]): { type: ParsedFile['type']; typeLabel: string } => {
   const mappedCols = mappings.map(m => m.mapped.toLowerCase());
   
+  // 1. Bank - ต้องมี from_account + to_account + amount
   if (mappedCols.includes('from_account') && mappedCols.includes('to_account') && mappedCols.includes('amount')) {
     return { type: 'bank', typeLabel: 'ธุรกรรมธนาคาร' };
   }
-  if (mappedCols.includes('first_name') || mappedCols.includes('id_card')) {
-    return { type: 'person', typeLabel: 'บุคคล' };
-  }
+  
+  // 2. Phone - ต้องมี from_number + to_number
   if (mappedCols.includes('from_number') && mappedCols.includes('to_number')) {
     return { type: 'phone', typeLabel: 'ข้อมูลโทรศัพท์' };
   }
+  
+  // 3. Crypto - ต้องมี from_wallet + to_wallet
   if (mappedCols.includes('from_wallet') && mappedCols.includes('to_wallet')) {
     return { type: 'crypto', typeLabel: 'กระเป๋าคริปโต' };
   }
+  
+  // 4. Person - มี first_name หรือ id_card (ตรวจสอบสุดท้ายเพราะ generic)
+  if (mappedCols.includes('first_name') || mappedCols.includes('id_card')) {
+    return { type: 'person', typeLabel: 'บุคคล' };
+  }
+  
   return { type: 'unknown', typeLabel: 'ไม่ทราบประเภท' };
 };
 
