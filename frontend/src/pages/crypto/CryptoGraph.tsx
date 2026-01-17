@@ -12,8 +12,6 @@ import {
   Download,
   Sun,
   Moon,
-
-
   Layout,
   Circle,
   GitBranch,
@@ -22,32 +20,13 @@ import {
   Target
 } from 'lucide-react';
 import { Button } from '../../components/ui';
+import type { WalletInfo, Transaction, KnownEntity } from '../../services/blockchainApi';
 // @ts-ignore
 import cytoscape from 'cytoscape';
 // @ts-ignore
 import cytoscapeSvg from 'cytoscape-svg';
 
 cytoscape.use(cytoscapeSvg);
-
-interface Transaction {
-  hash: string;
-  from: string;
-  to: string;
-  value: number;
-  valueUSD: number;
-  type: 'in' | 'out';
-  timestamp: number;
-}
-
-interface WalletInfo {
-  address: string;
-  balanceUSD: number;
-}
-
-interface KnownEntity {
-  name: string;
-  type: 'exchange' | 'mixer' | 'defi' | 'bridge' | 'scam' | 'gambling' | 'nft' | 'unknown';
-}
 
 interface CryptoGraphProps {
   walletInfo: WalletInfo;
@@ -68,6 +47,7 @@ const getEntityEmoji = (type: string): string => {
     scam: '⚠️',
     gambling: '🎰',
     nft: '🎨',
+    darknet: '🕵️',
     unknown: '❓'
   };
   return emojis[type] || '❓';
@@ -84,6 +64,7 @@ const getEntityColor = (type: string): string => {
     scam: '#dc2626',
     gambling: '#f97316',
     nft: '#ec4899',
+    darknet: '#7c3aed',
     unknown: '#6b7280'
   };
   return colors[type] || '#6b7280';
@@ -330,6 +311,7 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
     { emoji: '🌉', label: 'Bridge', color: '#f59e0b' },
     { emoji: '🎰', label: 'Gambling', color: '#f97316' },
     { emoji: '🎨', label: 'NFT', color: '#ec4899' },
+    { emoji: '🕵️', label: 'Darknet', color: '#7c3aed' },
     { emoji: '❓', label: 'Unknown', color: '#6b7280' },
   ];
 

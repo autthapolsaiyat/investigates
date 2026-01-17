@@ -33,7 +33,6 @@ import blockchainApi, {
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
 import { CryptoImportModal } from './CryptoImportModal';
 import { CryptoGraph } from './CryptoGraph';
-import type { Transaction as CryptoTransaction } from '../../services/blockchainApi';
 
 // Blockchain configurations
 interface BlockchainConfig {
