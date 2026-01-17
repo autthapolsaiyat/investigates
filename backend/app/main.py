@@ -6,12 +6,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.database import init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Starting InvestiGate API...")
-    # Skip DB init for now - will init on first request
+    # Initialize database tables
+    print("📦 Initializing database...")
+    init_db()
+    print("✅ Database ready!")
     yield
     print("👋 Shutting down...")
 
