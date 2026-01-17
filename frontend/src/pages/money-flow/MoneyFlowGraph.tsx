@@ -176,7 +176,7 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
   }, [nodes, edges]);
 
   // Cytoscape stylesheet
-  const stylesheet: cytoscape.Stylesheet[] = [
+  const stylesheet: any[] = [
     {
       selector: 'node',
       style: {
