@@ -3,498 +3,611 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InvestiGate - Project Progress Tracker</title>
+  <title>InvestiGate - Project Progress</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .progress-bar { transition: width 0.8s ease-in-out; }
-    .status-done { background: linear-gradient(90deg, #22c55e, #16a34a); }
-    .status-progress { background: linear-gradient(90deg, #f59e0b, #d97706); }
-    .status-pending { background: linear-gradient(90deg, #6b7280, #4b5563); }
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
-      50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.8); }
+    * { font-family: 'IBM Plex Sans Thai', sans-serif; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-btn.active { 
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
     }
-    .pulse-glow { animation: pulse-glow 2s infinite; }
+    .progress-bar {
+      background: linear-gradient(90deg, #22c55e, #10b981);
+      transition: width 0.5s ease;
+    }
+    .progress-bar.warning {
+      background: linear-gradient(90deg, #f59e0b, #eab308);
+    }
+    .progress-bar.danger {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(71, 85, 105, 0.5);
+    }
+    .status-done { color: #22c55e; }
+    .status-progress { color: #f59e0b; }
+    .status-pending { color: #64748b; }
+    .glow {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
   </style>
 </head>
-<body class="gradient-bg min-h-screen text-white">
-  
+<body class="bg-slate-900 text-white min-h-screen">
   <!-- Header -->
-  <header class="border-b border-white/10 backdrop-blur-sm sticky top-0 z-50">
+  <header class="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-xl">🔍</div>
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
           <div>
             <h1 class="text-xl font-bold">InvestiGate</h1>
-            <p class="text-xs text-gray-400">Investigation Platform - Progress Tracker</p>
+            <p class="text-sm text-slate-400">Project Progress Tracker</p>
           </div>
         </div>
-        <div class="flex items-center gap-4 text-sm">
-          <div class="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg flex items-center gap-2">
-            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            Production
-          </div>
-          <span class="text-gray-400">Last Updated: January 17, 2026</span>
+        <div class="text-right">
+          <p class="text-sm text-slate-400">Last Updated</p>
+          <p class="font-semibold text-blue-400" id="lastUpdate">17 มกราคม 2569</p>
         </div>
       </div>
     </div>
   </header>
 
   <main class="max-w-7xl mx-auto px-6 py-8">
-    
     <!-- Overall Progress -->
-    <section class="mb-10">
-      <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold">📈 Overall Progress</h2>
-          <span class="text-4xl font-bold text-green-400">87%</span>
-        </div>
-        <div class="w-full h-4 bg-gray-700 rounded-full overflow-hidden">
-          <div class="progress-bar h-full status-done rounded-full" style="width: 87%"></div>
-        </div>
-        <div class="grid grid-cols-4 gap-4 mt-6 text-center">
-          <div class="bg-green-500/10 rounded-xl p-4">
-            <div class="text-3xl font-bold text-green-400">8</div>
-            <div class="text-xs text-gray-400 mt-1">Completed</div>
-          </div>
-          <div class="bg-yellow-500/10 rounded-xl p-4">
-            <div class="text-3xl font-bold text-yellow-400">1</div>
-            <div class="text-xs text-gray-400 mt-1">In Progress</div>
-          </div>
-          <div class="bg-gray-500/10 rounded-xl p-4">
-            <div class="text-3xl font-bold text-gray-400">1</div>
-            <div class="text-xs text-gray-400 mt-1">Pending</div>
-          </div>
-          <div class="bg-blue-500/10 rounded-xl p-4">
-            <div class="text-3xl font-bold text-blue-400">10</div>
-            <div class="text-xs text-gray-400 mt-1">Total Pages</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Links -->
-    <section class="mb-10">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="https://wonderful-wave-0486dd100.6.azurestaticapps.net" target="_blank" 
-           class="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-xl p-4 flex items-center gap-3 transition-all card-hover">
-          <span class="text-2xl">🌐</span>
-          <div>
-            <div class="font-semibold">Frontend</div>
-            <div class="text-xs text-gray-400">Azure Static Web Apps</div>
-          </div>
-        </a>
-        <a href="https://investigates-api.azurewebsites.net" target="_blank"
-           class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl p-4 flex items-center gap-3 transition-all card-hover">
-          <span class="text-2xl">⚡</span>
-          <div>
-            <div class="font-semibold">Backend API</div>
-            <div class="text-xs text-gray-400">Azure Web Services</div>
-          </div>
-        </a>
-        <a href="https://github.com/autthapolsaiyat/investigates" target="_blank"
-           class="bg-gray-500/20 hover:bg-gray-500/30 border border-gray-500/30 rounded-xl p-4 flex items-center gap-3 transition-all card-hover">
-          <span class="text-2xl">📦</span>
-          <div>
-            <div class="font-semibold">GitHub Repository</div>
-            <div class="text-xs text-gray-400">Source Code</div>
-          </div>
-        </a>
-      </div>
-    </section>
-
-    <!-- Pages Progress -->
-    <section class="mb-10">
-      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-        📄 Pages Development Status
+    <div class="card rounded-2xl p-6 mb-8 glow">
+      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        ภาพรวมความคืบหน้า
       </h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        <!-- Dashboard -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">📊</span>
-              <div>
-                <h3 class="font-semibold text-lg">Dashboard</h3>
-                <p class="text-xs text-gray-400">หน้าภาพรวมระบบ</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">95%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 95%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Stats Cards</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Recent Cases</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Activity Timeline</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Charts & Analytics</li>
-          </ul>
-        </div>
-
-        <!-- Cases -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">📁</span>
-              <div>
-                <h3 class="font-semibold text-lg">Cases</h3>
-                <p class="text-xs text-gray-400">จัดการคดี</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">95%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 95%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Case List & Filters</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Case Details</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Evidence Management</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Timeline View</li>
-          </ul>
-        </div>
-
-        <!-- Evidence System -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">🔐</span>
-              <div>
-                <h3 class="font-semibold text-lg">Evidence System V4</h3>
-                <p class="text-xs text-gray-400">ระบบจัดการหลักฐาน</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">100%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 100%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Upload & Preview</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Chain of Custody</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Integrity Verification</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> AI Analysis Integration</li>
-          </ul>
-        </div>
-
-        <!-- Call Analysis - HIGHLIGHT -->
-        <div class="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-sm rounded-xl border border-green-500/30 p-5 card-hover transition-all pulse-glow">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">🕸️</span>
-              <div>
-                <h3 class="font-semibold text-lg">Intelligence Network V6</h3>
-                <p class="text-xs text-gray-400">Cytoscape.js Edition</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">99%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 99%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Drag & Drop Nodes</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Zoom & Pan</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> 5 Layout Types (Force/Circle/Grid/Tree/Cluster)</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Emoji Icons (👤📱🏦🏠🏢₿🚗)</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Search & Filter</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Export PNG & SVG</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Dark/Light Mode</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Fullscreen Mode</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Suspicious Patterns Detection</li>
-          </ul>
-          <div class="mt-3 pt-3 border-t border-white/10">
-            <span class="text-xs text-blue-400">Tech: react-cytoscapejs + cytoscape-svg</span>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-400">70%</div>
+          <div class="text-sm text-slate-400 mt-1">🕵️ ทีมสืบสวน</div>
+          <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
+            <div class="progress-bar h-2 rounded-full" style="width: 70%"></div>
           </div>
         </div>
-
-        <!-- Money Flow -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">💰</span>
-              <div>
-                <h3 class="font-semibold text-lg">Money Flow</h3>
-                <p class="text-xs text-gray-400">ติดตามกระแสเงิน</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">90%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 90%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Transaction Graph</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Account Linking</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Anomaly Detection</li>
-          </ul>
-        </div>
-
-        <!-- Forensic Report -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">📋</span>
-              <div>
-                <h3 class="font-semibold text-lg">Forensic Report</h3>
-                <p class="text-xs text-gray-400">รายงานการสืบสวน</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">85%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 85%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Report Templates</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> PDF Export</li>
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Digital Signatures</li>
-          </ul>
-        </div>
-
-        <!-- Import/Export -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">📥</span>
-              <div>
-                <h3 class="font-semibold text-lg">นำเข้าข้อมูล</h3>
-                <p class="text-xs text-gray-400">Import System</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">80%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 80%"></div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-yellow-400">40%</div>
+          <div class="text-sm text-slate-400 mt-1">👮 พนักงานสอบสวน</div>
+          <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
+            <div class="progress-bar warning h-2 rounded-full" style="width: 40%"></div>
           </div>
         </div>
-
-        <!-- Crypto Tracker -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">₿</span>
-              <div>
-                <h3 class="font-semibold text-lg">Crypto Tracker</h3>
-                <p class="text-xs text-gray-400">ติดตาม Cryptocurrency</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-500/20 text-yellow-400">60%</span>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-red-400">10%</div>
+          <div class="text-sm text-slate-400 mt-1">🔬 นักวิทย์</div>
+          <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
+            <div class="progress-bar danger h-2 rounded-full" style="width: 10%"></div>
           </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-progress rounded-full" style="width: 60%"></div>
-          </div>
-          <ul class="mt-4 space-y-1 text-xs text-gray-300">
-            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Wallet Search</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">◐</span> Transaction Tracing</li>
-            <li class="flex items-center gap-2"><span class="text-gray-500">○</span> Blockchain Analytics</li>
-          </ul>
-        </div>
-
-        <!-- Admin Pages -->
-        <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 card-hover transition-all">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">⚙️</span>
-              <div>
-                <h3 class="font-semibold text-lg">Admin Panel</h3>
-                <p class="text-xs text-gray-400">Organizations, Users, Settings</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-400">90%</span>
-          </div>
-          <div class="mt-4 w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="progress-bar h-full status-done rounded-full" style="width: 90%"></div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Tech Stack -->
-    <section class="mb-10">
-      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-        🛠️ Technology Stack
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">⚛️</div>
-          <div class="text-xs font-medium">React 18</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">📘</div>
-          <div class="text-xs font-medium">TypeScript</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">🎨</div>
-          <div class="text-xs font-medium">Tailwind CSS</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">⚡</div>
-          <div class="text-xs font-medium">Vite</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">🕸️</div>
-          <div class="text-xs font-medium">Cytoscape.js</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">☁️</div>
-          <div class="text-xs font-medium">Azure</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">🐍</div>
-          <div class="text-xs font-medium">Python/FastAPI</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">🗃️</div>
-          <div class="text-xs font-medium">PostgreSQL</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">🐙</div>
-          <div class="text-xs font-medium">GitHub Actions</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">🔒</div>
-          <div class="text-xs font-medium">JWT Auth</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">📊</div>
-          <div class="text-xs font-medium">Recharts</div>
-        </div>
-        <div class="bg-white/5 rounded-lg p-3 text-center">
-          <div class="text-2xl mb-1">📱</div>
-          <div class="text-xs font-medium">Lucide Icons</div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Recent Updates -->
-    <section class="mb-10">
-      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-        🕐 Recent Updates
-      </h2>
-      <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5">
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6">
+      <button onclick="showTab('team-sueb')" class="tab-btn active px-6 py-3 rounded-xl font-medium transition-all bg-slate-800 hover:bg-slate-700">
+        🕵️ ทีมสืบสวน
+      </button>
+      <button onclick="showTab('team-ps')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all bg-slate-800 hover:bg-slate-700">
+        👮 พนักงานสอบสวน
+      </button>
+      <button onclick="showTab('team-forensic')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all bg-slate-800 hover:bg-slate-700">
+        🔬 นักวิทย์
+      </button>
+    </div>
+
+    <!-- Tab Content: ทีมสืบสวน -->
+    <div id="team-sueb" class="tab-content active">
+      <div class="card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold flex items-center gap-2">
+            🕵️ ทีมสืบสวน - Feature Progress
+          </h3>
+          <span class="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg font-semibold">70% Complete</span>
+        </div>
+
         <div class="space-y-4">
-          <div class="flex items-start gap-4 pb-4 border-b border-white/10">
-            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 flex-shrink-0">✓</div>
-            <div>
-              <div class="font-medium">Intelligence Network V6 - Cytoscape.js</div>
-              <div class="text-sm text-gray-400 mt-1">Migrated to react-cytoscapejs with proper React integration. Added emoji icons, dark/light mode, fullscreen, export PNG/SVG.</div>
-              <div class="text-xs text-gray-500 mt-2">January 17, 2026</div>
+          <!-- Feature 1 -->
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">💰</span>
+                <div>
+                  <h4 class="font-semibold">Money Flow - ติดตามเส้นทางเงิน</h4>
+                  <p class="text-sm text-slate-400">แสดงแผนผังการไหลของเงินระหว่างบัญชี</p>
+                </div>
+              </div>
+              <span class="status-done font-semibold">✅ เสร็จสมบูรณ์</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Cytoscape.js</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">5 Layouts</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Export PNG/SVG</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Fullscreen</span>
             </div>
           </div>
-          <div class="flex items-start gap-4 pb-4 border-b border-white/10">
-            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 flex-shrink-0">✓</div>
-            <div>
-              <div class="font-medium">Evidence System V4</div>
-              <div class="text-sm text-gray-400 mt-1">Complete evidence management with chain of custody, integrity verification, and AI analysis integration.</div>
-              <div class="text-xs text-gray-500 mt-2">January 15, 2026</div>
+
+          <!-- Feature 2 -->
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">₿</span>
+                <div>
+                  <h4 class="font-semibold">Crypto Tracker - ติดตาม Cryptocurrency</h4>
+                  <p class="text-sm text-slate-400">ติดตาม Wallet Address, ดู Transaction, แสดงกราฟ</p>
+                </div>
+              </div>
+              <span class="status-done font-semibold">✅ เสร็จสมบูรณ์</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Blockchain API</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Network Graph</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Transaction History</span>
             </div>
           </div>
-          <div class="flex items-start gap-4 pb-4 border-b border-white/10">
-            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 flex-shrink-0">✓</div>
-            <div>
-              <div class="font-medium">Dashboard V2 & Cases V2</div>
-              <div class="text-sm text-gray-400 mt-1">Redesigned dashboard with improved analytics and case management system.</div>
-              <div class="text-xs text-gray-500 mt-2">January 14, 2026</div>
+
+          <!-- Feature 3 -->
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📊</span>
+                <div>
+                  <h4 class="font-semibold">Forensic Report Graph - แผนผังความสัมพันธ์</h4>
+                  <p class="text-sm text-slate-400">แสดงความเชื่อมโยงระหว่างบุคคล/บัญชี/หลักฐาน</p>
+                </div>
+              </div>
+              <span class="status-done font-semibold">✅ เสร็จสมบูรณ์</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Cytoscape.js</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Risk Scoring</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Highlight Connections</span>
             </div>
           </div>
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 flex-shrink-0">🚀</div>
-            <div>
-              <div class="font-medium">Initial Deployment</div>
-              <div class="text-sm text-gray-400 mt-1">First deployment to Azure Static Web Apps with CI/CD pipeline.</div>
-              <div class="text-xs text-gray-500 mt-2">January 10, 2026</div>
+
+          <!-- Feature 4 -->
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📞</span>
+                <div>
+                  <h4 class="font-semibold">Call Analysis - วิเคราะห์สายโทร</h4>
+                  <p class="text-sm text-slate-400">วิเคราะห์รูปแบบการโทร, หาความถี่, สร้างกราฟ</p>
+                </div>
+              </div>
+              <span class="status-done font-semibold">✅ เสร็จสมบูรณ์</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Pattern Analysis</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Frequency Chart</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Contact Network</span>
+            </div>
+          </div>
+
+          <!-- Feature 5 - In Progress -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-yellow-500/30">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🔗</span>
+                <div>
+                  <h4 class="font-semibold">Silk Road Demo - ตัวอย่างการสืบสวน</h4>
+                  <p class="text-sm text-slate-400">Demo การติดตามคดี Crypto ตั้งแต่ต้นจนจบ</p>
+                </div>
+              </div>
+              <span class="status-progress font-semibold">🔄 กำลังพัฒนา</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">UI ✓</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Timeline ✓</span>
+              <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">Export PDF 🔄</span>
+              <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">Save to Case 🔄</span>
+            </div>
+          </div>
+
+          <!-- Feature 6 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📍</span>
+                <div>
+                  <h4 class="font-semibold">Location Timeline - ไทม์ไลน์ตำแหน่ง</h4>
+                  <p class="text-sm text-slate-400">แสดงการเคลื่อนที่ของเป้าหมายบนแผนที่</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 7 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🏦</span>
+                <div>
+                  <h4 class="font-semibold">KYC Integration - เชื่อม Exchange</h4>
+                  <p class="text-sm text-slate-400">ส่งคำขอข้อมูล KYC ไปยัง Exchange</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- Comparison with Industry Tools -->
-    <section class="mb-10">
-      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-        🎯 Industry Standards Comparison
-      </h2>
-      <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-white/5">
-            <tr>
-              <th class="px-4 py-3 text-left font-semibold">Feature</th>
-              <th class="px-4 py-3 text-center font-semibold">InvestiGate</th>
-              <th class="px-4 py-3 text-center font-semibold text-gray-400">i2 Analyst's Notebook</th>
-              <th class="px-4 py-3 text-center font-semibold text-gray-400">Palantir</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-white/5">
-            <tr>
-              <td class="px-4 py-3">Network Visualization</td>
-              <td class="px-4 py-3 text-center text-green-400">✓ Cytoscape.js</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Drag & Drop</td>
-              <td class="px-4 py-3 text-center text-green-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Multiple Layouts</td>
-              <td class="px-4 py-3 text-center text-green-400">✓ 5 Types</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Export PNG/SVG</td>
-              <td class="px-4 py-3 text-center text-green-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Pattern Detection</td>
-              <td class="px-4 py-3 text-center text-green-400">✓ AI-based</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Web-based</td>
-              <td class="px-4 py-3 text-center text-green-400">✓</td>
-              <td class="px-4 py-3 text-center text-gray-400">✗ Desktop</td>
-              <td class="px-4 py-3 text-center text-gray-400">✓</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Open Source</td>
-              <td class="px-4 py-3 text-center text-green-400">✓ Custom</td>
-              <td class="px-4 py-3 text-center text-gray-400">✗ Proprietary</td>
-              <td class="px-4 py-3 text-center text-gray-400">✗ Proprietary</td>
-            </tr>
-            <tr>
-              <td class="px-4 py-3">Price</td>
-              <td class="px-4 py-3 text-center text-green-400">Free</td>
-              <td class="px-4 py-3 text-center text-gray-400">$$$</td>
-              <td class="px-4 py-3 text-center text-gray-400">$$$$</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Todo for 100% -->
+      <div class="card rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+          📋 สิ่งที่ต้องทำให้ครบ 100%
+        </h3>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+            <input type="checkbox" class="w-5 h-5 rounded">
+            <span>Silk Road Demo - Export PDF ที่ใช้งานได้จริง</span>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+            <input type="checkbox" class="w-5 h-5 rounded">
+            <span>Silk Road Demo - Save to Case เชื่อม Database</span>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg">
+            <input type="checkbox" class="w-5 h-5 rounded">
+            <span>Location Timeline - แสดงตำแหน่งบนแผนที่</span>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg">
+            <input type="checkbox" class="w-5 h-5 rounded">
+            <span>KYC Integration - Template หนังสือขอข้อมูล</span>
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
 
+    <!-- Tab Content: พนักงานสอบสวน -->
+    <div id="team-ps" class="tab-content">
+      <div class="card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold flex items-center gap-2">
+            👮 พนักงานสอบสวน - Feature Progress
+          </h3>
+          <span class="px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-lg font-semibold">40% Complete</span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Feature 1 -->
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📁</span>
+                <div>
+                  <h4 class="font-semibold">Cases - จัดการคดี/สำนวน</h4>
+                  <p class="text-sm text-slate-400">สร้าง/แก้ไข/ลบ คดี, กำหนดสถานะ, มอบหมายงาน</p>
+                </div>
+              </div>
+              <span class="status-done font-semibold">✅ เสร็จสมบูรณ์</span>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📊</span>
+                <div>
+                  <h4 class="font-semibold">Dashboard - ภาพรวมคดี</h4>
+                  <p class="text-sm text-slate-400">สถิติคดี, สถานะ, กราฟ</p>
+                </div>
+              </div>
+              <span class="status-done font-semibold">✅ เสร็จสมบูรณ์</span>
+            </div>
+          </div>
+
+          <!-- Feature 3 - Partial -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-yellow-500/30">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📄</span>
+                <div>
+                  <h4 class="font-semibold">Forensic Report - รายงานส่งศาล</h4>
+                  <p class="text-sm text-slate-400">ดูแผนผัง, Timeline, รายการบัญชี</p>
+                </div>
+              </div>
+              <span class="status-progress font-semibold">🔄 บางส่วน</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">View Graph ✓</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">View Timeline ✓</span>
+              <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">Export PDF 🔄</span>
+              <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">Print 🔄</span>
+            </div>
+          </div>
+
+          <!-- Feature 4 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🔗</span>
+                <div>
+                  <h4 class="font-semibold">Evidence Linking - เชื่อมโยงหลักฐาน</h4>
+                  <p class="text-sm text-slate-400">เชื่อมหลักฐานดิจิทัลเข้ากับคดี</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 5 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📋</span>
+                <div>
+                  <h4 class="font-semibold">Case Summary - สรุปคดีอัตโนมัติ</h4>
+                  <p class="text-sm text-slate-400">AI สรุปคดีจากข้อมูลทั้งหมด</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 6 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📬</span>
+                <div>
+                  <h4 class="font-semibold">รับรายงานจากนักวิทย์</h4>
+                  <p class="text-sm text-slate-400">ดูผลการตรวจพิสูจน์จากนักวิทย์</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: นักวิทย์ -->
+    <div id="team-forensic" class="tab-content">
+      <div class="card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold flex items-center gap-2">
+            🔬 นักวิทยาศาสตร์ (Forensic) - Feature Progress
+          </h3>
+          <span class="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg font-semibold">10% Complete</span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Feature 1 - Partial -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-yellow-500/30">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📞</span>
+                <div>
+                  <h4 class="font-semibold">Call Analysis - วิเคราะห์สายโทร</h4>
+                  <p class="text-sm text-slate-400">วิเคราะห์ Call logs จากมือถือ</p>
+                </div>
+              </div>
+              <span class="status-progress font-semibold">🔄 บางส่วน</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Manual Input ✓</span>
+              <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">Import Excel 🔄</span>
+            </div>
+          </div>
+
+          <!-- Feature 2 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📱</span>
+                <div>
+                  <h4 class="font-semibold">Import from Cellebrite/Axiom</h4>
+                  <p class="text-sm text-slate-400">นำเข้าข้อมูลจากเครื่องมือตรวจมือถือ</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 3 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">⏱️</span>
+                <div>
+                  <h4 class="font-semibold">Timeline Analyzer - รวม Timeline</h4>
+                  <p class="text-sm text-slate-400">รวม Timeline จากหลายแหล่ง (มือถือ, คอม, DVR)</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 4 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">💬</span>
+                <div>
+                  <h4 class="font-semibold">Chat Analyzer - วิเคราะห์แชท</h4>
+                  <p class="text-sm text-slate-400">วิเคราะห์ LINE, FB Messenger, WhatsApp</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 5 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📍</span>
+                <div>
+                  <h4 class="font-semibold">Location Mapper - แผนที่ GPS</h4>
+                  <p class="text-sm text-slate-400">แสดงตำแหน่ง GPS จากมือถือ/รูปภาพ</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 6 - Pending -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-600/30 opacity-70">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📄</span>
+                <div>
+                  <h4 class="font-semibold">Forensic Report Generator</h4>
+                  <p class="text-sm text-slate-400">สร้างรายงานผลการตรวจพิสูจน์</p>
+                </div>
+              </div>
+              <span class="status-pending font-semibold">⏳ รอพัฒนา</span>
+            </div>
+          </div>
+
+          <!-- Feature 7 - Partial -->
+          <div class="bg-slate-800/50 rounded-xl p-4 border border-yellow-500/30">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🔐</span>
+                <div>
+                  <h4 class="font-semibold">Chain of Custody</h4>
+                  <p class="text-sm text-slate-400">บันทึก SHA-256 Hash, Timestamp</p>
+                </div>
+              </div>
+              <span class="status-progress font-semibold">🔄 บางส่วน</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">SHA-256 ✓</span>
+              <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Timestamp ✓</span>
+              <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">QR Code 🔄</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Planned Features -->
+      <div class="card rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+          🗓️ แผนการพัฒนาสำหรับนักวิทย์
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-800/50 rounded-xl">
+            <h4 class="font-semibold mb-2">Phase 1 - Import Data</h4>
+            <ul class="text-sm text-slate-400 space-y-1">
+              <li>• รับ Excel/CSV จาก Cellebrite</li>
+              <li>• รับ Excel/CSV จาก Axiom</li>
+              <li>• Parse ข้อมูล Call, SMS, Chat</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-slate-800/50 rounded-xl">
+            <h4 class="font-semibold mb-2">Phase 2 - Analysis</h4>
+            <ul class="text-sm text-slate-400 space-y-1">
+              <li>• Timeline รวมจากทุกแหล่ง</li>
+              <li>• Link Analysis บุคคล</li>
+              <li>• Keyword Search</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-slate-800/50 rounded-xl">
+            <h4 class="font-semibold mb-2">Phase 3 - Visualization</h4>
+            <ul class="text-sm text-slate-400 space-y-1">
+              <li>• แผนที่ GPS</li>
+              <li>• กราฟการสื่อสาร</li>
+              <li>• Heatmap ช่วงเวลา</li>
+            </ul>
+          </div>
+          <div class="p-4 bg-slate-800/50 rounded-xl">
+            <h4 class="font-semibold mb-2">Phase 4 - Reports</h4>
+            <ul class="text-sm text-slate-400 space-y-1">
+              <li>• รายงานผลตรวจพิสูจน์</li>
+              <li>• Chain of Custody</li>
+              <li>• Export PDF รูปแบบศาล</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Changelog -->
+    <div class="card rounded-2xl p-6 mt-8">
+      <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+        📝 Changelog - ประวัติการอัปเดต
+      </h3>
+      <div class="space-y-4">
+        <div class="border-l-2 border-green-500 pl-4">
+          <div class="text-sm text-slate-400">17 มกราคม 2569</div>
+          <div class="font-semibold text-green-400">v0.5.0 - Cytoscape.js Upgrade</div>
+          <ul class="text-sm text-slate-400 mt-1">
+            <li>• อัพเกรด Money Flow Graph เป็น Cytoscape.js</li>
+            <li>• อัพเกรด Forensic Report Graph เป็น Cytoscape.js</li>
+            <li>• เพิ่ม 5 Layout algorithms (Force, Circle, Grid, Tree, Radial)</li>
+            <li>• เพิ่ม Export PNG/SVG</li>
+            <li>• เพิ่ม Fullscreen mode</li>
+          </ul>
+        </div>
+        <div class="border-l-2 border-blue-500 pl-4">
+          <div class="text-sm text-slate-400">16 มกราคม 2569</div>
+          <div class="font-semibold text-blue-400">v0.4.0 - Crypto Tracker</div>
+          <ul class="text-sm text-slate-400 mt-1">
+            <li>• เพิ่ม Crypto Tracker module</li>
+            <li>• เชื่อม Blockchain API</li>
+            <li>• Network visualization</li>
+          </ul>
+        </div>
+        <div class="border-l-2 border-purple-500 pl-4">
+          <div class="text-sm text-slate-400">15 มกราคม 2569</div>
+          <div class="font-semibold text-purple-400">v0.3.0 - Evidence Manager</div>
+          <ul class="text-sm text-slate-400 mt-1">
+            <li>• เพิ่มระบบจัดการหลักฐาน</li>
+            <li>• SHA-256 Hash verification</li>
+            <li>• Chain of Custody</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-white/10 py-6 text-center text-sm text-gray-500">
-    <p>InvestiGate - Professional Investigation Platform</p>
-    <p class="mt-1">Built with ❤️ using React, TypeScript, Cytoscape.js & Azure</p>
+  <footer class="border-t border-slate-800 mt-12 py-6">
+    <div class="max-w-7xl mx-auto px-6 text-center text-slate-500 text-sm">
+      <p>InvestiGate - Digital Forensics Investigation Platform</p>
+      <p class="mt-1">Built with ❤️ for Thai Law Enforcement</p>
+    </div>
   </footer>
 
+  <script>
+    function showTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      // Remove active from all buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      // Show selected tab
+      document.getElementById(tabId).classList.add('active');
+      // Add active to clicked button
+      event.target.classList.add('active');
+    }
+
+    // Set current date
+    const today = new Date();
+    const thaiYear = today.getFullYear() + 543;
+    const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    document.getElementById('lastUpdate').textContent = 
+      `${today.getDate()} ${months[today.getMonth()]} ${thaiYear}`;
+  </script>
 </body>
 </html>
