@@ -155,8 +155,8 @@ const LandingPage = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-900/80 backdrop-blur-lg border-b border-dark-700">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/images/logo.png" alt="InvestiGate" className="h-16 md:h-20" />
+            <div className="flex items-center">
+              <img src="/images/logo.png" alt="InvestiGate" className="h-14 md:h-16 w-auto" />
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-dark-300 hover:text-white transition-colors">คุณสมบัติ</a>
@@ -460,7 +460,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="mb-4">
-                <img src="/images/logo.png" alt="InvestiGate" className="h-16" />
+                <img src="/images/logo.png" alt="InvestiGate" className="h-20 w-auto" />
               </div>
               <p className="text-dark-400 text-sm">
                 Digital Forensic Investigation Platform
