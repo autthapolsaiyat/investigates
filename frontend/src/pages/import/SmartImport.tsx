@@ -805,7 +805,7 @@ const SmartImport: React.FC = () => {
       }
       
       await new Promise(resolve => setTimeout(resolve, 1500));
-      navigate(`/money-flow?case=${selectedCase}`);
+      navigate(`/app/money-flow?case=${selectedCase}`);
     } catch (error) { log(`\n❌ Error: ${error}`); }
     finally { setIsCreatingNetwork(false); }
   };

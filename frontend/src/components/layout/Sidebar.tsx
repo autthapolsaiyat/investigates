@@ -31,10 +31,10 @@ import { casesAPI, type Case } from '../../services/api';
 
 // Map routes to count keys
 const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'locations'> = {
-  '/money-flow': 'moneyFlow',
-  '/crypto': 'crypto',
-  '/call-analysis': 'calls',
-  '/location-timeline': 'locations',
+  '/app/money-flow': 'moneyFlow',
+  '/app/crypto': 'crypto',
+  '/app/call-analysis': 'calls',
+  '/app/location-timeline': 'locations',
 };
 
 // จัดเรียงตาม Flow: สร้างคดี → นำเข้าข้อมูล → วิเคราะห์ → ขอข้อมูลเพิ่ม → สรุปผล → รายงาน
@@ -43,54 +43,54 @@ const navSections = [
   {
     title: 'OVERVIEW',
     items: [
-      { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     ]
   },
   {
     title: 'CASE',
     items: [
-      { to: '/cases', icon: Briefcase, label: 'Cases' },
+      { to: '/app/cases', icon: Briefcase, label: 'Cases' },
     ]
   },
   {
     title: 'INPUT',
     items: [
-      { to: '/smart-import', icon: Sparkles, label: 'Smart Import' },
+      { to: '/app/smart-import', icon: Sparkles, label: 'Smart Import' },
     ]
   },
   {
     title: 'ANALYSIS',
     items: [
-      { to: '/money-flow', icon: DollarSign, label: 'Money Flow' },
-      { to: '/crypto', icon: Wallet, label: 'Crypto Tracker' },
-      { to: '/call-analysis', icon: Phone, label: 'Call Analysis' },
-      { to: '/location-timeline', icon: MapPin, label: 'Location Timeline' },
+      { to: '/app/money-flow', icon: DollarSign, label: 'Money Flow' },
+      { to: '/app/crypto', icon: Wallet, label: 'Crypto Tracker' },
+      { to: '/app/call-analysis', icon: Phone, label: 'Call Analysis' },
+      { to: '/app/location-timeline', icon: MapPin, label: 'Location Timeline' },
     ]
   },
   {
     title: 'INVESTIGATE',
     items: [
-      { to: '/kyc-request', icon: FileSearch, label: 'KYC Request' },
+      { to: '/app/kyc-request', icon: FileSearch, label: 'KYC Request' },
     ]
   },
   {
     title: 'REPORTS',
     items: [
-      { to: '/forensic-report', icon: FileText, label: 'Forensic Report' },
+      { to: '/app/forensic-report', icon: FileText, label: 'Forensic Report' },
     ]
   },
   {
     title: 'DEMO',
     items: [
-      { to: '/silk-road-demo', icon: Link2, label: 'Silk Road Demo' },
+      { to: '/app/silk-road-demo', icon: Link2, label: 'Silk Road Demo' },
     ]
   },
 ];
 
 const adminNavItems = [
-  { to: '/admin/organizations', icon: Building2, label: 'Organizations' },
-  { to: '/admin/users', icon: Users, label: 'Users' },
-  { to: '/admin/settings', icon: Settings, label: 'Settings' },
+  { to: '/app/admin/organizations', icon: Building2, label: 'Organizations' },
+  { to: '/app/admin/users', icon: Users, label: 'Users' },
+  { to: '/app/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
 export const Sidebar = () => {

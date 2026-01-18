@@ -16,8 +16,9 @@ import { LocationTimeline } from "./pages/location-timeline";
 import { KYCRequestGenerator } from "./pages/kyc-request";
 import { CryptoTracker } from './pages/crypto/CryptoTracker';
 import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
-import { HashVerify } from './pages/verify';  // ← เพิ่มบรรทัดนี้
+import { HashVerify } from './pages/verify';
 import { UserGuide } from './pages/guide';
+import { LandingPage } from './pages/landing';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -35,11 +36,15 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/verify" element={<HashVerify />} />  {/* ← เพิ่มบรรทัดนี้ (Public) */}
-        <Route path="/guide" element={<UserGuide />} />  {/* คู่มือ (Public) */}
-        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/verify" element={<HashVerify />} />
+        <Route path="/guide" element={<UserGuide />} />
+        
+        {/* Protected Routes */}
+        <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="cases" element={<CasesPage />} />
           <Route path="money-flow" element={<MoneyFlowPage />} />
@@ -54,7 +59,18 @@ function App() {
           <Route path="admin/users" element={<UsersPage />} />
           <Route path="admin/settings" element={<SettingsPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Legacy routes redirect to /app */}
+        <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="/cases" element={<Navigate to="/app/cases" replace />} />
+        <Route path="/money-flow" element={<Navigate to="/app/money-flow" replace />} />
+        <Route path="/forensic-report" element={<Navigate to="/app/forensic-report" replace />} />
+        <Route path="/smart-import" element={<Navigate to="/app/smart-import" replace />} />
+        <Route path="/call-analysis" element={<Navigate to="/app/call-analysis" replace />} />
+        <Route path="/crypto" element={<Navigate to="/app/crypto" replace />} />
+        <Route path="/location-timeline" element={<Navigate to="/app/location-timeline" replace />} />
+        
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
