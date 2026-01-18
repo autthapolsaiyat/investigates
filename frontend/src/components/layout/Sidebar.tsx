@@ -22,7 +22,8 @@ import {
   Sparkles,
   ChevronDown,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
@@ -302,6 +303,17 @@ export const Sidebar = () => {
           ))}
         </div>
       </nav>
+
+      {/* Help Button */}
+      <div className="px-4 py-2 border-t border-dark-700">
+        <button
+          onClick={() => window.open('/guide', '_blank')}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-300 hover:bg-dark-700 hover:text-white transition-colors"
+        >
+          <BookOpen size={18} />
+          <span className="text-sm">วิธีการใช้งาน</span>
+        </button>
+      </div>
 
       {/* User Info */}
       <div className="p-4 border-t border-dark-700">

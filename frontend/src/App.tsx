@@ -17,6 +17,7 @@ import { KYCRequestGenerator } from "./pages/kyc-request";
 import { CryptoTracker } from './pages/crypto/CryptoTracker';
 import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
 import { HashVerify } from './pages/verify';  // ← เพิ่มบรรทัดนี้
+import { UserGuide } from './pages/guide';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -36,6 +37,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verify" element={<HashVerify />} />  {/* ← เพิ่มบรรทัดนี้ (Public) */}
+        <Route path="/guide" element={<UserGuide />} />  {/* คู่มือ (Public) */}
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
