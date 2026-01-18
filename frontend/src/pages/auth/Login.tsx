@@ -4,7 +4,7 @@
  */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button, Input, Card } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
 
@@ -40,10 +40,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-white">InvestiGate</h1>
+          <img src="/images/logo.png" alt="InvestiGate" className="h-14 mx-auto mb-4" />
           <p className="text-gray-400 mt-2">Investigation Management Platform</p>
         </div>
 

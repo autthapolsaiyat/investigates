@@ -5,10 +5,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Shield, Network, Wallet, Phone, MapPin, FileText,
+  Shield, Network, Wallet, Phone, MapPin, FileText,
   CheckCircle, ArrowRight, Play,
   ChevronDown, ChevronUp, Users, Lock, Globe,
-  Sparkles, QrCode, BarChart3
+  Sparkles, QrCode
 } from 'lucide-react';
 
 const LandingPage = () => {
@@ -155,11 +155,8 @@ const LandingPage = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-900/80 backdrop-blur-lg border-b border-dark-700">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-                <Search className="text-white" size={20} />
-              </div>
-              <span className="text-xl font-bold">InvestiGate</span>
+            <div className="flex items-center gap-2">
+              <img src="/images/logo.png" alt="InvestiGate" className="h-10" />
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-dark-300 hover:text-white transition-colors">คุณสมบัติ</a>
@@ -239,35 +236,12 @@ const LandingPage = () => {
               </div>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-dark-800 to-dark-900 border border-dark-700 rounded-2xl p-4 shadow-2xl">
+              <div className="rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src="https://via.placeholder.com/600x400/1a1a2e/4f46e5?text=InvestiGate+Dashboard"
-                  alt="InvestiGate Dashboard"
-                  className="rounded-lg w-full"
+                  src="/images/hero-features.png"
+                  alt="InvestiGate Features - Money Flow, Crypto Tracker, Call Analysis, Location Timeline"
+                  className="w-full"
                 />
-              </div>
-              {/* Floating cards */}
-              <div className="absolute -left-6 top-1/4 bg-dark-800 border border-dark-700 rounded-xl p-4 shadow-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <Shield className="text-green-400" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400">Chain of Custody</p>
-                    <p className="font-semibold text-green-400">SHA-256 Verified</p>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -right-6 bottom-1/4 bg-dark-800 border border-dark-700 rounded-xl p-4 shadow-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="text-primary-400" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400">Network Analysis</p>
-                    <p className="font-semibold">247 Nodes</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -485,11 +459,8 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-                  <Search className="text-white" size={20} />
-                </div>
-                <span className="text-xl font-bold">InvestiGate</span>
+              <div className="mb-4">
+                <img src="/images/logo.png" alt="InvestiGate" className="h-10" />
               </div>
               <p className="text-dark-400 text-sm">
                 Digital Forensic Investigation Platform

@@ -14,7 +14,6 @@ import {
   Users,
   Settings,
   LogOut,
-  Search,
   FileText,
   MapPin,
   FileSearch,
@@ -163,15 +162,7 @@ export const Sidebar = () => {
     <aside className="w-64 bg-dark-800 border-r border-dark-700 flex flex-col">
       {/* Logo */}
       <div className="p-4 border-b border-dark-700">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-            <Search className="text-white" size={20} />
-          </div>
-          <div>
-            <h1 className="font-bold text-white">InvestiGate</h1>
-            <p className="text-xs text-dark-400">Investigation Platform</p>
-          </div>
-        </div>
+        <img src="/images/logo.png" alt="InvestiGate" className="h-10" />
       </div>
 
       {/* Case Selector */}
