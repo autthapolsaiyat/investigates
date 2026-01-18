@@ -54,4 +54,5 @@ def init_db():
     """
     from app.models import user, organization, case, money_flow  # noqa
     from app.models import evidence  # noqa - import separately to avoid circular
+    from app.models import registration, session  # noqa - Registration & Session models
     Base.metadata.create_all(bind=engine)

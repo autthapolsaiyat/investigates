@@ -1,0 +1,37 @@
+<step title="BackgroundTrace" date="2026-01-17T13:01:29.115" instance="644818" url="/api/publish" method="POST" >
+  <step title="Creating temporary deployment - FetchDeploymentManager" date="2026-01-17T13:01:29.208" /><!-- duration: 3ms -->
+  <step title="Creating temporary deployment" date="2026-01-17T13:01:29.216" /><!-- duration: 80ms -->
+  <step title="Performing fetch based deployment" date="2026-01-17T13:01:29.373" >
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/54d42f12-9ca8-477f-a316-64e23ddaa730.zip (0.03 MB) to /tmp/zipdeploy/extracted" date="2026-01-17T13:01:30.544" >
+      <step title="ChmodRecursive Process exited with total time taken in ms: 89" date="2026-01-17T13:01:30.699" /><!-- duration: 19ms -->
+    </step><!-- duration: 178ms -->
+    <step title="Deployment timer started" date="2026-01-17T13:01:32.749" >
+      <step title="DeploymentManager.Deploy(id:4320c1d7-3130-489f-ac93-ed3e0f486809)" date="2026-01-17T13:01:32.771" >
+        <step title="Collecting changeset information" date="2026-01-17T13:01:32.844" /><!-- duration: 81ms -->
+        <step title="Updating submodules" date="2026-01-17T13:01:32.933" /><!-- duration: 1111ms -->
+        <step title="Determining deployment builder" date="2026-01-17T13:01:34.291" >
+          <step title="Builder is OryxBuilder" date="2026-01-17T13:01:34.306" /><!-- duration: 10ms -->
+        </step><!-- duration: 35ms -->
+        <step title="PreDeployment: context.CleanOutputPath False" date="2026-01-17T13:01:34.404" >
+          <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-01-17T13:01:34.551" >
+            <step title="Building" date="2026-01-17T13:01:34.690" >
+              <step title="Executing external process" date="2026-01-17T13:01:35.013" type="process" path="bash" arguments="-c &quot;oryx build /tmp/zipdeploy/extracted -o /home/site/wwwroot --platform python --platform-version 3.12 -p virtualenv_name=antenv --log-file /tmp/build-debug.log  -i /tmp/8de55c88ac7d1f6 --compress-destination-dir | tee /tmp/oryx-build.log ; exit $PIPESTATUS &quot;" >
+                <step title="Cpu: python(157606,29.280s)+ts(157607,0.100s)+build.sh(157605,0.000s)+build.sh(157604,0.000s)+build.sh(157522,0.060s)+oryx(157502,3.740s)+tee(157503,0.000s)+bash(157501,0.000s)=total(33.160s)" date="2026-01-17T13:02:56.136" /><!-- duration: 11ms -->
+                <step title="bash: no io activity for 60s, prev-cpu=-1.000s, current-cpu=33.160s" date="2026-01-17T13:02:56.196" /><!-- duration: 71ms -->
+              </step><!-- duration: 119246ms -->
+              <step title="Using PythonDeploymentLogParser" date="2026-01-17T13:03:34.692" /><!-- duration: 8ms -->
+              <step title="Modified file to trigger a restart of the app container." date="2026-01-17T13:03:35.938" /><!-- duration: 7ms -->
+              <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-01-17T13:03:35.951" /><!-- duration: 14ms -->
+              <step title="Purge deployment items" date="2026-01-17T13:03:37.053" >
+                <step title="Remove 8f17eac6-, Success, received at 01/08/2026 12:33:54" date="2026-01-17T13:03:37.152" /><!-- duration: 6ms -->
+              </step><!-- duration: 124ms -->
+            </step><!-- duration: 122585ms -->
+          </step><!-- duration: 122729ms -->
+          <step title="Cleaning up temp files" date="2026-01-17T13:03:37.284" /><!-- duration: 1328ms -->
+          <step title="Cleaning up temp files" date="2026-01-17T13:03:38.691" /><!-- duration: 523ms -->
+          <step title="Reloading status file with latest updates" date="2026-01-17T13:03:39.311" >
+            <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2026-01-17T13:03:39.383" /><!-- duration: 212ms -->
+          </step><!-- duration: 305ms -->
+          <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2026-01-17T13:03:39.645" /><!-- duration: 20ms -->
+        </step><!-- duration: 125421ms -->
+      </step><!-- duration: 127136ms -->

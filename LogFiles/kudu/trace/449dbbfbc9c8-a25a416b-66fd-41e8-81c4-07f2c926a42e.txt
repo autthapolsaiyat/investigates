@@ -1,0 +1,4 @@
+2026-01-08T17:05:26    Error occurred, type: error, text: LogStreamManager: Inside TerminateClient
+2026-01-08T17:05:26    Error occurred, type: error, text: LogStreamManager: Inside Reset
+2026-01-08T17:40:26    Error occurred, type: error, text: LogStreamManager: ProcessRequest end due to timeout
+2026-01-08T17:40:26  Error occurred, type: error, text: LogStreamManager: Inside Reset

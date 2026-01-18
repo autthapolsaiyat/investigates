@@ -1,0 +1,182 @@
+2026-01-18T15:15:28.2332658Z,Updating submodules.,50120b49-6685-481a-8315-5fb6b3445d9d,0
+2026-01-18T15:15:29.4049627Z,Preparing deployment for commit id 'b956edf3-c'.,f88e7b61-d310-4a32-af58-c4d8a215fe7f,0
+2026-01-18T15:15:29.7678171Z,PreDeployment: context.CleanOutputPath False,5357a73a-437a-486c-9d52-a4af3206d33d,0
+2026-01-18T15:15:29.9037700Z,PreDeployment: context.OutputPath /home/site/wwwroot,bc3bea7a-4ee4-4280-823d-f666b8134e2c,0
+2026-01-18T15:15:30.0643918Z,Repository path is /tmp/zipdeploy/extracted,c40597e6-d165-4cf5-8d1b-f8f74098f3ed,0
+2026-01-18T15:15:30.1987576Z,Running oryx build...,8c7f5add-5330-49d4-92ee-636ede6e1c79,0
+	2026-01-18T15:15:30.2115253Z,Command: oryx build /tmp/zipdeploy/extracted -o /home/site/wwwroot --platform python --platform-version 3.12 -p virtualenv_name=antenv --log-file /tmp/build-debug.log  -i /tmp/8de56a46a927420 --compress-destination-dir | tee /tmp/oryx-build.log,,0
+	2026-01-18T15:15:32.2516288Z,Operation performed by Microsoft Oryx&comma; https://github.com/Microsoft/Oryx,,0
+	2026-01-18T15:15:32.3746865Z,You can report issues at https://github.com/Microsoft/Oryx/issues,,0
+	2026-01-18T15:15:32.4341053Z,,,0
+	2026-01-18T15:15:32.4570113Z,Oryx Version: 0.2.20251022.1+bef98bc7139feefaa74be16de9d835e2c85385d4&comma; Commit: bef98bc7139feefaa74be16de9d835e2c85385d4&comma; ReleaseTagName: 20251022.1,,0
+	2026-01-18T15:15:32.4738058Z,,,0
+	2026-01-18T15:15:32.5236861Z,Build Operation ID: 36f8632f0fe8e2bf,,0
+	2026-01-18T15:15:32.5480801Z,Repository Commit : b956edf3-cd87-420d-8d15-1c8bb59507ad,,0
+	2026-01-18T15:15:32.6341470Z,OS Type           : bullseye,,0
+	2026-01-18T15:15:32.6761698Z,Image Type        : githubactions,,0
+	2026-01-18T15:15:32.7071882Z,,,0
+	2026-01-18T15:15:32.7788374Z,Primary SDK Storage URL: https://oryx-cdn.microsoft.io,,0
+	2026-01-18T15:15:32.7976895Z,Backup SDK Storage URL: ,,0
+	2026-01-18T15:15:32.9070450Z,Detecting platforms...,,0
+	2026-01-18T15:15:32.9205516Z,External SDK provider is enabled.,,0
+	2026-01-18T15:15:32.9356135Z,Requesting metadata for platform python from external SDK provider,,0
+	2026-01-18T15:15:34.5268173Z,Requesting metadata for platform python from external SDK provider,,0
+	2026-01-18T15:15:35.2590129Z,Detected following platforms:,,0
+	2026-01-18T15:15:35.2861362Z,  python: 3.12.12,,0
+	2026-01-18T15:15:35.8914918Z,,,0
+	2026-01-18T15:15:35.9731207Z,Using intermediate directory '/tmp/8de56a46a927420'.,,0
+	2026-01-18T15:15:35.9943405Z,,,0
+	2026-01-18T15:15:36.0328072Z,Copying files to the intermediate directory...,,0
+	2026-01-18T15:15:36.1074432Z,Done in 1 sec(s).,,0
+	2026-01-18T15:15:36.1461290Z,,,0
+	2026-01-18T15:15:36.2247626Z,Source directory     : /tmp/8de56a46a927420,,0
+	2026-01-18T15:15:36.2847037Z,Destination directory: /home/site/wwwroot,,0
+	2026-01-18T15:15:36.3853520Z,,,0
+	2026-01-18T15:15:36.6770656Z,Python Version: /tmp/oryx/platforms/python/3.12.12/bin/python3.12,,0
+	2026-01-18T15:15:36.7480989Z,Creating directory for command manifest file if it does not exist,,0
+	2026-01-18T15:15:36.8201337Z,Removing existing manifest file,,0
+	2026-01-18T15:15:36.8885738Z,Python Virtual Environment: antenv,,0
+	2026-01-18T15:15:36.9791615Z,Creating virtual environment...,,0
+	2026-01-18T15:15:37.0585537Z,Executing: /tmp/oryx/platforms/python/3.12.12/bin/python3.12 -m venv antenv --copies --system-site-packages,,0
+	2026-01-18T15:15:50.0354591Z,Activating virtual environment...,,0
+	2026-01-18T15:15:50.1471796Z,Running pip install...,,0
+	2026-01-18T15:16:36.1199662Z,[15:15:52+0000] Collecting fastapi==0.115.6 (from -r requirements.txt (line 2)),,0
+	2026-01-18T15:16:36.1514376Z,[15:15:52+0000]   Using cached fastapi-0.115.6-py3-none-any.whl.metadata (27 kB),,0
+	2026-01-18T15:16:36.2318697Z,[15:15:52+0000] Collecting uvicorn==0.34.0 (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:36.2752650Z,[15:15:52+0000]   Using cached uvicorn-0.34.0-py3-none-any.whl.metadata (6.5 kB),,0
+	2026-01-18T15:16:36.3135863Z,[15:15:52+0000] Collecting gunicorn==23.0.0 (from -r requirements.txt (line 4)),,0
+	2026-01-18T15:16:36.3929042Z,[15:15:52+0000]   Using cached gunicorn-23.0.0-py3-none-any.whl.metadata (4.4 kB),,0
+	2026-01-18T15:16:36.4436955Z,[15:15:52+0000] Collecting python-multipart==0.0.20 (from -r requirements.txt (line 5)),,0
+	2026-01-18T15:16:36.4918893Z,[15:15:52+0000]   Using cached python_multipart-0.0.20-py3-none-any.whl.metadata (1.8 kB),,0
+	2026-01-18T15:16:36.5431778Z,[15:15:53+0000] Collecting sqlalchemy==2.0.36 (from -r requirements.txt (line 8)),,0
+	2026-01-18T15:16:36.5796884Z,[15:15:53+0000]   Using cached SQLAlchemy-2.0.36-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.7 kB),,0
+	2026-01-18T15:16:36.6297771Z,[15:15:54+0000] Collecting pymssql==2.3.2 (from -r requirements.txt (line 9)),,0
+	2026-01-18T15:16:36.7704545Z,[15:15:54+0000]   Using cached pymssql-2.3.2-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (4.7 kB),,0
+	2026-01-18T15:16:36.8133161Z,[15:15:54+0000] Collecting python-jose==3.3.0 (from python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:36.8607770Z,[15:15:54+0000]   Using cached python_jose-3.3.0-py2.py3-none-any.whl.metadata (5.4 kB),,0
+	2026-01-18T15:16:36.9241675Z,[15:15:54+0000] Collecting passlib==1.7.4 (from passlib[bcrypt]==1.7.4->-r requirements.txt (line 13)),,0
+	2026-01-18T15:16:36.9645925Z,[15:15:54+0000]   Using cached passlib-1.7.4-py2.py3-none-any.whl.metadata (1.7 kB),,0
+	2026-01-18T15:16:37.0225637Z,[15:15:54+0000] Collecting bcrypt==4.2.1 (from -r requirements.txt (line 14)),,0
+	2026-01-18T15:16:37.0542464Z,[15:15:54+0000]   Using cached bcrypt-4.2.1-cp39-abi3-manylinux_2_28_x86_64.whl.metadata (9.8 kB),,0
+	2026-01-18T15:16:37.1341378Z,[15:15:55+0000] Collecting pydantic==2.10.4 (from -r requirements.txt (line 17)),,0
+	2026-01-18T15:16:37.1948856Z,[15:15:55+0000]   Using cached pydantic-2.10.4-py3-none-any.whl.metadata (29 kB),,0
+	2026-01-18T15:16:37.2554319Z,[15:15:55+0000] Collecting pydantic-settings==2.7.0 (from -r requirements.txt (line 18)),,0
+	2026-01-18T15:16:37.3647476Z,[15:15:55+0000]   Using cached pydantic_settings-2.7.0-py3-none-any.whl.metadata (3.5 kB),,0
+	2026-01-18T15:16:37.4253482Z,[15:15:55+0000] Collecting email-validator==2.2.0 (from -r requirements.txt (line 19)),,0
+	2026-01-18T15:16:37.4846906Z,[15:15:55+0000]   Using cached email_validator-2.2.0-py3-none-any.whl.metadata (25 kB),,0
+	2026-01-18T15:16:37.5246622Z,[15:15:55+0000] Collecting python-dotenv==1.0.1 (from -r requirements.txt (line 22)),,0
+	2026-01-18T15:16:37.5765811Z,[15:15:55+0000]   Using cached python_dotenv-1.0.1-py3-none-any.whl.metadata (23 kB),,0
+	2026-01-18T15:16:37.6278642Z,[15:15:55+0000] Collecting starlette<0.42.0&comma;>=0.40.0 (from fastapi==0.115.6->-r requirements.txt (line 2)),,0
+	2026-01-18T15:16:37.6956498Z,[15:15:55+0000]   Using cached starlette-0.41.3-py3-none-any.whl.metadata (6.0 kB),,0
+	2026-01-18T15:16:37.7466684Z,[15:15:56+0000] Collecting typing-extensions>=4.8.0 (from fastapi==0.115.6->-r requirements.txt (line 2)),,0
+	2026-01-18T15:16:37.8074539Z,[15:15:56+0000]   Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB),,0
+	2026-01-18T15:16:37.8584719Z,[15:15:56+0000] Collecting click>=7.0 (from uvicorn==0.34.0->uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:37.9298026Z,[15:15:56+0000]   Using cached click-8.3.1-py3-none-any.whl.metadata (2.6 kB),,0
+	2026-01-18T15:16:37.9989708Z,[15:15:56+0000] Collecting h11>=0.8 (from uvicorn==0.34.0->uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:38.0985312Z,[15:15:56+0000]   Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB),,0
+	2026-01-18T15:16:38.2397900Z,[15:15:56+0000] Collecting packaging (from gunicorn==23.0.0->-r requirements.txt (line 4)),,0
+	2026-01-18T15:16:38.3696927Z,[15:15:56+0000]   Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB),,0
+	2026-01-18T15:16:38.4485103Z,[15:15:57+0000] Collecting greenlet!=0.4.17 (from sqlalchemy==2.0.36->-r requirements.txt (line 8)),,0
+	2026-01-18T15:16:38.6796604Z,[15:15:57+0000]   Using cached greenlet-3.3.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (4.1 kB),,0
+	2026-01-18T15:16:38.9429952Z,[15:15:57+0000] Collecting ecdsa!=0.15 (from python-jose==3.3.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:39.1409973Z,[15:15:57+0000]   Using cached ecdsa-0.19.1-py2.py3-none-any.whl.metadata (29 kB),,0
+	2026-01-18T15:16:39.3099028Z,[15:15:57+0000] Collecting rsa (from python-jose==3.3.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:39.4191749Z,[15:15:57+0000]   Using cached rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB),,0
+	2026-01-18T15:16:39.5295512Z,[15:15:57+0000] Collecting pyasn1 (from python-jose==3.3.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:39.6304942Z,[15:15:57+0000]   Using cached pyasn1-0.6.2-py3-none-any.whl.metadata (8.4 kB),,0
+	2026-01-18T15:16:39.7513254Z,[15:15:57+0000] Collecting annotated-types>=0.6.0 (from pydantic==2.10.4->-r requirements.txt (line 17)),,0
+	2026-01-18T15:16:39.8517700Z,[15:15:57+0000]   Using cached annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB),,0
+	2026-01-18T15:16:40.1203704Z,[15:16:00+0000] Collecting pydantic-core==2.27.2 (from pydantic==2.10.4->-r requirements.txt (line 17)),,0
+	2026-01-18T15:16:40.2016515Z,[15:16:00+0000]   Using cached pydantic_core-2.27.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB),,0
+	2026-01-18T15:16:40.3222659Z,[15:16:00+0000] Collecting dnspython>=2.0.0 (from email-validator==2.2.0->-r requirements.txt (line 19)),,0
+	2026-01-18T15:16:40.4232565Z,[15:16:00+0000]   Using cached dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB),,0
+	2026-01-18T15:16:40.4843493Z,[15:16:01+0000] Collecting idna>=2.0.0 (from email-validator==2.2.0->-r requirements.txt (line 19)),,0
+	2026-01-18T15:16:40.5258451Z,[15:16:01+0000]   Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB),,0
+	2026-01-18T15:16:40.5749373Z,[15:16:04+0000] Collecting cryptography>=3.4.0 (from python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:40.6252997Z,[15:16:04+0000]   Using cached cryptography-46.0.3-cp311-abi3-manylinux_2_28_x86_64.whl.metadata (5.7 kB),,0
+	2026-01-18T15:16:40.6739574Z,[15:16:05+0000] Collecting httptools>=0.6.3 (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:40.7265486Z,[15:16:05+0000]   Using cached httptools-0.7.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB),,0
+	2026-01-18T15:16:40.7863362Z,[15:16:06+0000] Collecting pyyaml>=5.1 (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:40.8451100Z,[15:16:06+0000]   Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB),,0
+	2026-01-18T15:16:40.8752007Z,[15:16:06+0000] Collecting uvloop!=0.15.0&comma;!=0.15.1&comma;>=0.14.0 (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:40.9262519Z,[15:16:06+0000]   Using cached uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB),,0
+	2026-01-18T15:16:41.0054100Z,[15:16:07+0000] Collecting watchfiles>=0.13 (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:41.0271826Z,[15:16:07+0000]   Using cached watchfiles-1.1.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB),,0
+	2026-01-18T15:16:41.0474329Z,[15:16:07+0000] Collecting websockets>=10.4 (from uvicorn[standard]==0.34.0->-r requirements.txt (line 3)),,0
+	2026-01-18T15:16:41.0964579Z,[15:16:07+0000]   Using cached websockets-16.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB),,0
+	2026-01-18T15:16:41.1568395Z,[15:16:08+0000] Collecting cffi>=2.0.0 (from cryptography>=3.4.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:41.2389132Z,[15:16:08+0000]   Using cached cffi-2.0.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB),,0
+	2026-01-18T15:16:41.3333505Z,[15:16:08+0000] Collecting six>=1.9.0 (from ecdsa!=0.15->python-jose==3.3.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:41.3813855Z,[15:16:08+0000]   Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB),,0
+	2026-01-18T15:16:41.4280848Z,[15:16:08+0000] Collecting anyio<5&comma;>=3.4.0 (from starlette<0.42.0&comma;>=0.40.0->fastapi==0.115.6->-r requirements.txt (line 2)),,0
+	2026-01-18T15:16:41.4596629Z,[15:16:08+0000]   Using cached anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB),,0
+	2026-01-18T15:16:41.4983793Z,[15:16:09+0000] Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->python-jose[cryptography]==3.3.0->-r requirements.txt (line 12)),,0
+	2026-01-18T15:16:41.5295843Z,[15:16:09+0000]   Using cached pycparser-2.23-py3-none-any.whl.metadata (993 bytes),,0
+	2026-01-18T15:16:41.5779509Z,[15:16:09+0000] Using cached fastapi-0.115.6-py3-none-any.whl (94 kB),,0
+	2026-01-18T15:16:41.6295523Z,[15:16:09+0000] Using cached uvicorn-0.34.0-py3-none-any.whl (62 kB),,0
+	2026-01-18T15:16:41.6780167Z,[15:16:09+0000] Using cached gunicorn-23.0.0-py3-none-any.whl (85 kB),,0
+	2026-01-18T15:16:41.7297069Z,[15:16:09+0000] Using cached python_multipart-0.0.20-py3-none-any.whl (24 kB),,0
+	2026-01-18T15:16:41.7508257Z,[15:16:09+0000] Using cached SQLAlchemy-2.0.36-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB),,0
+	2026-01-18T15:16:41.7999231Z,[15:16:09+0000] Using cached pymssql-2.3.2-cp312-cp312-manylinux_2_28_x86_64.whl (4.7 MB),,0
+	2026-01-18T15:16:41.8391478Z,[15:16:09+0000] Using cached python_jose-3.3.0-py2.py3-none-any.whl (33 kB),,0
+	2026-01-18T15:16:41.8793887Z,[15:16:09+0000] Using cached passlib-1.7.4-py2.py3-none-any.whl (525 kB),,0
+	2026-01-18T15:16:41.9192352Z,[15:16:10+0000] Using cached bcrypt-4.2.1-cp39-abi3-manylinux_2_28_x86_64.whl (278 kB),,0
+	2026-01-18T15:16:41.9602605Z,[15:16:10+0000] Using cached pydantic-2.10.4-py3-none-any.whl (431 kB),,0
+	2026-01-18T15:16:42.0124202Z,[15:16:10+0000] Using cached pydantic_settings-2.7.0-py3-none-any.whl (29 kB),,0
+	2026-01-18T15:16:42.0623590Z,[15:16:10+0000] Using cached email_validator-2.2.0-py3-none-any.whl (33 kB),,0
+	2026-01-18T15:16:42.1104098Z,[15:16:10+0000] Using cached python_dotenv-1.0.1-py3-none-any.whl (19 kB),,0
+	2026-01-18T15:16:42.1637690Z,[15:16:10+0000] Using cached pydantic_core-2.27.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB),,0
+	2026-01-18T15:16:42.2235746Z,[15:16:10+0000] Using cached annotated_types-0.7.0-py3-none-any.whl (13 kB),,0
+	2026-01-18T15:16:42.2749370Z,[15:16:10+0000] Using cached click-8.3.1-py3-none-any.whl (108 kB),,0
+	2026-01-18T15:16:42.3322380Z,[15:16:10+0000] Using cached cryptography-46.0.3-cp311-abi3-manylinux_2_28_x86_64.whl (4.5 MB),,0
+	2026-01-18T15:16:42.3664125Z,[15:16:10+0000] Using cached dnspython-2.8.0-py3-none-any.whl (331 kB),,0
+	2026-01-18T15:16:42.4024804Z,[15:16:10+0000] Using cached ecdsa-0.19.1-py2.py3-none-any.whl (150 kB),,0
+	2026-01-18T15:16:42.4431301Z,[15:16:10+0000] Using cached greenlet-3.3.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (609 kB),,0
+	2026-01-18T15:16:42.4728725Z,[15:16:10+0000] Using cached h11-0.16.0-py3-none-any.whl (37 kB),,0
+	2026-01-18T15:16:42.5027219Z,[15:16:10+0000] Using cached httptools-0.7.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (517 kB),,0
+	2026-01-18T15:16:42.5335715Z,[15:16:10+0000] Using cached idna-3.11-py3-none-any.whl (71 kB),,0
+	2026-01-18T15:16:42.5633623Z,[15:16:10+0000] Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB),,0
+	2026-01-18T15:16:42.6134219Z,[15:16:10+0000] Using cached starlette-0.41.3-py3-none-any.whl (73 kB),,0
+	2026-01-18T15:16:42.6448317Z,[15:16:10+0000] Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB),,0
+	2026-01-18T15:16:42.6938407Z,[15:16:10+0000] Using cached uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB),,0
+	2026-01-18T15:16:42.7185426Z,[15:16:10+0000] Using cached watchfiles-1.1.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB),,0
+	2026-01-18T15:16:42.7652267Z,[15:16:11+0000] Using cached websockets-16.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (184 kB),,0
+	2026-01-18T15:16:42.7981167Z,[15:16:11+0000] Using cached packaging-25.0-py3-none-any.whl (66 kB),,0
+	2026-01-18T15:16:42.8463770Z,[15:16:11+0000] Using cached pyasn1-0.6.2-py3-none-any.whl (83 kB),,0
+	2026-01-18T15:16:42.8598796Z,[15:16:11+0000] Using cached rsa-4.9.1-py3-none-any.whl (34 kB),,0
+	2026-01-18T15:16:42.8871307Z,[15:16:11+0000] Using cached anyio-4.12.1-py3-none-any.whl (113 kB),,0
+	2026-01-18T15:16:42.9254782Z,[15:16:11+0000] Using cached cffi-2.0.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (219 kB),,0
+	2026-01-18T15:16:42.9559706Z,[15:16:11+0000] Using cached six-1.17.0-py2.py3-none-any.whl (11 kB),,0
+	2026-01-18T15:16:42.9985689Z,[15:16:11+0000] Using cached pycparser-2.23-py3-none-any.whl (118 kB),,0
+	2026-01-18T15:16:43.0367032Z,[15:16:13+0000] Installing collected packages: pymssql&comma; passlib&comma; websockets&comma; uvloop&comma; typing-extensions&comma; six&comma; pyyaml&comma; python-multipart&comma; python-dotenv&comma; pycparser&comma; pyasn1&comma; packaging&comma; idna&comma; httptools&comma; h11&comma; greenlet&comma; dnspython&comma; click&comma; bcrypt&comma; annotated-types&comma; uvicorn&comma; sqlalchemy&comma; rsa&comma; pydantic-core&comma; gunicorn&comma; email-validator&comma; ecdsa&comma; cffi&comma; anyio&comma; watchfiles&comma; starlette&comma; python-jose&comma; pydantic&comma; cryptography&comma; pydantic-settings&comma; fastapi,,0
+	2026-01-18T15:16:43.0664977Z,[15:16:34+0000] Successfully installed annotated-types-0.7.0 anyio-4.12.1 bcrypt-4.2.1 cffi-2.0.0 click-8.3.1 cryptography-46.0.3 dnspython-2.8.0 ecdsa-0.19.1 email-validator-2.2.0 fastapi-0.115.6 greenlet-3.3.0 gunicorn-23.0.0 h11-0.16.0 httptools-0.7.1 idna-3.11 packaging-25.0 passlib-1.7.4 pyasn1-0.6.2 pycparser-2.23 pydantic-2.10.4 pydantic-core-2.27.2 pydantic-settings-2.7.0 pymssql-2.3.2 python-dotenv-1.0.1 python-jose-3.3.0 python-multipart-0.0.20 pyyaml-6.0.3 rsa-4.9.1 six-1.17.0 sqlalchemy-2.0.36 starlette-0.41.3 typing-extensions-4.15.0 uvicorn-0.34.0 uvloop-0.22.1 watchfiles-1.1.1 websockets-16.0,,0
+	2026-01-18T15:16:43.0867433Z,,,0
+	2026-01-18T15:16:43.1389921Z,[notice] A new release of pip is available: 25.0.1 -> 25.3,,0
+	2026-01-18T15:16:43.1872617Z,[notice] To update&comma; run: pip install --upgrade pip,,0
+	2026-01-18T15:16:43.2183421Z,Not a vso image&comma; so not writing build commands,,0
+	2026-01-18T15:16:43.2497418Z,Preparing output...,,0
+	2026-01-18T15:16:43.3179882Z,,,0
+	2026-01-18T15:16:43.3880133Z,Copying files to destination directory '/tmp/_preCompressedDestinationDir'...,,0
+	2026-01-18T15:16:46.4358413Z,Done in 7 sec(s).,,0
+	2026-01-18T15:16:46.4945894Z,Compressing content of directory '/tmp/_preCompressedDestinationDir'...,,0
+	2026-01-18T15:17:13.3415279Z,Copied the compressed output to '/home/site/wwwroot',,0
+	2026-01-18T15:17:13.4147140Z,,,0
+	2026-01-18T15:17:13.4493937Z,Removing existing manifest file,,0
+	2026-01-18T15:17:13.4967066Z,Creating a manifest file...,,0
+	2026-01-18T15:17:13.5241242Z,Manifest file created.,,0
+	2026-01-18T15:17:13.5642307Z,Copying .ostype to manifest output directory.,,0
+	2026-01-18T15:17:13.6238569Z,,,0
+	2026-01-18T15:17:13.6527055Z,Done in 98 sec(s).,,0
+2026-01-18T15:17:14.6161299Z,Running post deployment command(s)...,59533e21-5891-465e-9843-0078a8c04fe6,0
+2026-01-18T15:17:14.8990157Z,,41e9a87d-cd8a-44d4-a489-ad893116dd7c,0
+2026-01-18T15:17:15.1191145Z,Generating summary of Oryx build,f9e861ca-e54f-496e-bcc0-f3bc3852d49e,0
+2026-01-18T15:17:15.4458355Z,Parsing the build logs,5f4115d7-eb82-4e04-8dd9-1b1c327e1b1a,0
+2026-01-18T15:17:15.7911723Z,Found 0 issue(s),f4207138-afd0-4c6a-9d24-186d1f8f544c,0
+2026-01-18T15:17:16.0156801Z,,f2cc9927-9990-46f1-a10f-7cfacdfde23f,0
+2026-01-18T15:17:16.3020275Z,Build Summary :,1c82bb5a-eaef-438f-96d9-ca2d5614ffe5,0
+2026-01-18T15:17:16.5727545Z,===============,74e4b610-fc36-41fe-8bf2-91a2d4d0067f,0
+2026-01-18T15:17:17.5145221Z,Errors (0),43ecabbc-23cc-45cd-9985-d39d4f46b265,0
+2026-01-18T15:17:17.7346440Z,Warnings (0),26c8eec1-c110-4262-b73a-b771c7a987af,0
+2026-01-18T15:17:18.2980826Z,,95927db9-e5ab-489f-ae29-287bb0780bfa,0
+2026-01-18T15:17:18.6603642Z,Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path,2f44d5f4-06e5-452a-801f-ecbb6ad4a92f,0
+2026-01-18T15:17:19.2825728Z,Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy,d008cc2f-c17b-4ac0-9c70-54c1c6d8a5bd,0
