@@ -591,5 +591,119 @@ export const evidenceAPI = {
   },
 };
 
+// ============== Registration API ==============
+
+export type RegistrationStatus = 'pending' | 'approved' | 'rejected';
+
+export interface RegistrationRequest {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  organization_name?: string;
+  position?: string;
+  status: RegistrationStatus;
+  created_at: string;
+  updated_at: string;
+  processed_by?: number;
+  processed_at?: string;
+  rejection_reason?: string;
+  subscription_days?: number;
+}
+
+export interface RegistrationCreate {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  organization_name?: string;
+  position?: string;
+}
+
+export interface RegistrationApprove {
+  subscription_days: number;
+  role?: string;
+  notes?: string;
+}
+
+export interface RegistrationReject {
+  reason: string;
+}
+
+export interface RegistrationStatusCheck {
+  email: string;
+  status: RegistrationStatus;
+  created_at: string;
+  rejection_reason?: string;
+}
+
+export interface RegistrationStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  today: number;
+  this_week: number;
+  this_month: number;
+}
+
+export interface RegistrationListParams {
+  status?: RegistrationStatus;
+  page?: number;
+  page_size?: number;
+  search?: string;
+}
+
+export const registrationAPI = {
+  // Public: Submit registration request
+  submit: async (data: RegistrationCreate): Promise<RegistrationRequest> => {
+    const response = await axios.post(`${API_BASE_URL}/registrations/`, data);
+    return response.data;
+  },
+
+  // Public: Check registration status by email
+  checkStatus: async (email: string): Promise<RegistrationStatusCheck> => {
+    const response = await axios.get(`${API_BASE_URL}/registrations/status/${encodeURIComponent(email)}`);
+    return response.data;
+  },
+
+  // Admin: List all registrations
+  list: async (params?: RegistrationListParams): Promise<PaginatedResponse<RegistrationRequest>> => {
+    const response = await api.get('/registrations', { params });
+    return response.data;
+  },
+
+  // Admin: Get registration stats
+  getStats: async (): Promise<RegistrationStats> => {
+    const response = await api.get('/registrations/stats');
+    return response.data;
+  },
+
+  // Admin: Get single registration
+  get: async (id: number): Promise<RegistrationRequest> => {
+    const response = await api.get(`/registrations/${id}`);
+    return response.data;
+  },
+
+  // Admin: Approve registration
+  approve: async (id: number, data: RegistrationApprove): Promise<RegistrationRequest> => {
+    const response = await api.post(`/registrations/${id}/approve`, data);
+    return response.data;
+  },
+
+  // Admin: Reject registration
+  reject: async (id: number, data: RegistrationReject): Promise<RegistrationRequest> => {
+    const response = await api.post(`/registrations/${id}/reject`, data);
+    return response.data;
+  },
+
+  // Admin: Delete registration
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/registrations/${id}`);
+  },
+};
+
 // Export default api instance
 export default api;

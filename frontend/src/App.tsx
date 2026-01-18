@@ -3,12 +3,15 @@ import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Layout } from './components/layout';
 import { LoginPage } from './pages/auth/Login';
+import { RegisterPage } from './pages/auth/Register';
+import { PendingApprovalPage } from './pages/auth/PendingApproval';
 import { DashboardPage } from './pages/dashboard/Dashboard';
 import { CasesPage } from './pages/cases/Cases';
 import { MoneyFlowPage } from './pages/money-flow/MoneyFlow';
 import { OrganizationsPage } from './pages/admin/Organizations';
 import { UsersPage } from './pages/admin/Users';
 import { SettingsPage } from './pages/admin/Settings';
+import { PendingRegistrationsPage } from './pages/admin/PendingRegistrations';
 import { ForensicReportV2 } from './pages/forensic-report/ForensicReportV2';
 import SmartImport from './pages/import/SmartImport';
 import { SilkRoadDemo } from "./pages/silk-road-demo";
@@ -39,6 +42,8 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/pending-approval" element={<PendingApprovalPage />} />
         <Route path="/verify" element={<HashVerify />} />
         <Route path="/guide" element={<UserGuide />} />
         
@@ -58,6 +63,7 @@ function App() {
           <Route path="admin/organizations" element={<OrganizationsPage />} />
           <Route path="admin/users" element={<UsersPage />} />
           <Route path="admin/settings" element={<SettingsPage />} />
+          <Route path="admin/registrations" element={<PendingRegistrationsPage />} />
         </Route>
         
         {/* Legacy routes redirect to /app */}

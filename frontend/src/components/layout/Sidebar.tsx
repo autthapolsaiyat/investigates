@@ -22,7 +22,8 @@ import {
   ChevronDown,
   Loader2,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  UserPlus
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
@@ -87,6 +88,7 @@ const navSections = [
 ];
 
 const adminNavItems = [
+  { to: '/app/admin/registrations', icon: UserPlus, label: 'Registrations' },
   { to: '/app/admin/organizations', icon: Building2, label: 'Organizations' },
   { to: '/app/admin/users', icon: Users, label: 'Users' },
   { to: '/app/admin/settings', icon: Settings, label: 'Settings' },
