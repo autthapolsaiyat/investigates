@@ -47,11 +47,12 @@ async def root():
 
 # Import routers after app is created
 try:
-    from app.routers import auth_router, users_router, organizations_router, cases_router, money_flow_router
+    from app.routers import auth_router, users_router, organizations_router, cases_router, money_flow_router, evidence_router
     app.include_router(auth_router, prefix=settings.API_PREFIX)
     app.include_router(users_router, prefix=settings.API_PREFIX)
     app.include_router(organizations_router, prefix=settings.API_PREFIX)
     app.include_router(cases_router, prefix=settings.API_PREFIX)
     app.include_router(money_flow_router, prefix=settings.API_PREFIX)
+    app.include_router(evidence_router, prefix=settings.API_PREFIX)
 except Exception as e:
     print(f"⚠️ Could not load routers: {e}")

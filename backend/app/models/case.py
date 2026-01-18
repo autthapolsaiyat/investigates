@@ -83,6 +83,7 @@ class Case(Base):
     assigned_to_user = relationship("User", back_populates="cases_assigned", foreign_keys=[assigned_to])
     money_flow_nodes = relationship("MoneyFlowNode", back_populates="case", cascade="all, delete-orphan")
     money_flow_edges = relationship("MoneyFlowEdge", back_populates="case", cascade="all, delete-orphan")
+    evidences = relationship("Evidence", back_populates="case", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Case {self.case_number}: {self.title}>"

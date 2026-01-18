@@ -5,7 +5,15 @@ import {
   Network, ArrowRight, Trash2, Eye, Sparkles, AlertTriangle, TrendingUp,
   Shield, Settings, Link, Unlink, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { casesAPI } from '../../services/api';
+import { casesAPI, evidenceAPI } from '../../services/api';
+
+// SHA-256 Hash Calculator
+const calculateSHA256 = async (file: File): Promise<string> => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
 
 // ==================== TYPES ====================
 interface ColumnMapping {
@@ -34,6 +42,8 @@ interface ParsedFile {
   warnings: FieldWarning[];
   status: 'pending' | 'parsed' | 'mapped' | 'error';
   error?: string;
+  fileSize?: number;
+  sha256Hash?: string;
 }
 
 interface RiskFactor { factor: string; score: number; description: string; }
@@ -384,6 +394,9 @@ const SmartImport: React.FC = () => {
     
     for (const file of newFiles) {
       try {
+        // Calculate SHA-256 hash for Chain of Custody
+        const sha256Hash = await calculateSHA256(file);
+        
         const text = await file.text();
         const { columns, records } = parseCSV(text);
         
@@ -406,7 +419,9 @@ const SmartImport: React.FC = () => {
           columns,
           columnMappings,
           warnings,
-          status: warnings.some(w => w.severity === 'error') ? 'error' : 'mapped'
+          status: warnings.some(w => w.severity === 'error') ? 'error' : 'mapped',
+          fileSize: file.size,
+          sha256Hash
         });
       } catch {
         parsedFiles.push({
@@ -751,6 +766,35 @@ const SmartImport: React.FC = () => {
       }
       
       log(`  ✅ สร้าง ${edgeSuccess}/${analysisResult.edges.length} edges`);
+      
+      // บันทึก Evidence (Chain of Custody)
+      log(`\n🔐 บันทึก Chain of Custody...`);
+      let evidenceSuccess = 0;
+      
+      for (const file of files) {
+        if (file.sha256Hash) {
+          try {
+            await evidenceAPI.create({
+              case_id: selectedCase,
+              file_name: file.name,
+              file_type: file.type,
+              file_size: file.fileSize,
+              sha256_hash: file.sha256Hash,
+              evidence_type: 'csv_file',
+              evidence_source: 'smart_import',
+              records_count: file.records.length,
+              columns_info: JSON.stringify(file.columns),
+              description: `${file.typeLabel} - ${file.records.length} records`
+            });
+            evidenceSuccess++;
+            log(`  🔒 ${file.name} (${file.sha256Hash.substring(0, 16)}...)`);
+          } catch (err) {
+            log(`  ⚠️ ${file.name} (อาจซ้ำ)`);
+          }
+        }
+      }
+      
+      log(`  ✅ บันทึก ${evidenceSuccess}/${files.length} หลักฐาน`);
       log(`\n🎉 เสร็จสิ้น!`);
       
       await new Promise(resolve => setTimeout(resolve, 1500));

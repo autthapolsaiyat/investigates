@@ -499,5 +499,97 @@ export const moneyFlowAPI = {
   },
 };
 
+// ==================== EVIDENCE API ====================
+export interface Evidence {
+  id: number;
+  case_id: number;
+  file_name: string;
+  file_type?: string;
+  file_size?: number;
+  sha256_hash: string;
+  evidence_type: string;
+  evidence_source: string;
+  records_count?: number;
+  columns_info?: string;
+  description?: string;
+  notes?: string;
+  collected_by: number;
+  collected_at: string;
+  created_at: string;
+  updated_at: string;
+  collector_name?: string;
+  case_number?: string;
+  case_title?: string;
+}
+
+export interface EvidenceCreate {
+  case_id: number;
+  file_name: string;
+  file_type?: string;
+  file_size?: number;
+  sha256_hash: string;
+  evidence_type?: string;
+  evidence_source?: string;
+  records_count?: number;
+  columns_info?: string;
+  description?: string;
+  notes?: string;
+}
+
+export interface EvidenceVerifyResponse {
+  verified: boolean;
+  file_name: string;
+  sha256_hash: string;
+  case_number: string;
+  case_title: string;
+  collected_at: string;
+  collector_name: string;
+  message: string;
+}
+
+export interface CaseEvidencesResponse {
+  case_number: string;
+  case_title: string;
+  evidences_count: number;
+  evidences: Evidence[];
+}
+
+export const evidenceAPI = {
+  // Create evidence (with auth)
+  create: async (data: EvidenceCreate): Promise<Evidence> => {
+    const response = await api.post('/evidences/', data);
+    return response.data;
+  },
+
+  // List evidences for a case (with auth)
+  listByCase: async (caseId: number): Promise<Evidence[]> => {
+    const response = await api.get(`/evidences/case/${caseId}`);
+    return response.data;
+  },
+
+  // Get evidence by hash (with auth)
+  getByHash: async (hash: string): Promise<Evidence> => {
+    const response = await api.get(`/evidences/hash/${hash}`);
+    return response.data;
+  },
+
+  // Delete evidence (with auth)
+  delete: async (evidenceId: number): Promise<void> => {
+    await api.delete(`/evidences/${evidenceId}`);
+  },
+
+  // Public: Verify evidence by hash (no auth)
+  verifyPublic: async (hash: string): Promise<EvidenceVerifyResponse> => {
+    const response = await axios.get(`${API_BASE_URL}/evidences/public/verify/${hash}`);
+    return response.data;
+  },
+
+  // Public: Get case evidences by case number (no auth)
+  getCaseEvidencesPublic: async (caseNumber: string): Promise<CaseEvidencesResponse> => {
+    const response = await axios.get(`${API_BASE_URL}/evidences/public/case/${caseNumber}`);
+    return response.data;
+  },
+};
+
 // Export default api instance
 export default api;
