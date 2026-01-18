@@ -1,17 +1,17 @@
 /**
  * Forensic Report V2 - รายงานวิเคราะห์เครือข่ายอาชญากรรม
  * มาตรฐาน Digital Forensic สำหรับส่งศาล
- * Features: Risk Score Analysis, PDF Export, Auto Summary, Network Graph
+ * Features: Risk Score Analysis, PDF Export, Auto Summary, Network Graph, QR Code Chain of Custody
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   FileText, Download, Printer, Users, TrendingUp, RefreshCw, Loader2, 
   AlertTriangle, Phone, Wallet, Building2, Shield, ChevronRight,
-  Target, ArrowRightLeft, Globe, Shuffle, CheckCircle, Network
+  Target, ArrowRightLeft, Globe, Shuffle, CheckCircle, Network, QrCode, Lock, Fingerprint
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
-import { casesAPI, moneyFlowAPI } from '../../services/api';
-import type { Case, MoneyFlowNode, MoneyFlowEdge } from '../../services/api';
+import { casesAPI, moneyFlowAPI, evidenceAPI } from '../../services/api';
+import type { Case, MoneyFlowNode, MoneyFlowEdge, Evidence } from '../../services/api';
 import { ForensicReportGraph } from './ForensicReportGraph';
 
 // ==================== TYPES ====================
@@ -108,12 +108,14 @@ export const ForensicReportV2 = () => {
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
   const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
+  const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<Statistics | null>(null);
   const [highRiskPersons, setHighRiskPersons] = useState<HighRiskPerson[]>([]);
   const [keyTransactions, setKeyTransactions] = useState<KeyTransaction[]>([]);
   const [showGraph, setShowGraph] = useState(true);
+  const [showChainOfCustody, setShowChainOfCustody] = useState(true);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Fetch cases
@@ -136,9 +138,9 @@ export const ForensicReportV2 = () => {
     fetchCases();
   }, []);
 
-  // Fetch money flow data
+  // Fetch money flow data and evidences
   const fetchData = useCallback(async () => {
-    if (!selectedCaseId) return;
+    if (!selectedCaseId || !selectedCase) return;
     try {
       setLoading(true);
       const [nodesRes, edgesRes] = await Promise.all([
@@ -148,12 +150,21 @@ export const ForensicReportV2 = () => {
       setNodes(nodesRes);
       setEdges(edgesRes);
       analyzeData(nodesRes, edgesRes);
+      
+      // Fetch evidences for Chain of Custody
+      try {
+        const evidencesRes = await evidenceAPI.listByCase(selectedCaseId);
+        setEvidences(evidencesRes);
+      } catch {
+        // If evidences fetch fails, just set empty array
+        setEvidences([]);
+      }
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
       setLoading(false);
     }
-  }, [selectedCaseId]);
+  }, [selectedCaseId, selectedCase]);
 
   useEffect(() => {
     if (selectedCaseId) {
@@ -410,6 +421,42 @@ export const ForensicReportV2 = () => {
     <p style="font-size: 11px; color: #6b7280; margin-top: 15px; font-style: italic;">* ข้อมูลนี้เป็นเพียงการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรม ไม่ใช่ข้อสรุปทางคดี ควรตรวจสอบและรวบรวมพยานหลักฐานเพิ่มเติม</p>
   </div>
 
+  <h2>🔐 Chain of Custody - หลักฐานดิจิทัล</h2>
+  <div style="display: grid; grid-template-columns: 180px 1fr; gap: 20px; margin-bottom: 20px;">
+    <div style="text-align: center; padding: 15px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px;">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase?.case_number}`)}" alt="QR Code" style="width: 140px; height: 140px;" />
+      <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Scan เพื่อตรวจสอบหลักฐาน</p>
+    </div>
+    <div>
+      <h3 style="margin-bottom: 10px;">หลักฐานที่บันทึก (${evidences.length} รายการ)</h3>
+      <table style="font-size: 11px;">
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 35%">ชื่อไฟล์</th>
+            <th style="width: 45%">SHA-256 Hash</th>
+            <th style="width: 15%">วันที่บันทึก</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${evidences.length > 0 ? evidences.map((ev, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${ev.file_name}</td>
+              <td style="font-family: monospace; font-size: 9px;">${ev.sha256_hash}</td>
+              <td>${new Date(ev.collected_at).toLocaleDateString('th-TH')}</td>
+            </tr>
+          `).join('') : '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">ยังไม่มีหลักฐานที่บันทึก</td></tr>'}
+        </tbody>
+      </table>
+      ${evidences.length > 0 ? `
+        <div style="margin-top: 10px; padding: 10px; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; font-size: 11px; color: #047857;">
+          ✅ หลักฐานทั้งหมดถูกบันทึก SHA-256 Hash สำหรับยืนยันความถูกต้องในชั้นศาล
+        </div>
+      ` : ''}
+    </div>
+  </div>
+
   <div class="footer">
     <p>รายงานนี้สร้างโดยระบบ InvestiGate - วันที่ ${new Date().toLocaleString('th-TH')}</p>
   </div>
@@ -569,6 +616,88 @@ export const ForensicReportV2 = () => {
             {showGraph && nodes.length === 0 && (
               <div className="p-8 text-center text-dark-400">
                 ไม่มีข้อมูลเครือข่าย
+              </div>
+            )}
+          </Card>
+
+          {/* Chain of Custody - QR Code Section */}
+          <Card className="p-4 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Lock className="text-green-400" />
+                Chain of Custody - หลักฐานดิจิทัล
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChainOfCustody(!showChainOfCustody)}
+              >
+                {showChainOfCustody ? 'ซ่อน' : 'แสดง'}
+              </Button>
+            </div>
+            
+            {showChainOfCustody && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* QR Code */}
+                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
+                  {selectedCase && (
+                    <>
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase.case_number}`)}`}
+                        alt="QR Code"
+                        className="w-44 h-44 mb-3"
+                      />
+                      <p className="text-xs text-gray-600 text-center">
+                        Scan เพื่อตรวจสอบหลักฐาน
+                      </p>
+                    </>
+                  )}
+                </div>
+                
+                {/* Evidence List */}
+                <div className="lg:col-span-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <QrCode className="text-primary-400" size={18} />
+                    <span className="font-medium">หลักฐานที่บันทึก ({evidences.length} รายการ)</span>
+                  </div>
+                  
+                  {evidences.length > 0 ? (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {evidences.map((ev, idx) => (
+                        <div key={ev.id} className="flex items-center gap-3 p-2 bg-dark-900/50 rounded-lg border border-dark-700">
+                          <span className="text-xs text-dark-500 w-5">{idx + 1}.</span>
+                          <FileText size={16} className="text-primary-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{ev.file_name}</p>
+                            <div className="flex items-center gap-2 text-xs text-dark-400">
+                              <Fingerprint size={10} />
+                              <code className="truncate">{ev.sha256_hash.substring(0, 24)}...</code>
+                            </div>
+                          </div>
+                          <div className="text-right text-xs text-dark-400">
+                            <p>{ev.records_count} records</p>
+                            <p>{new Date(ev.collected_at).toLocaleDateString('th-TH')}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-dark-400 bg-dark-900/30 rounded-lg">
+                      <Shield size={24} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">ยังไม่มีหลักฐานที่บันทึก</p>
+                      <p className="text-xs mt-1">Import ข้อมูลผ่าน Smart Import เพื่อบันทึก Chain of Custody</p>
+                    </div>
+                  )}
+                  
+                  {evidences.length > 0 && (
+                    <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-400 text-sm">
+                        <CheckCircle size={16} />
+                        <span>หลักฐานทั้งหมดถูกบันทึก SHA-256 Hash สำหรับยืนยันความถูกต้อง</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </Card>
