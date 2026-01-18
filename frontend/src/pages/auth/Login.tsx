@@ -40,7 +40,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/images/logo.png" alt="InvestiGate" className="h-14 mx-auto mb-4" />
+          <img src="/images/logo.png" alt="InvestiGate" className="h-16 mx-auto mb-4" />
           <p className="text-gray-400 mt-2">Investigation Management Platform</p>
         </div>
 

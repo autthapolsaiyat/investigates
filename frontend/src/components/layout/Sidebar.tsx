@@ -162,7 +162,7 @@ export const Sidebar = () => {
     <aside className="w-64 bg-dark-800 border-r border-dark-700 flex flex-col">
       {/* Logo */}
       <div className="p-4 border-b border-dark-700">
-        <img src="/images/logo.png" alt="InvestiGate" className="h-10" />
+        <img src="/images/logo.png" alt="InvestiGate" className="h-12" />
       </div>
 
       {/* Case Selector */}
