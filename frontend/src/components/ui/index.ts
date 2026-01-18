@@ -3,3 +3,4 @@ export { Input } from './Input';
 export { Card } from './Card';
 export { Badge } from './Badge';
 export { CaseSelector } from './CaseSelector';
+export { CaseInfoBar } from './CaseInfoBar';

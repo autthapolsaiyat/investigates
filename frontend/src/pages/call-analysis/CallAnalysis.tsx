@@ -41,8 +41,8 @@ import {
   Grid3X3,
   Workflow
 } from 'lucide-react';
-import { Button, CaseSelector } from '../../components/ui';
-import type { Case } from '../../services/api';
+import { Button, CaseInfoBar } from '../../components/ui';
+
 import cytoscape from "cytoscape";
 // @ts-ignore
 import cytoscapeSvg from "cytoscape-svg";
@@ -535,14 +535,8 @@ export const CallAnalysis = () => {
   const [riskFilter, setRiskFilter] = useState<RiskLevel[]>(['critical', 'high', 'medium', 'low', 'unknown']);
   const [typeFilter, setTypeFilter] = useState<EntityType[]>(['person', 'phone', 'account', 'address', 'organization', 'crypto', 'vehicle']);
   
-  // Case selection
-  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [_selectedCase, setSelectedCase] = useState<Case | null>(null);
+  // Use global case store
   
-  const handleCaseChange = (caseId: number | null, caseData: Case | null) => {
-    setSelectedCaseId(caseId);
-    setSelectedCase(caseData);
-  };
 
   // Memoized filtered data
   const filteredEntities = useMemo(() => 
@@ -755,13 +749,9 @@ export const CallAnalysis = () => {
           </div>
         </div>
         
-        {/* Case Selector */}
+        {/* Case Info */}
         <div className="mt-4">
-          <CaseSelector
-            selectedCaseId={selectedCaseId}
-            onCaseChange={handleCaseChange}
-            showCaseInfo={true}
-          />
+          <CaseInfoBar />
         </div>
         
         {/* Stats */}

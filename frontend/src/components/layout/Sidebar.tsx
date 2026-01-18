@@ -2,6 +2,7 @@
  * Sidebar Component
  * Navigation sidebar organized by workflow
  */
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -18,10 +19,13 @@ import {
   MapPin,
   FileSearch,
   Link2,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  Loader2
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
+import { casesAPI, type Case } from '../../services/api';
 
 // Map routes to count keys
 const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'locations'> = {
@@ -90,7 +94,41 @@ const adminNavItems = [
 export const Sidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { dataCounts, selectedCaseId } = useCaseStore();
+  const { dataCounts, selectedCaseId, selectedCase, setSelectedCase } = useCaseStore();
+  
+  // Case selector state
+  const [cases, setCases] = useState<Case[]>([]);
+  const [isLoadingCases, setIsLoadingCases] = useState(true);
+  const [isCaseDropdownOpen, setIsCaseDropdownOpen] = useState(false);
+
+  // Fetch cases on mount
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const response = await casesAPI.list({ page: 1, page_size: 100 });
+        setCases(response.items);
+        
+        // Auto-select first case if none selected
+        if (response.items.length > 0 && !selectedCaseId) {
+          setSelectedCase(response.items[0].id, response.items[0]);
+        } else if (selectedCaseId && !selectedCase) {
+          // Restore case from ID
+          const found = response.items.find(c => c.id === selectedCaseId);
+          if (found) setSelectedCase(found.id, found);
+        }
+      } catch (err) {
+        console.error('Error fetching cases:', err);
+      } finally {
+        setIsLoadingCases(false);
+      }
+    };
+    fetchCases();
+  }, []);
+
+  const handleCaseSelect = (caseItem: Case) => {
+    setSelectedCase(caseItem.id, caseItem);
+    setIsCaseDropdownOpen(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -124,6 +162,55 @@ export const Sidebar = () => {
             <h1 className="font-bold text-white">InvestiGate</h1>
             <p className="text-xs text-dark-400">Investigation Platform</p>
           </div>
+        </div>
+      </div>
+
+      {/* Case Selector */}
+      <div className="p-3 border-b border-dark-700">
+        <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-1">เลือกคดี</p>
+        <div className="relative">
+          <button
+            onClick={() => setIsCaseDropdownOpen(!isCaseDropdownOpen)}
+            disabled={isLoadingCases}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg hover:border-primary-500/50 transition-colors text-left"
+          >
+            {isLoadingCases ? (
+              <div className="flex items-center gap-2 text-dark-400">
+                <Loader2 size={14} className="animate-spin" />
+                <span className="text-sm">กำลังโหลด...</span>
+              </div>
+            ) : selectedCase ? (
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-primary-400 font-medium truncate">{selectedCase.case_number}</p>
+                <p className="text-xs text-dark-400 truncate">{selectedCase.title}</p>
+              </div>
+            ) : (
+              <span className="text-sm text-dark-400">-- เลือกคดี --</span>
+            )}
+            <ChevronDown size={14} className={`text-dark-400 transition-transform flex-shrink-0 ${isCaseDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Dropdown */}
+          {isCaseDropdownOpen && (
+            <div className="absolute z-50 w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg shadow-xl max-h-[300px] overflow-y-auto">
+              {cases.length > 0 ? cases.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => handleCaseSelect(c)}
+                  className={`w-full flex flex-col px-3 py-2 hover:bg-dark-700 transition-colors text-left ${
+                    selectedCase?.id === c.id ? 'bg-primary-500/10 border-l-2 border-primary-500' : ''
+                  }`}
+                >
+                  <span className="text-xs font-medium text-white truncate">{c.case_number}</span>
+                  <span className="text-xs text-dark-400 truncate">{c.title}</span>
+                </button>
+              )) : (
+                <div className="p-3 text-center text-dark-400 text-sm">
+                  ไม่มีคดีในระบบ
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -6,10 +6,10 @@ import {
   RefreshCw, 
   Download, 
   Plus,
-  ChevronDown,
   Loader2,
   AlertCircle,
   Network,
+  Briefcase,
   DollarSign,
   Users,
   AlertTriangle
@@ -18,23 +18,14 @@ import { Button } from '../../components/ui';
 import { MoneyFlowGraph } from './MoneyFlowGraph';
 import { AddNodeModal } from './AddNodeModal';
 import type { MoneyFlowNode, MoneyFlowEdge } from './types';
-
-interface Case {
-  id: number;
-  case_number: string;
-  title: string;
-  status?: string;
-  total_amount?: number;
-  victims_count?: number;
-  suspects_count?: number;
-}
+import { useCaseStore } from '../../store/caseStore';
 
 const API_BASE = 'https://investigates-api.azurewebsites.net/api/v1';
 
 export const MoneyFlow = () => {
-  const [cases, setCases] = useState<Case[]>([]);
-  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  // Use global case store
+  const { selectedCaseId, selectedCase } = useCaseStore();
+  
   const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
   const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,28 +33,6 @@ export const MoneyFlow = () => {
   const [showAddNode, setShowAddNode] = useState(false);
 
   const getToken = () => localStorage.getItem('access_token');
-
-  // Fetch cases
-  useEffect(() => {
-    const fetchCases = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/cases?page=1&page_size=100`, {
-          headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setCases(data.items || []);
-          if (data.items?.length > 0 && !selectedCaseId) {
-            setSelectedCaseId(data.items[0].id);
-            setSelectedCase(data.items[0]);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching cases:', err);
-      }
-    };
-    fetchCases();
-  }, []);
 
   // Fetch money flow data
   const fetchMoneyFlowData = useCallback(async () => {
@@ -99,13 +68,6 @@ export const MoneyFlow = () => {
     fetchMoneyFlowData();
   }, [fetchMoneyFlowData]);
 
-  const handleCaseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const caseId = Number(e.target.value);
-    setSelectedCaseId(caseId);
-    const caseData = cases.find(c => c.id === caseId);
-    setSelectedCase(caseData || null);
-  };
-
   // Format currency
   const formatCurrency = (amount?: number) => {
     if (!amount) return '฿0';
@@ -124,29 +86,13 @@ export const MoneyFlow = () => {
             Money Flow
           </h1>
 
-          {/* Case Selector */}
-          <div className="relative">
-            <select
-              value={selectedCaseId || ''}
-              onChange={handleCaseChange}
-              className="appearance-none bg-dark-700 border border-dark-600 rounded-lg px-3 py-1.5 pr-8 text-white text-sm min-w-[200px] focus:outline-none focus:border-primary-500"
-            >
-              {cases.length === 0 ? (
-                <option value="">ไม่พบคดี</option>
-              ) : (
-                cases.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.case_number}
-                  </option>
-                ))
-              )}
-            </select>
-            <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-400 pointer-events-none" />
-          </div>
-
           {/* Case Info - Compact */}
-          {selectedCase && (
-            <div className="flex items-center gap-4 px-3 py-1 bg-dark-700/50 rounded-lg text-sm">
+          {selectedCase ? (
+            <div className="flex items-center gap-4 px-3 py-1.5 bg-dark-700/50 rounded-lg text-sm">
+              <div className="flex items-center gap-2">
+                <Briefcase size={14} className="text-primary-400" />
+                <span className="text-primary-400 font-medium">{selectedCase.case_number}</span>
+              </div>
               <span className="text-white font-medium truncate max-w-[200px]" title={selectedCase.title}>
                 {selectedCase.title}
               </span>
@@ -164,6 +110,11 @@ export const MoneyFlow = () => {
                   {selectedCase.suspects_count || 0}
                 </span>
               </div>
+            </div>
+          ) : (
+            <div className="px-3 py-1.5 bg-dark-700/50 rounded-lg text-sm text-dark-400">
+              <Briefcase size={14} className="inline mr-2" />
+              กรุณาเลือกคดีจากเมนูด้านซ้าย
             </div>
           )}
         </div>

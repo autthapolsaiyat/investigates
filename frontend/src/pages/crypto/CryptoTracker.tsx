@@ -22,8 +22,8 @@ import {
   Clock, Hash, Activity, AlertCircle, Info,
   Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge
 } from 'lucide-react';
-import { Button, Card, Badge, CaseSelector } from '../../components/ui';
-import type { Case } from '../../services/api';
+import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
+
 import blockchainApi, {
   getKnownEntity,
   getExplorerUrl,
@@ -183,14 +183,8 @@ export const CryptoTracker = () => {
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   const [showImportModal, setShowImportModal] = useState(false);
   
-  // Case selection
-  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [_selectedCase, setSelectedCase] = useState<Case | null>(null);
+  // Use global case store
   
-  const handleCaseChange = (caseId: number | null, caseData: Case | null) => {
-    setSelectedCaseId(caseId);
-    setSelectedCase(caseData);
-  };
   
 
   // Get current blockchain config
@@ -405,12 +399,8 @@ export const CryptoTracker = () => {
         </div>
       </div>
 
-      {/* Case Selector */}
-      <CaseSelector
-        selectedCaseId={selectedCaseId}
-        onCaseChange={handleCaseChange}
-        showCaseInfo={true}
-      />
+      {/* Case Info */}
+      <CaseInfoBar />
 
       {/* Search Section */}
       <Card className="p-4">

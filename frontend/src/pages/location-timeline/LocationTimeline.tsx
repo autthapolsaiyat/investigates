@@ -20,8 +20,8 @@ import {
   User,
   Navigation
 } from 'lucide-react';
-import { Button, Card, Badge, CaseSelector } from '../../components/ui';
-import type { Case } from '../../services/api';
+import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
+
 
 // Location point interface
 interface LocationPoint {
@@ -116,14 +116,8 @@ export const LocationTimeline = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   
-  // Case selection
-  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [_selectedCase, setSelectedCase] = useState<Case | null>(null);
+  // Use global case store
   
-  const handleCaseChange = (caseId: number | null, caseData: Case | null) => {
-    setSelectedCaseId(caseId);
-    setSelectedCase(caseData);
-  };
   
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -365,12 +359,8 @@ export const LocationTimeline = () => {
         </div>
       </div>
 
-      {/* Case Selector */}
-      <CaseSelector
-        selectedCaseId={selectedCaseId}
-        onCaseChange={handleCaseChange}
-        showCaseInfo={true}
-      />
+      {/* Case Info */}
+      <CaseInfoBar />
 
       {/* Filters */}
       <Card className="p-4">
