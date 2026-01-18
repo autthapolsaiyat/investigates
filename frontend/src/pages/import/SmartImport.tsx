@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCaseStore } from '../../store/caseStore';
 import { 
   Upload, FileText, Users, Phone, Wallet, CheckCircle, AlertCircle, Loader2,
   Network, ArrowRight, Trash2, Eye, Sparkles, AlertTriangle, TrendingUp,
@@ -356,6 +357,7 @@ const calculateRiskScore = (entity: LinkedEntity): { score: number; factors: Ris
 // ==================== MAIN COMPONENT ====================
 const SmartImport: React.FC = () => {
   const navigate = useNavigate();
+  const { fetchDataCounts } = useCaseStore();
   const [files, setFiles] = useState<ParsedFile[]>([]);
   const [cases, setCases] = useState<{ id: number; case_number: string; title: string }[]>([]);
   const [selectedCase, setSelectedCase] = useState<number | null>(null);
@@ -796,6 +798,11 @@ const SmartImport: React.FC = () => {
       
       log(`  ✅ บันทึก ${evidenceSuccess}/${files.length} หลักฐาน`);
       log(`\n🎉 เสร็จสิ้น!`);
+      
+      // Refresh sidebar badge counts
+      if (selectedCase) {
+        await fetchDataCounts(selectedCase);
+      }
       
       await new Promise(resolve => setTimeout(resolve, 1500));
       navigate(`/money-flow?case=${selectedCase}`);

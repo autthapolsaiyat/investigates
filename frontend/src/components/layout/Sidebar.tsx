@@ -21,7 +21,8 @@ import {
   Link2,
   Sparkles,
   ChevronDown,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
@@ -94,12 +95,19 @@ const adminNavItems = [
 export const Sidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { dataCounts, selectedCaseId, selectedCase, setSelectedCase } = useCaseStore();
+  const { dataCounts, selectedCaseId, selectedCase, setSelectedCase, fetchDataCounts, isLoadingCounts } = useCaseStore();
   
   // Case selector state
   const [cases, setCases] = useState<Case[]>([]);
   const [isLoadingCases, setIsLoadingCases] = useState(true);
   const [isCaseDropdownOpen, setIsCaseDropdownOpen] = useState(false);
+
+  // Refresh counts
+  const handleRefreshCounts = () => {
+    if (selectedCaseId) {
+      fetchDataCounts(selectedCaseId);
+    }
+  };
 
   // Fetch cases on mount
   useEffect(() => {
@@ -212,6 +220,18 @@ export const Sidebar = () => {
             </div>
           )}
         </div>
+        
+        {/* Refresh Button */}
+        {selectedCaseId && (
+          <button
+            onClick={handleRefreshCounts}
+            disabled={isLoadingCounts}
+            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-white hover:bg-dark-700 rounded transition-colors"
+          >
+            <RefreshCw size={12} className={isLoadingCounts ? 'animate-spin' : ''} />
+            {isLoadingCounts ? 'กำลังโหลด...' : 'รีเฟรชข้อมูล'}
+          </button>
+        )}
       </div>
 
       {/* Main Navigation */}
