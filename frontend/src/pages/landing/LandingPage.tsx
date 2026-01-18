@@ -153,10 +153,10 @@ const LandingPage = () => {
       
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-900/80 backdrop-blur-lg border-b border-dark-700">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <img src="/images/logo.png" alt="InvestiGate" className="h-14 md:h-16 w-auto" />
+              <img src="/images/logo.png" alt="InvestiGate" className="h-20 md:h-24 w-auto" />
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-dark-300 hover:text-white transition-colors">คุณสมบัติ</a>
@@ -194,7 +194,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-36 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -460,7 +460,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="mb-4">
-                <img src="/images/logo.png" alt="InvestiGate" className="h-20 w-auto" />
+                <img src="/images/logo.png" alt="InvestiGate" className="h-28 w-auto" />
               </div>
               <p className="text-dark-400 text-sm">
                 Digital Forensic Investigation Platform
