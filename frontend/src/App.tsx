@@ -11,7 +11,6 @@ import { UsersPage } from './pages/admin/Users';
 import { SettingsPage } from './pages/admin/Settings';
 import { ForensicReportV2 } from './pages/forensic-report/ForensicReportV2';
 import SmartImport from './pages/import/SmartImport';
-import { ReportGenerator } from './pages/report/ReportGenerator';
 import { SilkRoadDemo } from "./pages/silk-road-demo";
 import { LocationTimeline } from "./pages/location-timeline";
 import { KYCRequestGenerator } from "./pages/kyc-request";
@@ -44,7 +43,6 @@ function App() {
           <Route path="money-flow" element={<MoneyFlowPage />} />
           <Route path="forensic-report" element={<ForensicReportV2 />} />
           <Route path="smart-import" element={<SmartImport />} />
-          <Route path="report" element={<ReportGenerator />} />
           <Route path="call-analysis" element={<CallAnalysis />} />
           <Route path="silk-road-demo" element={<SilkRoadDemo />} />
           <Route path="location-timeline" element={<LocationTimeline />} />

@@ -15,7 +15,6 @@ import {
   LogOut,
   Search,
   FileText,
-  FileCheck,
   MapPin,
   FileSearch,
   Link2,
@@ -63,7 +62,6 @@ const navSections = [
     title: 'REPORTS',
     items: [
       { to: '/forensic-report', icon: FileText, label: 'Forensic Report' },
-      { to: '/report', icon: FileCheck, label: 'รายงานศาล' },
     ]
   },
   {
