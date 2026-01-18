@@ -10,7 +10,6 @@ import { OrganizationsPage } from './pages/admin/Organizations';
 import { UsersPage } from './pages/admin/Users';
 import { SettingsPage } from './pages/admin/Settings';
 import { ForensicReportV2 } from './pages/forensic-report/ForensicReportV2';
-import { ImportData } from './pages/import/ImportData';
 import SmartImport from './pages/import/SmartImport';
 import { ReportGenerator } from './pages/report/ReportGenerator';
 import { SilkRoadDemo } from "./pages/silk-road-demo";
@@ -18,7 +17,7 @@ import { LocationTimeline } from "./pages/location-timeline";
 import { KYCRequestGenerator } from "./pages/kyc-request";
 import { CryptoTracker } from './pages/crypto/CryptoTracker';
 import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
-import { HashVerify } from './pages/verify';
+import { HashVerify } from './pages/verify';  // ← เพิ่มบรรทัดนี้
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -37,14 +36,13 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/verify" element={<HashVerify />} />
+        <Route path="/verify" element={<HashVerify />} />  {/* ← เพิ่มบรรทัดนี้ (Public) */}
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="cases" element={<CasesPage />} />
           <Route path="money-flow" element={<MoneyFlowPage />} />
           <Route path="forensic-report" element={<ForensicReportV2 />} />
-          <Route path="import" element={<ImportData />} />
           <Route path="smart-import" element={<SmartImport />} />
           <Route path="report" element={<ReportGenerator />} />
           <Route path="call-analysis" element={<CallAnalysis />} />

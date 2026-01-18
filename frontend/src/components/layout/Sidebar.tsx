@@ -15,7 +15,6 @@ import {
   LogOut,
   Search,
   FileText,
-  Upload,
   FileCheck,
   MapPin,
   FileSearch,
@@ -42,7 +41,6 @@ const navSections = [
   {
     title: 'INPUT',
     items: [
-      { to: '/import', icon: Upload, label: 'นำเข้าข้อมูล' },
       { to: '/smart-import', icon: Sparkles, label: 'Smart Import' },
     ]
   },
