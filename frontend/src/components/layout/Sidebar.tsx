@@ -21,6 +21,15 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useCaseStore } from '../../store/caseStore';
+
+// Map routes to count keys
+const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'locations'> = {
+  '/money-flow': 'moneyFlow',
+  '/crypto': 'crypto',
+  '/call-analysis': 'calls',
+  '/location-timeline': 'locations',
+};
 
 // จัดเรียงตาม Flow: สร้างคดี → นำเข้าข้อมูล → วิเคราะห์ → ขอข้อมูลเพิ่ม → สรุปผล → รายงาน
 
@@ -81,10 +90,26 @@ const adminNavItems = [
 export const Sidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { dataCounts, selectedCaseId } = useCaseStore();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Get count for a route
+  const getCount = (route: string): number | null => {
+    const countKey = routeCountMap[route];
+    if (!countKey || !selectedCaseId) return null;
+    return dataCounts[countKey];
+  };
+
+  // Format count for display
+  const formatCount = (count: number | null): string | null => {
+    if (count === null) return null;
+    if (count === 0) return null;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
+    return count.toString();
   };
 
   return (
@@ -109,22 +134,43 @@ export const Sidebar = () => {
             <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-3">
               {section.title}
             </p>
-            {section.items.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary-500/20 text-primary-400'
-                      : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-                  }`
-                }
-              >
-                <item.icon size={18} />
-                <span className="text-sm">{item.label}</span>
-              </NavLink>
-            ))}
+            {section.items.map((item) => {
+              const count = getCount(item.to);
+              const displayCount = formatCount(count);
+              const hasData = count !== null && count > 0;
+              const noData = count === 0;
+              
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-primary-500/20 text-primary-400'
+                        : noData 
+                          ? 'text-dark-500 hover:bg-dark-700 hover:text-dark-300'
+                          : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+                    }`
+                  }
+                >
+                  <item.icon size={18} />
+                  <span className="text-sm flex-1">{item.label}</span>
+                  {displayCount && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      hasData 
+                        ? 'bg-primary-500/20 text-primary-400' 
+                        : 'bg-dark-700 text-dark-500'
+                    }`}>
+                      {displayCount}
+                    </span>
+                  )}
+                  {noData && routeCountMap[item.to] && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-dark-600" title="ไม่มีข้อมูล" />
+                  )}
+                </NavLink>
+              );
+            })}
           </div>
         ))}
 

@@ -10,10 +10,11 @@ import {
 } from 'lucide-react';
 import { casesAPI, type Case } from '../../services/api';
 import { Badge } from '../ui';
+import { useCaseStore } from '../../store/caseStore';
 
 interface CaseSelectorProps {
-  selectedCaseId: number | null;
-  onCaseChange: (caseId: number | null, caseData: Case | null) => void;
+  selectedCaseId?: number | null;
+  onCaseChange?: (caseId: number | null, caseData: Case | null) => void;
   showCaseInfo?: boolean;
 }
 
@@ -48,9 +49,19 @@ export const CaseSelector = ({
   showCaseInfo = true 
 }: CaseSelectorProps) => {
   const [cases, setCases] = useState<Case[]>([]);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Use global store
+  const { 
+    selectedCaseId: storeCaseId, 
+    selectedCase: storeCase,
+    setSelectedCase: setStoreCase 
+  } = useCaseStore();
+  
+  // Use prop or store
+  const effectiveCaseId = selectedCaseId ?? storeCaseId;
+  const [localSelectedCase, setLocalSelectedCase] = useState<Case | null>(storeCase);
 
   // Fetch cases
   useEffect(() => {
@@ -61,13 +72,14 @@ export const CaseSelector = ({
         
         // Auto-select first case or selected case
         if (response.items.length > 0) {
-          const targetCase = selectedCaseId 
-            ? response.items.find(c => c.id === selectedCaseId) 
+          const targetCase = effectiveCaseId 
+            ? response.items.find(c => c.id === effectiveCaseId) 
             : response.items[0];
           
           if (targetCase) {
-            setSelectedCase(targetCase);
-            onCaseChange(targetCase.id, targetCase);
+            setLocalSelectedCase(targetCase);
+            setStoreCase(targetCase.id, targetCase);
+            onCaseChange?.(targetCase.id, targetCase);
           }
         }
       } catch (err) {
@@ -79,19 +91,30 @@ export const CaseSelector = ({
     fetchCases();
   }, []);
 
-  // Update selected case when ID changes
+  // Update local case when store changes
   useEffect(() => {
-    if (selectedCaseId && cases.length > 0) {
-      const found = cases.find(c => c.id === selectedCaseId);
-      if (found) setSelectedCase(found);
+    if (storeCase) {
+      setLocalSelectedCase(storeCase);
     }
-  }, [selectedCaseId, cases]);
+  }, [storeCase]);
+
+  // Update local case when ID changes
+  useEffect(() => {
+    if (effectiveCaseId && cases.length > 0) {
+      const found = cases.find(c => c.id === effectiveCaseId);
+      if (found) setLocalSelectedCase(found);
+    }
+  }, [effectiveCaseId, cases]);
 
   const handleSelect = (caseItem: Case) => {
-    setSelectedCase(caseItem);
-    onCaseChange(caseItem.id, caseItem);
+    setLocalSelectedCase(caseItem);
+    setStoreCase(caseItem.id, caseItem);
+    onCaseChange?.(caseItem.id, caseItem);
     setIsOpen(false);
   };
+
+  // Use local selected case for display
+  const selectedCase = localSelectedCase;
 
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) return `฿${(amount / 1000000).toFixed(2)}M`;
