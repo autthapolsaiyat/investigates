@@ -8,7 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
-from app.models import Evidence, Case, User
+# Import directly from model files to avoid circular import
+from app.models.evidence import Evidence
+from app.models.case import Case
+from app.models.user import User
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/evidences", tags=["evidences"])
