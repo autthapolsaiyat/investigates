@@ -9,7 +9,10 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
-  Network
+  Network,
+  DollarSign,
+  Users,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 import { MoneyFlowGraph } from './MoneyFlowGraph';
@@ -20,6 +23,10 @@ interface Case {
   id: number;
   case_number: string;
   title: string;
+  status?: string;
+  total_amount?: number;
+  victims_count?: number;
+  suspects_count?: number;
 }
 
 const API_BASE = 'https://investigates-api.azurewebsites.net/api/v1';
@@ -27,6 +34,7 @@ const API_BASE = 'https://investigates-api.azurewebsites.net/api/v1';
 export const MoneyFlow = () => {
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
   const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +55,7 @@ export const MoneyFlow = () => {
           setCases(data.items || []);
           if (data.items?.length > 0 && !selectedCaseId) {
             setSelectedCaseId(data.items[0].id);
+            setSelectedCase(data.items[0]);
           }
         }
       } catch (err) {
@@ -91,7 +100,18 @@ export const MoneyFlow = () => {
   }, [fetchMoneyFlowData]);
 
   const handleCaseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCaseId(Number(e.target.value));
+    const caseId = Number(e.target.value);
+    setSelectedCaseId(caseId);
+    const caseData = cases.find(c => c.id === caseId);
+    setSelectedCase(caseData || null);
+  };
+
+  // Format currency
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return '฿0';
+    if (amount >= 1000000) return `฿${(amount / 1000000).toFixed(2)}M`;
+    if (amount >= 1000) return `฿${(amount / 1000).toFixed(1)}K`;
+    return `฿${amount.toLocaleString()}`;
   };
 
   return (
@@ -123,6 +143,29 @@ export const MoneyFlow = () => {
             </select>
             <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-400 pointer-events-none" />
           </div>
+
+          {/* Case Info - Compact */}
+          {selectedCase && (
+            <div className="flex items-center gap-4 px-3 py-1 bg-dark-700/50 rounded-lg text-sm">
+              <span className="text-white font-medium truncate max-w-[200px]" title={selectedCase.title}>
+                {selectedCase.title}
+              </span>
+              <div className="flex items-center gap-3 text-dark-400">
+                <span className="flex items-center gap-1">
+                  <DollarSign size={14} className="text-green-400" />
+                  {formatCurrency(selectedCase.total_amount)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users size={14} className="text-red-400" />
+                  {selectedCase.victims_count || 0}
+                </span>
+                <span className="flex items-center gap-1">
+                  <AlertTriangle size={14} className="text-orange-400" />
+                  {selectedCase.suspects_count || 0}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
