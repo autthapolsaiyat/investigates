@@ -53,4 +53,5 @@ def init_db():
     Call this on application startup
     """
     from app.models import user, organization, case, money_flow  # noqa
+    from app.models import evidence  # noqa - import separately to avoid circular
     Base.metadata.create_all(bind=engine)

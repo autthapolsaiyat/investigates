@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from app.database import get_db
 # Import directly from model files to avoid circular import
 from app.models.evidence import Evidence
@@ -79,6 +79,23 @@ class CaseEvidencesResponse(BaseModel):
     evidences: List[dict]
 
 
+# ==================== HELPER FUNCTIONS ====================
+def get_user_full_name(db: Session, user_id: int) -> str:
+    """Get user full name by ID"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        return f"{user.first_name} {user.last_name}"
+    return "Unknown"
+
+
+def get_case_info(db: Session, case_id: int) -> tuple:
+    """Get case number and title by ID"""
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if case:
+        return case.case_number, case.title
+    return "N/A", "N/A"
+
+
 # ==================== ENDPOINTS ====================
 
 @router.post("/", response_model=EvidenceResponse)
@@ -88,7 +105,7 @@ async def create_evidence(
     current_user: User = Depends(get_current_user)
 ):
     """Create new evidence record (Chain of Custody)"""
-    # Verify case exists and user has access
+    # Verify case exists
     case = db.query(Case).filter(Case.id == evidence.case_id).first()
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -101,7 +118,10 @@ async def create_evidence(
     
     if existing:
         # Return existing evidence instead of creating duplicate
-        return existing
+        resp = EvidenceResponse.model_validate(existing)
+        resp.collector_name = get_user_full_name(db, existing.collected_by)
+        resp.case_number, resp.case_title = get_case_info(db, existing.case_id)
+        return resp
     
     # Create evidence
     db_evidence = Evidence(
@@ -124,7 +144,11 @@ async def create_evidence(
     db.commit()
     db.refresh(db_evidence)
     
-    return db_evidence
+    resp = EvidenceResponse.model_validate(db_evidence)
+    resp.collector_name = get_user_full_name(db, db_evidence.collected_by)
+    resp.case_number, resp.case_title = get_case_info(db, db_evidence.case_id)
+    
+    return resp
 
 
 @router.get("/case/{case_id}", response_model=List[EvidenceResponse])
@@ -134,17 +158,15 @@ async def list_case_evidences(
     current_user: User = Depends(get_current_user)
 ):
     """List all evidences for a case"""
-    evidences = db.query(Evidence).options(
-        joinedload(Evidence.case),
-        joinedload(Evidence.collected_by_user)
-    ).filter(Evidence.case_id == case_id).order_by(Evidence.collected_at.desc()).all()
+    evidences = db.query(Evidence).filter(
+        Evidence.case_id == case_id
+    ).order_by(Evidence.collected_at.desc()).all()
     
     result = []
     for e in evidences:
         resp = EvidenceResponse.model_validate(e)
-        resp.collector_name = e.collected_by_user.full_name if e.collected_by_user else None
-        resp.case_number = e.case.case_number if e.case else None
-        resp.case_title = e.case.title if e.case else None
+        resp.collector_name = get_user_full_name(db, e.collected_by)
+        resp.case_number, resp.case_title = get_case_info(db, e.case_id)
         result.append(resp)
     
     return result
@@ -157,18 +179,16 @@ async def get_evidence_by_hash(
     current_user: User = Depends(get_current_user)
 ):
     """Get evidence by SHA-256 hash"""
-    evidence = db.query(Evidence).options(
-        joinedload(Evidence.case),
-        joinedload(Evidence.collected_by_user)
-    ).filter(Evidence.sha256_hash == sha256_hash).first()
+    evidence = db.query(Evidence).filter(
+        Evidence.sha256_hash == sha256_hash
+    ).first()
     
     if not evidence:
         raise HTTPException(status_code=404, detail="Evidence not found")
     
     resp = EvidenceResponse.model_validate(evidence)
-    resp.collector_name = evidence.collected_by_user.full_name if evidence.collected_by_user else None
-    resp.case_number = evidence.case.case_number if evidence.case else None
-    resp.case_title = evidence.case.title if evidence.case else None
+    resp.collector_name = get_user_full_name(db, evidence.collected_by)
+    resp.case_number, resp.case_title = get_case_info(db, evidence.case_id)
     
     return resp
 
@@ -201,10 +221,9 @@ async def verify_evidence_public(
     Public endpoint to verify evidence by hash
     Used by QR Code scanning
     """
-    evidence = db.query(Evidence).options(
-        joinedload(Evidence.case),
-        joinedload(Evidence.collected_by_user)
-    ).filter(Evidence.sha256_hash == sha256_hash).first()
+    evidence = db.query(Evidence).filter(
+        Evidence.sha256_hash == sha256_hash
+    ).first()
     
     if not evidence:
         raise HTTPException(
@@ -212,14 +231,17 @@ async def verify_evidence_public(
             detail="ไม่พบหลักฐานในระบบ - Hash นี้ยังไม่ได้ลงทะเบียน"
         )
     
+    case_number, case_title = get_case_info(db, evidence.case_id)
+    collector_name = get_user_full_name(db, evidence.collected_by)
+    
     return EvidenceVerifyResponse(
         verified=True,
         file_name=evidence.file_name,
         sha256_hash=evidence.sha256_hash,
-        case_number=evidence.case.case_number if evidence.case else "N/A",
-        case_title=evidence.case.title if evidence.case else "N/A",
+        case_number=case_number,
+        case_title=case_title,
         collected_at=evidence.collected_at,
-        collector_name=evidence.collected_by_user.full_name if evidence.collected_by_user else "Unknown",
+        collector_name=collector_name,
         message="หลักฐานถูกต้อง - Hash ตรงกับที่บันทึกในระบบ"
     )
 
@@ -241,12 +263,13 @@ async def get_case_evidences_public(
             detail="ไม่พบคดีในระบบ"
         )
     
-    evidences = db.query(Evidence).options(
-        joinedload(Evidence.collected_by_user)
-    ).filter(Evidence.case_id == case.id).order_by(Evidence.collected_at.desc()).all()
+    evidences = db.query(Evidence).filter(
+        Evidence.case_id == case.id
+    ).order_by(Evidence.collected_at.desc()).all()
     
     evidence_list = []
     for e in evidences:
+        collector_name = get_user_full_name(db, e.collected_by)
         evidence_list.append({
             "id": e.id,
             "file_name": e.file_name,
@@ -257,7 +280,7 @@ async def get_case_evidences_public(
             "evidence_source": e.evidence_source,
             "records_count": e.records_count,
             "collected_at": e.collected_at.isoformat() if e.collected_at else None,
-            "collector_name": e.collected_by_user.full_name if e.collected_by_user else "Unknown"
+            "collector_name": collector_name
         })
     
     return CaseEvidencesResponse(

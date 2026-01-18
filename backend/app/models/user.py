@@ -50,11 +50,10 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
+    # Relationships (evidences_collected removed to avoid circular import)
     organization = relationship("Organization", back_populates="users")
     cases_created = relationship("Case", back_populates="created_by_user", foreign_keys="Case.created_by")
     cases_assigned = relationship("Case", back_populates="assigned_to_user", foreign_keys="Case.assigned_to")
-    evidences_collected = relationship("Evidence", back_populates="collected_by_user")
     
     @property
     def full_name(self) -> str:

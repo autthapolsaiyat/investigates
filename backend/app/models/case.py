@@ -77,14 +77,12 @@ class Case(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
+    # Relationships (Evidence relationship removed to avoid circular import)
     organization = relationship("Organization", back_populates="cases")
     created_by_user = relationship("User", back_populates="cases_created", foreign_keys=[created_by])
     assigned_to_user = relationship("User", back_populates="cases_assigned", foreign_keys=[assigned_to])
     money_flow_nodes = relationship("MoneyFlowNode", back_populates="case", cascade="all, delete-orphan")
     money_flow_edges = relationship("MoneyFlowEdge", back_populates="case", cascade="all, delete-orphan")
-    # Evidence relationship defined with lazy loading to avoid circular import
-    evidences = relationship("Evidence", back_populates="case", cascade="all, delete-orphan", lazy="dynamic")
     
     def __repr__(self):
         return f"<Case {self.case_number}: {self.title}>"

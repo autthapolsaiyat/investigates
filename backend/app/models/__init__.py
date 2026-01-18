@@ -1,12 +1,12 @@
 """
 Database Models
 Export all models for easy importing
+Note: Evidence is imported directly in router to avoid circular import
 """
 from app.models.organization import Organization
 from app.models.user import User
 from app.models.case import Case, CaseStatus
 from app.models.money_flow import MoneyFlowNode, MoneyFlowEdge, NodeType
-from app.models.evidence import Evidence, EvidenceType, EvidenceSource
 
 __all__ = [
     "Organization",
@@ -15,8 +15,5 @@ __all__ = [
     "CaseStatus",
     "MoneyFlowNode",
     "MoneyFlowEdge",
-    "NodeType",
-    "Evidence",
-    "EvidenceType",
-    "EvidenceSource"
+    "NodeType"
 ]
