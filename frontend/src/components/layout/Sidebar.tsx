@@ -20,11 +20,13 @@ import {
   ChevronDown,
   Loader2,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  Bug
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
-import { casesAPI, type Case } from '../../services/api';
+import { casesAPI, supportAPI, type Case } from '../../services/api';
+import { CreateTicketModal } from '../../pages/support/CreateTicketModal';
 
 // Map routes to count keys
 const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'locations'> = {
@@ -96,6 +98,27 @@ export const Sidebar = () => {
   const [cases, setCases] = useState<Case[]>([]);
   const [isLoadingCases, setIsLoadingCases] = useState(true);
   const [isCaseDropdownOpen, setIsCaseDropdownOpen] = useState(false);
+  
+  // Support ticket state
+  const [unreadTickets, setUnreadTickets] = useState(0);
+  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+
+  // Fetch unread ticket count
+  const fetchUnreadTickets = async () => {
+    try {
+      const response = await supportAPI.getUnreadCount();
+      setUnreadTickets(response.unread_count);
+    } catch (error) {
+      console.error('Error fetching unread tickets:', error);
+    }
+  };
+
+  // Fetch unread count on mount and periodically
+  useEffect(() => {
+    fetchUnreadTickets();
+    const interval = setInterval(fetchUnreadTickets, 60000); // Every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Refresh counts
   const handleRefreshCounts = () => {
@@ -303,6 +326,34 @@ export const Sidebar = () => {
         </button>
       </div>
 
+      {/* Support Button */}
+      <div className="px-4 py-2 border-t border-dark-700">
+        <button
+          onClick={() => setIsCreateTicketOpen(true)}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-300 hover:bg-dark-700 hover:text-white transition-colors relative"
+        >
+          <Bug size={18} />
+          <span className="text-sm">แจ้งปัญหา</span>
+          {unreadTickets > 0 && (
+            <span className="ml-auto px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full min-w-[20px] text-center">
+              {unreadTickets}
+            </span>
+          )}
+        </button>
+        <NavLink
+          to="/app/my-tickets"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 mt-1 rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-500/20 text-primary-400'
+                : 'text-dark-400 hover:bg-dark-700 hover:text-dark-300'
+            }`
+          }
+        >
+          <span className="text-sm ml-7">ดู Tickets ทั้งหมด</span>
+        </NavLink>
+      </div>
+
       {/* User Info */}
       <div className="p-4 border-t border-dark-700">
         <div className="flex items-center gap-3 mb-3">
@@ -322,6 +373,13 @@ export const Sidebar = () => {
           <span className="text-sm">Logout</span>
         </button>
       </div>
+
+      {/* Create Ticket Modal */}
+      <CreateTicketModal
+        isOpen={isCreateTicketOpen}
+        onClose={() => setIsCreateTicketOpen(false)}
+        onSuccess={fetchUnreadTickets}
+      />
     </aside>
   );
 };

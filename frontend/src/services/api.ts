@@ -768,5 +768,173 @@ export const registrationAPI = {
   },
 };
 
+// ============== Support Tickets API ==============
+
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type TicketPriority = 'low' | 'medium' | 'high' | 'critical';
+export type TicketCategory = 'bug' | 'feature' | 'question' | 'other';
+
+export interface SupportTicket {
+  id: number;
+  ticket_number: string;
+  user_id: number;
+  subject: string;
+  description: string;
+  category: TicketCategory;
+  status: TicketStatus;
+  priority: TicketPriority;
+  has_screenshot: boolean;
+  screenshot_data?: string;
+  screenshot_filename?: string;
+  admin_response?: string;
+  resolved_by?: number;
+  resolved_at?: string;
+  user_read_at?: string;
+  created_at: string;
+  updated_at: string;
+  is_unread?: boolean;
+  has_admin_response?: boolean;
+  // For admin view
+  user?: {
+    id: number;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+  };
+  resolver?: {
+    id: number;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+  };
+}
+
+export interface TicketListItem {
+  id: number;
+  ticket_number: string;
+  subject: string;
+  category: TicketCategory;
+  status: TicketStatus;
+  priority: TicketPriority;
+  has_screenshot: boolean;
+  has_admin_response: boolean;
+  is_unread: boolean;
+  created_at: string;
+  resolved_at?: string;
+}
+
+export interface TicketCreateData {
+  subject: string;
+  description: string;
+  category: TicketCategory;
+  screenshot_base64?: string;
+  screenshot_filename?: string;
+}
+
+export interface TicketAdminUpdateData {
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  admin_response?: string;
+}
+
+export interface TicketListResponse {
+  items: TicketListItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+  unread_count: number;
+}
+
+export interface AdminTicketListResponse {
+  items: SupportTicket[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface TicketStats {
+  total: number;
+  open: number;
+  in_progress: number;
+  resolved: number;
+  closed: number;
+  today: number;
+  this_week: number;
+  bugs: number;
+  features: number;
+  questions: number;
+  others: number;
+}
+
+export interface TicketListParams {
+  page?: number;
+  page_size?: number;
+  status?: TicketStatus;
+  category?: TicketCategory;
+  priority?: TicketPriority;
+  search?: string;
+}
+
+export const supportAPI = {
+  // ============== User Endpoints ==============
+  
+  // Create a new ticket
+  create: async (data: TicketCreateData): Promise<SupportTicket> => {
+    const response = await api.post('/support/tickets', data);
+    return response.data;
+  },
+
+  // List my tickets
+  list: async (params?: { page?: number; page_size?: number; status?: TicketStatus }): Promise<TicketListResponse> => {
+    const response = await api.get('/support/tickets', { params });
+    return response.data;
+  },
+
+  // Get single ticket
+  get: async (id: number): Promise<SupportTicket> => {
+    const response = await api.get(`/support/tickets/${id}`);
+    return response.data;
+  },
+
+  // Get unread count
+  getUnreadCount: async (): Promise<{ unread_count: number }> => {
+    const response = await api.get('/support/tickets/unread/count');
+    return response.data;
+  },
+
+  // Mark ticket as read
+  markAsRead: async (id: number): Promise<void> => {
+    await api.post(`/support/tickets/${id}/read`);
+  },
+
+  // ============== Admin Endpoints ==============
+
+  // Admin: List all tickets
+  adminList: async (params?: TicketListParams): Promise<AdminTicketListResponse> => {
+    const response = await api.get('/support/admin/tickets', { params });
+    return response.data;
+  },
+
+  // Admin: Get stats
+  adminGetStats: async (): Promise<TicketStats> => {
+    const response = await api.get('/support/admin/stats');
+    return response.data;
+  },
+
+  // Admin: Get single ticket
+  adminGet: async (id: number): Promise<SupportTicket> => {
+    const response = await api.get(`/support/admin/tickets/${id}`);
+    return response.data;
+  },
+
+  // Admin: Update ticket
+  adminUpdate: async (id: number, data: TicketAdminUpdateData): Promise<SupportTicket> => {
+    const response = await api.patch(`/support/admin/tickets/${id}`, data);
+    return response.data;
+  },
+};
+
 // Export default api instance
 export default api;

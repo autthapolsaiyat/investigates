@@ -18,6 +18,7 @@ import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
 import { HashVerify } from './pages/verify';
 import { UserGuide } from './pages/guide';
 import { LandingPage } from './pages/landing';
+import { MyTickets } from './pages/support/MyTickets';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboard';
@@ -30,6 +31,7 @@ import { SubscriptionsPage } from './pages/admin/Subscriptions';
 import { NotificationsPage } from './pages/admin/Notifications';
 import { SystemReportsPage } from './pages/admin/SystemReports';
 import { DeletedCases } from './pages/admin/DeletedCases';
+import { SupportTickets } from './pages/admin/SupportTickets';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -68,6 +70,7 @@ function App() {
           <Route path="location-timeline" element={<LocationTimeline />} />
           <Route path="kyc-request" element={<KYCRequestGenerator />} />
           <Route path="crypto" element={<CryptoTracker />} />
+          <Route path="my-tickets" element={<MyTickets />} />
         </Route>
 
         {/* Admin Panel Routes (Separated Admin Interface) */}
@@ -82,6 +85,7 @@ function App() {
           <Route path="subscriptions" element={<SubscriptionsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="reports" element={<SystemReportsPage />} />
+          <Route path="support-tickets" element={<SupportTickets />} />
         </Route>
         
         {/* Legacy routes redirect to /app */}

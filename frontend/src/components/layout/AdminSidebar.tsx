@@ -16,7 +16,8 @@ import {
   CreditCard,
   FileText,
   Bell,
-  Trash2
+  Trash2,
+  Bug
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -46,6 +47,12 @@ const adminNavSections = [
     title: 'DATA MANAGEMENT',
     items: [
       { to: '/admin/deleted-cases', icon: Trash2, label: 'Deleted Cases' },
+    ]
+  },
+  {
+    title: 'SUPPORT',
+    items: [
+      { to: '/admin/support-tickets', icon: Bug, label: 'Support Tickets' },
     ]
   },
   {
