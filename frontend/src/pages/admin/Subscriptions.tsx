@@ -17,7 +17,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { Card, Input, Button, Badge } from '../../components/ui';
+import { Card, Input, Button } from '../../components/ui';
 import { usersAPI } from '../../services/api';
 import type { User as UserType } from '../../services/api';
 

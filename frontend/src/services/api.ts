@@ -119,6 +119,11 @@ export interface User {
   phone?: string;
   role: string;
   organization_id?: number;
+  organization_name?: string;
+  position?: string;
+  status?: string;
+  subscription_start?: string;
+  subscription_end?: string;
   is_active: boolean;
   is_verified: boolean;
   avatar_url?: string;
