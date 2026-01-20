@@ -92,9 +92,33 @@ class CaseResponse(CaseBase):
     created_at: datetime
     updated_at: datetime
     
+    # Soft Delete
+    is_active: bool = True
+    deleted_at: Optional[datetime] = None
+    deleted_by: Optional[int] = None
+    
     # Computed
     nodes_count: Optional[int] = None
     edges_count: Optional[int] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class DeletedCaseResponse(BaseModel):
+    """Deleted case info for admin restore"""
+    id: int
+    case_number: str
+    title: str
+    case_type: CaseType
+    status: CaseStatus
+    priority: CasePriority
+    total_amount: float
+    organization_id: int
+    created_at: datetime
+    deleted_at: Optional[datetime]
+    deleted_by: Optional[int]
+    deleted_by_email: Optional[str] = None
     
     class Config:
         from_attributes = True

@@ -1,759 +1,390 @@
 /**
- * Cases V2 - Complete Case Management
+ * Cases - Case Management with Table View & Soft Delete
  * Features:
- * 1. Case List with filters
- * 2. Case Detail Modal
- * 3. Timeline view
- * 4. Evidence linking
- * 5. Team assignment
- * 6. Status workflow
- * 7. Create/Edit case
+ * 1. Table & Grid view toggle
+ * 2. Case List with filters
+ * 3. Case Detail Modal
+ * 4. Create/Edit case
+ * 5. Soft Delete with confirmation
  */
 import { useState, useEffect } from 'react';
 import {
   Plus,
   Search,
-
   Briefcase,
   Calendar,
-  Users,
   DollarSign,
-  Clock,
-
-
-  Edit,
-
   Eye,
+  Edit,
+  Trash2,
   X,
-  CheckCircle,
+  MoreVertical,
+  Grid3X3,
+  List,
   AlertTriangle,
+  CheckCircle,
+  Clock,
   FileText,
-  Shield,
-
-
-  Globe,
-
-  User,
-
-
-
-
-
-
-  Flag,
-  Target,
-  Activity
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
-import { casesAPI } from '../../services/api';
+import { casesAPI, type Case } from '../../services/api';
 
 // ============================================
-// TYPES
+// CONSTANTS
 // ============================================
-
-interface CaseItem {
-  id: string;
-  caseNumber: string;
-  name: string;
-  description: string;
-  type: string;
-  status: 'draft' | 'investigating' | 'prosecutor' | 'court' | 'closed';
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  amount: number;
-  currency: string;
-  suspects: Suspect[];
-  team: TeamMember[];
-  evidence: Evidence[];
-  timeline: TimelineItem[];
-  createdAt: string;
-  updatedAt: string;
-  dueDate: string;
-  progress: number;
-  tags: string[];
-}
-
-interface Suspect {
-  id: string;
-  name: string;
-  idNumber?: string;
-  nationality?: string;
-  role: string;
-  status: 'identified' | 'wanted' | 'arrested' | 'charged';
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  avatar?: string;
-}
-
-interface Evidence {
-  id: string;
-  name: string;
-  type: string;
-  hash?: string;
-  addedAt: string;
-}
-
-interface TimelineItem {
-  id: string;
-  date: string;
-  title: string;
-  description: string;
-  type: 'created' | 'updated' | 'evidence' | 'suspect' | 'milestone' | 'status';
-  user: string;
-}
-
-// ============================================
-// MOCK DATA
-// ============================================
-
-const MOCK_CASES: CaseItem[] = [
-  {
-    id: '1',
-    caseNumber: 'CASE-20260111-001',
-    name: 'คดี Silk Road Thailand',
-    description: 'การสืบสวนเครือข่ายค้ายาเสพติดผ่าน Cryptocurrency บน Dark Web',
-    type: 'Cryptocurrency Fraud',
-    status: 'investigating',
-    priority: 'critical',
-    amount: 156000000,
-    currency: 'THB',
-    suspects: [
-      { id: '1', name: 'นาย ก.', idNumber: '1-XXXX-XXXXX-XX-X', nationality: 'Thai', role: 'หัวหน้าเครือข่าย', status: 'wanted' },
-      { id: '2', name: 'นาย ข.', nationality: 'Thai', role: 'ผู้ดูแลกระเป๋า', status: 'identified' },
-      { id: '3', name: 'James Z.', nationality: 'American', role: 'Hacker', status: 'arrested' }
-    ],
-    team: [
-      { id: '1', name: 'พ.ต.ท. สมชาย', role: 'หัวหน้าคดี' },
-      { id: '2', name: 'ร.ต.อ. สมหญิง', role: 'นักวิเคราะห์' },
-      { id: '3', name: 'พ.ต.ต. วิชัย', role: 'ผู้ช่วย' }
-    ],
-    evidence: [
-      { id: '1', name: 'Screenshot_wallet.png', type: 'image', hash: 'd2eaa769...', addedAt: '2026-01-11' },
-      { id: '2', name: 'Transaction_log.pdf', type: 'document', hash: 'a1b2c3d4...', addedAt: '2026-01-10' },
-      { id: '3', name: 'KYC_data.xlsx', type: 'spreadsheet', addedAt: '2026-01-09' }
-    ],
-    timeline: [
-      { id: '1', date: '2026-01-11', title: 'เพิ่มหลักฐาน', description: 'อัพโหลด Screenshot wallet', type: 'evidence', user: 'ร.ต.อ. สมหญิง' },
-      { id: '2', date: '2026-01-10', title: 'ระบุผู้ต้องหา', description: 'พบข้อมูล KYC ของ James Z.', type: 'suspect', user: 'พ.ต.ท. สมชาย' },
-      { id: '3', date: '2026-01-09', title: 'สร้างคดี', description: 'เริ่มต้นการสืบสวน', type: 'created', user: 'พ.ต.ท. สมชาย' }
-    ],
-    createdAt: '2026-01-09',
-    updatedAt: '2026-01-11',
-    dueDate: '2026-02-15',
-    progress: 75,
-    tags: ['crypto', 'dark-web', 'international']
-  },
-  {
-    id: '2',
-    caseNumber: 'CASE-20260110-002',
-    name: 'คดีแชร์ลูกโซ่ออนไลน์',
-    description: 'การหลอกลวงลงทุนผ่านแอพพลิเคชั่น',
-    type: 'Ponzi Scheme',
-    status: 'investigating',
-    priority: 'high',
-    amount: 89000000,
-    currency: 'THB',
-    suspects: [
-      { id: '1', name: 'นาง ค.', role: 'ผู้ก่อตั้ง', status: 'wanted' },
-      { id: '2', name: 'นาย ง.', role: 'ผู้ร่วมก่อตั้ง', status: 'arrested' }
-    ],
-    team: [
-      { id: '1', name: 'พ.ต.ท. สมศักดิ์', role: 'หัวหน้าคดี' }
-    ],
-    evidence: [
-      { id: '1', name: 'Bank_statement.pdf', type: 'document', addedAt: '2026-01-10' }
-    ],
-    timeline: [
-      { id: '1', date: '2026-01-10', title: 'สร้างคดี', description: 'รับแจ้งความจากผู้เสียหาย', type: 'created', user: 'พ.ต.ท. สมศักดิ์' }
-    ],
-    createdAt: '2026-01-10',
-    updatedAt: '2026-01-10',
-    dueDate: '2026-01-30',
-    progress: 45,
-    tags: ['ponzi', 'online']
-  },
-  {
-    id: '3',
-    caseNumber: 'CASE-20260109-003',
-    name: 'คดีฟอกเงินคาสิโน',
-    description: 'การฟอกเงินผ่านคาสิโนออนไลน์และ Cryptocurrency',
-    type: 'Money Laundering',
-    status: 'prosecutor',
-    priority: 'high',
-    amount: 234000000,
-    currency: 'THB',
-    suspects: [
-      { id: '1', name: 'บริษัท ABC', role: 'นิติบุคคล', status: 'charged' }
-    ],
-    team: [
-      { id: '1', name: 'พ.ต.ท. สุชาติ', role: 'หัวหน้าคดี' },
-      { id: '2', name: 'ร.ต.อ. มานี', role: 'นักวิเคราะห์' }
-    ],
-    evidence: [],
-    timeline: [],
-    createdAt: '2026-01-09',
-    updatedAt: '2026-01-11',
-    dueDate: '2026-01-20',
-    progress: 90,
-    tags: ['casino', 'money-laundering']
-  },
-  {
-    id: '4',
-    caseNumber: 'CASE-20260108-004',
-    name: 'คดีหลอกลงทุน Forex',
-    description: 'แอบอ้างเป็นบริษัทลงทุน Forex ที่ไม่มีใบอนุญาต',
-    type: 'Investment Fraud',
-    status: 'investigating',
-    priority: 'medium',
-    amount: 45000000,
-    currency: 'THB',
-    suspects: [],
-    team: [
-      { id: '1', name: 'ร.ต.อ. ประยุทธ์', role: 'หัวหน้าคดี' }
-    ],
-    evidence: [],
-    timeline: [],
-    createdAt: '2026-01-08',
-    updatedAt: '2026-01-08',
-    dueDate: '2026-03-01',
-    progress: 30,
-    tags: ['forex', 'fraud']
-  },
-  {
-    id: '5',
-    caseNumber: 'CASE-20260105-005',
-    name: 'คดีโจรกรรม NFT',
-    description: 'การโจรกรรม NFT มูลค่าสูงจาก Marketplace',
-    type: 'NFT Theft',
-    status: 'closed',
-    priority: 'low',
-    amount: 12000000,
-    currency: 'THB',
-    suspects: [
-      { id: '1', name: 'นาย จ.', role: 'แฮกเกอร์', status: 'arrested' }
-    ],
-    team: [],
-    evidence: [],
-    timeline: [],
-    createdAt: '2026-01-05',
-    updatedAt: '2026-01-10',
-    dueDate: '2026-01-15',
-    progress: 100,
-    tags: ['nft', 'theft']
-  }
-];
 
 const CASE_TYPES = [
-  'ทั้งหมด',
-  'Cryptocurrency Fraud',
-  'Ponzi Scheme',
-  'Money Laundering',
-  'Investment Fraud',
-  'NFT Theft'
+  { value: '', label: 'ทุกประเภท' },
+  { value: 'online_gambling', label: 'พนันออนไลน์' },
+  { value: 'money_laundering', label: 'ฟอกเงิน' },
+  { value: 'fraud', label: 'ฉ้อโกง' },
+  { value: 'call_center_scam', label: 'แก๊งคอลเซ็นเตอร์' },
+  { value: 'romance_scam', label: 'หลอกรัก' },
+  { value: 'investment_scam', label: 'หลอกลงทุน' },
+  { value: 'other', label: 'อื่นๆ' }
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'ทุกสถานะ' },
+  { value: '', label: 'ทุกสถานะ' },
   { value: 'draft', label: 'ร่าง' },
-  { value: 'investigating', label: 'กำลังสืบสวน' },
-  { value: 'prosecutor', label: 'รอพนักงานอัยการ' },
-  { value: 'court', label: 'อยู่ในชั้นศาล' },
-  { value: 'closed', label: 'ปิดคดี' }
+  { value: 'open', label: 'เปิด' },
+  { value: 'in_progress', label: 'กำลังดำเนินการ' },
+  { value: 'pending_review', label: 'รอตรวจสอบ' },
+  { value: 'closed', label: 'ปิด' },
+  { value: 'archived', label: 'จัดเก็บ' }
+];
+
+const PRIORITY_OPTIONS = [
+  { value: '', label: 'ทุกความสำคัญ' },
+  { value: 'critical', label: 'วิกฤต' },
+  { value: 'high', label: 'สูง' },
+  { value: 'medium', label: 'ปานกลาง' },
+  { value: 'low', label: 'ต่ำ' }
 ];
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
-const formatCurrency = (amount: number, currency: string = 'THB') => {
-  if (currency === 'THB') {
-    if (amount >= 1000000) {
-      return `฿${(amount / 1000000).toFixed(1)}M`;
-    }
-    return `฿${amount.toLocaleString()}`;
-  }
-  return `${amount.toLocaleString()} ${currency}`;
-};
-
-const getStatusStyle = (status: string) => {
-  const styles: Record<string, { bg: string; text: string; label: string }> = {
-    draft: { bg: 'bg-dark-600', text: 'text-dark-300', label: 'ร่าง' },
-    investigating: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'กำลังสืบสวน' },
-    prosecutor: { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'รอพนักงานอัยการ' },
-    court: { bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'อยู่ในชั้นศาล' },
-    closed: { bg: 'bg-green-500/20', text: 'text-green-400', label: 'ปิดคดี' }
+const getStatusBadge = (status: string) => {
+  const styles: Record<string, string> = {
+    draft: 'bg-gray-500/20 text-gray-400',
+    open: 'bg-blue-500/20 text-blue-400',
+    in_progress: 'bg-yellow-500/20 text-yellow-400',
+    pending_review: 'bg-orange-500/20 text-orange-400',
+    closed: 'bg-green-500/20 text-green-400',
+    archived: 'bg-purple-500/20 text-purple-400'
   };
-  return styles[status] || styles.draft;
-};
-
-const getPriorityStyle = (priority: "critical" | "high" | "medium" | "low") => {
-  const styles: Record<string, { bg: string; text: string; icon: typeof AlertTriangle }> = {
-    critical: { bg: 'bg-red-500/20', text: 'text-red-400', icon: AlertTriangle },
-    high: { bg: 'bg-orange-500/20', text: 'text-orange-400', icon: Flag },
-    medium: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: Target },
-    low: { bg: 'bg-green-500/20', text: 'text-green-400', icon: CheckCircle }
+  const labels: Record<string, string> = {
+    draft: 'ร่าง',
+    open: 'เปิด',
+    in_progress: 'กำลังดำเนินการ',
+    pending_review: 'รอตรวจสอบ',
+    closed: 'ปิด',
+    archived: 'จัดเก็บ'
   };
-  return styles[priority] || styles.medium;
-};
-
-const getSuspectStatusStyle = (status: string) => {
-  const styles: Record<string, { bg: string; text: string; label: string }> = {
-    identified: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'ระบุตัวแล้ว' },
-    wanted: { bg: 'bg-red-500/20', text: 'text-red-400', label: 'ออกหมายจับ' },
-    arrested: { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'ถูกจับกุม' },
-    charged: { bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'ถูกฟ้อง' }
-  };
-  return styles[status] || styles.identified;
-};
-
-// ============================================
-// COMPONENTS
-// ============================================
-
-const CaseCard = ({ case_, onClick }: { case_: CaseItem; onClick: () => void }) => {
-  const statusStyle = getStatusStyle(case_.status);
-  const priorityStyle = getPriorityStyle(case_.priority);
-  const PriorityIcon = priorityStyle.icon;
-
   return (
-    <div 
-      onClick={onClick}
-      className="bg-dark-800 rounded-xl border border-dark-700 p-5 hover:border-dark-600 hover:shadow-lg transition-all cursor-pointer group"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 ${priorityStyle.bg} rounded-lg flex items-center justify-center`}>
-            <PriorityIcon size={20} className={priorityStyle.text} />
-          </div>
-          <div>
-            <p className="text-xs text-dark-500">{case_.caseNumber}</p>
-            <h3 className="text-white font-semibold group-hover:text-primary-400 transition-colors">
-              {case_.name}
-            </h3>
-          </div>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-xs ${statusStyle.bg} ${statusStyle.text}`}>
-          {statusStyle.label}
-        </span>
-      </div>
-
-      <p className="text-sm text-dark-400 mb-4 line-clamp-2">{case_.description}</p>
-
-      <div className="flex items-center gap-4 mb-4">
-        <div className="flex items-center gap-1 text-sm">
-          <DollarSign size={14} className="text-amber-400" />
-          <span className="text-amber-400 font-semibold">{formatCurrency(case_.amount)}</span>
-        </div>
-        <div className="flex items-center gap-1 text-sm text-dark-400">
-          <Users size={14} />
-          <span>{case_.suspects.length} ผู้ต้องหา</span>
-        </div>
-        <div className="flex items-center gap-1 text-sm text-dark-400">
-          <FileText size={14} />
-          <span>{case_.evidence.length} หลักฐาน</span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 w-24 bg-dark-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary-500 rounded-full"
-              style={{ width: `${case_.progress}%` }}
-            />
-          </div>
-          <span className="text-xs text-dark-400">{case_.progress}%</span>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-dark-500">
-          <Calendar size={12} />
-          <span>กำหนด: {new Date(case_.dueDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</span>
-        </div>
-      </div>
-
-      {case_.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-dark-700">
-          {case_.tags.map(tag => (
-            <span key={tag} className="px-2 py-0.5 bg-dark-700 rounded text-xs text-dark-400">
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
+    <span className={`px-2 py-1 rounded-full text-xs ${styles[status] || styles.draft}`}>
+      {labels[status] || status}
+    </span>
   );
 };
 
-const CaseDetailModal = ({ case_, onClose, onEdit }: { case_: CaseItem; onClose: () => void; onEdit: () => void }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'evidence' | 'suspects' | 'team'>('overview');
-  const statusStyle = getStatusStyle(case_.status);
-  const priorityStyle = getPriorityStyle(case_.priority);
+const getPriorityBadge = (priority: string) => {
+  const styles: Record<string, string> = {
+    critical: 'bg-red-500/20 text-red-400',
+    high: 'bg-orange-500/20 text-orange-400',
+    medium: 'bg-yellow-500/20 text-yellow-400',
+    low: 'bg-gray-500/20 text-gray-400'
+  };
+  const labels: Record<string, string> = {
+    critical: 'วิกฤต',
+    high: 'สูง',
+    medium: 'ปานกลาง',
+    low: 'ต่ำ'
+  };
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs ${styles[priority] || styles.medium}`}>
+      {labels[priority] || priority}
+    </span>
+  );
+};
 
-  const tabs = [
-    { id: 'overview', label: 'ภาพรวม', icon: Eye },
-    { id: 'timeline', label: 'Timeline', icon: Clock },
-    { id: 'evidence', label: 'หลักฐาน', icon: Shield },
-    { id: 'suspects', label: 'ผู้ต้องหา', icon: Users },
-    { id: 'team', label: 'ทีม', icon: User }
-  ];
+const getCaseTypeLabel = (type: string) => {
+  const labels: Record<string, string> = {
+    online_gambling: 'พนันออนไลน์',
+    money_laundering: 'ฟอกเงิน',
+    fraud: 'ฉ้อโกง',
+    call_center_scam: 'แก๊งคอลเซ็นเตอร์',
+    romance_scam: 'หลอกรัก',
+    investment_scam: 'หลอกลงทุน',
+    other: 'อื่นๆ'
+  };
+  return labels[type] || type;
+};
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 0
+  }).format(amount);
+};
+
+// ============================================
+// DELETE CONFIRMATION MODAL
+// ============================================
+
+interface DeleteModalProps {
+  case_: Case;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}
+
+const DeleteConfirmModal = ({ case_, isOpen, onClose, onConfirm, isDeleting }: DeleteModalProps) => {
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-800 rounded-2xl border border-dark-700 w-full max-w-5xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-md border border-dark-600">
         {/* Header */}
         <div className="p-6 border-b border-dark-700">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 ${priorityStyle.bg} rounded-xl flex items-center justify-center`}>
-                <Briefcase size={28} className={priorityStyle.text} />
-              </div>
-              <div>
-                <p className="text-sm text-dark-400">{case_.caseNumber}</p>
-                <h2 className="text-xl font-bold text-white">{case_.name}</h2>
-                <div className="flex items-center gap-3 mt-2">
-                  <span className={`px-3 py-1 rounded-full text-xs ${statusStyle.bg} ${statusStyle.text}`}>
-                    {statusStyle.label}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-xs ${priorityStyle.bg} ${priorityStyle.text} uppercase`}>
-                    {case_.priority}
-                  </span>
-                </div>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-red-500/20 rounded-full">
+              <AlertTriangle className="text-red-400" size={24} />
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={onEdit}>
-                <Edit size={16} className="mr-1" /> แก้ไข
-              </Button>
-              <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
-                <X size={20} className="text-dark-400" />
-              </button>
+            <div>
+              <h2 className="text-lg font-semibold text-white">ยืนยันการลบคดี</h2>
+              <p className="text-sm text-dark-400">คุณต้องการลบคดีนี้หรือไม่?</p>
             </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-dark-700 px-6">
-          <div className="flex gap-1">
-            {tabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'text-primary-400 border-primary-400'
-                      : 'text-dark-400 border-transparent hover:text-white'
-                  }`}
-                >
-                  <Icon size={16} />
-                  {tab.label}
-                </button>
-              );
-            })}
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 220px)' }}>
-          {activeTab === 'overview' && (
-            <div className="grid grid-cols-3 gap-6">
-              <div className="col-span-2 space-y-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-dark-400 mb-2">รายละเอียด</h3>
-                  <p className="text-dark-300">{case_.description}</p>
-                </div>
+        <div className="p-6">
+          <div className="bg-dark-700 rounded-lg p-4 mb-4">
+            <p className="text-sm text-primary-400 font-mono">{case_.case_number}</p>
+            <p className="text-white font-medium mt-1">{case_.title}</p>
+          </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-dark-900 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <DollarSign size={16} className="text-amber-400" />
-                      <span className="text-sm text-dark-400">มูลค่าความเสียหาย</span>
-                    </div>
-                    <p className="text-2xl font-bold text-amber-400">{formatCurrency(case_.amount)}</p>
-                  </div>
-                  <div className="bg-dark-900 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity size={16} className="text-primary-400" />
-                      <span className="text-sm text-dark-400">ความคืบหน้า</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-3 bg-dark-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary-500 rounded-full"
-                          style={{ width: `${case_.progress}%` }}
-                        />
-                      </div>
-                      <span className="text-lg font-bold text-white">{case_.progress}%</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-dark-900 rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-dark-400 mb-3">ข้อมูลคดี</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Globe size={14} className="text-dark-500" />
-                      <span className="text-dark-400">ประเภท:</span>
-                      <span className="text-white">{case_.type}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-dark-500" />
-                      <span className="text-dark-400">สร้างเมื่อ:</span>
-                      <span className="text-white">{new Date(case_.createdAt).toLocaleDateString('th-TH')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock size={14} className="text-dark-500" />
-                      <span className="text-dark-400">อัพเดตล่าสุด:</span>
-                      <span className="text-white">{new Date(case_.updatedAt).toLocaleDateString('th-TH')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Flag size={14} className="text-dark-500" />
-                      <span className="text-dark-400">กำหนดส่ง:</span>
-                      <span className="text-white">{new Date(case_.dueDate).toLocaleDateString('th-TH')}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-dark-900 rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-dark-400 mb-3">Quick Stats</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-dark-400">ผู้ต้องหา</span>
-                      <span className="text-white font-semibold">{case_.suspects.length} คน</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-dark-400">หลักฐาน</span>
-                      <span className="text-white font-semibold">{case_.evidence.length} รายการ</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-dark-400">ทีมงาน</span>
-                      <span className="text-white font-semibold">{case_.team.length} คน</span>
-                    </div>
-                  </div>
-                </div>
-
-                {case_.tags.length > 0 && (
-                  <div className="bg-dark-900 rounded-xl p-4">
-                    <h3 className="text-sm font-semibold text-dark-400 mb-3">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {case_.tags.map(tag => (
-                        <span key={tag} className="px-3 py-1 bg-dark-700 rounded-full text-xs text-dark-300">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+            <div className="flex gap-3">
+              <CheckCircle className="text-blue-400 flex-shrink-0" size={20} />
+              <div className="text-sm text-blue-300">
+                <p className="font-medium">ข้อมูลจะถูกซ่อนจากระบบ</p>
+                <p className="text-blue-400 mt-1">แต่ยังสามารถกู้คืนได้โดย Admin</p>
               </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          {activeTab === 'timeline' && (
-            <div className="space-y-4">
-              {case_.timeline.length === 0 ? (
-                <div className="text-center py-12">
-                  <Clock size={48} className="text-dark-600 mx-auto mb-4" />
-                  <p className="text-dark-400">ยังไม่มี Timeline</p>
-                </div>
-              ) : (
-                <div className="relative">
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-dark-700" />
-                  {case_.timeline.map((item, _index) => (
-                    <div key={item.id} className="relative flex gap-4 pb-6">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
-                        item.type === 'created' ? 'bg-green-500/20' :
-                        item.type === 'evidence' ? 'bg-blue-500/20' :
-                        item.type === 'suspect' ? 'bg-red-500/20' :
-                        'bg-dark-700'
-                      }`}>
-                        {item.type === 'created' && <Plus size={20} className="text-green-400" />}
-                        {item.type === 'evidence' && <Shield size={20} className="text-blue-400" />}
-                        {item.type === 'suspect' && <Users size={20} className="text-red-400" />}
-                        {item.type === 'updated' && <Edit size={20} className="text-dark-400" />}
-                      </div>
-                      <div className="flex-1 bg-dark-900 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-white font-medium">{item.title}</h4>
-                          <span className="text-xs text-dark-500">{new Date(item.date).toLocaleDateString('th-TH')}</span>
-                        </div>
-                        <p className="text-sm text-dark-400">{item.description}</p>
-                        <p className="text-xs text-dark-500 mt-2">โดย {item.user}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'evidence' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-dark-400">{case_.evidence.length} รายการ</p>
-                <Button variant="primary" size="sm">
-                  <Plus size={16} className="mr-1" /> เพิ่มหลักฐาน
-                </Button>
-              </div>
-              {case_.evidence.length === 0 ? (
-                <div className="text-center py-12">
-                  <Shield size={48} className="text-dark-600 mx-auto mb-4" />
-                  <p className="text-dark-400">ยังไม่มีหลักฐาน</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {case_.evidence.map(item => (
-                    <div key={item.id} className="bg-dark-900 rounded-xl p-4 flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary-500/20 rounded-lg flex items-center justify-center">
-                        <FileText size={24} className="text-primary-400" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{item.name}</p>
-                        {item.hash && (
-                          <p className="text-xs text-dark-500 font-mono">SHA-256: {item.hash}</p>
-                        )}
-                        <p className="text-xs text-dark-400 mt-1">เพิ่มเมื่อ {item.addedAt}</p>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Eye size={16} />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'suspects' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-dark-400">{case_.suspects.length} คน</p>
-                <Button variant="primary" size="sm">
-                  <Plus size={16} className="mr-1" /> เพิ่มผู้ต้องหา
-                </Button>
-              </div>
-              {case_.suspects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users size={48} className="text-dark-600 mx-auto mb-4" />
-                  <p className="text-dark-400">ยังไม่มีผู้ต้องหา</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {case_.suspects.map(suspect => {
-                    const statusStyle = getSuspectStatusStyle(suspect.status);
-                    return (
-                      <div key={suspect.id} className="bg-dark-900 rounded-xl p-4 flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
-                          <User size={24} className="text-red-400" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-white font-semibold">{suspect.name}</p>
-                            <span className={`px-2 py-0.5 rounded text-xs ${statusStyle.bg} ${statusStyle.text}`}>
-                              {statusStyle.label}
-                            </span>
-                          </div>
-                          <p className="text-sm text-dark-400">{suspect.role}</p>
-                          {suspect.idNumber && (
-                            <p className="text-xs text-dark-500">ID: {suspect.idNumber}</p>
-                          )}
-                        </div>
-                        {suspect.nationality && (
-                          <span className="text-xs text-dark-400">{suspect.nationality}</span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'team' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-dark-400">{case_.team.length} คน</p>
-                <Button variant="primary" size="sm">
-                  <Plus size={16} className="mr-1" /> เพิ่มสมาชิก
-                </Button>
-              </div>
-              {case_.team.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users size={48} className="text-dark-600 mx-auto mb-4" />
-                  <p className="text-dark-400">ยังไม่มีทีมงาน</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {case_.team.map(member => (
-                    <div key={member.id} className="bg-dark-900 rounded-xl p-4 flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary-500/20 rounded-full flex items-center justify-center">
-                        <span className="text-primary-400 font-semibold">
-                          {member.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">{member.name}</p>
-                        <p className="text-sm text-dark-400">{member.role}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        {/* Actions */}
+        <div className="p-6 border-t border-dark-700 flex gap-3">
+          <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isDeleting}>
+            ยกเลิก
+          </Button>
+          <Button 
+            variant="primary" 
+            className="flex-1 bg-red-600 hover:bg-red-700"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 size={18} className="mr-2 animate-spin" />
+                กำลังลบ...
+              </>
+            ) : (
+              <>
+                <Trash2 size={18} className="mr-2" />
+                ลบคดี
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>
   );
 };
 
-const CreateCaseModal = ({ onClose, onSave, editingCase }: { onClose: () => void; onSave: (case_: Partial<CaseItem>) => void; editingCase?: CaseItem | null }) => {
-  const [formData, setFormData] = useState<{ name: string; description: string; type: string; priority: 'critical' | 'high' | 'medium' | 'low'; amount: string; dueDate: string; }>({
-    name: editingCase?.name || '',
-    description: editingCase?.description || '',
-    type: editingCase?.type || 'Cryptocurrency Fraud',
-    priority: editingCase?.priority || 'medium',
-    amount: editingCase?.amount?.toString() || '',
-    dueDate: editingCase?.dueDate || ''
-  });
+// ============================================
+// CASE DETAIL MODAL
+// ============================================
 
-  const isEditing = !!editingCase;
+interface DetailModalProps {
+  case_: Case;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
 
-  const handleSubmit = () => {
-    if (!formData.name) {
-      alert('กรุณากรอกชื่อคดี');
-      return;
-    }
-    onSave({
-      ...formData,
-      id: editingCase?.id,
-      amount: parseFloat(formData.amount) || 0
-    });
-    onClose();
-  };
-
+const CaseDetailModal = ({ case_, onClose, onEdit, onDelete }: DetailModalProps) => {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-800 rounded-2xl border border-dark-700 w-full max-w-lg">
-        <div className="p-6 border-b border-dark-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">{isEditing ? 'แก้ไขคดี' : 'สร้างคดีใหม่'}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-2xl border border-dark-600 max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-dark-700 flex items-start justify-between">
+          <div>
+            <p className="text-sm text-primary-400 font-mono">{case_.case_number}</p>
+            <h2 className="text-xl font-semibold text-white mt-1">{case_.title}</h2>
+            <div className="flex gap-2 mt-2">
+              {getStatusBadge(case_.status)}
+              {getPriorityBadge(case_.priority)}
+            </div>
+          </div>
           <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
             <X size={20} className="text-dark-400" />
           </button>
         </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto flex-1">
+          {/* Description */}
+          {case_.description && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-dark-400 mb-2">รายละเอียด</h3>
+              <p className="text-white">{case_.description}</p>
+            </div>
+          )}
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-dark-700 rounded-lg p-4">
+              <p className="text-dark-400 text-sm">ประเภทคดี</p>
+              <p className="text-white font-medium mt-1">{getCaseTypeLabel(case_.case_type)}</p>
+            </div>
+            <div className="bg-dark-700 rounded-lg p-4">
+              <p className="text-dark-400 text-sm">มูลค่าความเสียหาย</p>
+              <p className="text-white font-medium mt-1">{formatCurrency(case_.total_amount)}</p>
+            </div>
+            <div className="bg-dark-700 rounded-lg p-4">
+              <p className="text-dark-400 text-sm">ผู้เสียหาย</p>
+              <p className="text-white font-medium mt-1">{case_.victims_count} คน</p>
+            </div>
+            <div className="bg-dark-700 rounded-lg p-4">
+              <p className="text-dark-400 text-sm">ผู้ต้องสงสัย</p>
+              <p className="text-white font-medium mt-1">{case_.suspects_count} คน</p>
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-dark-400 text-sm">วันที่สร้าง</p>
+              <p className="text-white mt-1">{formatDate(case_.created_at)}</p>
+            </div>
+            <div>
+              <p className="text-dark-400 text-sm">อัปเดตล่าสุด</p>
+              <p className="text-white mt-1">{formatDate(case_.updated_at)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="p-6 border-t border-dark-700 flex gap-3">
+          <Button variant="ghost" onClick={onDelete} className="text-red-400 hover:bg-red-500/10">
+            <Trash2 size={18} className="mr-2" />
+            ลบ
+          </Button>
+          <div className="flex-1" />
+          <Button variant="ghost" onClick={onClose}>
+            ปิด
+          </Button>
+          <Button variant="primary" onClick={onEdit}>
+            <Edit size={18} className="mr-2" />
+            แก้ไข
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// CREATE/EDIT MODAL
+// ============================================
+
+interface CreateModalProps {
+  onClose: () => void;
+  onSave: (data: any) => Promise<void>;
+  editingCase?: Case | null;
+}
+
+const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: editingCase?.title || '',
+    description: editingCase?.description || '',
+    case_type: editingCase?.case_type || 'fraud',
+    priority: editingCase?.priority || 'medium',
+    total_amount: editingCase?.total_amount?.toString() || '0',
+    victims_count: editingCase?.victims_count?.toString() || '0',
+    suspects_count: editingCase?.suspects_count?.toString() || '0'
+  });
+
+  const handleSubmit = async () => {
+    if (!formData.title.trim()) {
+      alert('กรุณากรอกชื่อคดี');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await onSave({
+        ...formData,
+        total_amount: parseFloat(formData.total_amount) || 0,
+        victims_count: parseInt(formData.victims_count) || 0,
+        suspects_count: parseInt(formData.suspects_count) || 0
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error saving case:', error);
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-lg border border-dark-600">
+        {/* Header */}
+        <div className="p-6 border-b border-dark-700 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-white">
+            {editingCase ? 'แก้ไขคดี' : 'สร้างคดีใหม่'}
+          </h2>
+          <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
+            <X size={20} className="text-dark-400" />
+          </button>
+        </div>
+
+        {/* Form */}
         <div className="p-6 space-y-4">
           <div>
             <label className="text-sm text-dark-400 mb-1 block">ชื่อคดี *</label>
             <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="เช่น คดีฟอกเงินผ่าน Crypto"
             />
           </div>
+
           <div>
             <label className="text-sm text-dark-400 mb-1 block">รายละเอียด</label>
             <textarea
@@ -764,16 +395,17 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: { onClose: () => void
               className="w-full bg-dark-900 border border-dark-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-primary-500"
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-dark-400 mb-1 block">ประเภทคดี</label>
               <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                value={formData.case_type}
+                onChange={(e) => setFormData({ ...formData, case_type: e.target.value })}
                 className="w-full bg-dark-900 border border-dark-700 rounded-lg p-3 text-white focus:outline-none focus:border-primary-500"
               >
-                {CASE_TYPES.filter(t => t !== 'ทั้งหมด').map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {CASE_TYPES.filter(t => t.value).map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
                 ))}
               </select>
             </div>
@@ -781,41 +413,148 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: { onClose: () => void
               <label className="text-sm text-dark-400 mb-1 block">ความสำคัญ</label>
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as "critical" | "high" | "medium" | "low" })}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                 className="w-full bg-dark-900 border border-dark-700 rounded-lg p-3 text-white focus:outline-none focus:border-primary-500"
               >
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                {PRIORITY_OPTIONS.filter(p => p.value).map(priority => (
+                  <option key={priority.value} value={priority.value}>{priority.label}</option>
+                ))}
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">มูลค่าความเสียหาย (บาท)</label>
+              <label className="text-sm text-dark-400 mb-1 block">มูลค่า (บาท)</label>
               <Input
                 type="number"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                value={formData.total_amount}
+                onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">กำหนดส่ง</label>
+              <label className="text-sm text-dark-400 mb-1 block">ผู้เสียหาย</label>
               <Input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                type="number"
+                value={formData.victims_count}
+                onChange={(e) => setFormData({ ...formData, victims_count: e.target.value })}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-dark-400 mb-1 block">ผู้ต้องสงสัย</label>
+              <Input
+                type="number"
+                value={formData.suspects_count}
+                onChange={(e) => setFormData({ ...formData, suspects_count: e.target.value })}
+                placeholder="0"
               />
             </div>
           </div>
         </div>
+
+        {/* Actions */}
         <div className="p-6 border-t border-dark-700 flex gap-3">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>ยกเลิก</Button>
-          <Button variant="primary" className="flex-1" onClick={handleSubmit}>
-            <Plus size={18} className="mr-1" /> สร้างคดี
+          <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isLoading}>
+            ยกเลิก
           </Button>
+          <Button variant="primary" className="flex-1" onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="mr-2 animate-spin" />
+                กำลังบันทึก...
+              </>
+            ) : (
+              <>
+                <Plus size={18} className="mr-2" />
+                {editingCase ? 'บันทึก' : 'สร้างคดี'}
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// CASE CARD (Grid View)
+// ============================================
+
+interface CaseCardProps {
+  case_: Case;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const CaseCard = ({ case_, onView, onEdit, onDelete }: CaseCardProps) => {
+  const [showMenu, setShowMenu] = useState(false);
+
+  return (
+    <div className="bg-dark-800 border border-dark-700 rounded-xl p-5 hover:border-dark-600 transition-colors">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <p className="text-xs text-primary-400 font-mono">{case_.case_number}</p>
+          <h3 className="text-white font-medium mt-1 line-clamp-2">{case_.title}</h3>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-1.5 hover:bg-dark-700 rounded-lg"
+          >
+            <MoreVertical size={18} className="text-dark-400" />
+          </button>
+          {showMenu && (
+            <>
+              <div className="fixed inset-0" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 top-full mt-1 bg-dark-700 border border-dark-600 rounded-lg shadow-xl z-10 py-1 min-w-[140px]">
+                <button
+                  onClick={() => { setShowMenu(false); onView(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-dark-600"
+                >
+                  <Eye size={16} /> ดูรายละเอียด
+                </button>
+                <button
+                  onClick={() => { setShowMenu(false); onEdit(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-dark-600"
+                >
+                  <Edit size={16} /> แก้ไข
+                </button>
+                <hr className="border-dark-600 my-1" />
+                <button
+                  onClick={() => { setShowMenu(false); onDelete(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-dark-600"
+                >
+                  <Trash2 size={16} /> ลบคดี
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div className="flex gap-2 mb-4">
+        {getStatusBadge(case_.status)}
+        {getPriorityBadge(case_.priority)}
+      </div>
+
+      {/* Info */}
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center gap-2 text-dark-400">
+          <FileText size={14} />
+          <span>{getCaseTypeLabel(case_.case_type)}</span>
+        </div>
+        <div className="flex items-center gap-2 text-dark-400">
+          <DollarSign size={14} />
+          <span>{formatCurrency(case_.total_amount)}</span>
+        </div>
+        <div className="flex items-center gap-2 text-dark-400">
+          <Calendar size={14} />
+          <span>{formatDate(case_.created_at)}</span>
         </div>
       </div>
     </div>
@@ -827,136 +566,79 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: { onClose: () => void
 // ============================================
 
 export const Cases = () => {
-  const [cases, setCases] = useState<CaseItem[]>(MOCK_CASES);
+  // State
+  const [cases, setCases] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState('ทั้งหมด');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedCase, setSelectedCase] = useState<CaseItem | null>(null);
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedPriority, setSelectedPriority] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+
+  // Modals
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCase, setEditingCase] = useState<CaseItem | null>(null);
-  const [_viewMode, _setViewMode] = useState<'grid' | 'list'>('grid');
-  const [_loading, setLoading] = useState(true);
+  const [editingCase, setEditingCase] = useState<Case | null>(null);
+  const [deletingCase, setDeletingCase] = useState<Case | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch cases from API on mount
-  useEffect(() => {
-    fetchCases();
-  }, []);
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
+  // Fetch cases
   const fetchCases = async () => {
     try {
       setLoading(true);
-      const response = await casesAPI.list({ page: 1, page_size: 100 });
-      // Map API response to CaseItem format
-      const apiCases: CaseItem[] = response.items.map(item => ({
-        id: String(item.id),
-        caseNumber: item.case_number || `CASE-${item.id}`,
-        name: item.title,
-        description: item.description || '',
-        type: item.case_type || 'Other',
-        status: item.status as CaseItem['status'] || 'draft',
-        priority: item.priority as CaseItem['priority'] || 'medium',
-        amount: item.total_amount || 0,
-        currency: 'THB',
-        suspects: [],
-        team: [],
-        evidence: [],
-        timeline: [],
-        createdAt: item.created_at?.slice(0, 10) || '',
-        updatedAt: item.updated_at?.slice(0, 10) || '',
-        dueDate: '',
-        progress: 0,
-        tags: item.tags?.split(',') || []
-      }));
-      // Combine API cases with mock cases for demo
-      setCases([...apiCases, ...MOCK_CASES.filter(m => !apiCases.find(a => a.caseNumber === m.caseNumber))]);
-    } catch (err) {
-      console.error('Failed to fetch cases:', err);
-      setCases(MOCK_CASES);
+      const response = await casesAPI.list({
+        page,
+        page_size: 20,
+        search: searchQuery || undefined,
+        case_type: selectedType || undefined,
+        status: selectedStatus || undefined,
+        priority: selectedPriority || undefined
+      });
+      setCases(response.items);
+      setTotal(response.total);
+      setTotalPages(response.pages);
+    } catch (error) {
+      console.error('Error fetching cases:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredCases = cases.filter(case_ => {
-    const matchesSearch = case_.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         case_.caseNumber.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = selectedType === 'ทั้งหมด' || case_.type === selectedType;
-    const matchesStatus = selectedStatus === 'all' || case_.status === selectedStatus;
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  useEffect(() => {
+    fetchCases();
+  }, [page, searchQuery, selectedType, selectedStatus, selectedPriority]);
 
-  const handleCreateCase = async (newCase: Partial<CaseItem>) => {
-    try {
-      // If editing, update existing case
-      if (newCase.id) {
-        // TODO: Implement update API
-        const updatedCases = cases.map(c => 
-          c.id === newCase.id ? { ...c, ...newCase, name: newCase.name || c.name } : c
-        );
-        setCases(updatedCases);
-        setEditingCase(null);
-        return;
-      }
-
-      // Create new case via API
-      const response = await casesAPI.create({
-        title: newCase.name || '',
-        description: newCase.description || '',
-        case_type: mapCaseType(newCase.type || 'Other'),
-        priority: newCase.priority || 'medium',
-        total_amount: newCase.amount || 0,
-        tags: ''
-      });
-
-      // Add to local state with API response
-      const fullCase: CaseItem = {
-        id: String(response.id),
-        caseNumber: response.case_number || `CASE-${response.id}`,
-        name: response.title,
-        description: response.description || '',
-        type: newCase.type || 'Other',
-        status: 'draft',
-        priority: (newCase.priority as CaseItem['priority']) || 'medium',
-        amount: response.total_amount || 0,
-        currency: 'THB',
-        suspects: [],
-        team: [],
-        evidence: [],
-        timeline: [
-          {
-            id: '1',
-            date: new Date().toISOString().slice(0, 10),
-            title: 'สร้างคดี',
-            description: 'เริ่มต้นการสืบสวน',
-            type: 'created',
-            user: 'Current User'
-          }
-        ],
-        createdAt: new Date().toISOString().slice(0, 10),
-        updatedAt: new Date().toISOString().slice(0, 10),
-        dueDate: newCase.dueDate || '',
-        progress: 0,
-        tags: []
-      };
-      setCases([fullCase, ...cases]);
-    } catch (error) {
-      console.error('Failed to create case:', error);
-      alert('ไม่สามารถสร้างคดีได้ กรุณาลองใหม่');
+  // Handlers
+  const handleCreateCase = async (data: any) => {
+    if (editingCase) {
+      await casesAPI.update(editingCase.id, data);
+    } else {
+      await casesAPI.create(data);
     }
+    fetchCases();
+    setEditingCase(null);
   };
 
-  // Map frontend case type to API enum
-  const mapCaseType = (type: string): string => {
-    const typeMap: Record<string, string> = {
-      'Online Gambling': 'online_gambling',
-      'Money Laundering': 'money_laundering',
-      'Cryptocurrency Fraud': 'fraud',
-      'Investment Fraud': 'investment_scam',
-      'Romance Scam': 'romance_scam',
-      'Call Center Scam': 'call_center_scam',
-      'Other': 'other'
-    };
-    return typeMap[type] || 'other';
+  const handleDeleteCase = async () => {
+    if (!deletingCase) return;
+
+    setIsDeleting(true);
+    try {
+      await casesAPI.delete(deletingCase.id);
+      setDeletingCase(null);
+      setSelectedCase(null);
+      fetchCases();
+    } catch (error) {
+      console.error('Error deleting case:', error);
+      alert('เกิดข้อผิดพลาดในการลบคดี');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -965,48 +647,86 @@ export const Cases = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">คดีทั้งหมด</h1>
-          <p className="text-dark-400 mt-1">{filteredCases.length} คดี</p>
+          <p className="text-dark-400 mt-1">{total} คดี</p>
         </div>
-        <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-          <Plus size={18} className="mr-2" />
-          สร้างคดีใหม่
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={fetchCases} disabled={loading}>
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          </Button>
+          <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+            <Plus size={18} className="mr-2" />
+            สร้างคดีใหม่
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={20} />
           <Input
             placeholder="ค้นหาคดี..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             className="pl-10"
           />
         </div>
+
         <select
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-          className="bg-dark-800 border border-dark-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary-500"
+          onChange={(e) => { setSelectedType(e.target.value); setPage(1); }}
+          className="bg-dark-800 border border-dark-700 rounded-lg px-4 py-2 text-white text-sm"
         >
           {CASE_TYPES.map(type => (
-            <option key={type} value={type}>{type}</option>
+            <option key={type.value} value={type.value}>{type.label}</option>
           ))}
         </select>
+
         <select
           value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="bg-dark-800 border border-dark-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary-500"
+          onChange={(e) => { setSelectedStatus(e.target.value); setPage(1); }}
+          className="bg-dark-800 border border-dark-700 rounded-lg px-4 py-2 text-white text-sm"
         >
-          {STATUS_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          {STATUS_OPTIONS.map(status => (
+            <option key={status.value} value={status.value}>{status.label}</option>
           ))}
         </select>
+
+        <select
+          value={selectedPriority}
+          onChange={(e) => { setSelectedPriority(e.target.value); setPage(1); }}
+          className="bg-dark-800 border border-dark-700 rounded-lg px-4 py-2 text-white text-sm"
+        >
+          {PRIORITY_OPTIONS.map(priority => (
+            <option key={priority.value} value={priority.value}>{priority.label}</option>
+          ))}
+        </select>
+
+        {/* View Toggle */}
+        <div className="flex bg-dark-800 border border-dark-700 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('table')}
+            className={`p-2 rounded ${viewMode === 'table' ? 'bg-primary-500/20 text-primary-400' : 'text-dark-400'}`}
+          >
+            <List size={18} />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary-500/20 text-primary-400' : 'text-dark-400'}`}
+          >
+            <Grid3X3 size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* Cases Grid */}
-      {filteredCases.length === 0 ? (
-        <div className="text-center py-16">
+      {/* Loading */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={40} className="text-primary-500 animate-spin" />
+        </div>
+      ) : cases.length === 0 ? (
+        /* Empty State */
+        <div className="text-center py-20">
           <Briefcase size={64} className="text-dark-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">ไม่พบคดี</h3>
           <p className="text-dark-400 mb-6">
@@ -1019,19 +739,126 @@ export const Cases = () => {
             </Button>
           )}
         </div>
+      ) : viewMode === 'table' ? (
+        /* Table View */
+        <div className="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-dark-700">
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">#</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">หมายเลขคดี</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">ชื่อคดี</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">ประเภท</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">สถานะ</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">ความสำคัญ</th>
+                <th className="text-right px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">มูลค่า</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">วันที่สร้าง</th>
+                <th className="text-center px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cases.map((case_, index) => (
+                <tr key={case_.id} className="border-b border-dark-700 hover:bg-dark-700/50 transition-colors">
+                  <td className="px-4 py-3 text-dark-400 text-sm">{(page - 1) * 20 + index + 1}</td>
+                  <td className="px-4 py-3">
+                    <span className="text-primary-400 font-mono text-sm">{case_.case_number}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="text-white text-sm font-medium truncate max-w-[200px]" title={case_.title}>
+                      {case_.title}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-dark-300 text-sm">{getCaseTypeLabel(case_.case_type)}</td>
+                  <td className="px-4 py-3">{getStatusBadge(case_.status)}</td>
+                  <td className="px-4 py-3">{getPriorityBadge(case_.priority)}</td>
+                  <td className="px-4 py-3 text-right text-white text-sm">{formatCurrency(case_.total_amount)}</td>
+                  <td className="px-4 py-3 text-dark-400 text-sm">{formatDate(case_.created_at)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => setSelectedCase(case_)}
+                        className="p-1.5 hover:bg-dark-600 rounded text-dark-400 hover:text-white"
+                        title="ดูรายละเอียด"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => { setEditingCase(case_); setShowCreateModal(true); }}
+                        className="p-1.5 hover:bg-dark-600 rounded text-dark-400 hover:text-white"
+                        title="แก้ไข"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeletingCase(case_)}
+                        className="p-1.5 hover:bg-red-500/20 rounded text-dark-400 hover:text-red-400"
+                        title="ลบ"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-dark-700">
+              <p className="text-sm text-dark-400">
+                แสดง {(page - 1) * 20 + 1}-{Math.min(page * 20, total)} จาก {total} รายการ
+              </p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 text-sm bg-dark-700 text-white rounded disabled:opacity-50"
+                >
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = page <= 3 ? i + 1 : page - 2 + i;
+                  if (pageNum > totalPages) return null;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        page === pageNum ? 'bg-primary-500 text-white' : 'bg-dark-700 text-white hover:bg-dark-600'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 text-sm bg-dark-700 text-white rounded disabled:opacity-50"
+                >
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
+        /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredCases.map(case_ => (
+          {cases.map(case_ => (
             <CaseCard
               key={case_.id}
               case_={case_}
-              onClick={() => setSelectedCase(case_)}
+              onView={() => setSelectedCase(case_)}
+              onEdit={() => { setEditingCase(case_); setShowCreateModal(true); }}
+              onDelete={() => setDeletingCase(case_)}
             />
           ))}
         </div>
       )}
 
-      {/* Case Detail Modal */}
+      {/* Modals */}
       {selectedCase && (
         <CaseDetailModal
           case_={selectedCase}
@@ -1041,18 +868,28 @@ export const Cases = () => {
             setSelectedCase(null);
             setShowCreateModal(true);
           }}
+          onDelete={() => {
+            setDeletingCase(selectedCase);
+            setSelectedCase(null);
+          }}
         />
       )}
 
-      {/* Create/Edit Case Modal */}
       {showCreateModal && (
         <CreateCaseModal
-          onClose={() => {
-            setShowCreateModal(false);
-            setEditingCase(null);
-          }}
+          onClose={() => { setShowCreateModal(false); setEditingCase(null); }}
           onSave={handleCreateCase}
           editingCase={editingCase}
+        />
+      )}
+
+      {deletingCase && (
+        <DeleteConfirmModal
+          case_={deletingCase}
+          isOpen={true}
+          onClose={() => setDeletingCase(null)}
+          onConfirm={handleDeleteCase}
+          isDeleting={isDeleting}
         />
       )}
     </div>

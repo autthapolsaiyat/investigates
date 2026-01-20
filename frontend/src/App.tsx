@@ -29,6 +29,7 @@ import { ActivityLogPage } from './pages/admin/ActivityLog';
 import { SubscriptionsPage } from './pages/admin/Subscriptions';
 import { NotificationsPage } from './pages/admin/Notifications';
 import { SystemReportsPage } from './pages/admin/SystemReports';
+import { DeletedCases } from './pages/admin/DeletedCases';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -75,6 +76,7 @@ function App() {
           <Route path="registrations" element={<PendingRegistrationsPage />} />
           <Route path="organizations" element={<OrganizationsPage />} />
           <Route path="users" element={<UsersPage />} />
+          <Route path="deleted-cases" element={<DeletedCases />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="activity" element={<ActivityLogPage />} />
           <Route path="subscriptions" element={<SubscriptionsPage />} />

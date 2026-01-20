@@ -308,6 +308,33 @@ export interface Case {
   updated_at: string;
   nodes_count?: number;
   edges_count?: number;
+  // Soft Delete fields
+  is_active?: boolean;
+  deleted_at?: string;
+  deleted_by?: number;
+}
+
+export interface DeletedCase {
+  id: number;
+  case_number: string;
+  title: string;
+  case_type: string;
+  status: string;
+  priority: string;
+  total_amount: number;
+  organization_id: number;
+  created_at: string;
+  deleted_at?: string;
+  deleted_by?: number;
+  deleted_by_email?: string;
+}
+
+export interface CaseDeleteResponse {
+  message: string;
+  case_id: number;
+  case_number: string;
+  deleted_by: string;
+  deleted_at: string;
 }
 
 export interface CaseCreateData {
@@ -347,38 +374,69 @@ export interface CaseStatistics {
 }
 
 export const casesAPI = {
+  // List active cases
   list: async (params?: CaseListParams): Promise<PaginatedResponse<Case>> => {
     const response = await api.get('/cases', { params });
     return response.data;
   },
 
+  // Get single case
   get: async (id: number): Promise<Case> => {
     const response = await api.get(`/cases/${id}`);
     return response.data;
   },
 
+  // Create case
   create: async (data: CaseCreateData): Promise<Case> => {
     const response = await api.post('/cases', data);
     return response.data;
   },
 
+  // Update case
   update: async (id: number, data: Partial<Case>): Promise<Case> => {
     const response = await api.patch(`/cases/${id}`, data);
     return response.data;
   },
 
+  // Update status
   updateStatus: async (id: number, status: string, notes?: string): Promise<Case> => {
     const response = await api.patch(`/cases/${id}/status`, { status, notes });
     return response.data;
   },
 
-  delete: async (id: number): Promise<void> => {
-    await api.delete(`/cases/${id}`);
+  // ★ SOFT DELETE: Delete case (sets is_active=false)
+  delete: async (id: number): Promise<CaseDeleteResponse> => {
+    const response = await api.delete(`/cases/${id}`);
+    return response.data;
   },
 
+  // Get statistics
   getStatistics: async (): Promise<CaseStatistics> => {
     const response = await api.get('/cases/statistics');
     return response.data;
+  },
+
+  // ★ ADMIN: List deleted cases
+  listDeleted: async (params?: { page?: number; page_size?: number; search?: string }): Promise<DeletedCase[]> => {
+    const response = await api.get('/cases/admin/deleted', { params });
+    return response.data;
+  },
+
+  // ★ ADMIN: Count deleted cases
+  countDeleted: async (): Promise<{ deleted_count: number }> => {
+    const response = await api.get('/cases/admin/deleted/count');
+    return response.data;
+  },
+
+  // ★ ADMIN: Restore deleted case
+  restore: async (id: number): Promise<Case> => {
+    const response = await api.post(`/cases/${id}/restore`);
+    return response.data;
+  },
+
+  // ★ SUPER ADMIN: Permanent delete
+  permanentDelete: async (id: number): Promise<void> => {
+    await api.delete(`/cases/${id}/permanent`);
   },
 };
 

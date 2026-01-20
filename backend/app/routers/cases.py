@@ -1,6 +1,6 @@
 """
 Cases Router
-Case management CRUD endpoints
+Case management CRUD endpoints with Soft Delete support
 """
 from math import ceil
 from datetime import datetime
@@ -8,6 +8,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
+from typing import Optional
 
 from app.database import get_db
 from app.models.case import Case, CaseStatus, CaseType, CasePriority
@@ -19,7 +20,8 @@ from app.schemas.case import (
     CaseStatusUpdate,
     CaseResponse,
     CaseListResponse,
-    CaseStatistics
+    CaseStatistics,
+    DeletedCaseResponse
 )
 from app.schemas.user import UserBrief
 from app.utils.security import get_current_user, require_roles
@@ -34,6 +36,10 @@ def generate_case_number() -> str:
     return f"CASE-{timestamp}-{unique_id}"
 
 
+# ============================================
+# REGULAR ENDPOINTS (Filter is_active=True)
+# ============================================
+
 @router.get("", response_model=CaseListResponse)
 async def list_cases(
     page: int = Query(1, ge=1),
@@ -47,12 +53,16 @@ async def list_cases(
     db: Session = Depends(get_db)
 ):
     """
-    List cases with pagination and filters
+    List active cases with pagination and filters
+    Only returns is_active=True cases
     """
     query = db.query(Case).options(
         joinedload(Case.created_by_user),
         joinedload(Case.assigned_to_user)
     )
+    
+    # ★ SOFT DELETE: Only show active cases
+    query = query.filter(Case.is_active == True)
     
     # Filter by organization (non-super-admin can only see their org's cases)
     if current_user.role != UserRole.SUPER_ADMIN:
@@ -138,7 +148,7 @@ async def create_case(
     # Generate case number
     case_number = generate_case_number()
     
-    # Create case
+    # Create case (is_active defaults to True)
     case = Case(
         case_number=case_number,
         title=request.title,
@@ -155,7 +165,8 @@ async def create_case(
         tags=request.tags,
         organization_id=current_user.organization_id,
         created_by=current_user.id,
-        assigned_to=request.assigned_to or current_user.id
+        assigned_to=request.assigned_to or current_user.id,
+        is_active=True  # Explicitly set
     )
     
     db.add(case)
@@ -172,8 +183,12 @@ async def get_case_statistics(
 ):
     """
     Get case statistics for dashboard
+    Only counts active cases
     """
     query = db.query(Case)
+    
+    # ★ SOFT DELETE: Only count active cases
+    query = query.filter(Case.is_active == True)
     
     # Filter by organization
     if current_user.role != UserRole.SUPER_ADMIN:
@@ -195,17 +210,17 @@ async def get_case_statistics(
         CaseStatus.ARCHIVED
     ])).count()
     
-    # Total amount
-    total_amount = db.query(func.sum(Case.total_amount))
+    # Total amount (need fresh query with is_active filter)
+    amount_query = db.query(func.sum(Case.total_amount)).filter(Case.is_active == True)
     if current_user.role != UserRole.SUPER_ADMIN:
-        total_amount = total_amount.filter(Case.organization_id == current_user.organization_id)
-    total_amount = total_amount.scalar() or 0
+        amount_query = amount_query.filter(Case.organization_id == current_user.organization_id)
+    total_amount = amount_query.scalar() or 0
     
     # Total victims
-    total_victims = db.query(func.sum(Case.victims_count))
+    victims_query = db.query(func.sum(Case.victims_count)).filter(Case.is_active == True)
     if current_user.role != UserRole.SUPER_ADMIN:
-        total_victims = total_victims.filter(Case.organization_id == current_user.organization_id)
-    total_victims = total_victims.scalar() or 0
+        victims_query = victims_query.filter(Case.organization_id == current_user.organization_id)
+    total_victims = victims_query.scalar() or 0
     
     # By type
     by_type = {}
@@ -240,6 +255,82 @@ async def get_case_statistics(
     )
 
 
+# ============================================
+# ★ ADMIN ENDPOINTS - DELETED CASES MANAGEMENT
+# ============================================
+# NOTE: These must come BEFORE /{case_id} routes to avoid path conflicts
+
+@router.get("/admin/deleted", response_model=list[DeletedCaseResponse])
+async def list_deleted_cases(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    search: str = Query(None),
+    current_user: User = Depends(require_roles("super_admin", "org_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    List deleted cases (Admin only)
+    For restore functionality
+    """
+    query = db.query(Case).filter(Case.is_active == False)
+    
+    # Org admin can only see their org's deleted cases
+    if current_user.role != UserRole.SUPER_ADMIN:
+        query = query.filter(Case.organization_id == current_user.organization_id)
+    
+    # Search filter
+    if search:
+        query = query.filter(
+            or_(
+                Case.case_number.ilike(f"%{search}%"),
+                Case.title.ilike(f"%{search}%")
+            )
+        )
+    
+    # Order by deleted_at desc (most recently deleted first)
+    cases = query.order_by(Case.deleted_at.desc()) \
+                 .offset((page - 1) * page_size) \
+                 .limit(page_size) \
+                 .all()
+    
+    # Build response with deleted_by email
+    result = []
+    for case in cases:
+        item = DeletedCaseResponse.model_validate(case)
+        
+        # Get deleted_by user email
+        if case.deleted_by:
+            deleted_user = db.query(User).filter(User.id == case.deleted_by).first()
+            if deleted_user:
+                item.deleted_by_email = deleted_user.email
+        
+        result.append(item)
+    
+    return result
+
+
+@router.get("/admin/deleted/count")
+async def count_deleted_cases(
+    current_user: User = Depends(require_roles("super_admin", "org_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Get count of deleted cases
+    """
+    query = db.query(Case).filter(Case.is_active == False)
+    
+    if current_user.role != UserRole.SUPER_ADMIN:
+        query = query.filter(Case.organization_id == current_user.organization_id)
+    
+    count = query.count()
+    
+    return {"deleted_count": count}
+
+
+# ============================================
+# SINGLE CASE ENDPOINTS
+# ============================================
+
 @router.get("/{case_id}", response_model=CaseResponse)
 async def get_case(
     case_id: int,
@@ -247,12 +338,15 @@ async def get_case(
     db: Session = Depends(get_db)
 ):
     """
-    Get case by ID
+    Get case by ID (only active cases)
     """
     case = db.query(Case).options(
         joinedload(Case.created_by_user),
         joinedload(Case.assigned_to_user)
-    ).filter(Case.id == case_id).first()
+    ).filter(
+        Case.id == case_id,
+        Case.is_active == True  # ★ SOFT DELETE: Only get active cases
+    ).first()
     
     if not case:
         raise HTTPException(
@@ -291,9 +385,12 @@ async def update_case(
     db: Session = Depends(get_db)
 ):
     """
-    Update case
+    Update case (only active cases)
     """
-    case = db.query(Case).filter(Case.id == case_id).first()
+    case = db.query(Case).filter(
+        Case.id == case_id,
+        Case.is_active == True  # ★ SOFT DELETE
+    ).first()
     
     if not case:
         raise HTTPException(
@@ -343,7 +440,10 @@ async def update_case_status(
     """
     Quick status update
     """
-    case = db.query(Case).filter(Case.id == case_id).first()
+    case = db.query(Case).filter(
+        Case.id == case_id,
+        Case.is_active == True  # ★ SOFT DELETE
+    ).first()
     
     if not case:
         raise HTTPException(
@@ -374,16 +474,24 @@ async def update_case_status(
     return CaseResponse.model_validate(case)
 
 
-@router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)
+# ============================================
+# ★ SOFT DELETE ENDPOINT
+# ============================================
+
+@router.delete("/{case_id}", status_code=status.HTTP_200_OK)
 async def delete_case(
     case_id: int,
-    current_user: User = Depends(require_roles("super_admin", "org_admin")),
+    current_user: User = Depends(require_roles("super_admin", "org_admin", "investigator")),
     db: Session = Depends(get_db)
 ):
     """
-    Delete case (admin only)
+    Soft delete case (set is_active=False)
+    Data is preserved and can be restored by admin
     """
-    case = db.query(Case).filter(Case.id == case_id).first()
+    case = db.query(Case).filter(
+        Case.id == case_id,
+        Case.is_active == True  # Can only delete active cases
+    ).first()
     
     if not case:
         raise HTTPException(
@@ -391,13 +499,95 @@ async def delete_case(
             detail="Case not found"
         )
     
-    # Org admin can only delete their org's cases
-    if current_user.role == UserRole.ORG_ADMIN:
+    # Permission check: org users can only delete their org's cases
+    if current_user.role != UserRole.SUPER_ADMIN:
         if case.organization_id != current_user.organization_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied"
             )
     
+    # ★ SOFT DELETE: Set flags instead of deleting
+    case.is_active = False
+    case.deleted_at = datetime.utcnow()
+    case.deleted_by = current_user.id
+    
+    db.commit()
+    
+    return {
+        "message": "Case deleted successfully",
+        "case_id": case_id,
+        "case_number": case.case_number,
+        "deleted_by": current_user.email,
+        "deleted_at": case.deleted_at.isoformat()
+    }
+
+
+@router.post("/{case_id}/restore", response_model=CaseResponse)
+async def restore_case(
+    case_id: int,
+    current_user: User = Depends(require_roles("super_admin", "org_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Restore a deleted case (Admin only)
+    Sets is_active back to True
+    """
+    case = db.query(Case).filter(
+        Case.id == case_id,
+        Case.is_active == False  # Can only restore deleted cases
+    ).first()
+    
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deleted case not found"
+        )
+    
+    # Permission check
+    if current_user.role != UserRole.SUPER_ADMIN:
+        if case.organization_id != current_user.organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+    
+    # ★ RESTORE: Set is_active back to True and clear delete info
+    case.is_active = True
+    case.deleted_at = None
+    case.deleted_by = None
+    
+    # Add note about restoration
+    restore_note = f"\n[{datetime.utcnow()}] Case restored by {current_user.email}"
+    case.internal_notes = (case.internal_notes or "") + restore_note
+    
+    db.commit()
+    db.refresh(case)
+    
+    return CaseResponse.model_validate(case)
+
+
+@router.delete("/{case_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+async def permanent_delete_case(
+    case_id: int,
+    current_user: User = Depends(require_roles("super_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Permanently delete a case (Super Admin only)
+    WARNING: This cannot be undone!
+    """
+    case = db.query(Case).filter(
+        Case.id == case_id,
+        Case.is_active == False  # Can only permanently delete already soft-deleted cases
+    ).first()
+    
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deleted case not found. Case must be soft-deleted first."
+        )
+    
+    # Actually delete from database
     db.delete(case)
     db.commit()

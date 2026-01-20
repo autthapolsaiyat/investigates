@@ -15,7 +15,8 @@ import {
   Activity,
   CreditCard,
   FileText,
-  Bell
+  Bell,
+  Trash2
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -39,6 +40,12 @@ const adminNavSections = [
     title: 'ORGANIZATION',
     items: [
       { to: '/admin/organizations', icon: Building2, label: 'Organizations' },
+    ]
+  },
+  {
+    title: 'DATA MANAGEMENT',
+    items: [
+      { to: '/admin/deleted-cases', icon: Trash2, label: 'Deleted Cases' },
     ]
   },
   {

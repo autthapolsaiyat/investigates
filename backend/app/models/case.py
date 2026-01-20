@@ -77,10 +77,16 @@ class Case(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Soft Delete
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
     # Relationships (Evidence relationship removed to avoid circular import)
     organization = relationship("Organization", back_populates="cases")
     created_by_user = relationship("User", back_populates="cases_created", foreign_keys=[created_by])
     assigned_to_user = relationship("User", back_populates="cases_assigned", foreign_keys=[assigned_to])
+    deleted_by_user = relationship("User", foreign_keys=[deleted_by])
     money_flow_nodes = relationship("MoneyFlowNode", back_populates="case", cascade="all, delete-orphan")
     money_flow_edges = relationship("MoneyFlowEdge", back_populates="case", cascade="all, delete-orphan")
     
