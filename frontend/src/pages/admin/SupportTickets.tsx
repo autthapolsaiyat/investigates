@@ -39,13 +39,6 @@ const statusConfig: Record<TicketStatus, { label: string; color: string; bgColor
   closed: { label: 'Closed', color: 'text-gray-400', bgColor: 'bg-gray-500/20', icon: <CheckCircle size={14} /> },
 };
 
-// Priority config
-const priorityConfig: Record<TicketPriority, { label: string; color: string }> = {
-  low: { label: 'Low', color: 'text-gray-400' },
-  medium: { label: 'Medium', color: 'text-blue-400' },
-  high: { label: 'High', color: 'text-orange-400' },
-  critical: { label: 'Critical', color: 'text-red-400' },
-};
 
 // Category config
 const categoryConfig: Record<TicketCategory, { label: string; icon: React.ReactNode; color: string }> = {

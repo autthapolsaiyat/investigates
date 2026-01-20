@@ -3,7 +3,7 @@
  * Modal for users to create support tickets with screenshot upload
  */
 import { useState, useRef, useCallback } from 'react';
-import { X, Upload, Image, Trash2, Send, Bug, Lightbulb, HelpCircle, FileText, Loader2 } from 'lucide-react';
+import { X, Image, Trash2, Send, Bug, Lightbulb, HelpCircle, FileText, Loader2 } from 'lucide-react';
 import { supportAPI, type TicketCategory } from '../../services/api';
 
 interface CreateTicketModalProps {
