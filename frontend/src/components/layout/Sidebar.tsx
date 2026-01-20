@@ -10,8 +10,6 @@ import {
   DollarSign, 
   Phone, 
   Wallet,
-  Building2,
-  Users,
   Settings,
   LogOut,
   FileText,
@@ -22,8 +20,7 @@ import {
   ChevronDown,
   Loader2,
   RefreshCw,
-  BookOpen,
-  UserPlus
+  BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
@@ -87,12 +84,8 @@ const navSections = [
   },
 ];
 
-const adminNavItems = [
-  { to: '/app/admin/registrations', icon: UserPlus, label: 'Registrations' },
-  { to: '/app/admin/organizations', icon: Building2, label: 'Organizations' },
-  { to: '/app/admin/users', icon: Users, label: 'Users' },
-  { to: '/app/admin/settings', icon: Settings, label: 'Settings' },
-];
+// Admin roles that can see admin panel link
+const ADMIN_ROLES = ['super_admin', 'admin'];
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -275,26 +268,28 @@ export const Sidebar = () => {
           </div>
         ))}
 
-        {/* Admin Section */}
-        <div className="mt-4">
-          <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-3">Admin</p>
-          {adminNavItems.map((item) => (
+        {/* Admin Panel Link (Only for admin roles) */}
+        {user?.role && ADMIN_ROLES.includes(user.role) && (
+          <div className="mt-6">
+            <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-3">Admin</p>
             <NavLink
-              key={item.to}
-              to={item.to}
+              to="/admin"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-primary-500/20 text-primary-400'
+                    ? 'bg-red-500/20 text-red-400'
                     : 'text-dark-300 hover:bg-dark-700 hover:text-white'
                 }`
               }
             >
-              <item.icon size={18} />
-              <span className="text-sm">{item.label}</span>
+              <Settings size={18} />
+              <span className="text-sm">Admin Panel</span>
+              <span className="ml-auto text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                Admin
+              </span>
             </NavLink>
-          ))}
-        </div>
+          </div>
+        )}
       </nav>
 
       {/* Help Button */}

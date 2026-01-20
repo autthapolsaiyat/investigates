@@ -1,17 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
-import { Layout } from './components/layout';
+import { Layout, AdminLayout, AdminRoute } from './components/layout';
 import { LoginPage } from './pages/auth/Login';
 import { RegisterPage } from './pages/auth/Register';
 import { PendingApprovalPage } from './pages/auth/PendingApproval';
 import { DashboardPage } from './pages/dashboard/Dashboard';
 import { CasesPage } from './pages/cases/Cases';
 import { MoneyFlowPage } from './pages/money-flow/MoneyFlow';
-import { OrganizationsPage } from './pages/admin/Organizations';
-import { UsersPage } from './pages/admin/Users';
-import { SettingsPage } from './pages/admin/Settings';
-import { PendingRegistrationsPage } from './pages/admin/PendingRegistrations';
 import { ForensicReportV2 } from './pages/forensic-report/ForensicReportV2';
 import SmartImport from './pages/import/SmartImport';
 import { SilkRoadDemo } from "./pages/silk-road-demo";
@@ -22,6 +18,17 @@ import { CallAnalysis } from './pages/call-analysis/CallAnalysis';
 import { HashVerify } from './pages/verify';
 import { UserGuide } from './pages/guide';
 import { LandingPage } from './pages/landing';
+
+// Admin Pages
+import { AdminDashboardPage } from './pages/admin/AdminDashboard';
+import { PendingRegistrationsPage } from './pages/admin/PendingRegistrations';
+import { OrganizationsPage } from './pages/admin/Organizations';
+import { UsersPage } from './pages/admin/Users';
+import { SettingsPage } from './pages/admin/Settings';
+import { ActivityLogPage } from './pages/admin/ActivityLog';
+import { SubscriptionsPage } from './pages/admin/Subscriptions';
+import { NotificationsPage } from './pages/admin/Notifications';
+import { SystemReportsPage } from './pages/admin/SystemReports';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -47,7 +54,7 @@ function App() {
         <Route path="/verify" element={<HashVerify />} />
         <Route path="/guide" element={<UserGuide />} />
         
-        {/* Protected Routes */}
+        {/* Protected App Routes (Investigator Interface) */}
         <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
@@ -60,10 +67,19 @@ function App() {
           <Route path="location-timeline" element={<LocationTimeline />} />
           <Route path="kyc-request" element={<KYCRequestGenerator />} />
           <Route path="crypto" element={<CryptoTracker />} />
-          <Route path="admin/organizations" element={<OrganizationsPage />} />
-          <Route path="admin/users" element={<UsersPage />} />
-          <Route path="admin/settings" element={<SettingsPage />} />
-          <Route path="admin/registrations" element={<PendingRegistrationsPage />} />
+        </Route>
+
+        {/* Admin Panel Routes (Separated Admin Interface) */}
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="registrations" element={<PendingRegistrationsPage />} />
+          <Route path="organizations" element={<OrganizationsPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="activity" element={<ActivityLogPage />} />
+          <Route path="subscriptions" element={<SubscriptionsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="reports" element={<SystemReportsPage />} />
         </Route>
         
         {/* Legacy routes redirect to /app */}
@@ -75,6 +91,9 @@ function App() {
         <Route path="/call-analysis" element={<Navigate to="/app/call-analysis" replace />} />
         <Route path="/crypto" element={<Navigate to="/app/crypto" replace />} />
         <Route path="/location-timeline" element={<Navigate to="/app/location-timeline" replace />} />
+        
+        {/* Legacy admin routes redirect to new /admin */}
+        <Route path="/app/admin/*" element={<Navigate to="/admin" replace />} />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
