@@ -21,12 +21,68 @@ import {
   Loader2,
   RefreshCw,
   BookOpen,
-  Bug
+  Bug,
+  CreditCard,
+  AlertTriangle,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
 import { casesAPI, supportAPI, type Case } from '../../services/api';
 import { CreateTicketModal } from '../../pages/support/CreateTicketModal';
+
+
+// Subscription Badge Component
+const SubscriptionBadge = ({ subscriptionEnd }: { subscriptionEnd: string }) => {
+  const endDate = new Date(subscriptionEnd);
+  const now = new Date();
+  const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  let status: 'active' | 'expiring' | 'expired';
+  let bgColor: string;
+  let textColor: string;
+  let Icon: typeof CheckCircle;
+  
+  if (daysLeft < 0) {
+    status = 'expired';
+    bgColor = 'bg-red-500/10';
+    textColor = 'text-red-400';
+    Icon = AlertTriangle;
+  } else if (daysLeft <= 7) {
+    status = 'expiring';
+    bgColor = 'bg-yellow-500/10';
+    textColor = 'text-yellow-400';
+    Icon = AlertTriangle;
+  } else {
+    status = 'active';
+    bgColor = 'bg-green-500/10';
+    textColor = 'text-green-400';
+    Icon = CheckCircle;
+  }
+  
+  return (
+    <div className={`${bgColor} rounded-lg p-2`}>
+      <div className="flex items-center gap-2 mb-1">
+        <CreditCard size={12} className={textColor} />
+        <span className={`text-xs font-medium ${textColor}`}>
+          {status === 'expired' ? 'หมดอายุแล้ว' : status === 'expiring' ? 'ใกล้หมดอายุ' : 'Subscription'}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-dark-400">
+          {status === 'expired' 
+            ? `หมด ${Math.abs(daysLeft)} วันที่แล้ว`
+            : `เหลือ ${daysLeft} วัน`
+          }
+        </span>
+        <span className="text-xs text-dark-500">
+          {endDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 // Map routes to count keys
 const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'locations'> = {
@@ -365,6 +421,14 @@ export const Sidebar = () => {
             <p className="text-xs text-dark-400 truncate">{user?.role || 'super_admin'}</p>
           </div>
         </div>
+        
+        {/* Subscription Status */}
+        {user?.subscription_end && (
+          <div className="mb-3 p-2 bg-dark-700/50 rounded-lg">
+            <SubscriptionBadge subscriptionEnd={user.subscription_end} />
+          </div>
+        )}
+        
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors w-full"

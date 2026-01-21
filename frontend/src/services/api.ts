@@ -960,5 +960,104 @@ export const supportAPI = {
   },
 };
 
+
+// ============== Login History API ==============
+
+export interface LoginHistoryItem {
+  id: number;
+  user_id: number;
+  login_at: string;
+  ip_address?: string;
+  user_agent?: string;
+  device_type?: string;
+  browser?: string;
+  os?: string;
+  country?: string;
+  country_code?: string;
+  region?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  isp?: string;
+  login_success: boolean;
+  failure_reason?: string;
+  user_email?: string;
+  user_name?: string;
+}
+
+export interface LoginHistoryListResponse {
+  items: LoginHistoryItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface LoginMapPoint {
+  id: number;
+  user_id: number;
+  user_email: string;
+  user_name: string;
+  login_at: string;
+  ip_address?: string;
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  country?: string;
+  device_type?: string;
+  browser?: string;
+  os?: string;
+  is_online: boolean;
+}
+
+export interface LoginMapResponse {
+  points: LoginMapPoint[];
+  total_logins: number;
+  unique_users: number;
+  unique_locations: number;
+}
+
+export interface LoginStats {
+  total_logins_today: number;
+  total_logins_week: number;
+  total_logins_month: number;
+  unique_users_today: number;
+  failed_logins_today: number;
+  top_locations: Array<{ city: string; country: string; count: number }>;
+  top_devices: Array<{ device_type: string; browser: string; count: number }>;
+}
+
+export const loginHistoryAPI = {
+  // List login history
+  list: async (params?: {
+    page?: number;
+    page_size?: number;
+    user_id?: number;
+    success_only?: boolean;
+    days?: number;
+  }): Promise<LoginHistoryListResponse> => {
+    const response = await api.get('/login-history', { params });
+    return response.data;
+  },
+
+  // Get map data
+  getMapData: async (days: number = 7): Promise<LoginMapResponse> => {
+    const response = await api.get('/login-history/map', { params: { days } });
+    return response.data;
+  },
+
+  // Get stats
+  getStats: async (): Promise<LoginStats> => {
+    const response = await api.get('/login-history/stats');
+    return response.data;
+  },
+
+  // Get user login history
+  getUserHistory: async (userId: number, limit: number = 10): Promise<LoginHistoryItem[]> => {
+    const response = await api.get(`/login-history/user/${userId}`, { params: { limit } });
+    return response.data;
+  },
+};
+
 // Export default api instance
 export default api;

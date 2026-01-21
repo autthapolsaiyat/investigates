@@ -17,7 +17,8 @@ import {
   FileText,
   Bell,
   Trash2,
-  Bug
+  Bug,
+  Map
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -27,6 +28,7 @@ const adminNavSections = [
     items: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
       { to: '/admin/activity', icon: Activity, label: 'Activity Log' },
+      { to: '/admin/login-map', icon: Map, label: 'Login Map' },
     ]
   },
   {

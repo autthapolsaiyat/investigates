@@ -9,6 +9,7 @@ from app.models.case import Case, CaseStatus
 from app.models.money_flow import MoneyFlowNode, MoneyFlowEdge, NodeType
 from app.models.registration import RegistrationRequest, RegistrationStatus
 from app.models.session import UserSession
+from app.models.login_history import LoginHistory
 
 __all__ = [
     "Organization",
@@ -22,5 +23,6 @@ __all__ = [
     "NodeType",
     "RegistrationRequest",
     "RegistrationStatus",
-    "UserSession"
+    "UserSession",
+    "LoginHistory"
 ]

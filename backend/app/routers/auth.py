@@ -1,15 +1,16 @@
 """
 Authentication Router
-Login, Register, Token refresh endpoints
+Login, Register, Token refresh endpoints with login tracking
 """
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.config import settings
 from app.models.user import User, UserRole
 from app.models.organization import Organization
+from app.models.login_history import LoginHistory
 from app.schemas.auth import (
     LoginRequest, 
     LoginResponse, 
@@ -25,8 +26,55 @@ from app.utils.security import (
     decode_token,
     get_current_user
 )
+from app.utils.login_tracking import parse_user_agent, get_ip_geolocation, get_client_ip
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+async def log_login_attempt(
+    db: Session,
+    user_id: int,
+    request: Request,
+    success: bool = True,
+    failure_reason: str = None
+):
+    """Log login attempt with device and location info"""
+    try:
+        # Get client info
+        ip_address = get_client_ip(request)
+        user_agent = request.headers.get("User-Agent", "")
+        
+        # Parse user agent
+        ua_info = parse_user_agent(user_agent)
+        
+        # Get IP geolocation
+        geo_info = await get_ip_geolocation(ip_address)
+        
+        # Create login history record
+        login_record = LoginHistory(
+            user_id=user_id,
+            login_at=datetime.utcnow(),
+            ip_address=ip_address,
+            user_agent=user_agent[:500] if user_agent else None,
+            device_type=ua_info["device_type"],
+            browser=ua_info["browser"],
+            os=ua_info["os"],
+            country=geo_info.get("country"),
+            country_code=geo_info.get("country_code"),
+            region=geo_info.get("region"),
+            city=geo_info.get("city"),
+            latitude=geo_info.get("latitude"),
+            longitude=geo_info.get("longitude"),
+            isp=geo_info.get("isp"),
+            login_success=success,
+            failure_reason=failure_reason
+        )
+        
+        db.add(login_record)
+        db.commit()
+    except Exception as e:
+        print(f"Error logging login: {e}")
+        # Don't fail the login if logging fails
 
 
 @router.post("/seed-admin")
@@ -69,11 +117,13 @@ async def seed_admin(db: Session = Depends(get_db)):
 @router.post("/login", response_model=LoginResponse)
 async def login(
     request: LoginRequest,
+    fastapi_request: Request,
     db: Session = Depends(get_db)
 ):
     """
     Login with email and password
     Returns access token, refresh token, and user info
+    Logs login attempt with device and location info
     """
     # Find user
     user = db.query(User).filter(User.email == request.email).first()
@@ -86,6 +136,8 @@ async def login(
     
     # Check if locked
     if user.locked_until and user.locked_until > datetime.utcnow():
+        # Log failed attempt
+        await log_login_attempt(db, user.id, fastapi_request, False, "Account locked")
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
             detail="Account is temporarily locked. Please try again later."
@@ -99,6 +151,9 @@ async def login(
             user.locked_until = datetime.utcnow() + timedelta(minutes=30)
         db.commit()
         
+        # Log failed attempt
+        await log_login_attempt(db, user.id, fastapi_request, False, "Invalid password")
+        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
@@ -106,6 +161,8 @@ async def login(
     
     # Check if active
     if not user.is_active:
+        # Log failed attempt
+        await log_login_attempt(db, user.id, fastapi_request, False, "Account disabled")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is disabled"
@@ -116,6 +173,9 @@ async def login(
     user.locked_until = None
     user.last_login_at = datetime.utcnow()
     db.commit()
+    
+    # Log successful login
+    await log_login_attempt(db, user.id, fastapi_request, True)
     
     # Create tokens
     token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}

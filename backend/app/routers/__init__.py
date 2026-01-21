@@ -10,6 +10,7 @@ from app.routers.cases import router as cases_router
 from app.routers.money_flow import router as money_flow_router
 from app.routers.registrations import router as registrations_router
 from app.routers.support import router as support_router
+from app.routers.login_history import router as login_history_router
 
 __all__ = [
     "auth_router",
@@ -18,5 +19,6 @@ __all__ = [
     "cases_router",
     "money_flow_router",
     "registrations_router",
-    "support_router"
+    "support_router",
+    "login_history_router"
 ]
