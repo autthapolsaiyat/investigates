@@ -18,7 +18,8 @@ import {
   Bell,
   Trash2,
   Bug,
-  Map
+  Map,
+  Key
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -37,6 +38,7 @@ const adminNavSections = [
       { to: '/admin/registrations', icon: UserPlus, label: 'Registrations' },
       { to: '/admin/users', icon: Users, label: 'Users' },
       { to: '/admin/subscriptions', icon: CreditCard, label: 'Subscriptions' },
+      { to: '/admin/licenses', icon: Key, label: 'License Keys' },
     ]
   },
   {
