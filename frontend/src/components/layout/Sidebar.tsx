@@ -24,8 +24,7 @@ import {
   Bug,
   CreditCard,
   AlertTriangle,
-  CheckCircle,
-  Clock
+  CheckCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
@@ -42,23 +41,19 @@ const SubscriptionBadge = ({ subscriptionEnd }: { subscriptionEnd: string }) => 
   let status: 'active' | 'expiring' | 'expired';
   let bgColor: string;
   let textColor: string;
-  let Icon: typeof CheckCircle;
   
   if (daysLeft < 0) {
     status = 'expired';
     bgColor = 'bg-red-500/10';
     textColor = 'text-red-400';
-    Icon = AlertTriangle;
   } else if (daysLeft <= 7) {
     status = 'expiring';
     bgColor = 'bg-yellow-500/10';
     textColor = 'text-yellow-400';
-    Icon = AlertTriangle;
   } else {
     status = 'active';
     bgColor = 'bg-green-500/10';
     textColor = 'text-green-400';
-    Icon = CheckCircle;
   }
   
   return (

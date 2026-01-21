@@ -16,17 +16,16 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Filter,
   List
 } from 'lucide-react';
 import { Card, Button } from '../../components/ui';
 import { loginHistoryAPI } from '../../services/api';
 import type { LoginMapPoint, LoginStats, LoginHistoryItem } from '../../services/api';
 
-// Leaflet CSS (loaded via CDN in index.html)
+// Leaflet types (loaded via CDN)
 declare global {
   interface Window {
-    L: typeof import('leaflet');
+    L: any;
   }
 }
 
@@ -36,7 +35,6 @@ export const LoginMap = () => {
   const markersLayer = useRef<any>(null);
   
   const [isLoading, setIsLoading] = useState(true);
-  const [mapPoints, setMapPoints] = useState<LoginMapPoint[]>([]);
   const [stats, setStats] = useState<LoginStats | null>(null);
   const [days, setDays] = useState(7);
   const [showList, setShowList] = useState(false);
@@ -101,7 +99,6 @@ export const LoginMap = () => {
         loginHistoryAPI.list({ page: 1, page_size: 50, days })
       ]);
 
-      setMapPoints(mapData.points);
       setTotalLogins(mapData.total_logins);
       setUniqueUsers(mapData.unique_users);
       setUniqueLocations(mapData.unique_locations);
