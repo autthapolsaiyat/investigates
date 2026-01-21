@@ -292,6 +292,37 @@ async def get_current_user_info(
     return UserResponse.model_validate(current_user)
 
 
+@router.patch("/profile", response_model=UserResponse)
+async def update_profile(
+    first_name: str = None,
+    last_name: str = None,
+    phone: str = None,
+    department: str = None,
+    position: str = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update current user's profile
+    """
+    # Update allowed fields
+    if first_name is not None:
+        current_user.first_name = first_name
+    if last_name is not None:
+        current_user.last_name = last_name
+    if phone is not None:
+        current_user.phone = phone
+    if department is not None:
+        current_user.department = department
+    if position is not None:
+        current_user.position = position
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return UserResponse.model_validate(current_user)
+
+
 @router.post("/logout")
 async def logout(
     current_user: User = Depends(get_current_user)

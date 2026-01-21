@@ -41,6 +41,7 @@ class User(Base):
     phone = Column(String(50), nullable=True)
     avatar_url = Column(String(500), nullable=True)
     position = Column(String(100), nullable=True)  # Job title
+    department = Column(String(100), nullable=True)  # Department/Division
     organization_name = Column(String(255), nullable=True)  # Free text org name
     
     # Role & Organization

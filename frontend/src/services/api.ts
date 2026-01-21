@@ -177,6 +177,11 @@ export const authAPI = {
     setTokens(tokens.access_token, tokens.refresh_token);
     return tokens;
   },
+
+  updateProfile: async (data: { first_name?: string; last_name?: string; phone?: string; department?: string; position?: string }): Promise<User> => {
+    const response = await api.patch('/auth/profile', null, { params: data });
+    return response.data;
+  },
 };
 
 // ============== Users API ==============

@@ -19,6 +19,7 @@ import { HashVerify } from './pages/verify';
 import { UserGuide } from './pages/guide';
 import { LandingPage } from './pages/landing';
 import { MyTickets } from './pages/support/MyTickets';
+import { Profile } from './pages/profile';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboard';
@@ -56,7 +57,6 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/pending-approval" element={<PendingApprovalPage />} />
         <Route path="/verify" element={<HashVerify />} />
-        <Route path="/guide" element={<UserGuide />} />
         
         {/* Protected App Routes (Investigator Interface) */}
         <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -72,6 +72,8 @@ function App() {
           <Route path="kyc-request" element={<KYCRequestGenerator />} />
           <Route path="crypto" element={<CryptoTracker />} />
           <Route path="my-tickets" element={<MyTickets />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="guide" element={<UserGuide />} />
         </Route>
 
         {/* Admin Panel Routes (Separated Admin Interface) */}
@@ -99,6 +101,7 @@ function App() {
         <Route path="/call-analysis" element={<Navigate to="/app/call-analysis" replace />} />
         <Route path="/crypto" element={<Navigate to="/app/crypto" replace />} />
         <Route path="/location-timeline" element={<Navigate to="/app/location-timeline" replace />} />
+        <Route path="/guide" element={<Navigate to="/app/guide" replace />} />
         
         {/* Legacy admin routes redirect to new /admin */}
         <Route path="/app/admin/*" element={<Navigate to="/admin" replace />} />

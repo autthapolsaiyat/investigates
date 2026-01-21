@@ -366,13 +366,19 @@ export const Sidebar = () => {
 
       {/* Help Button */}
       <div className="px-4 py-2 border-t border-dark-700">
-        <button
-          onClick={() => window.open('/guide', '_blank')}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-300 hover:bg-dark-700 hover:text-white transition-colors"
+        <NavLink
+          to="/app/guide"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 w-full rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-500/20 text-primary-400'
+                : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+            }`
+          }
         >
           <BookOpen size={18} />
           <span className="text-sm">วิธีการใช้งาน</span>
-        </button>
+        </NavLink>
       </div>
 
       {/* Support Button */}
@@ -405,15 +411,24 @@ export const Sidebar = () => {
 
       {/* User Info */}
       <div className="p-4 border-t border-dark-700">
-        <div className="flex items-center gap-3 mb-3">
+        <NavLink
+          to="/app/profile"
+          className={({ isActive }) =>
+            `flex items-center gap-3 mb-3 p-2 rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-500/20'
+                : 'hover:bg-dark-700'
+            }`
+          }
+        >
           <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
             {user?.email?.charAt(0) || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user?.email || 'Admin User'}</p>
-            <p className="text-xs text-dark-400 truncate">{user?.role || 'super_admin'}</p>
+            <p className="text-sm font-medium text-white truncate">{user?.full_name || user?.email || 'User'}</p>
+            <p className="text-xs text-dark-400 truncate">{user?.role || 'investigator'}</p>
           </div>
-        </div>
+        </NavLink>
         
         {/* Subscription Status */}
         {user?.subscription_end && (

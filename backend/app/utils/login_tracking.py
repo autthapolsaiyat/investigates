@@ -141,19 +141,29 @@ def get_client_ip(request) -> str:
     """
     Get real client IP from request, considering proxies
     """
+    ip = None
+    
     # Check X-Forwarded-For header (common for proxies/load balancers)
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         # Take the first IP (original client)
-        return forwarded_for.split(",")[0].strip()
+        ip = forwarded_for.split(",")[0].strip()
     
     # Check X-Real-IP header (nginx)
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
+    if not ip:
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            ip = real_ip.strip()
     
     # Fall back to direct client IP
-    if request.client:
-        return request.client.host
+    if not ip and request.client:
+        ip = request.client.host
     
-    return "unknown"
+    if not ip:
+        return "unknown"
+    
+    # Strip port if present (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+    if ":" in ip and not ip.startswith("["):  # Don't break IPv6
+        ip = ip.split(":")[0]
+    
+    return ip

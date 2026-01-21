@@ -55,6 +55,10 @@ async def list_cases(
     """
     List active cases with pagination and filters
     Only returns is_active=True cases
+    - Super Admin: sees all cases
+    - Org Admin: sees all cases in their organization
+    - Investigator: sees only cases they created or are assigned to
+    - Analyst/Viewer: sees only cases assigned to them
     """
     query = db.query(Case).options(
         joinedload(Case.created_by_user),
@@ -64,9 +68,23 @@ async def list_cases(
     # ★ SOFT DELETE: Only show active cases
     query = query.filter(Case.is_active == True)
     
-    # Filter by organization (non-super-admin can only see their org's cases)
-    if current_user.role != UserRole.SUPER_ADMIN:
+    # ★ ROLE-BASED FILTERING
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super Admin sees all cases
+        pass
+    elif current_user.role == UserRole.ORG_ADMIN:
+        # Org Admin sees all cases in their organization
         query = query.filter(Case.organization_id == current_user.organization_id)
+    else:
+        # Investigator, Analyst, Viewer: see only their own cases
+        # (cases they created OR cases assigned to them)
+        query = query.filter(
+            Case.organization_id == current_user.organization_id,
+            or_(
+                Case.created_by == current_user.id,
+                Case.assigned_to == current_user.id
+            )
+        )
     
     # Search filter
     if search:
@@ -183,43 +201,79 @@ async def get_case_statistics(
 ):
     """
     Get case statistics for dashboard
-    Only counts active cases
+    Only counts active cases visible to the user
     """
     query = db.query(Case)
     
     # ★ SOFT DELETE: Only count active cases
     query = query.filter(Case.is_active == True)
     
-    # Filter by organization
-    if current_user.role != UserRole.SUPER_ADMIN:
+    # ★ ROLE-BASED FILTERING (same as list_cases)
+    if current_user.role == UserRole.SUPER_ADMIN:
+        pass
+    elif current_user.role == UserRole.ORG_ADMIN:
         query = query.filter(Case.organization_id == current_user.organization_id)
+    else:
+        # Investigator, Analyst, Viewer: see only their own cases
+        query = query.filter(
+            Case.organization_id == current_user.organization_id,
+            or_(
+                Case.created_by == current_user.id,
+                Case.assigned_to == current_user.id
+            )
+        )
     
     # Total cases
     total_cases = query.count()
     
-    # Open cases
-    open_cases = query.filter(Case.status.in_([
+    # Open cases - need fresh subquery with same filters
+    open_query = db.query(Case).filter(Case.is_active == True)
+    if current_user.role == UserRole.SUPER_ADMIN:
+        pass
+    elif current_user.role == UserRole.ORG_ADMIN:
+        open_query = open_query.filter(Case.organization_id == current_user.organization_id)
+    else:
+        open_query = open_query.filter(
+            Case.organization_id == current_user.organization_id,
+            or_(Case.created_by == current_user.id, Case.assigned_to == current_user.id)
+        )
+    
+    open_cases = open_query.filter(Case.status.in_([
         CaseStatus.OPEN, 
         CaseStatus.IN_PROGRESS, 
         CaseStatus.PENDING_REVIEW
     ])).count()
     
     # Closed cases
-    closed_cases = query.filter(Case.status.in_([
+    closed_cases = open_query.filter(Case.status.in_([
         CaseStatus.CLOSED,
         CaseStatus.ARCHIVED
     ])).count()
     
-    # Total amount (need fresh query with is_active filter)
+    # Total amount
     amount_query = db.query(func.sum(Case.total_amount)).filter(Case.is_active == True)
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role == UserRole.SUPER_ADMIN:
+        pass
+    elif current_user.role == UserRole.ORG_ADMIN:
         amount_query = amount_query.filter(Case.organization_id == current_user.organization_id)
+    else:
+        amount_query = amount_query.filter(
+            Case.organization_id == current_user.organization_id,
+            or_(Case.created_by == current_user.id, Case.assigned_to == current_user.id)
+        )
     total_amount = amount_query.scalar() or 0
     
     # Total victims
     victims_query = db.query(func.sum(Case.victims_count)).filter(Case.is_active == True)
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role == UserRole.SUPER_ADMIN:
+        pass
+    elif current_user.role == UserRole.ORG_ADMIN:
         victims_query = victims_query.filter(Case.organization_id == current_user.organization_id)
+    else:
+        victims_query = victims_query.filter(
+            Case.organization_id == current_user.organization_id,
+            or_(Case.created_by == current_user.id, Case.assigned_to == current_user.id)
+        )
     total_victims = victims_query.scalar() or 0
     
     # By type
