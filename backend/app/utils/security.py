@@ -124,3 +124,13 @@ def require_roles(*allowed_roles):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Access denied. Required roles: {', '.join(allowed_roles)}")
         return current_user
     return role_checker
+
+
+async def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require user to be admin or super_admin"""
+    if current_user.role.value not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user

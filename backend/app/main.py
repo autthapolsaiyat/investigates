@@ -41,23 +41,48 @@ app.add_middleware(
 async def health_check():
     return {"status": "healthy", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
+# Diagnostic endpoint to check router loading
+router_errors = []
+router_status = []
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to InvestiGate API", "docs": "/docs"}
 
+@app.get("/debug/routers")
+async def debug_routers():
+    return {
+        "loaded": router_status,
+        "errors": router_errors,
+        "total_loaded": len(router_status),
+        "total_errors": len(router_errors)
+    }
+
 # Import routers after app is created
-try:
-    from app.routers import auth_router, users_router, organizations_router, cases_router, money_flow_router, registrations_router
-    app.include_router(auth_router, prefix=settings.API_PREFIX)
-    app.include_router(users_router, prefix=settings.API_PREFIX)
-    app.include_router(organizations_router, prefix=settings.API_PREFIX)
-    app.include_router(cases_router, prefix=settings.API_PREFIX)
-    app.include_router(money_flow_router, prefix=settings.API_PREFIX)
-    app.include_router(registrations_router, prefix=settings.API_PREFIX)
-    
-    # Import evidence router separately to avoid circular import
-    from app.routers.evidence import router as evidence_router
-    app.include_router(evidence_router, prefix=settings.API_PREFIX)
-    print("✅ All routers loaded successfully")
-except Exception as e:
-    print(f"⚠️ Could not load routers: {e}")
+import traceback
+
+routers_to_load = [
+    ("auth", "app.routers.auth", "router"),
+    ("users", "app.routers.users", "router"),
+    ("organizations", "app.routers.organizations", "router"),
+    ("cases", "app.routers.cases", "router"),
+    ("money_flow", "app.routers.money_flow", "router"),
+    ("registrations", "app.routers.registrations", "router"),
+    ("support", "app.routers.support", "router"),
+    ("evidence", "app.routers.evidence", "router"),
+]
+
+for name, module_path, router_attr in routers_to_load:
+    try:
+        import importlib
+        module = importlib.import_module(module_path)
+        router = getattr(module, router_attr)
+        app.include_router(router, prefix=settings.API_PREFIX)
+        router_status.append({"name": name, "status": "loaded"})
+    except Exception as e:
+        error_detail = {
+            "name": name,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+        router_errors.append(error_detail)

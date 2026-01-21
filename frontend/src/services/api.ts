@@ -229,6 +229,30 @@ export const usersAPI = {
       new_password: newPassword,
     });
   },
+
+  // Admin: Reset user password with random temporary password
+  resetPassword: async (id: number): Promise<{ message: string; user_id: number; temporary_password: string }> => {
+    const response = await api.post(`/users/${id}/reset-password`);
+    return response.data;
+  },
+
+  // Admin: Renew/extend subscription
+  renewSubscription: async (id: number, days: number): Promise<{
+    message: string;
+    user_id: number;
+    subscription_start: string;
+    subscription_end: string;
+    days_added: number;
+  }> => {
+    const response = await api.post(`/users/${id}/renew-subscription`, { days });
+    return response.data;
+  },
+
+  // Admin: Cancel subscription
+  cancelSubscription: async (id: number): Promise<{ message: string; user_id: number }> => {
+    const response = await api.post(`/users/${id}/cancel-subscription`);
+    return response.data;
+  },
 };
 
 // ============== Organizations API ==============

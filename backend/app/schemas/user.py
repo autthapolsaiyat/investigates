@@ -63,15 +63,43 @@ class UserResponse(UserBase):
     id: int
     role: UserRole
     organization_id: Optional[int]
+    organization_name: Optional[str] = None
     is_active: bool
     is_verified: bool
     avatar_url: Optional[str]
     last_login_at: Optional[datetime]
+    subscription_start: Optional[datetime] = None
+    subscription_end: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     
     class Config:
         from_attributes = True
+
+
+# ============== Subscription Schemas ==============
+
+class RenewSubscriptionRequest(BaseModel):
+    """Schema for renewing subscription"""
+    days: int = Field(..., ge=1, le=3650, description="Number of days to add (1-3650)")
+
+
+class RenewSubscriptionResponse(BaseModel):
+    """Response for subscription renewal"""
+    message: str
+    user_id: int
+    subscription_start: datetime
+    subscription_end: datetime
+    days_added: int
+
+
+# ============== Password Reset Schema ==============
+
+class ResetPasswordResponse(BaseModel):
+    """Response for admin password reset"""
+    message: str
+    user_id: int
+    temporary_password: str
 
 
 class UserBrief(BaseModel):

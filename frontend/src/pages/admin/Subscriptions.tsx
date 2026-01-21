@@ -1,6 +1,6 @@
 /**
  * Subscriptions Page (Admin)
- * Manage user subscriptions
+ * Manage user subscriptions - Renew, Cancel, View
  */
 import { useState, useEffect } from 'react';
 import { 
@@ -15,11 +15,50 @@ import {
   XCircle,
   Clock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X,
+  Plus,
+  Ban,
+  Loader2
 } from 'lucide-react';
 import { Card, Input, Button } from '../../components/ui';
 import { usersAPI } from '../../services/api';
 import type { User as UserType } from '../../services/api';
+
+// Modal Component
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title: string;
+}
+
+const Modal = ({ isOpen, onClose, children, title }: ModalProps) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-dark-800 rounded-xl p-6 w-full max-w-md mx-4 border border-dark-700">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-dark-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Subscription Duration Options
+const DURATION_OPTIONS = [
+  { label: '7 วัน (ทดลอง)', days: 7, price: 'ฟรี' },
+  { label: '1 เดือน', days: 30, price: '฿2,500' },
+  { label: '3 เดือน', days: 90, price: '฿6,000' },
+  { label: '6 เดือน', days: 180, price: '฿10,000' },
+  { label: '1 ปี', days: 365, price: '฿18,000' },
+];
 
 export const Subscriptions = () => {
   const [users, setUsers] = useState<UserType[]>([]);
@@ -28,6 +67,15 @@ export const Subscriptions = () => {
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Modal states
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  const [selectedDays, setSelectedDays] = useState(30);
+  const [customDays, setCustomDays] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -91,6 +139,67 @@ export const Subscriptions = () => {
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
+  // Open Renew Modal
+  const openRenewModal = (user: UserType) => {
+    setSelectedUser(user);
+    setSelectedDays(30);
+    setCustomDays('');
+    setSuccessMessage(null);
+    setShowRenewModal(true);
+  };
+
+  // Open Cancel Modal
+  const openCancelModal = (user: UserType) => {
+    setSelectedUser(user);
+    setShowCancelModal(true);
+  };
+
+  // Handle Renew
+  const handleRenew = async () => {
+    if (!selectedUser) return;
+    
+    const days = customDays ? parseInt(customDays) : selectedDays;
+    if (!days || days < 1) {
+      alert('กรุณาระบุจำนวนวันที่ถูกต้อง');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await usersAPI.renewSubscription(selectedUser.id, days);
+      setSuccessMessage(`ต่ออายุสำเร็จ! หมดอายุวันที่ ${new Date(result.subscription_end).toLocaleDateString('th-TH')}`);
+      fetchUsers();
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setShowRenewModal(false);
+        setSuccessMessage(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Error renewing subscription:', err);
+      alert('เกิดข้อผิดพลาดในการต่ออายุ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle Cancel
+  const handleCancel = async () => {
+    if (!selectedUser) return;
+
+    setSaving(true);
+    try {
+      await usersAPI.cancelSubscription(selectedUser.id);
+      setShowCancelModal(false);
+      fetchUsers();
+    } catch (err) {
+      console.error('Error cancelling subscription:', err);
+      alert('เกิดข้อผิดพลาดในการยกเลิก');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -211,10 +320,10 @@ export const Subscriptions = () => {
                         {user.email.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-white font-medium truncate">{user.email}</p>
-                        <p className="text-sm text-gray-400 truncate">
-                          {user.organization_name || 'ไม่ระบุหน่วยงาน'}
+                        <p className="text-white font-medium truncate">
+                          {user.first_name} {user.last_name}
                         </p>
+                        <p className="text-sm text-gray-400 truncate">{user.email}</p>
                       </div>
                     </div>
                     
@@ -236,9 +345,28 @@ export const Subscriptions = () => {
                       )}
                       
                       {/* Actions */}
-                      <Button size="sm" variant="secondary">
-                        ต่ออายุ
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="secondary"
+                          onClick={() => openRenewModal(user)}
+                          title="ต่ออายุ"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          ต่ออายุ
+                        </Button>
+                        {(subStatus.status === 'active' || subStatus.status === 'expiring') && (
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            onClick={() => openCancelModal(user)}
+                            title="ยกเลิก"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -273,10 +401,137 @@ export const Subscriptions = () => {
         )}
       </Card>
 
-      {/* Coming Soon Notice */}
-      <div className="p-4 bg-primary-500/10 border border-primary-500/20 rounded-lg text-center">
-        <p className="text-primary-400">🚧 ฟังก์ชันต่ออายุ/ปรับ Subscription กำลังพัฒนา</p>
-      </div>
+      {/* Renew Modal */}
+      <Modal 
+        isOpen={showRenewModal} 
+        onClose={() => setShowRenewModal(false)} 
+        title="ต่ออายุ Subscription"
+      >
+        {successMessage ? (
+          <div className="text-center py-4">
+            <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+            <p className="text-green-400">{successMessage}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* User Info */}
+            <div className="p-3 bg-dark-700 rounded-lg">
+              <p className="text-white font-medium">{selectedUser?.first_name} {selectedUser?.last_name}</p>
+              <p className="text-sm text-gray-400">{selectedUser?.email}</p>
+              {selectedUser?.subscription_end && (
+                <p className="text-sm text-gray-500 mt-1">
+                  หมดอายุปัจจุบัน: {new Date(selectedUser.subscription_end).toLocaleDateString('th-TH')}
+                </p>
+              )}
+            </div>
+
+            {/* Duration Options */}
+            <div>
+              <label className="block text-sm font-medium mb-2">เลือกระยะเวลา</label>
+              <div className="grid grid-cols-2 gap-2">
+                {DURATION_OPTIONS.map((option) => (
+                  <button
+                    key={option.days}
+                    onClick={() => { setSelectedDays(option.days); setCustomDays(''); }}
+                    className={`p-3 rounded-lg border text-left transition-colors ${
+                      selectedDays === option.days && !customDays
+                        ? 'border-primary-500 bg-primary-500/10'
+                        : 'border-dark-600 hover:border-dark-500'
+                    }`}
+                  >
+                    <p className="font-medium text-white">{option.label}</p>
+                    <p className="text-sm text-gray-400">{option.price}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Days */}
+            <div>
+              <label className="block text-sm font-medium mb-2">หรือระบุจำนวนวัน</label>
+              <Input
+                type="number"
+                placeholder="เช่น 45"
+                value={customDays}
+                onChange={(e) => setCustomDays(e.target.value)}
+                min={1}
+                max={3650}
+              />
+            </div>
+
+            {/* Summary */}
+            <div className="p-3 bg-primary-500/10 border border-primary-500/20 rounded-lg">
+              <p className="text-primary-400 text-sm">
+                จะเพิ่มระยะเวลา: <strong>{customDays || selectedDays} วัน</strong>
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <Button 
+                variant="ghost" 
+                className="flex-1" 
+                onClick={() => setShowRenewModal(false)}
+              >
+                ยกเลิก
+              </Button>
+              <Button 
+                className="flex-1" 
+                onClick={handleRenew}
+                disabled={saving}
+              >
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                ยืนยันต่ออายุ
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Cancel Modal */}
+      <Modal 
+        isOpen={showCancelModal} 
+        onClose={() => setShowCancelModal(false)} 
+        title="ยกเลิก Subscription"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-400 font-medium">คำเตือน</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  การยกเลิก Subscription จะทำให้ผู้ใช้ไม่สามารถใช้งานระบบได้ทันที
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 bg-dark-700 rounded-lg">
+            <p className="text-white font-medium">{selectedUser?.first_name} {selectedUser?.last_name}</p>
+            <p className="text-sm text-gray-400">{selectedUser?.email}</p>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button 
+              variant="ghost" 
+              className="flex-1" 
+              onClick={() => setShowCancelModal(false)}
+            >
+              ยกเลิก
+            </Button>
+            <Button 
+              variant="danger" 
+              className="flex-1" 
+              onClick={handleCancel}
+              disabled={saving}
+            >
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              ยืนยันยกเลิก
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

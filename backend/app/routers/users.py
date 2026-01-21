@@ -3,6 +3,7 @@ Users Router
 User management CRUD endpoints
 """
 from math import ceil
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -14,8 +15,13 @@ from app.schemas.user import (
     UserUpdate,
     UserUpdatePassword,
     UserResponse,
-    UserListResponse
+    UserListResponse,
+    RenewSubscriptionRequest,
+    RenewSubscriptionResponse,
+    ResetPasswordResponse
 )
+import secrets
+import string
 from app.utils.security import (
     get_current_user,
     get_password_hash,
@@ -269,3 +275,153 @@ async def change_password(
     db.commit()
     
     return {"message": "Password changed successfully"}
+
+
+# ============== Admin Actions ==============
+
+def generate_temp_password(length: int = 12) -> str:
+    """Generate a secure temporary password"""
+    # At least: 1 uppercase, 1 lowercase, 1 digit, 1 special char
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    while True:
+        password = ''.join(secrets.choice(alphabet) for _ in range(length))
+        # Check requirements
+        if (any(c.islower() for c in password)
+            and any(c.isupper() for c in password)
+            and any(c.isdigit() for c in password)
+            and any(c in "!@#$%^&*" for c in password)):
+            return password
+
+
+@router.post("/{user_id}/reset-password", response_model=ResetPasswordResponse)
+async def admin_reset_password(
+    user_id: int,
+    current_user: User = Depends(require_roles("super_admin", "org_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin resets user password with a randomly generated temporary password.
+    User should change this password on next login.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Org admin can only reset users in their org
+    if current_user.role == UserRole.ORG_ADMIN:
+        if user.organization_id != current_user.organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot reset password for users outside your organization"
+            )
+    
+    # Cannot reset your own password via this endpoint
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Use change-password endpoint for your own password"
+        )
+    
+    # Generate new password
+    temp_password = generate_temp_password()
+    user.hashed_password = get_password_hash(temp_password)
+    
+    db.commit()
+    
+    return ResetPasswordResponse(
+        message="Password has been reset successfully",
+        user_id=user.id,
+        temporary_password=temp_password
+    )
+
+
+@router.post("/{user_id}/renew-subscription", response_model=RenewSubscriptionResponse)
+async def renew_subscription(
+    user_id: int,
+    request: RenewSubscriptionRequest,
+    current_user: User = Depends(require_roles("super_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Renew/extend user subscription.
+    - If no subscription exists, starts from today
+    - If subscription already exists, adds days from current end date (or today if expired)
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    now = datetime.utcnow()
+    
+    # Determine start date
+    if user.subscription_end and user.subscription_end > now:
+        # Still valid: extend from current end date
+        base_date = user.subscription_end
+    else:
+        # Expired or no subscription: start from today
+        base_date = now
+        if not user.subscription_start:
+            user.subscription_start = now
+    
+    # Calculate new end date
+    new_end_date = base_date + timedelta(days=request.days)
+    user.subscription_end = new_end_date
+    
+    # Ensure user is active
+    user.is_active = True
+    
+    db.commit()
+    db.refresh(user)
+    
+    return RenewSubscriptionResponse(
+        message="Subscription renewed successfully",
+        user_id=user.id,
+        subscription_start=user.subscription_start,
+        subscription_end=user.subscription_end,
+        days_added=request.days
+    )
+
+
+@router.post("/{user_id}/cancel-subscription")
+async def cancel_subscription(
+    user_id: int,
+    current_user: User = Depends(require_roles("super_admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Cancel user subscription (set end date to now).
+    User will be marked as inactive.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Cannot cancel your own subscription
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot cancel your own subscription"
+        )
+    
+    # Set subscription end to now
+    user.subscription_end = datetime.utcnow()
+    user.is_active = False
+    
+    db.commit()
+    
+    return {
+        "message": "Subscription cancelled successfully",
+        "user_id": user.id
+    }

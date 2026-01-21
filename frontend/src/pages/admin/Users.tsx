@@ -1,10 +1,11 @@
 /**
- * Users Page - Complete CRUD
+ * Users Page - Complete CRUD with Reset Password
  */
 import { useEffect, useState } from 'react';
 import { 
   Plus, Search, User, Mail, Shield, Edit, Trash2, 
-  Loader2, AlertCircle, CheckCircle, XCircle, Clock, X
+  Loader2, AlertCircle, CheckCircle, XCircle, Clock, X,
+  Key, Copy, Check
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
 import { usersAPI, organizationsAPI } from '../../services/api';
@@ -74,6 +75,7 @@ export const Users = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -86,6 +88,10 @@ export const Users = () => {
     is_active: true
   });
   const [saving, setSaving] = useState(false);
+  
+  // Reset Password states
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -170,6 +176,31 @@ export const Users = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!selectedUser) return;
+    try {
+      setSaving(true);
+      const result = await usersAPI.resetPassword(selectedUser.id);
+      setNewPassword(result.temporary_password);
+    } catch (err) {
+      console.error('Failed to reset password:', err);
+      alert('Failed to reset password');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const copyPassword = async () => {
+    if (!newPassword) return;
+    try {
+      await navigator.clipboard.writeText(newPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       email: '',
@@ -206,6 +237,13 @@ export const Users = () => {
   const openDeleteModal = (user: UserType) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
+  };
+
+  const openResetPasswordModal = (user: UserType) => {
+    setSelectedUser(user);
+    setNewPassword(null);
+    setCopied(false);
+    setShowResetPasswordModal(true);
   };
 
   const filteredUsers = users.filter(user =>
@@ -319,11 +357,20 @@ export const Users = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => openResetPasswordModal(user)}
+                        title="Reset Password"
+                        className="text-yellow-400 hover:text-yellow-300"
+                      >
+                        <Key size={16} />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => openEditModal(user)} title="Edit">
                         <Edit size={16} />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300" onClick={() => openDeleteModal(user)}>
+                      <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300" onClick={() => openDeleteModal(user)} title="Delete">
                         <Trash2 size={16} />
                       </Button>
                     </div>
@@ -505,6 +552,91 @@ export const Users = () => {
               Delete
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Reset Password Modal */}
+      <Modal 
+        isOpen={showResetPasswordModal} 
+        onClose={() => setShowResetPasswordModal(false)} 
+        title="Reset Password"
+      >
+        <div className="space-y-4">
+          {!newPassword ? (
+            <>
+              {/* Confirmation */}
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Key className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-yellow-400 font-medium">รีเซ็ตรหัสผ่าน</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      ระบบจะสร้างรหัสผ่านชั่วคราวแบบสุ่มให้ผู้ใช้ ผู้ใช้ควรเปลี่ยนรหัสผ่านเมื่อ Login ครั้งถัดไป
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-dark-700 rounded-lg">
+                <p className="text-white font-medium">{selectedUser?.first_name} {selectedUser?.last_name}</p>
+                <p className="text-sm text-gray-400">{selectedUser?.email}</p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="ghost" 
+                  className="flex-1" 
+                  onClick={() => setShowResetPasswordModal(false)}
+                >
+                  ยกเลิก
+                </Button>
+                <Button 
+                  className="flex-1" 
+                  onClick={handleResetPassword}
+                  disabled={saving}
+                >
+                  {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  สร้างรหัสผ่านใหม่
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Show new password */}
+              <div className="text-center py-2">
+                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <p className="text-green-400 font-medium">รีเซ็ตรหัสผ่านสำเร็จ!</p>
+              </div>
+
+              <div className="p-3 bg-dark-700 rounded-lg">
+                <p className="text-sm text-gray-400 mb-2">รหัสผ่านชั่วคราว:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-dark-800 px-3 py-2 rounded font-mono text-primary-400 text-lg">
+                    {newPassword}
+                  </code>
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    onClick={copyPassword}
+                    title="Copy"
+                  >
+                    {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-sm text-yellow-400">
+                ⚠️ กรุณาบันทึกรหัสผ่านนี้ไว้ ระบบจะไม่แสดงรหัสผ่านนี้อีกครั้ง
+              </div>
+
+              <Button 
+                className="w-full" 
+                onClick={() => setShowResetPasswordModal(false)}
+              >
+                ปิด
+              </Button>
+            </>
+          )}
         </div>
       </Modal>
     </div>
