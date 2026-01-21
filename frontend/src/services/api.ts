@@ -116,11 +116,13 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  full_name?: string;
   phone?: string;
   role: string;
   organization_id?: number;
   organization_name?: string;
   position?: string;
+  department?: string;
   status?: string;
   subscription_start?: string;
   subscription_end?: string;
