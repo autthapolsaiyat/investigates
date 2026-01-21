@@ -11,11 +11,8 @@ import {
   CheckCircle, 
   XCircle, 
   Clock,
-  AlertTriangle,
   RefreshCw,
-  Download,
   Filter,
-  MoreVertical,
   Trash2,
   Eye
 } from 'lucide-react';
@@ -332,7 +329,7 @@ export const LicenseManagement = () => {
             <option value="enterprise">Enterprise</option>
           </select>
           
-          <Button variant="outline" onClick={handleSearch}>
+          <Button variant="secondary" onClick={handleSearch}>
             <Filter size={18} className="mr-2" />
             กรอง
           </Button>
@@ -459,7 +456,7 @@ export const LicenseManagement = () => {
             <p className="text-sm text-dark-400">หน้า {page} จาก {totalPages}</p>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
@@ -467,7 +464,7 @@ export const LicenseManagement = () => {
                 ก่อนหน้า
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
@@ -667,7 +664,7 @@ export const LicenseManagement = () => {
             </div>
             
             <div className="flex justify-end mt-6">
-              <Button variant="outline" onClick={() => setIsDetailModalOpen(false)}>
+              <Button variant="secondary" onClick={() => setIsDetailModalOpen(false)}>
                 ปิด
               </Button>
             </div>

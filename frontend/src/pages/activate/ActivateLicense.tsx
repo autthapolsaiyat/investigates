@@ -8,7 +8,6 @@ import {
   CheckCircle, 
   XCircle, 
   AlertTriangle,
-  Clock,
   Shield,
   Sparkles,
   CreditCard,
@@ -381,7 +380,7 @@ export const ActivateLicense = () => {
           
           <div className="flex gap-3">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleValidate}
               disabled={licenseKey.length !== 19 || isValidating}
               className="flex-1"
