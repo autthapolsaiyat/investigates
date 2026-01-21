@@ -20,6 +20,7 @@ import { UserGuide } from './pages/guide';
 import { LandingPage } from './pages/landing';
 import { MyTickets } from './pages/support/MyTickets';
 import { Profile } from './pages/profile';
+import { ActivateLicense } from './pages/activate';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboard';
@@ -34,6 +35,7 @@ import { SystemReportsPage } from './pages/admin/SystemReports';
 import { DeletedCases } from './pages/admin/DeletedCases';
 import { SupportTickets } from './pages/admin/SupportTickets';
 import { LoginMap } from './pages/admin/LoginMap';
+import { LicenseManagement } from './pages/admin/LicenseManagement';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -74,6 +76,7 @@ function App() {
           <Route path="my-tickets" element={<MyTickets />} />
           <Route path="profile" element={<Profile />} />
           <Route path="guide" element={<UserGuide />} />
+          <Route path="activate" element={<ActivateLicense />} />
         </Route>
 
         {/* Admin Panel Routes (Separated Admin Interface) */}
@@ -83,6 +86,7 @@ function App() {
           <Route path="organizations" element={<OrganizationsPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="deleted-cases" element={<DeletedCases />} />
+          <Route path="licenses" element={<LicenseManagement />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="activity" element={<ActivityLogPage />} />
           <Route path="subscriptions" element={<SubscriptionsPage />} />
