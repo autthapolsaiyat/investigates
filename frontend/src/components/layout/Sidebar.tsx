@@ -22,9 +22,7 @@ import {
   RefreshCw,
   BookOpen,
   Bug,
-  CreditCard,
-  AlertTriangle,
-  CheckCircle
+  CreditCard
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
