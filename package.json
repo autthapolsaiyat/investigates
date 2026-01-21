@@ -1,0 +1,17 @@
+{
+  "name": "investigates",
+  "version": "1.0.0",
+  "main": "test-admin-simple.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.0.9"
+  }
+}
