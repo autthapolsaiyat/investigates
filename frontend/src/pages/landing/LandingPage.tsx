@@ -60,9 +60,9 @@ const LandingPage = () => {
   const pricing = [
     {
       name: 'Starter',
-      price: '30,000',
-      period: '/คน/ปี',
-      desc: 'เหมาะสำหรับเริ่มต้น',
+      price: 'ฟรี',
+      period: ' 30 วัน',
+      desc: 'ทดลองใช้งานก่อนตัดสินใจ',
       features: [
         '1 User License',
         'สร้างคดีไม่จำกัด',
@@ -74,11 +74,12 @@ const LandingPage = () => {
         'Email Support'
       ],
       highlight: false,
-      cta: 'เริ่มต้นใช้งาน'
+      cta: 'สมัครใช้ฟรี',
+      isFree: true
     },
     {
       name: 'Professional',
-      price: '60,000',
+      price: '150,000',
       period: '/คน/ปี',
       desc: 'สำหรับงานสืบสวนขั้นสูง',
       features: [
@@ -92,11 +93,12 @@ const LandingPage = () => {
         'Online Training'
       ],
       highlight: true,
-      cta: 'แนะนำ'
+      cta: 'แนะนำ',
+      isFree: false
     },
     {
       name: 'Enterprise',
-      price: '120,000',
+      price: '250,000',
       period: '/คน/ปี',
       desc: 'สำหรับหน่วยงานขนาดใหญ่',
       features: [
@@ -110,7 +112,8 @@ const LandingPage = () => {
         'SLA 99.9%'
       ],
       highlight: false,
-      cta: 'ติดต่อเรา'
+      cta: 'ติดต่อเรา',
+      isFree: false
     }
   ];
 
@@ -370,7 +373,7 @@ const LandingPage = () => {
                 <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                 <p className="text-dark-400 text-sm mb-4">{plan.desc}</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">฿{plan.price}</span>
+                  <span className="text-4xl font-bold">{plan.isFree ? plan.price : `฿${plan.price}`}</span>
                   <span className="text-dark-400">{plan.period}</span>
                 </div>
                 <button
@@ -442,7 +445,7 @@ const LandingPage = () => {
             พร้อมเริ่มวิเคราะห์คดีแล้วหรือยัง?
           </h2>
           <p className="text-xl text-dark-400 mb-8">
-            ทดลองใช้ฟรี 14 วัน ไม่ต้องใส่บัตรเครดิต
+            ทดลองใช้ฟรี 30 วัน ไม่ต้องใส่บัตรเครดิต
           </p>
           <button
             onClick={() => navigate('/login')}

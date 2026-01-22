@@ -1066,5 +1066,332 @@ export const loginHistoryAPI = {
   },
 };
 
+
+// ============== Activity Log API ==============
+
+export interface ActivityLogItem {
+  id: number;
+  user_id?: number;
+  activity_type: string;
+  action: string;
+  details?: string;
+  target_type?: string;
+  target_id?: number;
+  target_name?: string;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+  user_email?: string;
+  user_name?: string;
+}
+
+export interface ActivityLogListResponse {
+  items: ActivityLogItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface ActivityLogStats {
+  total_today: number;
+  total_week: number;
+  total_month: number;
+  by_type: Record<string, number>;
+  top_users: Array<{ user_email: string; count: number }>;
+  recent_actions: Array<{ action: string; count: number }>;
+}
+
+export interface ActivityLogParams {
+  page?: number;
+  page_size?: number;
+  activity_type?: string;
+  user_id?: number;
+  target_type?: string;
+  search?: string;
+  days?: number;
+}
+
+export const activityLogAPI = {
+  // List activity logs
+  list: async (params?: ActivityLogParams): Promise<ActivityLogListResponse> => {
+    const response = await api.get('/activity-logs', { params });
+    return response.data;
+  },
+
+  // Get stats
+  getStats: async (): Promise<ActivityLogStats> => {
+    const response = await api.get('/activity-logs/stats');
+    return response.data;
+  },
+
+  // Get activity types
+  getTypes: async (): Promise<{ types: Array<{ value: string; label: string }> }> => {
+    const response = await api.get('/activity-logs/types');
+    return response.data;
+  },
+};
+
+
+// ============== Notifications API ==============
+
+export interface NotificationItem {
+  id: number;
+  title: string;
+  message: string;
+  notification_type: string;
+  priority: string;
+  target_audience: string;
+  created_by?: number;
+  creator_email?: string;
+  creator_name?: string;
+  sent_at?: string;
+  expires_at?: string;
+  is_active: boolean;
+  recipients_count: number;
+  read_count: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface NotificationListResponse {
+  items: NotificationItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface NotificationStats {
+  total_sent: number;
+  total_active: number;
+  total_read: number;
+  read_rate: number;
+  by_type: Record<string, number>;
+}
+
+export interface NotificationTemplate {
+  id: number;
+  title: string;
+  message: string;
+  notification_type: string;
+}
+
+export interface NotificationCreateData {
+  title: string;
+  message: string;
+  notification_type?: string;
+  priority?: string;
+  target_audience?: string;
+  expires_at?: string;
+}
+
+export interface UserNotificationItem {
+  id: number;
+  notification_id: number;
+  title: string;
+  message: string;
+  notification_type: string;
+  priority: string;
+  is_read: boolean;
+  read_at?: string;
+  created_at: string;
+}
+
+export interface UserNotificationListResponse {
+  items: UserNotificationItem[];
+  total: number;
+  unread_count: number;
+}
+
+export const notificationsAPI = {
+  // ============== Admin Endpoints ==============
+  
+  // Create notification
+  create: async (data: NotificationCreateData): Promise<NotificationItem> => {
+    const response = await api.post('/notifications', data);
+    return response.data;
+  },
+
+  // Send notification
+  send: async (id: number): Promise<NotificationItem> => {
+    const response = await api.post(`/notifications/${id}/send`);
+    return response.data;
+  },
+
+  // List notifications (admin)
+  list: async (params?: { page?: number; page_size?: number; notification_type?: string; is_active?: boolean }): Promise<NotificationListResponse> => {
+    const response = await api.get('/notifications', { params });
+    return response.data;
+  },
+
+  // Get stats
+  getStats: async (): Promise<NotificationStats> => {
+    const response = await api.get('/notifications/stats');
+    return response.data;
+  },
+
+  // Get templates
+  getTemplates: async (): Promise<{ templates: NotificationTemplate[] }> => {
+    const response = await api.get('/notifications/templates');
+    return response.data;
+  },
+
+  // Update notification
+  update: async (id: number, data: Partial<NotificationCreateData> & { is_active?: boolean }): Promise<NotificationItem> => {
+    const response = await api.patch(`/notifications/${id}`, data);
+    return response.data;
+  },
+
+  // Delete notification
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/notifications/${id}`);
+  },
+
+  // ============== User Endpoints ==============
+
+  // Get my notifications
+  getMyNotifications: async (limit: number = 20): Promise<UserNotificationListResponse> => {
+    const response = await api.get('/notifications/my', { params: { limit } });
+    return response.data;
+  },
+
+  // Get unread count
+  getUnreadCount: async (): Promise<{ unread_count: number }> => {
+    const response = await api.get('/notifications/my/unread-count');
+    return response.data;
+  },
+
+  // Mark as read
+  markAsRead: async (userNotificationId: number): Promise<void> => {
+    await api.post(`/notifications/my/${userNotificationId}/read`);
+  },
+
+  // Dismiss notification
+  dismiss: async (userNotificationId: number): Promise<void> => {
+    await api.post(`/notifications/my/${userNotificationId}/dismiss`);
+  },
+
+  // Mark all as read
+  markAllAsRead: async (): Promise<void> => {
+    await api.post('/notifications/my/read-all');
+  },
+};
+
+
+// ============== Reports API ==============
+
+export interface OverviewStats {
+  period_days: number;
+  total_logins: number;
+  unique_users: number;
+  cases_created: number;
+  active_cases: number;
+  total_users: number;
+  new_users: number;
+  failed_logins: number;
+  active_subscriptions: number;
+}
+
+export interface UserStats {
+  period_days: number;
+  total_users: number;
+  by_role: Record<string, number>;
+  subscription_status: {
+    active: number;
+    expired: number;
+    none: number;
+  };
+  new_users_trend: Array<{ date: string; count: number }>;
+  top_active_users: Array<{
+    user_id: number;
+    email: string;
+    name: string;
+    login_count: number;
+  }>;
+}
+
+export interface CaseStats {
+  period_days: number;
+  total_cases: number;
+  by_status: Record<string, number>;
+  by_type: Record<string, number>;
+  deleted_cases: number;
+  cases_trend: Array<{ date: string; count: number }>;
+}
+
+export interface LoginStats {
+  period_days: number;
+  login_trend: Array<{ date: string; success: number; failed: number }>;
+  by_device: Record<string, number>;
+  by_country: Array<{ country: string; count: number }>;
+  hourly_today: Array<{ hour: number; count: number }>;
+}
+
+export interface ActivityStats {
+  period_days: number;
+  total_activities: number;
+  by_type: Array<{ type: string; count: number }>;
+  activity_trend: Array<{ date: string; count: number }>;
+}
+
+export interface FeatureUsage {
+  period_days: number;
+  total_usage: number;
+  features: Array<{
+    name: string;
+    usage: number;
+    percentage: number;
+    activity_types: string[];
+  }>;
+}
+
+export const reportsAPI = {
+  // Get overview stats
+  getOverview: async (days: number = 7): Promise<OverviewStats> => {
+    const response = await api.get('/reports/overview', { params: { days } });
+    return response.data;
+  },
+
+  // Get user stats
+  getUserStats: async (days: number = 30): Promise<UserStats> => {
+    const response = await api.get('/reports/users', { params: { days } });
+    return response.data;
+  },
+
+  // Get case stats
+  getCaseStats: async (days: number = 30): Promise<CaseStats> => {
+    const response = await api.get('/reports/cases', { params: { days } });
+    return response.data;
+  },
+
+  // Get login stats
+  getLoginStats: async (days: number = 7): Promise<LoginStats> => {
+    const response = await api.get('/reports/logins', { params: { days } });
+    return response.data;
+  },
+
+  // Get activity stats
+  getActivityStats: async (days: number = 7): Promise<ActivityStats> => {
+    const response = await api.get('/reports/activity', { params: { days } });
+    return response.data;
+  },
+
+  // Get feature usage
+  getFeatureUsage: async (days: number = 30): Promise<FeatureUsage> => {
+    const response = await api.get('/reports/feature-usage', { params: { days } });
+    return response.data;
+  },
+
+  // Export report
+  exportReport: async (reportType: string, days: number = 30): Promise<Blob> => {
+    const response = await api.get(`/reports/export/${reportType}`, {
+      params: { days },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
 // Export default api instance
 export default api;
