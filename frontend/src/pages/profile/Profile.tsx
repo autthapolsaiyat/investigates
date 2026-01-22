@@ -3,6 +3,7 @@
  * User can view and edit their profile information
  */
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   User, 
   Mail, 
@@ -17,7 +18,8 @@ import {
   Briefcase,
   Clock,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Key
 } from 'lucide-react';
 import { Card, Button, Input } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
@@ -320,7 +322,7 @@ export const Profile = () => {
           </Card>
 
           {/* Subscription */}
-          {subscriptionStatus && (
+          {subscriptionStatus ? (
             <Card className="p-6">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                 <CreditCard size={16} />
@@ -346,6 +348,33 @@ export const Profile = () => {
                   })}
                 </div>
               </div>
+              
+              <Link
+                to="/app/activate"
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-colors text-sm font-medium"
+              >
+                <Key size={16} />
+                ต่ออายุด้วย License Key
+              </Link>
+            </Card>
+          ) : (
+            <Card className="p-6">
+              <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                <CreditCard size={16} />
+                การสมัครสมาชิก
+              </h3>
+              
+              <div className="p-3 rounded-lg bg-dark-700/50">
+                <p className="text-sm text-dark-400">ยังไม่มี Subscription</p>
+              </div>
+              
+              <Link
+                to="/app/activate"
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                <Key size={16} />
+                เปิดใช้งาน License Key
+              </Link>
             </Card>
           )}
 
