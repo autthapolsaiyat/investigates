@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Bell, Plus, Send, Users, Mail, AlertCircle, CheckCircle, Trash2, Edit2,
+  Bell, Plus, Send, Users, CheckCircle, Trash2, Edit2,
   RefreshCw, Eye, EyeOff, X, Clock, TrendingUp, MessageSquare
 } from 'lucide-react';
 import { Card, Button, Input } from '../../components/ui';
