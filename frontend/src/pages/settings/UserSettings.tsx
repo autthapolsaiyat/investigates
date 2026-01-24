@@ -13,21 +13,96 @@ import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { Theme, Language, DateFormat } from '../../store/settingsStore';
 import { settingsAPI, authAPI } from '../../services/api';
-import { useTranslation } from '../../utils/translations';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
 
 type TabType = 'profile' | 'security' | 'appearance' | 'language';
 
 interface TabInfo {
   id: TabType;
-  label: string;
+  labelTh: string;
+  labelEn: string;
   icon: React.ReactNode;
 }
+
+// Inline translations
+const translations = {
+  th: {
+    settings: 'ตั้งค่า',
+    settingsDesc: 'จัดการบัญชีและการตั้งค่าแอปพลิเคชัน',
+    profile: 'โปรไฟล์',
+    security: 'ความปลอดภัย',
+    appearance: 'การแสดงผล',
+    language: 'ภาษา',
+    profileSettings: 'ข้อมูลโปรไฟล์',
+    firstName: 'ชื่อ',
+    lastName: 'นามสกุล',
+    email: 'อีเมล',
+    phone: 'เบอร์โทรศัพท์',
+    department: 'แผนก',
+    position: 'ตำแหน่ง',
+    save: 'บันทึก',
+    saveChanges: 'บันทึกการเปลี่ยนแปลง',
+    changesSaved: 'บันทึกสำเร็จ',
+    securitySettings: 'ความปลอดภัย',
+    changePassword: 'เปลี่ยนรหัสผ่าน',
+    currentPassword: 'รหัสผ่านปัจจุบัน',
+    newPassword: 'รหัสผ่านใหม่',
+    confirmPassword: 'ยืนยันรหัสผ่านใหม่',
+    passwordChanged: 'เปลี่ยนรหัสผ่านสำเร็จ',
+    passwordMismatch: 'รหัสผ่านไม่ตรงกัน',
+    passwordTooShort: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
+    appearanceSettings: 'การแสดงผล',
+    theme: 'ธีม',
+    lightTheme: 'สว่าง',
+    darkTheme: 'มืด',
+    systemTheme: 'ตามระบบ',
+    languageSettings: 'ภาษาและภูมิภาค',
+    selectLanguage: 'เลือกภาษา',
+    timezone: 'เขตเวลา',
+    dateFormat: 'รูปแบบวันที่',
+  },
+  en: {
+    settings: 'Settings',
+    settingsDesc: 'Manage your account and application settings',
+    profile: 'Profile',
+    security: 'Security',
+    appearance: 'Appearance',
+    language: 'Language',
+    profileSettings: 'Profile Settings',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    email: 'Email',
+    phone: 'Phone',
+    department: 'Department',
+    position: 'Position',
+    save: 'Save',
+    saveChanges: 'Save Changes',
+    changesSaved: 'Changes Saved',
+    securitySettings: 'Security Settings',
+    changePassword: 'Change Password',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm Password',
+    passwordChanged: 'Password Changed Successfully',
+    passwordMismatch: 'Passwords do not match',
+    passwordTooShort: 'Password must be at least 8 characters',
+    appearanceSettings: 'Appearance Settings',
+    theme: 'Theme',
+    lightTheme: 'Light',
+    darkTheme: 'Dark',
+    systemTheme: 'System',
+    languageSettings: 'Language & Region',
+    selectLanguage: 'Select Language',
+    timezone: 'Timezone',
+    dateFormat: 'Date Format',
+  },
+};
 
 export default function UserSettings() {
   const { user, updateUser } = useAuthStore();
   const settings = useSettingsStore();
-  const tr = useTranslation(settings.language);
+  const lang = settings.language || 'th';
+  const t = translations[lang];
   
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [saving, setSaving] = useState(false);
@@ -84,7 +159,7 @@ export default function UserSettings() {
 
   const loadSettings = async () => {
     try {
-      const data = await settingsAPI.get();
+      const data = await settingsAPI.getSettings();
       if (data.theme) settings.setTheme(data.theme as Theme);
       if (data.language) settings.setLanguage(data.language as Language);
       if (data.timezone) settings.setTimezone(data.timezone);
@@ -95,10 +170,10 @@ export default function UserSettings() {
   };
 
   const tabs: TabInfo[] = [
-    { id: 'profile', label: tr.t('profile'), icon: <User size={18} /> },
-    { id: 'security', label: tr.t('security'), icon: <Shield size={18} /> },
-    { id: 'appearance', label: tr.t('appearance'), icon: <Palette size={18} /> },
-    { id: 'language', label: tr.t('language'), icon: <Globe size={18} /> },
+    { id: 'profile', labelTh: 'โปรไฟล์', labelEn: 'Profile', icon: <User size={18} /> },
+    { id: 'security', labelTh: 'ความปลอดภัย', labelEn: 'Security', icon: <Shield size={18} /> },
+    { id: 'appearance', labelTh: 'การแสดงผล', labelEn: 'Appearance', icon: <Palette size={18} /> },
+    { id: 'language', labelTh: 'ภาษา', labelEn: 'Language', icon: <Globe size={18} /> },
   ];
 
   // Save profile
@@ -122,18 +197,22 @@ export default function UserSettings() {
     setPasswordError(null);
     
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      setPasswordError(tr.t('passwordMismatch'));
+      setPasswordError(t.passwordMismatch);
       return;
     }
     
     if (passwordForm.new_password.length < 8) {
-      setPasswordError(tr.t('passwordTooShort'));
+      setPasswordError(t.passwordTooShort);
       return;
     }
     
     setSaving(true);
     try {
-      await settingsAPI.changePassword(passwordForm.current_password, passwordForm.new_password);
+      await settingsAPI.changePassword({
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password,
+        confirm_password: passwordForm.confirm_password,
+      });
       setPasswordSuccess(true);
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
       setTimeout(() => setPasswordSuccess(false), 3000);
@@ -162,7 +241,7 @@ export default function UserSettings() {
     setSaving(true);
     try {
       const result = await settingsAPI.uploadAvatar(avatarPreview);
-      updateUser({ avatar_url: result.avatar_url });
+      updateUser({ avatar_url: result.avatar_data || undefined });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: any) {
@@ -177,7 +256,7 @@ export default function UserSettings() {
     settings.setTheme(theme);
     settings.applyTheme();
     try {
-      await settingsAPI.update({ theme });
+      await settingsAPI.updateSettings({ theme });
     } catch (err) {
       console.error('Failed to save theme:', err);
     }
@@ -187,7 +266,7 @@ export default function UserSettings() {
   const handleLanguageChange = async (language: Language) => {
     settings.setLanguage(language);
     try {
-      await settingsAPI.update({ language });
+      await settingsAPI.updateSettings({ language });
     } catch (err) {
       console.error('Failed to save language:', err);
     }
@@ -197,7 +276,7 @@ export default function UserSettings() {
   const handleTimezoneChange = async (timezone: string) => {
     settings.setTimezone(timezone);
     try {
-      await settingsAPI.update({ timezone });
+      await settingsAPI.updateSettings({ timezone });
     } catch (err) {
       console.error('Failed to save timezone:', err);
     }
@@ -207,13 +286,13 @@ export default function UserSettings() {
   const handleDateFormatChange = async (dateFormat: DateFormat) => {
     settings.setDateFormat(dateFormat);
     try {
-      await settingsAPI.update({ date_format: dateFormat });
+      await settingsAPI.updateSettings({ date_format: dateFormat });
     } catch (err) {
       console.error('Failed to save date format:', err);
     }
   };
 
-  const ThemeOption = ({ id: _id, theme, icon, label, selected }: { id: string; theme: Theme; icon: React.ReactNode; label: string; selected: boolean }) => (
+  const ThemeOption = ({ theme, icon, label, selected }: { theme: Theme; icon: React.ReactNode; label: string; selected: boolean }) => (
     <button
       onClick={() => handleThemeChange(theme)}
       className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
@@ -230,8 +309,8 @@ export default function UserSettings() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">{tr.t('settings')}</h1>
-      <p className="text-dark-400 mb-6">{tr.t('settingsDescription')}</p>
+      <h1 className="text-2xl font-bold mb-2">{t.settings}</h1>
+      <p className="text-dark-400 mb-6">{t.settingsDesc}</p>
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar */}
@@ -248,7 +327,7 @@ export default function UserSettings() {
                 }`}
               >
                 {tab.icon}
-                <span>{tab.label}</span>
+                <span>{lang === 'th' ? tab.labelTh : tab.labelEn}</span>
               </button>
             ))}
           </Card>
@@ -260,7 +339,7 @@ export default function UserSettings() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold mb-4">{tr.t('profileSettings')}</h2>
+                <h2 className="text-lg font-semibold mb-4">{t.profileSettings}</h2>
                 
                 {error && (
                   <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
@@ -272,7 +351,7 @@ export default function UserSettings() {
                 {saveSuccess && (
                   <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm flex items-center gap-2">
                     <Check size={16} />
-                    {tr.t('changesSaved')}
+                    {t.changesSaved}
                   </div>
                 )}
 
@@ -304,7 +383,7 @@ export default function UserSettings() {
                     <div className="flex gap-2">
                       <Button size="sm" onClick={handleAvatarUpload} disabled={saving}>
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                        {tr.t('save')}
+                        {t.save}
                       </Button>
                       <Button size="sm" variant="secondary" onClick={() => setAvatarPreview(user?.avatar_url || null)}>
                         <X size={14} />
@@ -316,39 +395,39 @@ export default function UserSettings() {
                 {/* Form */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('firstName')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.firstName}</label>
                     <Input
                       value={profileForm.first_name}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfileForm({ ...profileForm, first_name: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('lastName')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.lastName}</label>
                     <Input
                       value={profileForm.last_name}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfileForm({ ...profileForm, last_name: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('email')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.email}</label>
                     <Input value={user?.email || ''} disabled className="bg-dark-800" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('phone')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.phone}</label>
                     <Input
                       value={profileForm.phone}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfileForm({ ...profileForm, phone: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('department')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.department}</label>
                     <Input
                       value={profileForm.department}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfileForm({ ...profileForm, department: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('position')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.position}</label>
                     <Input
                       value={profileForm.position}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfileForm({ ...profileForm, position: e.target.value })}
@@ -358,7 +437,7 @@ export default function UserSettings() {
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
                   {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : <Save size={16} className="mr-2" />}
-                  {tr.t('saveChanges')}
+                  {t.saveChanges}
                 </Button>
               </div>
             )}
@@ -366,11 +445,11 @@ export default function UserSettings() {
             {/* Security Tab */}
             {activeTab === 'security' && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold mb-4">{tr.t('securitySettings')}</h2>
+                <h2 className="text-lg font-semibold mb-4">{t.securitySettings}</h2>
                 
                 {/* Change Password */}
                 <div className="space-y-4">
-                  <h3 className="font-medium">{tr.t('changePassword')}</h3>
+                  <h3 className="font-medium">{t.changePassword}</h3>
                   
                   {passwordError && (
                     <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
@@ -382,12 +461,12 @@ export default function UserSettings() {
                   {passwordSuccess && (
                     <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm flex items-center gap-2">
                       <Check size={16} />
-                      {tr.t('passwordChanged')}
+                      {t.passwordChanged}
                     </div>
                   )}
                   
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('currentPassword')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.currentPassword}</label>
                     <div className="relative">
                       <Input
                         type={showPasswords.current ? 'text' : 'password'}
@@ -406,7 +485,7 @@ export default function UserSettings() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('newPassword')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.newPassword}</label>
                     <div className="relative">
                       <Input
                         type={showPasswords.new ? 'text' : 'password'}
@@ -425,7 +504,7 @@ export default function UserSettings() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-1">{tr.t('confirmPassword')}</label>
+                    <label className="block text-sm font-medium mb-1">{t.confirmPassword}</label>
                     <div className="relative">
                       <Input
                         type={showPasswords.confirm ? 'text' : 'password'}
@@ -449,7 +528,7 @@ export default function UserSettings() {
                     disabled={saving || !passwordForm.current_password || !passwordForm.new_password || !passwordForm.confirm_password}
                   >
                     {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-                    {tr.t('changePassword')}
+                    {t.changePassword}
                   </Button>
                 </div>
                 
@@ -463,30 +542,27 @@ export default function UserSettings() {
             {/* Appearance Tab */}
             {activeTab === 'appearance' && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold mb-4">{tr.t('appearanceSettings')}</h2>
+                <h2 className="text-lg font-semibold mb-4">{t.appearanceSettings}</h2>
                 
                 <div>
-                  <h3 className="font-medium mb-4">{tr.t('theme')}</h3>
+                  <h3 className="font-medium mb-4">{t.theme}</h3>
                   <div className="grid grid-cols-3 gap-4">
                     <ThemeOption
-                      id="theme-light"
                       theme="light"
                       icon={<Sun size={24} className="text-yellow-400" />}
-                      label={tr.t('lightTheme')}
+                      label={t.lightTheme}
                       selected={settings.theme === 'light'}
                     />
                     <ThemeOption
-                      id="theme-dark"
                       theme="dark"
                       icon={<Moon size={24} className="text-blue-400" />}
-                      label={tr.t('darkTheme')}
+                      label={t.darkTheme}
                       selected={settings.theme === 'dark'}
                     />
                     <ThemeOption
-                      id="theme-system"
                       theme="system"
                       icon={<Monitor size={24} className="text-gray-400" />}
-                      label={tr.t('systemTheme')}
+                      label={t.systemTheme}
                       selected={settings.theme === 'system'}
                     />
                   </div>
@@ -497,11 +573,11 @@ export default function UserSettings() {
             {/* Language Tab */}
             {activeTab === 'language' && (
               <div className="space-y-6">
-                <h2 className="text-lg font-semibold mb-4">{tr.t('languageSettings')}</h2>
+                <h2 className="text-lg font-semibold mb-4">{t.languageSettings}</h2>
                 
                 {/* Language Selection */}
                 <div>
-                  <h3 className="font-medium mb-3">{tr.t('selectLanguage')}</h3>
+                  <h3 className="font-medium mb-3">{t.selectLanguage}</h3>
                   <div className="flex gap-4">
                     <button
                       onClick={() => handleLanguageChange('th')}
@@ -532,7 +608,7 @@ export default function UserSettings() {
 
                 {/* Timezone */}
                 <div>
-                  <h3 className="font-medium mb-3">{tr.t('timezone')}</h3>
+                  <h3 className="font-medium mb-3">{t.timezone}</h3>
                   <select
                     value={settings.timezone}
                     onChange={(e) => handleTimezoneChange(e.target.value)}
@@ -550,14 +626,14 @@ export default function UserSettings() {
 
                 {/* Date Format */}
                 <div>
-                  <h3 className="font-medium mb-3">{tr.t('dateFormat')}</h3>
+                  <h3 className="font-medium mb-3">{t.dateFormat}</h3>
                   <div className="flex flex-wrap gap-3">
                     {(['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'] as DateFormat[]).map((format) => (
                       <button
                         key={format}
                         onClick={() => handleDateFormatChange(format)}
                         className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                          settings.dateFormat === format
+                          settings.date_format === format
                             ? 'border-primary-500 bg-primary-500/10 text-primary-400'
                             : 'border-dark-700 hover:border-dark-600'
                         }`}
