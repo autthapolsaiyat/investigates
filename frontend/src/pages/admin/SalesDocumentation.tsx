@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/ui';
 import { useSettingsStore } from '../../store/settingsStore';
-import { useTranslation } from '../../utils/translations';
+
 
 type TabType = 'security' | 'faq' | 'deployment';
 
@@ -93,14 +93,6 @@ const CopyButton = ({ text }: { text: string }) => {
 };
 
 // Code Block Component
-const CodeBlock = ({ children }: { children: string }) => (
-  <div className="relative bg-dark-900 rounded-lg p-3 font-mono text-sm overflow-x-auto">
-    <div className="absolute top-2 right-2">
-      <CopyButton text={children} />
-    </div>
-    <pre className="text-green-400">{children}</pre>
-  </div>
-);
 
 // Stat Card Component
 const StatCard = ({ icon: Icon, label, value, color }: { 
@@ -122,7 +114,7 @@ const StatCard = ({ icon: Icon, label, value, color }: {
 
 export const SalesDocumentation = () => {
   const { language } = useSettingsStore();
-  const tr = useTranslation(language);
+  
   const [activeTab, setActiveTab] = useState<TabType>('security');
 
   const tabs = [
