@@ -6,12 +6,10 @@
 import { useState } from 'react';
 import { 
   Shield, HelpCircle, Server, Lock, Database, Cloud, 
-  Monitor, Key, ChevronDown, ChevronRight, Copy, Check,
-  AlertTriangle, Clock, HardDrive, Globe, Building
+  Monitor, Key, ChevronDown, ChevronRight,
+  AlertTriangle, Clock, HardDrive, Globe, Building, Check
 } from 'lucide-react';
 import { Card } from '../../components/ui';
-import { useSettingsStore } from '../../store/settingsStore';
-
 
 type TabType = 'security' | 'faq' | 'deployment';
 
@@ -71,11 +69,25 @@ const FAQItem = ({ question, answer }: { question: string; answer: React.ReactNo
   );
 };
 
-// Copy Button Component
+// Stat Card Component
+const StatCard = ({ icon: Icon, label, value, color }: { 
+  icon: React.ElementType; 
+  label: string; 
+  value: string;
+  color: string;
+}) => (
+  <div className={`bg-dark-700 rounded-lg p-4 border-l-4 ${color}`}>
+    <div className="flex items-center gap-3">
+      <Icon size={24} className="text-dark-400" />
+      <div>
+        <p className="text-sm text-dark-400">{label}</p>
+        <p className="font-bold text-lg">{value}</p>
+      </div>
+    </div>
+  </div>
+);
 
 export const SalesDocumentation = () => {
-  useSettingsStore();
-  
   const [activeTab, setActiveTab] = useState<TabType>('security');
 
   const tabs = [
