@@ -19,7 +19,8 @@ import {
   Trash2,
   Bug,
   Map,
-  Key
+  Key,
+  BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -64,6 +65,7 @@ const adminNavSections = [
     items: [
       { to: '/admin/notifications', icon: Bell, label: 'Notifications' },
       { to: '/admin/reports', icon: FileText, label: 'System Reports' },
+      { to: '/admin/sales-docs', icon: BookOpen, label: 'Sales Docs' },
       { to: '/admin/settings', icon: Settings, label: 'Settings' },
     ]
   },

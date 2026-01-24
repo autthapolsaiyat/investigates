@@ -37,6 +37,7 @@ import { DeletedCases } from './pages/admin/DeletedCases';
 import { SupportTickets } from './pages/admin/SupportTickets';
 import { LoginMap } from './pages/admin/LoginMap';
 import { LicenseManagement } from './pages/admin/LicenseManagement';
+import { SalesDocumentation } from './pages/admin/SalesDocumentation';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -96,6 +97,7 @@ function App() {
           <Route path="reports" element={<SystemReportsPage />} />
           <Route path="support-tickets" element={<SupportTickets />} />
           <Route path="login-map" element={<LoginMap />} />
+          <Route path="sales-docs" element={<SalesDocumentation />} />
         </Route>
         
         {/* Legacy routes redirect to /app */}
