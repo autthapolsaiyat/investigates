@@ -15,6 +15,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 import type { Theme, Language, DateFormat } from '../../store/settingsStore';
 import { settingsAPI, authAPI } from '../../services/api';
 import { useTranslation } from '../../utils/translations';
+import TwoFactorSetup from '../../components/TwoFactorSetup';
 
 type TabType = 'profile' | 'notifications' | 'security' | 'appearance' | 'language';
 
@@ -602,14 +603,7 @@ export const Settings = () => {
                 
                 {/* 2FA Section */}
                 <div className="border-t border-dark-700 pt-6">
-                  <h3 className="font-medium mb-2">{tr.t('twoFactorAuth')}</h3>
-                  <p className="text-dark-400 text-sm mb-4">
-                    {tr.t('twoFactorAuthDesc')}
-                  </p>
-                  <Button variant="secondary" disabled>
-                    {tr.t('enable2FA')}
-                    <span className="ml-2 text-xs bg-dark-600 px-2 py-0.5 rounded">Coming Soon</span>
-                  </Button>
+                  <TwoFactorSetup language={settings.language} />
                 </div>
               </div>
             )}
