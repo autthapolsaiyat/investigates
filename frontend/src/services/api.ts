@@ -1393,5 +1393,135 @@ export const reportsAPI = {
   },
 };
 
+// ============== Settings API ==============
+
+export interface UserSettingsResponse {
+  id: number;
+  user_id: number;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  case_updates: boolean;
+  weekly_report: boolean;
+  ticket_updates: boolean;
+  system_announcements: boolean;
+  theme: string;
+  sidebar_collapsed: boolean;
+  language: string;
+  timezone: string;
+  date_format: string;
+  avatar_data: string | null;
+  avatar_filename: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationPreferences {
+  email_notifications: boolean;
+  push_notifications: boolean;
+  case_updates: boolean;
+  weekly_report: boolean;
+  ticket_updates: boolean;
+  system_announcements: boolean;
+}
+
+export interface AppearanceSettings {
+  theme: string;
+  sidebar_collapsed: boolean;
+}
+
+export interface LanguageSettings {
+  language: string;
+  timezone: string;
+  date_format: string;
+}
+
+export interface AvatarResponse {
+  avatar_data: string | null;
+  filename: string | null;
+}
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export const settingsAPI = {
+  // Get all settings
+  getSettings: async (): Promise<UserSettingsResponse> => {
+    const response = await api.get('/settings');
+    return response.data;
+  },
+
+  // Update all settings
+  updateSettings: async (data: Partial<UserSettingsResponse>): Promise<UserSettingsResponse> => {
+    const response = await api.patch('/settings', data);
+    return response.data;
+  },
+
+  // Get notification preferences
+  getNotifications: async (): Promise<NotificationPreferences> => {
+    const response = await api.get('/settings/notifications');
+    return response.data;
+  },
+
+  // Update notification preferences
+  updateNotifications: async (data: Partial<NotificationPreferences>): Promise<NotificationPreferences> => {
+    const response = await api.patch('/settings/notifications', data);
+    return response.data;
+  },
+
+  // Get appearance settings
+  getAppearance: async (): Promise<AppearanceSettings> => {
+    const response = await api.get('/settings/appearance');
+    return response.data;
+  },
+
+  // Update appearance settings
+  updateAppearance: async (data: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
+    const response = await api.patch('/settings/appearance', data);
+    return response.data;
+  },
+
+  // Get language settings
+  getLanguage: async (): Promise<LanguageSettings> => {
+    const response = await api.get('/settings/language');
+    return response.data;
+  },
+
+  // Update language settings
+  updateLanguage: async (data: Partial<LanguageSettings>): Promise<LanguageSettings> => {
+    const response = await api.patch('/settings/language', data);
+    return response.data;
+  },
+
+  // Change password
+  changePassword: async (data: ChangePasswordRequest): Promise<{ message: string }> => {
+    const response = await api.post('/settings/change-password', data);
+    return response.data;
+  },
+
+  // Get avatar
+  getAvatar: async (): Promise<AvatarResponse> => {
+    const response = await api.get('/settings/avatar');
+    return response.data;
+  },
+
+  // Upload avatar
+  uploadAvatar: async (avatarData: string, filename?: string): Promise<AvatarResponse> => {
+    const response = await api.post('/settings/avatar', {
+      avatar_data: avatarData,
+      filename: filename || 'avatar.png',
+    });
+    return response.data;
+  },
+
+  // Delete avatar
+  deleteAvatar: async (): Promise<{ message: string }> => {
+    const response = await api.delete('/settings/avatar');
+    return response.data;
+  },
+};
+
 // Export default api instance
 export default api;
