@@ -302,7 +302,7 @@ export default function TwoFactorAdmin() {
                           {t.enabled}
                         </Badge>
                       ) : (
-                        <Badge variant="secondary">
+                        <Badge variant="default">
                           <ShieldOff className="w-3 h-3 mr-1" />
                           {t.disabled}
                         </Badge>

@@ -4,9 +4,9 @@
  */
 import { useState, useEffect } from 'react';
 import { Shield, ShieldCheck, ShieldOff, Copy, Check, RefreshCw, AlertCircle, Key, Smartphone } from 'lucide-react';
-import { Button, Input, Card } from '../../components/ui';
-import { twoFactorAPI } from '../../services/api';
-import type { TwoFAStatus, TwoFASetupResponse } from '../../services/api';
+import { Button, Input } from './ui';
+import { twoFactorAPI } from '../services/api';
+import type { TwoFAStatus, TwoFASetupResponse } from '../services/api';
 
 interface TwoFactorSetupProps {
   language?: 'th' | 'en';
@@ -293,7 +293,7 @@ export default function TwoFactorSetup({ language = 'th' }: TwoFactorSetupProps)
             <Input
               type="text"
               value={verifyCode}
-              onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="000000"
               className="font-mono text-center text-lg tracking-widest"
               maxLength={6}
@@ -333,7 +333,7 @@ export default function TwoFactorSetup({ language = 'th' }: TwoFactorSetupProps)
           <Input
             type="password"
             value={disablePassword}
-            onChange={(e) => setDisablePassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDisablePassword(e.target.value)}
             placeholder="••••••••"
           />
         </div>
@@ -343,7 +343,7 @@ export default function TwoFactorSetup({ language = 'th' }: TwoFactorSetupProps)
           <Input
             type="text"
             value={disableCode}
-            onChange={(e) => setDisableCode(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDisableCode(e.target.value)}
             placeholder="000000 หรือ XXXX-XXXX"
           />
         </div>
