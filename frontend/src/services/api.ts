@@ -765,7 +765,7 @@ export const registrationAPI = {
 
   // Admin: List all registrations
   list: async (params?: RegistrationListParams): Promise<PaginatedResponse<RegistrationRequest>> => {
-    const response = await api.get('/registrations', { params });
+    const response = await api.get('/registrations/', { params });
     return response.data;
   },
 
