@@ -2,7 +2,7 @@
  * Sidebar Component
  * Navigation sidebar organized by workflow
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -22,11 +22,12 @@ import {
   RefreshCw,
   BookOpen,
   Bug,
-  CreditCard
+  CreditCard,
+  Bell,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
-import { casesAPI, supportAPI, type Case } from '../../services/api';
+import { casesAPI, supportAPI, notificationsAPI, type Case, type UserNotificationItem } from '../../services/api';
 import { CreateTicketModal } from '../../pages/support/CreateTicketModal';
 
 
@@ -77,6 +78,110 @@ const SubscriptionBadge = ({ subscriptionEnd }: { subscriptionEnd: string }) => 
   );
 };
 
+
+// Notification Bell Component
+const NotificationBell = () => {
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<UserNotificationItem[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await notificationsAPI.getUnreadCount();
+      setUnreadCount(response.unread_count);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await notificationsAPI.getMyNotifications(10);
+      setNotifications(response.items || []);
+      setUnreadCount(response.unread_count || 0);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      await notificationsAPI.markAsRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) fetchNotifications();
+  }, [isOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 rounded-lg hover:bg-dark-700 transition-colors relative"
+        title="การแจ้งเตือน"
+      >
+        <Bell size={18} className="text-dark-400" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute bottom-full left-0 mb-2 w-80 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50">
+          <div className="p-3 border-b border-dark-700 flex items-center justify-between">
+            <h3 className="text-sm font-medium text-white">การแจ้งเตือน</h3>
+            {unreadCount > 0 && (
+              <span className="text-xs text-primary-400">{unreadCount} ยังไม่อ่าน</span>
+            )}
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-4 text-center text-dark-400 text-sm">ไม่มีการแจ้งเตือน</div>
+            ) : (
+              notifications.map(n => (
+                <div
+                  key={n.id}
+                  onClick={() => !n.is_read && handleMarkAsRead(n.id)}
+                  className={`p-3 border-b border-dark-700 cursor-pointer hover:bg-dark-700 ${!n.is_read ? 'bg-primary-500/5' : ''}`}
+                >
+                  <p className={`text-sm ${!n.is_read ? 'text-white font-medium' : 'text-dark-300'}`}>{n.title}</p>
+                  <p className="text-xs text-dark-400 mt-1 line-clamp-2">{n.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 // Map routes to count keys
 const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'locations'> = {
   '/app/money-flow': 'moneyFlow',
@@ -84,8 +189,6 @@ const routeCountMap: Record<string, 'moneyFlow' | 'crypto' | 'calls' | 'location
   '/app/call-analysis': 'calls',
   '/app/location-timeline': 'locations',
 };
-
-// จัดเรียงตาม Flow: สร้างคดี → นำเข้าข้อมูล → วิเคราะห์ → ขอข้อมูลเพิ่ม → สรุปผล → รายงาน
 
 const navSections = [
   {
@@ -135,7 +238,6 @@ const navSections = [
   },
 ];
 
-// Admin roles that can see admin panel link
 const ADMIN_ROLES = ['super_admin', 'admin'];
 
 export const Sidebar = () => {
@@ -143,16 +245,13 @@ export const Sidebar = () => {
   const { user, logout } = useAuthStore();
   const { dataCounts, selectedCaseId, selectedCase, setSelectedCase, fetchDataCounts, isLoadingCounts } = useCaseStore();
   
-  // Case selector state
   const [cases, setCases] = useState<Case[]>([]);
   const [isLoadingCases, setIsLoadingCases] = useState(true);
   const [isCaseDropdownOpen, setIsCaseDropdownOpen] = useState(false);
   
-  // Support ticket state
   const [unreadTickets, setUnreadTickets] = useState(0);
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
 
-  // Fetch unread ticket count
   const fetchUnreadTickets = async () => {
     try {
       const response = await supportAPI.getUnreadCount();
@@ -162,32 +261,27 @@ export const Sidebar = () => {
     }
   };
 
-  // Fetch unread count on mount and periodically
   useEffect(() => {
     fetchUnreadTickets();
-    const interval = setInterval(fetchUnreadTickets, 60000); // Every minute
+    const interval = setInterval(fetchUnreadTickets, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Refresh counts
   const handleRefreshCounts = () => {
     if (selectedCaseId) {
       fetchDataCounts(selectedCaseId);
     }
   };
 
-  // Fetch cases on mount
   useEffect(() => {
     const fetchCases = async () => {
       try {
         const response = await casesAPI.list({ page: 1, page_size: 100 });
         setCases(response.items);
         
-        // Auto-select first case if none selected
         if (response.items.length > 0 && !selectedCaseId) {
           setSelectedCase(response.items[0].id, response.items[0]);
         } else if (selectedCaseId && !selectedCase) {
-          // Restore case from ID
           const found = response.items.find(c => c.id === selectedCaseId);
           if (found) setSelectedCase(found.id, found);
         }
@@ -210,14 +304,12 @@ export const Sidebar = () => {
     navigate('/login');
   };
 
-  // Get count for a route
   const getCount = (route: string): number | null => {
     const countKey = routeCountMap[route];
     if (!countKey || !selectedCaseId) return null;
     return dataCounts[countKey];
   };
 
-  // Format count for display
   const formatCount = (count: number | null): string | null => {
     if (count === null) return null;
     if (count === 0) return null;
@@ -257,7 +349,6 @@ export const Sidebar = () => {
             <ChevronDown size={14} className={`text-dark-400 transition-transform flex-shrink-0 ${isCaseDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Dropdown */}
           {isCaseDropdownOpen && (
             <div className="absolute z-50 w-full mt-1 bg-dark-800 border border-dark-600 rounded-lg shadow-xl max-h-[300px] overflow-y-auto">
               {cases.length > 0 ? cases.map(c => (
@@ -280,7 +371,6 @@ export const Sidebar = () => {
           )}
         </div>
         
-        {/* Refresh Button */}
         {selectedCaseId && (
           <button
             onClick={handleRefreshCounts}
@@ -340,7 +430,6 @@ export const Sidebar = () => {
           </div>
         ))}
 
-        {/* Admin Panel Link (Only for admin roles) */}
         {user?.role && ADMIN_ROLES.includes(user.role) && (
           <div className="mt-6">
             <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-3">Admin</p>
@@ -409,28 +498,28 @@ export const Sidebar = () => {
         </NavLink>
       </div>
 
-      {/* User Info */}
+      {/* User Info with Notification Bell */}
       <div className="p-4 border-t border-dark-700">
-        <NavLink
-          to="/app/profile"
-          className={({ isActive }) =>
-            `flex items-center gap-3 mb-3 p-2 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary-500/20'
-                : 'hover:bg-dark-700'
-            }`
-          }
-        >
-          <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-            {user?.email?.charAt(0) || 'A'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user?.full_name || user?.email || 'User'}</p>
-            <p className="text-xs text-dark-400 truncate">{user?.role || 'investigator'}</p>
-          </div>
-        </NavLink>
+        <div className="flex items-center gap-2 mb-3">
+          <NavLink
+            to="/app/profile"
+            className={({ isActive }) =>
+              `flex-1 flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                isActive ? 'bg-primary-500/20' : 'hover:bg-dark-700'
+              }`
+            }
+          >
+            <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+              {user?.email?.charAt(0) || 'A'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{user?.full_name || user?.email || 'User'}</p>
+              <p className="text-xs text-dark-400 truncate">{user?.role || 'investigator'}</p>
+            </div>
+          </NavLink>
+          <NotificationBell />
+        </div>
         
-        {/* Subscription Status */}
         {user?.subscription_end && (
           <div className="mb-3 p-2 bg-dark-700/50 rounded-lg">
             <SubscriptionBadge subscriptionEnd={user.subscription_end} />
@@ -446,7 +535,6 @@ export const Sidebar = () => {
         </button>
       </div>
 
-      {/* Create Ticket Modal */}
       <CreateTicketModal
         isOpen={isCreateTicketOpen}
         onClose={() => setIsCreateTicketOpen(false)}
