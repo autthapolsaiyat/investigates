@@ -127,16 +127,32 @@ export const useSettingsStore = create<SettingsState>()(
       // Apply theme to document
       applyTheme: () => {
         const { theme } = get();
-        const root = document.documentElement;
+        const html = document.documentElement;
+        const body = document.body;
+        
+        // Remove existing theme classes
+        html.classList.remove('light', 'dark');
+        body.classList.remove('light', 'dark');
+        
+        let effectiveTheme = theme;
         
         if (theme === 'system') {
+          // Check system preference
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          root.classList.toggle('dark', prefersDark);
-          root.classList.toggle('light', !prefersDark);
-        } else {
-          root.classList.toggle('dark', theme === 'dark');
-          root.classList.toggle('light', theme === 'light');
+          effectiveTheme = prefersDark ? 'dark' : 'light';
         }
+        
+        // Apply theme class to both html and body
+        if (effectiveTheme === 'light') {
+          html.classList.add('light');
+          body.classList.add('light');
+        } else {
+          html.classList.add('dark');
+          body.classList.add('dark');
+        }
+        
+        // Store in localStorage for immediate load on next visit
+        localStorage.setItem('theme', theme);
       },
       
       // Load settings from API

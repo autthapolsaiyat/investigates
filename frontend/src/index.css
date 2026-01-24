@@ -1,7 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ========================================
+   Theme Colors - CSS Variables
+   ======================================== */
+
 @theme {
+  /* Primary Colors (Blue) */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-200: #bfdbfe;
@@ -14,6 +19,7 @@
   --color-primary-900: #1e3a8a;
   --color-primary-950: #172554;
   
+  /* Dark Theme Colors (Default) */
   --color-dark-50: #f8fafc;
   --color-dark-100: #f1f5f9;
   --color-dark-200: #e2e8f0;
@@ -27,7 +33,300 @@
   --color-dark-950: #020617;
 }
 
+/* ========================================
+   Theme Variables - Semantic Colors
+   ======================================== */
+
+:root {
+  /* Default: Dark Theme */
+  --bg-primary: #020617;      /* dark-950 */
+  --bg-secondary: #0f172a;    /* dark-900 */
+  --bg-tertiary: #1e293b;     /* dark-800 */
+  --bg-card: #1e293b;         /* dark-800 */
+  --bg-hover: #334155;        /* dark-700 */
+  --bg-input: #334155;        /* dark-700 */
+  
+  --text-primary: #f1f5f9;    /* dark-100 */
+  --text-secondary: #94a3b8;  /* dark-400 */
+  --text-muted: #64748b;      /* dark-500 */
+  --text-inverse: #020617;    /* dark-950 */
+  
+  --border-color: #334155;    /* dark-700 */
+  --border-light: #475569;    /* dark-600 */
+  
+  --sidebar-bg: #0f172a;      /* dark-900 */
+  --sidebar-hover: #1e293b;   /* dark-800 */
+  
+  --scrollbar-bg: #1e293b;
+  --scrollbar-thumb: #475569;
+}
+
+/* Light Theme */
+:root.light, .light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;    /* slate-50 */
+  --bg-tertiary: #f1f5f9;     /* slate-100 */
+  --bg-card: #ffffff;
+  --bg-hover: #e2e8f0;        /* slate-200 */
+  --bg-input: #ffffff;
+  
+  --text-primary: #0f172a;    /* slate-900 */
+  --text-secondary: #475569;  /* slate-600 */
+  --text-muted: #64748b;      /* slate-500 */
+  --text-inverse: #f8fafc;
+  
+  --border-color: #e2e8f0;    /* slate-200 */
+  --border-light: #cbd5e1;    /* slate-300 */
+  
+  --sidebar-bg: #f8fafc;
+  --sidebar-hover: #e2e8f0;
+  
+  --scrollbar-bg: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
 body {
-  @apply bg-dark-950 text-dark-100 antialiased;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ========================================
+   Theme-aware Component Overrides
+   ======================================== */
+
+/* Cards */
+.light .bg-dark-800 {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color);
+}
+
+.light .bg-dark-900 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.light .bg-dark-950 {
+  background-color: var(--bg-primary) !important;
+}
+
+.light .bg-dark-700 {
+  background-color: var(--bg-hover) !important;
+}
+
+.light .bg-dark-600 {
+  background-color: var(--border-light) !important;
+}
+
+/* Text Colors */
+.light .text-white {
+  color: var(--text-primary) !important;
+}
+
+.light .text-dark-100 {
+  color: var(--text-primary) !important;
+}
+
+.light .text-dark-200 {
+  color: var(--text-primary) !important;
+}
+
+.light .text-dark-300 {
+  color: var(--text-secondary) !important;
+}
+
+.light .text-dark-400 {
+  color: var(--text-secondary) !important;
+}
+
+.light .text-dark-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Borders */
+.light .border-dark-700 {
+  border-color: var(--border-color) !important;
+}
+
+.light .border-dark-600 {
+  border-color: var(--border-light) !important;
+}
+
+/* Sidebar */
+.light aside,
+.light [class*="sidebar"] {
+  background-color: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--border-color);
+}
+
+.light aside:hover,
+.light [class*="sidebar"]:hover {
+  background-color: var(--sidebar-bg) !important;
+}
+
+/* Inputs */
+.light input,
+.light select,
+.light textarea {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: var(--color-primary-500) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Buttons */
+.light button:not([class*="primary"]):not([class*="bg-primary"]) {
+  color: var(--text-primary);
+}
+
+/* Hover states */
+.light .hover\:bg-dark-700:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.light .hover\:bg-dark-800:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.light .hover\:text-white:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Dropdown menus */
+.light [class*="dropdown"],
+.light [class*="menu"],
+.light [role="menu"] {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Tables */
+.light table {
+  background-color: var(--bg-card);
+}
+
+.light th {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.light td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.light tr:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* Modals */
+.light [class*="modal"],
+.light [role="dialog"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ========================================
+   Transition for Theme Switch
+   ======================================== */
+
+* {
+  transition: background-color 0.2s ease, 
+              border-color 0.2s ease,
+              color 0.15s ease;
+}
+
+/* Disable transition during theme switch to prevent flash */
+.theme-transition-disable * {
+  transition: none !important;
+}
+
+/* ========================================
+   Additional Light Theme Fixes
+   ======================================== */
+
+/* Stats cards */
+.light .bg-primary-500\/10 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.light .bg-green-500\/10 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+.light .bg-yellow-500\/10 {
+  background-color: rgba(234, 179, 8, 0.1) !important;
+}
+
+.light .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Badge colors stay the same */
+.light .bg-primary-500,
+.light .bg-green-500,
+.light .bg-yellow-500,
+.light .bg-red-500 {
+  /* Keep original colors */
+}
+
+/* Focus rings */
+.light *:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* Selection */
+.light ::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: var(--text-primary);
+}
+
+::selection {
+  background-color: rgba(59, 130, 246, 0.5);
+  color: white;
 }
