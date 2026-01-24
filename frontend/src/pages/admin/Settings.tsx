@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { Button, Input, Card } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
-import { useSettingsStore, Theme, Language, DateFormat } from '../../store/settingsStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import type { Theme, Language, DateFormat } from '../../store/settingsStore';
 import { settingsAPI, authAPI } from '../../services/api';
 import { useTranslation } from '../../utils/translations';
 
@@ -58,7 +59,7 @@ const NotificationItem = ({
 
 // Theme Option Component
 const ThemeOption = ({ 
-  id, 
+  id: _id, 
   label, 
   icon: Icon, 
   selected, 
