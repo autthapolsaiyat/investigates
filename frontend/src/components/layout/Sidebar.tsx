@@ -498,6 +498,23 @@ export const Sidebar = () => {
         </NavLink>
       </div>
 
+      {/* Settings Button */}
+      <div className="px-4 py-2 border-t border-dark-700">
+        <NavLink
+          to="/app/settings"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 w-full rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-500/20 text-primary-400'
+                : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+            }`
+          }
+        >
+          <Settings size={18} />
+          <span className="text-sm">ตั้งค่า</span>
+        </NavLink>
+      </div>
+
       {/* User Info with Notification Bell */}
       <div className="p-4 border-t border-dark-700">
         <div className="flex items-center gap-2 mb-3">

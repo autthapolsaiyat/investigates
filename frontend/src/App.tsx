@@ -21,6 +21,7 @@ import { LandingPage } from './pages/landing';
 import { MyTickets } from './pages/support/MyTickets';
 import { Profile } from './pages/profile';
 import { ActivateLicense } from './pages/activate';
+import { UserSettings } from './pages/settings';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboard';
@@ -75,6 +76,7 @@ function App() {
           <Route path="crypto" element={<CryptoTracker />} />
           <Route path="my-tickets" element={<MyTickets />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<UserSettings />} />
           <Route path="guide" element={<UserGuide />} />
           <Route path="activate" element={<ActivateLicense />} />
         </Route>
