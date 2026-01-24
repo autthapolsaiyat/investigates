@@ -72,48 +72,9 @@ const FAQItem = ({ question, answer }: { question: string; answer: React.ReactNo
 };
 
 // Copy Button Component
-const CopyButton = ({ text }: { text: string }) => {
-  const [copied, setCopied] = useState(false);
-  
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  
-  return (
-    <button
-      onClick={handleCopy}
-      className="p-1 hover:bg-dark-600 rounded transition-colors"
-      title="Copy"
-    >
-      {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} className="text-dark-400" />}
-    </button>
-  );
-};
-
-// Code Block Component
-
-// Stat Card Component
-const StatCard = ({ icon: Icon, label, value, color }: { 
-  icon: React.ElementType; 
-  label: string; 
-  value: string;
-  color: string;
-}) => (
-  <div className={`bg-dark-700 rounded-lg p-4 border-l-4 ${color}`}>
-    <div className="flex items-center gap-3">
-      <Icon size={24} className="text-dark-400" />
-      <div>
-        <p className="text-sm text-dark-400">{label}</p>
-        <p className="font-bold text-lg">{value}</p>
-      </div>
-    </div>
-  </div>
-);
 
 export const SalesDocumentation = () => {
-  const { language } = useSettingsStore();
+  useSettingsStore();
   
   const [activeTab, setActiveTab] = useState<TabType>('security');
 
