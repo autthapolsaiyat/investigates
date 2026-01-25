@@ -519,6 +519,19 @@ export const Users = () => {
               <option value="super_admin">Super Admin</option>
             </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Organization</label>
+            <select
+              className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
+              value={formData.organization_id}
+              onChange={(e) => setFormData({ ...formData, organization_id: Number(e.target.value) })}
+            >
+              <option value={0}>Select organization</option>
+              {organizations.map(org => (
+                <option key={org.id} value={org.id}>{org.name}</option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
