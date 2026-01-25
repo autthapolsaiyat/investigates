@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import {
   Plus,
+  Minus,
   Search,
   Briefcase,
   Calendar,
@@ -324,6 +325,16 @@ interface CreateModalProps {
   editingCase?: Case | null;
 }
 
+// Quick amount presets (in THB)
+const AMOUNT_PRESETS = [
+  { value: 10000, label: '10K' },
+  { value: 100000, label: '100K' },
+  { value: 500000, label: '500K' },
+  { value: 1000000, label: '1M' },
+  { value: 10000000, label: '10M' },
+  { value: 20000000, label: '20M' },
+];
+
 const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -331,10 +342,16 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
     description: editingCase?.description || '',
     case_type: editingCase?.case_type || 'fraud',
     priority: editingCase?.priority || 'medium',
-    total_amount: editingCase?.total_amount?.toString() || '0',
-    victims_count: editingCase?.victims_count?.toString() || '0',
-    suspects_count: editingCase?.suspects_count?.toString() || '0'
+    total_amount: editingCase?.total_amount || 0,
+    victims_count: editingCase?.victims_count || 0,
+    suspects_count: editingCase?.suspects_count || 0
   });
+
+  const formatNumber = (num: number) => num.toLocaleString('en-US');
+  
+  const addAmount = (add: number) => {
+    setFormData(prev => ({ ...prev, total_amount: Math.max(0, prev.total_amount + add) }));
+  };
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -346,9 +363,9 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
     try {
       await onSave({
         ...formData,
-        total_amount: parseFloat(formData.total_amount) || 0,
-        victims_count: parseInt(formData.victims_count) || 0,
-        suspects_count: parseInt(formData.suspects_count) || 0
+        total_amount: formData.total_amount || 0,
+        victims_count: formData.victims_count || 0,
+        suspects_count: formData.suspects_count || 0
       });
       onClose();
     } catch (error) {
@@ -359,14 +376,37 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
     }
   };
 
+  // Counter component
+  const Counter = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (
+    <div>
+      <label className="text-sm text-dark-400 mb-1 block">{label}</label>
+      <div className="flex items-center gap-1">
+        <button type="button" onClick={() => onChange(Math.max(0, value - 10))}
+          className="px-2 py-2 bg-dark-700 hover:bg-dark-600 rounded-l-lg text-dark-300 hover:text-white text-xs">-10</button>
+        <button type="button" onClick={() => onChange(Math.max(0, value - 1))}
+          className="px-2 py-2 bg-dark-700 hover:bg-dark-600 text-dark-300 hover:text-white">
+          <Minus size={12} />
+        </button>
+        <input type="number" value={value} onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+          className="w-14 bg-dark-900 border-y border-dark-700 px-2 py-2 text-white text-center text-sm" />
+        <button type="button" onClick={() => onChange(value + 1)}
+          className="px-2 py-2 bg-dark-700 hover:bg-dark-600 text-dark-300 hover:text-white">
+          <Plus size={12} />
+        </button>
+        <button type="button" onClick={() => onChange(value + 10)}
+          className="px-2 py-2 bg-dark-700 hover:bg-dark-600 rounded-r-lg text-dark-300 hover:text-white text-xs">+10</button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-lg border border-dark-600">
+      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-lg border border-dark-600 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-dark-700 flex items-center justify-between">
+        <div className="p-6 border-b border-dark-700 flex items-center justify-between sticky top-0 bg-dark-800 z-10">
           <h2 className="text-xl font-semibold text-white">
-            {editingCase ? 'EditCases' : 'Create New Case'}
+            {editingCase ? 'Edit Case' : 'Create New Case'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
             <X size={20} className="text-dark-400" />
@@ -389,8 +429,8 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="DescriptionCases..."
-              rows={3}
+              placeholder="Case description..."
+              rows={2}
               className="w-full bg-dark-900 border border-dark-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-primary-500"
             />
           </div>
@@ -422,34 +462,66 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm text-dark-400 mb-1 block">Amount (THB)</label>
-              <Input
+          {/* Amount Section with Quick Buttons */}
+          <div className="bg-dark-700/50 rounded-lg p-4 space-y-3">
+            <label className="text-sm text-dark-400 flex items-center gap-1">
+              <DollarSign size={14} />
+              Amount (THB)
+            </label>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-primary-400">฿</span>
+              <input
                 type="number"
                 value={formData.total_amount}
-                onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-                placeholder="0"
+                onChange={(e) => setFormData({ ...formData, total_amount: parseFloat(e.target.value) || 0 })}
+                className="flex-1 bg-dark-600 border border-dark-500 rounded-lg px-3 py-2 text-white text-xl font-bold focus:border-primary-500 focus:outline-none"
               />
             </div>
-            <div>
-              <label className="text-sm text-dark-400 mb-1 block">Victims</label>
-              <Input
-                type="number"
-                value={formData.victims_count}
-                onChange={(e) => setFormData({ ...formData, victims_count: e.target.value })}
-                placeholder="0"
-              />
+
+            {formData.total_amount > 0 && (
+              <div className="text-sm text-primary-400 text-right font-medium">
+                ฿{formatNumber(formData.total_amount)}
+              </div>
+            )}
+
+            {/* Quick Amount Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {AMOUNT_PRESETS.map(preset => (
+                <button key={preset.value} type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, total_amount: preset.value }))}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    formData.total_amount === preset.value
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-dark-600 text-dark-300 hover:bg-dark-500 hover:text-white'
+                  }`}>
+                  {preset.label}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="text-sm text-dark-400 mb-1 block">Suspects</label>
-              <Input
-                type="number"
-                value={formData.suspects_count}
-                onChange={(e) => setFormData({ ...formData, suspects_count: e.target.value })}
-                placeholder="0"
-              />
+
+            {/* Increment Buttons */}
+            <div className="flex items-center gap-2 pt-2 border-t border-dark-600">
+              <span className="text-xs text-dark-500">Adjust:</span>
+              <button type="button" onClick={() => addAmount(-100000)}
+                className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-xs">-100K</button>
+              <button type="button" onClick={() => addAmount(-10000)}
+                className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-xs">-10K</button>
+              <button type="button" onClick={() => addAmount(10000)}
+                className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs">+10K</button>
+              <button type="button" onClick={() => addAmount(100000)}
+                className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs">+100K</button>
+              <button type="button" onClick={() => addAmount(1000000)}
+                className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs">+1M</button>
             </div>
+          </div>
+
+          {/* Victims & Suspects Counters */}
+          <div className="grid grid-cols-2 gap-4">
+            <Counter label="Victims" value={formData.victims_count}
+              onChange={(v) => setFormData(prev => ({ ...prev, victims_count: v }))} />
+            <Counter label="Suspects" value={formData.suspects_count}
+              onChange={(v) => setFormData(prev => ({ ...prev, suspects_count: v }))} />
           </div>
         </div>
 
