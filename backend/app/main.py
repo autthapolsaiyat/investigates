@@ -72,6 +72,9 @@ routers_to_load = [
     ("evidence", "app.routers.evidence", "router"),
     ("login_history", "app.routers.login_history", "router"),
     ("licenses", "app.routers.licenses", "router"),
+    ("call_records", "app.routers.call_records", "router"),
+    ("locations", "app.routers.locations", "router"),
+    ("crypto_transactions", "app.routers.crypto_transactions", "router"),
 ]
 
 for name, module_path, router_attr in routers_to_load:

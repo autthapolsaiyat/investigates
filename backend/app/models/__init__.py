@@ -10,6 +10,9 @@ from app.models.money_flow import MoneyFlowNode, MoneyFlowEdge, NodeType
 from app.models.registration import RegistrationRequest, RegistrationStatus
 from app.models.session import UserSession
 from app.models.login_history import LoginHistory
+from app.models.call_record import CallRecord, CallEntity, CallLink, CallType
+from app.models.location import LocationPoint, LocationCluster, LocationSource
+from app.models.crypto import CryptoTransaction, CryptoWallet, BlockchainType, RiskFlag
 
 __all__ = [
     "Organization",
@@ -24,5 +27,19 @@ __all__ = [
     "RegistrationRequest",
     "RegistrationStatus",
     "UserSession",
-    "LoginHistory"
+    "LoginHistory",
+    # Call Analysis
+    "CallRecord",
+    "CallEntity",
+    "CallLink",
+    "CallType",
+    # Location
+    "LocationPoint",
+    "LocationCluster",
+    "LocationSource",
+    # Crypto
+    "CryptoTransaction",
+    "CryptoWallet",
+    "BlockchainType",
+    "RiskFlag"
 ]

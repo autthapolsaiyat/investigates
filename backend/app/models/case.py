@@ -90,5 +90,18 @@ class Case(Base):
     money_flow_nodes = relationship("MoneyFlowNode", back_populates="case", cascade="all, delete-orphan")
     money_flow_edges = relationship("MoneyFlowEdge", back_populates="case", cascade="all, delete-orphan")
     
+    # Call Analysis relationships
+    call_records = relationship("CallRecord", back_populates="case", cascade="all, delete-orphan")
+    call_entities = relationship("CallEntity", back_populates="case", cascade="all, delete-orphan")
+    call_links = relationship("CallLink", back_populates="case", cascade="all, delete-orphan")
+    
+    # Location relationships
+    location_points = relationship("LocationPoint", back_populates="case", cascade="all, delete-orphan")
+    location_clusters = relationship("LocationCluster", back_populates="case", cascade="all, delete-orphan")
+    
+    # Crypto relationships
+    crypto_transactions = relationship("CryptoTransaction", back_populates="case", cascade="all, delete-orphan")
+    crypto_wallets = relationship("CryptoWallet", back_populates="case", cascade="all, delete-orphan")
+    
     def __repr__(self):
         return f"<Case {self.case_number}: {self.title}>"

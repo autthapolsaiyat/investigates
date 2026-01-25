@@ -11,6 +11,9 @@ from app.routers.money_flow import router as money_flow_router
 from app.routers.registrations import router as registrations_router
 from app.routers.support import router as support_router
 from app.routers.login_history import router as login_history_router
+from app.routers.call_records import router as call_records_router
+from app.routers.locations import router as locations_router
+from app.routers.crypto_transactions import router as crypto_transactions_router
 
 __all__ = [
     "auth_router",
@@ -20,5 +23,8 @@ __all__ = [
     "money_flow_router",
     "registrations_router",
     "support_router",
-    "login_history_router"
+    "login_history_router",
+    "call_records_router",
+    "locations_router",
+    "crypto_transactions_router"
 ]

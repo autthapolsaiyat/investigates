@@ -47,7 +47,11 @@ import { useCaseStore } from '../../store/caseStore';
 import cytoscape from "cytoscape";
 // @ts-ignore
 import cytoscapeSvg from "cytoscape-svg";
-cytoscape.use(cytoscapeSvg);
+
+// Register SVG extension only once to avoid duplicate warning
+if (!cytoscape.prototype.svg) {
+  cytoscape.use(cytoscapeSvg);
+}
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
@@ -103,14 +107,8 @@ interface SuspiciousPattern {
 // DATA - Fetched from API
 // ============================================
 
-// Empty default data - will be populated from API
-const DEFAULT_CLUSTERS: Cluster[] = [
-  { id: 1, name: 'Network Boss', color: '#ef4444', entities: [], risk: 'critical', description: 'Main command group' },
-  { id: 2, name: 'Coordinator', color: '#f97316', entities: [], risk: 'high', description: 'Coordination group' },
-  { id: 3, name: 'Small Dealers', color: '#22c55e', entities: [], risk: 'medium', description: 'Retail group' },
-  { id: 4, name: 'Myanmar Production', color: '#8b5cf6', entities: [], risk: 'critical', description: 'Supplier group' },
-  { id: 5, name: 'Transport/Logistics', color: '#3b82f6', entities: [], risk: 'high', description: 'Transport group' },
-];
+// Cluster colors for auto-generated clusters
+const CLUSTER_COLORS = ['#ef4444', '#f97316', '#22c55e', '#8b5cf6', '#3b82f6', '#ec4899', '#14b8a6', '#f59e0b'];
 
 // ============================================
 // HELPERS
@@ -431,7 +429,7 @@ export const CallAnalysis = () => {
   // Data state - fetched from API
   const [entities, setEntities] = useState<Entity[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
-  const [clusters, setClusters] = useState<Cluster[]>(DEFAULT_CLUSTERS);
+  const [clusters, setClusters] = useState<Cluster[]>([]);
   const [patterns, setPatterns] = useState<SuspiciousPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [_error, setError] = useState<string | null>(null);
@@ -485,7 +483,7 @@ export const CallAnalysis = () => {
             // No data yet - this is okay
             setEntities([]);
             setLinks([]);
-            setClusters(DEFAULT_CLUSTERS);
+            setClusters([]);
             setPatterns([]);
             setIsLoading(false);
             return;
@@ -517,16 +515,14 @@ export const CallAnalysis = () => {
           metadata: l.metadata || {}
         }));
         
-        const transformedClusters: Cluster[] = data.clusters.length > 0 
-          ? data.clusters.map((c: any) => ({
-              id: c.id,
-              name: c.name,
-              color: c.color,
-              entities: c.entities || [],
-              risk: c.risk as RiskLevel,
-              description: c.description || ''
-            }))
-          : DEFAULT_CLUSTERS;
+        const transformedClusters: Cluster[] = data.clusters.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          color: c.color,
+          entities: c.entities || [],
+          risk: c.risk as RiskLevel,
+          description: c.description || ''
+        }));
         
         setEntities(transformedEntities);
         setLinks(transformedLinks);
