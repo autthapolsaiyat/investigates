@@ -507,16 +507,49 @@ export const LicenseManagement = () => {
               
               <div>
                 <label className="block text-sm text-dark-400 mb-1">จำนวนวัน</label>
-                <select
-                  value={createForm.days_valid}
-                  onChange={(e) => setCreateForm({ ...createForm, days_valid: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white"
-                >
-                  <option value={30}>30 วัน (1 เดือน)</option>
-                  <option value={90}>90 วัน (3 เดือน)</option>
-                  <option value={180}>180 วัน (6 เดือน)</option>
-                  <option value={365}>365 วัน (1 ปี)</option>
-                </select>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateForm({ ...createForm, days_valid: Math.max(1, createForm.days_valid - 30) })}
+                    className="px-3 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
+                  >
+                    -30
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="3650"
+                    value={createForm.days_valid}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      setCreateForm({ ...createForm, days_valid: Math.min(3650, Math.max(1, value)) });
+                    }}
+                    className="flex-1 px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white text-center"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCreateForm({ ...createForm, days_valid: Math.min(3650, createForm.days_valid + 30) })}
+                    className="px-3 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
+                  >
+                    +30
+                  </button>
+                </div>
+                <div className="flex justify-center gap-2 mt-2">
+                  {[30, 90, 180, 365, 730].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => setCreateForm({ ...createForm, days_valid: days })}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                        createForm.days_valid === days
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-dark-700 text-dark-300 hover:bg-dark-600'
+                      }`}
+                    >
+                      {days === 30 ? '1เดือน' : days === 90 ? '3เดือน' : days === 180 ? '6เดือน' : days === 365 ? '1ปี' : '2ปี'}
+                    </button>
+                  ))}
+                </div>
               </div>
               
               <div>
