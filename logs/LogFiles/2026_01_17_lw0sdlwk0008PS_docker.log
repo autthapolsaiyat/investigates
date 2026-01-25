@@ -1,0 +1,82 @@
+2026-01-17T12:56:09.7560091Z Container start method called.
+2026-01-17T12:56:09.7713184Z Establishing network.
+2026-01-17T12:56:09.7801071Z Pulling image: appsvc/python:3.12_20251017.5.tuxprod.
+2026-01-17T12:56:10.1281469Z Container is starting.
+2026-01-17T12:56:10.1310373Z Establishing user namespace if not established already.
+2026-01-17T12:56:10.1313381Z Establishing network if not established already.
+2026-01-17T12:56:10.1314765Z Mounting volumes.
+2026-01-17T12:56:10.1341834Z Nested mountpoint 
+2026-01-17T12:56:10.1718900Z Nested mountpoint volatile/logs
+2026-01-17T12:56:10.2112185Z Nested mountpoint 
+2026-01-17T12:56:10.2751857Z Nested mountpoint 
+2026-01-17T12:56:10.3123840Z Nested mountpoint 
+2026-01-17T12:56:10.7496976Z Creating container.
+2026-01-17T12:56:10.7578655Z Creating pipes for streaming container io.
+2026-01-17T12:56:10.7597116Z Creating stdout named pipe at /podr/container/pipe/32a138f47d6d_investigates-api/stdout_41d444ffddbb44389afb04d8dd59dd87.
+2026-01-17T12:56:10.7685138Z Successfully created stdout named pipe at: /podr/container/pipe/32a138f47d6d_investigates-api/stdout_41d444ffddbb44389afb04d8dd59dd87.
+2026-01-17T12:56:10.7697740Z Opening named pipe /podr/container/pipe/32a138f47d6d_investigates-api/stdout_41d444ffddbb44389afb04d8dd59dd87 for reading in non-blocking mode.
+2026-01-17T12:56:10.7704408Z Successfully opened named pipe: /podr/container/pipe/32a138f47d6d_investigates-api/stdout_41d444ffddbb44389afb04d8dd59dd87.
+2026-01-17T12:56:10.7793074Z Successfully removed non-blocking flag from /podr/container/pipe/32a138f47d6d_investigates-api/stdout_41d444ffddbb44389afb04d8dd59dd87.
+2026-01-17T12:56:10.7804144Z Creating stderr named pipe at /podr/container/pipe/32a138f47d6d_investigates-api/stderr_2b7bcd77542c47e88d9283ed07c76ce9.
+2026-01-17T12:56:10.7877742Z Successfully created stderr named pipe at: /podr/container/pipe/32a138f47d6d_investigates-api/stderr_2b7bcd77542c47e88d9283ed07c76ce9.
+2026-01-17T12:56:10.7878723Z Opening named pipe /podr/container/pipe/32a138f47d6d_investigates-api/stderr_2b7bcd77542c47e88d9283ed07c76ce9 for reading in non-blocking mode.
+2026-01-17T12:56:10.7879665Z Successfully opened named pipe: /podr/container/pipe/32a138f47d6d_investigates-api/stderr_2b7bcd77542c47e88d9283ed07c76ce9.
+2026-01-17T12:56:10.7880353Z Successfully removed non-blocking flag from /podr/container/pipe/32a138f47d6d_investigates-api/stderr_2b7bcd77542c47e88d9283ed07c76ce9.
+2026-01-17T12:56:10.7904496Z Creating container with image: appsvc/python:3.12_20251017.5.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.12_20251017.5.tuxprod
+2026-01-17T12:56:11.6319837Z Starting container: 32a138f47d6d_investigates-api.
+2026-01-17T12:56:11.7576568Z Starting watchers and probes.
+2026-01-17T12:56:11.7733271Z Starting metrics collection.
+2026-01-17T12:56:11.7823964Z Container is running.
+2026-01-17T12:56:12.7076532Z Container start method finished after 2904 ms.
+2026-01-17T12:57:10.0369270Z Site startup probe succeeded after 57.2574622 seconds.
+2026-01-17T12:57:10.8673951Z Site is running with deployment version: 0766719e-07b8-4bb5-b397-57ae671c32be
+2026-01-17T12:57:10.8769268Z Site started.
+2026-01-17T12:57:10.8910328Z Site is running with patch version PYTHON 3.12.12
+2026-01-17T12:57:31.0636947Z Container is terminating. Grace period: 5 seconds.
+2026-01-17T12:57:31.1408472Z Stop and delete container. Retry count = 0
+2026-01-17T12:57:31.1417150Z Stopping container: 2d0660e51fb5_investigates-api.
+2026-01-17T12:57:36.4036061Z Deleting container: 2d0660e51fb5_investigates-api. Retry count = 0
+2026-01-17T12:57:38.7697517Z Container spec TerminationMessagePolicy  path 
+2026-01-17T12:57:38.9283467Z Container is terminated. Total time elapsed: 7861 ms.
+2026-01-17T12:57:39.0079369Z Site: investigates-api stopped.
+2026-01-17T13:03:43.2163212Z Container start method called.
+2026-01-17T13:03:43.2188302Z Establishing network.
+2026-01-17T13:03:43.2195089Z Pulling image: appsvc/python:3.12_20251017.5.tuxprod.
+2026-01-17T13:03:43.6638882Z Container is starting.
+2026-01-17T13:03:43.6724243Z Establishing user namespace if not established already.
+2026-01-17T13:03:43.6726489Z Establishing network if not established already.
+2026-01-17T13:03:43.6750074Z Mounting volumes.
+2026-01-17T13:03:43.6855921Z Nested mountpoint 
+2026-01-17T13:03:43.7250352Z Nested mountpoint volatile/logs
+2026-01-17T13:03:43.7750505Z Nested mountpoint 
+2026-01-17T13:03:43.9541568Z Nested mountpoint 
+2026-01-17T13:03:43.9873639Z Nested mountpoint 
+2026-01-17T13:03:44.4094671Z Creating container.
+2026-01-17T13:03:44.4168031Z Creating pipes for streaming container io.
+2026-01-17T13:03:44.4178752Z Creating stdout named pipe at /podr/container/pipe/da4d947c4905_investigates-api/stdout_3901afbd47e5406bba45920d4b9299a6.
+2026-01-17T13:03:44.4279649Z Successfully created stdout named pipe at: /podr/container/pipe/da4d947c4905_investigates-api/stdout_3901afbd47e5406bba45920d4b9299a6.
+2026-01-17T13:03:44.4292188Z Opening named pipe /podr/container/pipe/da4d947c4905_investigates-api/stdout_3901afbd47e5406bba45920d4b9299a6 for reading in non-blocking mode.
+2026-01-17T13:03:44.4300850Z Successfully opened named pipe: /podr/container/pipe/da4d947c4905_investigates-api/stdout_3901afbd47e5406bba45920d4b9299a6.
+2026-01-17T13:03:44.4378212Z Successfully removed non-blocking flag from /podr/container/pipe/da4d947c4905_investigates-api/stdout_3901afbd47e5406bba45920d4b9299a6.
+2026-01-17T13:03:44.4379880Z Creating stderr named pipe at /podr/container/pipe/da4d947c4905_investigates-api/stderr_2b82e7f9714b4bd2b99056e3d3fb4897.
+2026-01-17T13:03:44.4381525Z Successfully created stderr named pipe at: /podr/container/pipe/da4d947c4905_investigates-api/stderr_2b82e7f9714b4bd2b99056e3d3fb4897.
+2026-01-17T13:03:44.4382568Z Opening named pipe /podr/container/pipe/da4d947c4905_investigates-api/stderr_2b82e7f9714b4bd2b99056e3d3fb4897 for reading in non-blocking mode.
+2026-01-17T13:03:44.4383599Z Successfully opened named pipe: /podr/container/pipe/da4d947c4905_investigates-api/stderr_2b82e7f9714b4bd2b99056e3d3fb4897.
+2026-01-17T13:03:44.4384442Z Successfully removed non-blocking flag from /podr/container/pipe/da4d947c4905_investigates-api/stderr_2b82e7f9714b4bd2b99056e3d3fb4897.
+2026-01-17T13:03:44.4395594Z Creating container with image: appsvc/python:3.12_20251017.5.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.12_20251017.5.tuxprod
+2026-01-17T13:03:45.3411533Z Starting container: da4d947c4905_investigates-api.
+2026-01-17T13:03:45.5437972Z Starting watchers and probes.
+2026-01-17T13:03:45.5813118Z Starting metrics collection.
+2026-01-17T13:03:45.5820866Z Container is running.
+2026-01-17T13:03:45.7449270Z Container start method finished after 2515 ms.
+2026-01-17T13:04:42.7841323Z Site startup probe succeeded after 56.8680121 seconds.
+2026-01-17T13:04:43.2256121Z Site is running with deployment version: 4320c1d7-3130-489f-ac93-ed3e0f486809
+2026-01-17T13:04:43.2337962Z Site started.
+2026-01-17T13:04:43.2374378Z Site is running with patch version PYTHON 3.12.12
+2026-01-17T13:05:03.3035776Z Container is terminating. Grace period: 5 seconds.
+2026-01-17T13:05:03.3941956Z Stop and delete container. Retry count = 0
+2026-01-17T13:05:03.3951798Z Stopping container: 32a138f47d6d_investigates-api.
+2026-01-17T13:05:08.6243872Z Deleting container: 32a138f47d6d_investigates-api. Retry count = 0
+2026-01-17T13:05:09.2649730Z Container spec TerminationMessagePolicy  path 
+2026-01-17T13:05:09.2728090Z Container is terminated. Total time elapsed: 5967 ms.
+2026-01-17T13:05:09.2767741Z Site: investigates-api stopped.

@@ -4,25 +4,9 @@ For SaaS license key management
 """
 from datetime import datetime
 from typing import Optional
-from enum import Enum as PyEnum
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
-
-
-class LicensePlanType(str, PyEnum):
-    """License plan types"""
-    BASIC = "basic"
-    PROFESSIONAL = "professional"
-    ENTERPRISE = "enterprise"
-
-
-class LicenseStatus(str, PyEnum):
-    """License key status"""
-    UNUSED = "unused"        # Not yet activated
-    ACTIVATED = "activated"  # Currently in use
-    EXPIRED = "expired"      # Subscription expired
-    REVOKED = "revoked"      # Manually revoked by admin
 
 
 class LicenseKey(Base):
@@ -33,14 +17,14 @@ class LicenseKey(Base):
     id = Column(Integer, primary_key=True, index=True)
     license_key = Column(String(50), unique=True, index=True, nullable=False)
     
-    # Plan details
-    plan_type = Column(Enum(LicensePlanType), default=LicensePlanType.PROFESSIONAL, nullable=False)
+    # Plan details - using String for SQL Server compatibility
+    plan_type = Column(String(20), default="professional", nullable=False)
     plan_name = Column(String(100), nullable=True)  # Display name
     days_valid = Column(Integer, default=365, nullable=False)  # Subscription duration
     max_users = Column(Integer, default=5, nullable=False)  # Max users allowed
     
-    # Status
-    status = Column(Enum(LicenseStatus), default=LicenseStatus.UNUSED, nullable=False)
+    # Status - using String for SQL Server compatibility
+    status = Column(String(20), default="unused", nullable=False)
     
     # Customer info (before activation)
     customer_name = Column(String(255), nullable=True)
@@ -71,7 +55,7 @@ class LicenseKey(Base):
     @property
     def is_valid(self) -> bool:
         """Check if license is currently valid"""
-        if self.status != LicenseStatus.ACTIVATED:
+        if self.status != "activated":
             return False
         if self.expires_at and datetime.utcnow() > self.expires_at:
             return False

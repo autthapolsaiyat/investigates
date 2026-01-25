@@ -1,0 +1,7 @@
+<step title="Incoming Request" date="2026-01-08T15:05:26.248" instance="644818" url="/logstream" method="GET" type="request" pid="768,1,43" Host="investigates-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.78.0 (HOMEBREW)" Accept-Encoding="identity" Authorization="Bea..." x-ms-client-request-id="74128c56-eca3-11f0-b8b2-c6eea053c943" X-ARR-LOG-ID="74128c56-eca3-11f0-b8b2-c6eea053c943" CLIENT-IP="49.228.107.136:55066" X-SITE-DEPLOYMENT-ID="investigates-api" WAS-DEFAULT-HOSTNAME="investigates-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/logstream" X-Client-IP="49.228.107.136" X-Client-Port="55066" >
+  <step title="LogStreamHandlerMiddleware.Invoke" date="2026-01-08T15:05:26.260" /><!-- duration: 65ms -->
+  <step title="Error occurred" date="2026-01-08T17:05:26.343" type="error" text="LogStreamManager: Inside TerminateClient" /><!-- duration: 43ms -->
+  <step title="Error occurred" date="2026-01-08T17:05:26.411" type="error" text="LogStreamManager: Inside Reset" /><!-- duration: 11ms -->
+  <step title="Error occurred" date="2026-01-08T17:40:26.541" type="error" text="LogStreamManager: ProcessRequest end due to timeout" /><!-- duration: 7ms -->
+  <step title="Outgoing response" date="2026-01-08T17:40:26.596" type="response" statusCode="200" statusText="OK" /><!-- duration: 8ms -->
+</step><!-- duration: 9300361ms -->

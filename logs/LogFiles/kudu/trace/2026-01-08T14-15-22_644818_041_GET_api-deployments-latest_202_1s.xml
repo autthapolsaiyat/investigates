@@ -1,0 +1,9 @@
+<step title="Incoming Request" date="2026-01-08T14:15:22.880" instance="644818" url="/api/deployments/latest" method="GET" type="request" pid="768,1,31" Accept="*/*" Host="investigates-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.78.0 (HOMEBREW)" Accept-Encoding="gzip, deflate" Authorization="Bea..." x-ms-client-request-id="711aa300-ec9c-11f0-b327-c6eea053c943" X-ARR-LOG-ID="711aa300-ec9c-11f0-b327-c6eea053c943" CLIENT-IP="49.228.107.136:52926" X-SITE-DEPLOYMENT-ID="investigates-api" WAS-DEFAULT-HOSTNAME="investigates-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest" X-Client-IP="49.228.107.136" X-Client-Port="52926" >
+  <step title="Cleanup Xml Logs" date="2026-01-08T14:15:22.889" /><!-- duration: 29ms -->
+  <step title="DeploymentService.GetResult" date="2026-01-08T14:15:22.932" >
+    <step title="DeploymentService.GetLatestDeployment" date="2026-01-08T14:15:22.946" >
+      <step title="DeploymentManager.GetResults" date="2026-01-08T14:15:22.957" /><!-- duration: 439ms -->
+    </step><!-- duration: 457ms -->
+  </step><!-- duration: 475ms -->
+  <step title="Outgoing response" date="2026-01-08T14:15:23.411" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 7ms -->
+</step><!-- duration: 556ms -->

@@ -711,7 +711,7 @@ export const SalesDocumentation = () => {
                 />
 
                 <FAQItem 
-                  question='Q10: "Can we install on our organization's server??"'
+                  question="Q10: Can we install on our organization's server?"
                   answer={
                     <div className="space-y-3">
                       <p className="text-green-400 font-bold">✅ Yes! We have On-Premises Version</p>

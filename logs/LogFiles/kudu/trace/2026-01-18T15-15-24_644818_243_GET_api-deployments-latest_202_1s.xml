@@ -1,0 +1,8 @@
+<step title="Incoming Request" date="2026-01-18T15:15:24.657" instance="644818" url="/api/deployments/latest?deployer=OneDeploy&amp;time=2026-01-18_15-15-24Z" method="GET" type="request" pid="768,1,15" Host="investigates-api.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_632f2cf547ba8128d59e8a35d428f54ef36444e6743a1a4062ffdade880fce24" Authorization="Bea..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=644818c0f7c6fe162cbfe986d6c3c34895ec19cbc74b8c6af9740bc1790bb1fe;Path=/;HttpOnly;Secure;Domain=investigates-api.scm.azurewebsites.net; ARRAffinitySameSite=644818c0f7c6fe162cbfe986d6c3c34895ec19cbc74b8c6af9740bc1790bb1fe;Path=/;HttpOnly;SameSite=None;Secure;Domain=investigates-api.scm.azurewebsites.net" Content-Length="0" X-ARR-LOG-ID="4022588d-29c0-4fe1-b79f-42deeae7080a" CLIENT-IP="52.176.124.225:42944" X-SITE-DEPLOYMENT-ID="investigates-api" WAS-DEFAULT-HOSTNAME="investigates-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=OneDeploy&amp;time=2026-01-18_15-15-24Z" X-Client-IP="52.176.124.225" X-Client-Port="42944" >
+  <step title="DeploymentService.GetResult" date="2026-01-18T15:15:24.668" >
+    <step title="DeploymentService.GetLatestDeployment" date="2026-01-18T15:15:24.672" >
+      <step title="DeploymentManager.GetResults" date="2026-01-18T15:15:24.680" /><!-- duration: 1260ms -->
+    </step><!-- duration: 1271ms -->
+  </step><!-- duration: 1291ms -->
+  <step title="Outgoing response" date="2026-01-18T15:15:25.983" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 4ms -->
+</step><!-- duration: 1333ms -->

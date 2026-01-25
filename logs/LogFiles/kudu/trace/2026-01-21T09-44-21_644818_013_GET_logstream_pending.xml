@@ -1,0 +1,5 @@
+<step title="Incoming Request" date="2026-01-21T09:44:21.233" instance="644818" url="/logstream" method="GET" type="request" pid="772,1,23" Host="investigates-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.78.0 (HOMEBREW)" Accept-Encoding="identity" Authorization="Bea..." x-ms-client-request-id="bfe47c2a-f6ad-11f0-b7ad-c6eea053c942" X-ARR-LOG-ID="bfe47c2a-f6ad-11f0-b7ad-c6eea053c942" CLIENT-IP="49.230.240.23:41338" X-SITE-DEPLOYMENT-ID="investigates-api" WAS-DEFAULT-HOSTNAME="investigates-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/logstream" X-Client-IP="49.230.240.23" X-Client-Port="41338" >
+  <step title="Cleanup Xml Logs" date="2026-01-21T09:44:21.244" >
+    <step title="Cleanup Infos" date="2026-01-21T09:44:21.303" totalFiles="381" totalCleanup="221" /><!-- duration: 60ms -->
+  </step><!-- duration: 131ms -->
+  <step title="LogStreamHandlerMiddleware.Invoke" date="2026-01-21T09:44:21.444" /><!-- duration: 533ms -->

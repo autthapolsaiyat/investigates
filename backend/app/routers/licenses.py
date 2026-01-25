@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
-from app.models.license import LicenseKey, LicenseStatus, LicensePlanType
+from app.models.license import LicenseKey
 from app.models.user import User, UserRole
 from app.models.organization import Organization
 from app.schemas.license import (
@@ -24,6 +24,10 @@ from app.schemas.license import (
 from app.utils.security import get_current_user, require_roles
 
 router = APIRouter(prefix="/licenses", tags=["Licenses"])
+
+# Valid values for validation
+VALID_PLAN_TYPES = ["basic", "professional", "enterprise"]
+VALID_STATUSES = ["unused", "activated", "expired", "revoked"]
 
 
 def generate_license_key() -> str:
@@ -40,12 +44,12 @@ def generate_license_key() -> str:
     return '-'.join(segments)
 
 
-def get_plan_name(plan_type: LicensePlanType) -> str:
+def get_plan_name(plan_type: str) -> str:
     """Get display name for plan type"""
     names = {
-        LicensePlanType.BASIC: "Basic",
-        LicensePlanType.PROFESSIONAL: "Professional",
-        LicensePlanType.ENTERPRISE: "Enterprise"
+        "basic": "Basic",
+        "professional": "Professional",
+        "enterprise": "Enterprise"
     }
     return names.get(plan_type, "Unknown")
 
@@ -80,11 +84,11 @@ def license_to_response(license: LicenseKey, db: Session) -> LicenseResponse:
     return LicenseResponse(
         id=license.id,
         license_key=license.license_key,
-        plan_type=license.plan_type.value,
+        plan_type=license.plan_type,
         plan_name=get_plan_name(license.plan_type),
         days_valid=license.days_valid,
         max_users=license.max_users,
-        status=license.status.value,
+        status=license.status,
         customer_name=license.customer_name,
         customer_contact=license.customer_contact,
         notes=license.notes,
@@ -125,28 +129,22 @@ async def list_licenses(
     
     # Status filter
     if status_filter:
-        try:
-            status_enum = LicenseStatus(status_filter)
-            query = query.filter(LicenseKey.status == status_enum)
-        except ValueError:
-            pass
+        if status_filter in VALID_STATUSES:
+            query = query.filter(LicenseKey.status == status_filter)
     
     # Plan type filter
     if plan_type:
-        try:
-            plan_enum = LicensePlanType(plan_type)
-            query = query.filter(LicenseKey.plan_type == plan_enum)
-        except ValueError:
-            pass
+        if plan_type in VALID_PLAN_TYPES:
+            query = query.filter(LicenseKey.plan_type == plan_type)
     
     # Count total
     total = query.count()
     
     # Calculate stats
-    total_unused = db.query(LicenseKey).filter(LicenseKey.status == LicenseStatus.UNUSED).count()
-    total_activated = db.query(LicenseKey).filter(LicenseKey.status == LicenseStatus.ACTIVATED).count()
-    total_expired = db.query(LicenseKey).filter(LicenseKey.status == LicenseStatus.EXPIRED).count()
-    total_revoked = db.query(LicenseKey).filter(LicenseKey.status == LicenseStatus.REVOKED).count()
+    total_unused = db.query(LicenseKey).filter(LicenseKey.status == "unused").count()
+    total_activated = db.query(LicenseKey).filter(LicenseKey.status == "activated").count()
+    total_expired = db.query(LicenseKey).filter(LicenseKey.status == "expired").count()
+    total_revoked = db.query(LicenseKey).filter(LicenseKey.status == "revoked").count()
     
     # Paginate
     licenses = query.order_by(LicenseKey.created_at.desc()) \
@@ -189,14 +187,14 @@ async def generate_license(
     # Create license
     license = LicenseKey(
         license_key=license_key,
-        plan_type=LicensePlanType(request.plan_type),
-        plan_name=get_plan_name(LicensePlanType(request.plan_type)),
+        plan_type=request.plan_type.value,
+        plan_name=get_plan_name(request.plan_type.value),
         days_valid=request.days_valid,
         max_users=request.max_users,
         customer_name=request.customer_name,
         customer_contact=request.customer_contact,
         notes=request.notes,
-        status=LicenseStatus.UNUSED,
+        status="unused",
         created_by=current_user.id
     )
     
@@ -244,13 +242,13 @@ async def revoke_license(
             detail="License not found"
         )
     
-    if license.status == LicenseStatus.REVOKED:
+    if license.status == "revoked":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="License is already revoked"
         )
     
-    license.status = LicenseStatus.REVOKED
+    license.status = "revoked"
     license.revoked_by = current_user.id
     license.revoked_at = datetime.utcnow()
     
@@ -280,11 +278,11 @@ async def activate_license(
             detail="Invalid license key"
         )
     
-    if license.status != LicenseStatus.UNUSED:
+    if license.status != "unused":
         status_messages = {
-            LicenseStatus.ACTIVATED: "License key has already been activated",
-            LicenseStatus.EXPIRED: "License key has expired",
-            LicenseStatus.REVOKED: "License key has been revoked"
+            "activated": "License key has already been activated",
+            "expired": "License key has expired",
+            "revoked": "License key has been revoked"
         }
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -295,7 +293,7 @@ async def activate_license(
     now = datetime.utcnow()
     expires_at = now + timedelta(days=license.days_valid)
     
-    license.status = LicenseStatus.ACTIVATED
+    license.status = "activated"
     license.activated_by = current_user.id
     license.activated_at = now
     license.expires_at = expires_at
@@ -341,16 +339,16 @@ async def validate_license(
             "message": "Invalid license key"
         }
     
-    if license.status == LicenseStatus.UNUSED:
+    if license.status == "unused":
         return {
             "valid": True,
             "status": "unused",
-            "plan_type": license.plan_type.value,
+            "plan_type": license.plan_type,
             "days_valid": license.days_valid,
             "message": "License key is available for activation"
         }
     
-    if license.status == LicenseStatus.ACTIVATED:
+    if license.status == "activated":
         return {
             "valid": True,
             "status": "activated",
@@ -361,8 +359,8 @@ async def validate_license(
     
     return {
         "valid": False,
-        "status": license.status.value,
-        "message": f"License key is {license.status.value}"
+        "status": license.status,
+        "message": f"License key is {license.status}"
     }
 
 
@@ -384,7 +382,7 @@ async def delete_license(
             detail="License not found"
         )
     
-    if license.status != LicenseStatus.UNUSED:
+    if license.status != "unused":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only unused licenses can be deleted"
