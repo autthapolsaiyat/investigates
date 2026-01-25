@@ -811,7 +811,6 @@ const SmartImport: React.FC = () => {
       // ============================================
       
       // Save Call Records (phone type files)
-      const phoneFiles = files.filter(f => f.type === 'phone');
       if (phoneFiles.length > 0) {
         log(`\n📞 Save Call Records...`);
         let callSuccess = 0;
@@ -912,7 +911,6 @@ const SmartImport: React.FC = () => {
       }
       
       // Save Crypto Transactions
-      const cryptoFiles = files.filter(f => f.type === 'crypto');
       if (cryptoFiles.length > 0) {
         log(`\n💰 Save Crypto Transactions...`);
         let cryptoSuccess = 0;
