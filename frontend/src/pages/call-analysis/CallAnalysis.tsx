@@ -48,9 +48,12 @@ import cytoscape from "cytoscape";
 // @ts-ignore
 import cytoscapeSvg from "cytoscape-svg";
 
-// Register SVG extension only once to avoid duplicate warning
-if (!cytoscape.prototype.svg) {
+// Register SVG extension only once using a global flag
+// @ts-ignore
+if (typeof window !== 'undefined' && !window.__cytoscapeSvgRegistered) {
   cytoscape.use(cytoscapeSvg);
+  // @ts-ignore
+  window.__cytoscapeSvgRegistered = true;
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
@@ -102,13 +105,6 @@ interface SuspiciousPattern {
   entities: string[];
   evidence: string[];
 }
-
-// ============================================
-// DATA - Fetched from API
-// ============================================
-
-// Cluster colors for auto-generated clusters
-const CLUSTER_COLORS = ['#ef4444', '#f97316', '#22c55e', '#8b5cf6', '#3b82f6', '#ec4899', '#14b8a6', '#f59e0b'];
 
 // ============================================
 // HELPERS
