@@ -1,9 +1,9 @@
 /**
  * CaseCreateModal - Create New Case
- * Updated to match backend schema
+ * Enhanced with quick amount buttons
  */
 import { useState } from 'react';
-import { X, Plus, Loader2, FileText } from 'lucide-react';
+import { X, Plus, Minus, Loader2, FileText, DollarSign, Users, UserX } from 'lucide-react';
 import { Button } from '../../components/ui';
 
 interface CaseCreateModalProps {
@@ -30,6 +30,16 @@ const PRIORITIES = [
   { value: 'critical', label: 'Critical' },
 ];
 
+// Quick amount presets (in THB)
+const AMOUNT_PRESETS = [
+  { value: 10000, label: '10K' },
+  { value: 100000, label: '100K' },
+  { value: 500000, label: '500K' },
+  { value: 1000000, label: '1M' },
+  { value: 10000000, label: '10M' },
+  { value: 20000000, label: '20M' },
+];
+
 export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +53,72 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
     victims_count: 0,
     suspects_count: 0,
   });
+
+  // Format number with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString('en-US');
+  };
+
+  // Add to amount
+  const addAmount = (add: number) => {
+    setFormData(prev => ({ ...prev, total_amount: Math.max(0, prev.total_amount + add) }));
+  };
+
+  // Counter component for Victims/Suspects
+  const Counter = ({ 
+    label, 
+    value, 
+    onChange, 
+    icon: Icon 
+  }: { 
+    label: string; 
+    value: number; 
+    onChange: (v: number) => void;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+  }) => (
+    <div>
+      <label className="block text-sm text-dark-400 mb-1 flex items-center gap-1">
+        <Icon size={14} />
+        {label}
+      </label>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 10))}
+          className="px-2 py-2 bg-dark-600 hover:bg-dark-500 rounded-l-lg text-dark-300 hover:text-white transition-colors"
+        >
+          -10
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          className="px-2 py-2 bg-dark-600 hover:bg-dark-500 text-dark-300 hover:text-white transition-colors"
+        >
+          <Minus size={14} />
+        </button>
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+          className="w-16 bg-dark-700 border-y border-dark-600 px-2 py-2 text-white text-center"
+        />
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          className="px-2 py-2 bg-dark-600 hover:bg-dark-500 text-dark-300 hover:text-white transition-colors"
+        >
+          <Plus size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(value + 10)}
+          className="px-2 py-2 bg-dark-600 hover:bg-dark-500 rounded-r-lg text-dark-300 hover:text-white transition-colors"
+        >
+          +10
+        </button>
+      </div>
+    </div>
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +134,6 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
     try {
       const token = localStorage.getItem('access_token');
       
-      // Prepare data matching backend CaseCreate schema
       const payload = {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
@@ -70,8 +145,6 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
         suspects_count: Number(formData.suspects_count) || 0,
       };
 
-      console.log('Creating case with payload:', payload);
-
       const response = await fetch('https://investigates-api.azurewebsites.net/api/v1/cases', {
         method: 'POST',
         headers: {
@@ -82,11 +155,8 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
       });
 
       if (response.ok) {
-        const newCase = await response.json();
-        console.log('Case created successfully:', newCase);
         onSuccess();
         onClose();
-        // Reset form
         setFormData({
           title: '',
           description: '',
@@ -99,11 +169,9 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
         });
       } else {
         const data = await response.json();
-        console.error('Error response:', data);
-        setError(data.detail || JSON.stringify(data) || 'Error creating case');
+        setError(data.detail || 'Error creating case');
       }
     } catch (err) {
-      console.error('Network error:', err);
       setError('Unable to connect to server');
     } finally {
       setIsLoading(false);
@@ -114,13 +182,10 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       
-      {/* Modal */}
-      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-lg border border-dark-600">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-dark-700">
+      <div className="relative bg-dark-800 rounded-xl shadow-2xl w-full max-w-lg border border-dark-600 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-dark-700 sticky top-0 bg-dark-800 z-10">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <FileText className="text-primary-400" />
             Create New Case
@@ -130,7 +195,6 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Title */}
           <div>
@@ -151,7 +215,7 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Case description..."
-              rows={3}
+              rows={2}
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none resize-none"
             />
           </div>
@@ -184,38 +248,104 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
             </div>
           </div>
 
-          {/* Financial Info */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-dark-400 mb-1">Amount (THB)</label>
+          {/* Amount Section */}
+          <div className="bg-dark-700/50 rounded-lg p-4 space-y-3">
+            <label className="text-sm text-dark-400 flex items-center gap-1">
+              <DollarSign size={14} />
+              Amount (THB)
+            </label>
+
+            {/* Amount Input with Display */}
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-primary-400">฿</span>
               <input
                 type="number"
                 value={formData.total_amount}
                 onChange={(e) => setFormData(prev => ({ ...prev, total_amount: parseFloat(e.target.value) || 0 }))}
-                placeholder="0"
-                className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
+                className="flex-1 bg-dark-600 border border-dark-500 rounded-lg px-3 py-2 text-white text-xl font-bold focus:border-primary-500 focus:outline-none"
               />
             </div>
-            <div>
-              <label className="block text-sm text-dark-400 mb-1">Victims</label>
-              <input
-                type="number"
-                value={formData.victims_count}
-                onChange={(e) => setFormData(prev => ({ ...prev, victims_count: parseInt(e.target.value) || 0 }))}
-                placeholder="0"
-                className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
-              />
+
+            {/* Formatted Display */}
+            {formData.total_amount > 0 && (
+              <div className="text-sm text-primary-400 text-right font-medium">
+                ฿{formatNumber(formData.total_amount)}
+              </div>
+            )}
+
+            {/* Quick Amount Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {AMOUNT_PRESETS.map(preset => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, total_amount: preset.value }))}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    formData.total_amount === preset.value
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-dark-600 text-dark-300 hover:bg-dark-500 hover:text-white'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="block text-sm text-dark-400 mb-1">Suspects</label>
-              <input
-                type="number"
-                value={formData.suspects_count}
-                onChange={(e) => setFormData(prev => ({ ...prev, suspects_count: parseInt(e.target.value) || 0 }))}
-                placeholder="0"
-                className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
-              />
+
+            {/* Increment Buttons */}
+            <div className="flex items-center gap-2 pt-2 border-t border-dark-600">
+              <span className="text-xs text-dark-500">Adjust:</span>
+              <button
+                type="button"
+                onClick={() => addAmount(-100000)}
+                className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-xs"
+              >
+                -100K
+              </button>
+              <button
+                type="button"
+                onClick={() => addAmount(-10000)}
+                className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-xs"
+              >
+                -10K
+              </button>
+              <button
+                type="button"
+                onClick={() => addAmount(10000)}
+                className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs"
+              >
+                +10K
+              </button>
+              <button
+                type="button"
+                onClick={() => addAmount(100000)}
+                className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs"
+              >
+                +100K
+              </button>
+              <button
+                type="button"
+                onClick={() => addAmount(1000000)}
+                className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-xs"
+              >
+                +1M
+              </button>
             </div>
+          </div>
+
+          {/* Victims & Suspects with Counters */}
+          <div className="grid grid-cols-2 gap-4">
+            <Counter
+              label="Victims"
+              value={formData.victims_count}
+              onChange={(v) => setFormData(prev => ({ ...prev, victims_count: v }))}
+              icon={Users}
+            />
+            <Counter
+              label="Suspects"
+              value={formData.suspects_count}
+              onChange={(v) => setFormData(prev => ({ ...prev, suspects_count: v }))}
+              icon={UserX}
+            />
           </div>
 
           {/* Error */}

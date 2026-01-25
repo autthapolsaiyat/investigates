@@ -18,12 +18,14 @@ import {
   Link2,
   Sparkles,
   ChevronDown,
+  ChevronUp,
   Loader2,
   RefreshCw,
   BookOpen,
   Bug,
   CreditCard,
   Bell,
+  MoreHorizontal,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
@@ -251,6 +253,7 @@ export const Sidebar = () => {
   
   const [unreadTickets, setUnreadTickets] = useState(0);
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [isBottomExpanded, setIsBottomExpanded] = useState(false);
 
   const fetchUnreadTickets = async () => {
     try {
@@ -453,103 +456,103 @@ export const Sidebar = () => {
         )}
       </nav>
 
-      {/* Help Button */}
-      <div className="px-4 py-2 border-t border-dark-700">
-        <NavLink
-          to="/app/guide"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 w-full rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary-500/20 text-primary-400'
-                : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-            }`
-          }
-        >
-          <BookOpen size={18} />
-          <span className="text-sm">User Guide</span>
-        </NavLink>
-      </div>
-
-      {/* Support Button */}
-      <div className="px-4 py-2 border-t border-dark-700">
+      {/* Collapsible Bottom Section */}
+      <div className="border-t border-dark-700">
+        {/* Toggle Button - Always visible */}
         <button
-          onClick={() => setIsCreateTicketOpen(true)}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-300 hover:bg-dark-700 hover:text-white transition-colors relative"
+          onClick={() => setIsBottomExpanded(!isBottomExpanded)}
+          className="w-full px-4 py-3 flex items-center justify-between text-dark-400 hover:text-white hover:bg-dark-700/50 transition-colors"
         >
-          <Bug size={18} />
-          <span className="text-sm">Report Issue</span>
-          {unreadTickets > 0 && (
-            <span className="ml-auto px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full min-w-[20px] text-center">
-              {unreadTickets}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <span className="text-sm truncate max-w-[120px]">{user?.email || 'User'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            {isBottomExpanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </div>
         </button>
-        <NavLink
-          to="/app/my-tickets"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 mt-1 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary-500/20 text-primary-400'
-                : 'text-dark-400 hover:bg-dark-700 hover:text-dark-300'
-            }`
-          }
-        >
-          <span className="text-sm ml-7">View All Tickets</span>
-        </NavLink>
-      </div>
 
-      {/* Settings Button */}
-      <div className="px-4 py-2 border-t border-dark-700">
-        <NavLink
-          to="/app/settings"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 w-full rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary-500/20 text-primary-400'
-                : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-            }`
-          }
-        >
-          <Settings size={18} />
-          <span className="text-sm">Settings</span>
-        </NavLink>
-      </div>
+        {/* Expandable Content */}
+        {isBottomExpanded && (
+          <div className="px-4 pb-4 space-y-1 border-t border-dark-700/50">
+            {/* User Guide */}
+            <NavLink
+              to="/app/guide"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-500/20 text-primary-400'
+                    : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+                }`
+              }
+            >
+              <BookOpen size={18} />
+              <span className="text-sm">User Guide</span>
+            </NavLink>
 
-      {/* User Info with Notification Bell */}
-      <div className="p-4 border-t border-dark-700">
-        <div className="flex items-center gap-2 mb-3">
-          <NavLink
-            to="/app/profile"
-            className={({ isActive }) =>
-              `flex-1 flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                isActive ? 'bg-primary-500/20' : 'hover:bg-dark-700'
-              }`
-            }
-          >
-            <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-              {user?.email?.charAt(0) || 'A'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.full_name || user?.email || 'User'}</p>
-              <p className="text-xs text-dark-400 truncate">{user?.role || 'investigator'}</p>
-            </div>
-          </NavLink>
-          <NotificationBell />
-        </div>
-        
-        {user?.subscription_end && (
-          <div className="mb-3 p-2 bg-dark-700/50 rounded-lg">
-            <SubscriptionBadge subscriptionEnd={user.subscription_end} />
+            {/* Report Issue */}
+            <button
+              onClick={() => setIsCreateTicketOpen(true)}
+              className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-300 hover:bg-dark-700 hover:text-white transition-colors"
+            >
+              <Bug size={18} />
+              <span className="text-sm">Report Issue</span>
+              {unreadTickets > 0 && (
+                <span className="ml-auto px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+                  {unreadTickets}
+                </span>
+              )}
+            </button>
+
+            {/* View Tickets */}
+            <NavLink
+              to="/app/my-tickets"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-500/20 text-primary-400'
+                    : 'text-dark-400 hover:bg-dark-700 hover:text-dark-300'
+                }`
+              }
+            >
+              <span className="text-sm ml-7">View All Tickets</span>
+            </NavLink>
+
+            {/* Settings */}
+            <NavLink
+              to="/app/settings"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-500/20 text-primary-400'
+                    : 'text-dark-300 hover:bg-dark-700 hover:text-white'
+                }`
+              }
+            >
+              <Settings size={18} />
+              <span className="text-sm">Settings</span>
+            </NavLink>
+
+            {/* Subscription */}
+            {user?.subscription_end && (
+              <div className="mt-2 p-2 bg-dark-700/50 rounded-lg">
+                <SubscriptionBadge subscriptionEnd={user.subscription_end} />
+              </div>
+            )}
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-400 hover:bg-dark-700 hover:text-red-400 transition-colors"
+            >
+              <LogOut size={18} />
+              <span className="text-sm">Logout</span>
+            </button>
           </div>
         )}
-        
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors w-full"
-        >
-          <LogOut size={16} />
-          <span className="text-sm">Logout</span>
-        </button>
       </div>
 
       <CreateTicketModal
