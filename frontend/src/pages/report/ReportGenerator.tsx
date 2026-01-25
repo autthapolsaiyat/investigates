@@ -1,6 +1,6 @@
 /**
- * PDF Report Generator - สร้างรายงานส่งศาล
- * มาตรฐาน Digital Forensic
+ * PDF Report Generator - Generate Court Report
+ * Digital Forensic Standard
  */
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -62,10 +62,10 @@ export const ReportGenerator = () => {
     includeConclusion: true,
     investigatorName: '',
     investigatorRank: '',
-    investigatorUnit: 'กองบังคับการปราบปรามการกระทำความผิดเกี่ยวกับอาชญากรรมทางเทคโนโลยี',
+    investigatorUnit: 'Technology Crime Suppression Division',
     reportDate: new Date().toISOString().split('T')[0],
     caseJudge: '',
-    courtName: 'ศาลอาญา'
+    courtName: 'Criminal Court'
   });
 
   const reportRef = useRef<HTMLDivElement>(null);
@@ -154,9 +154,9 @@ export const ReportGenerator = () => {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-3">
             <FileText className="text-primary-500" />
-            สร้างรายงานส่งศาล
+            Generate Court Report
           </h1>
-          <p className="text-dark-400 mt-1">PDF Report Generator - มาตรฐาน Digital Forensic</p>
+          <p className="text-dark-400 mt-1">PDF Report Generator - Digital Forensic Standard</p>
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export const ReportGenerator = () => {
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <FileCheck className="text-primary-400" />
-              เลือกคดี
+              Select Case
             </h3>
             <select
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
@@ -185,23 +185,23 @@ export const ReportGenerator = () => {
               <div className="grid grid-cols-5 gap-3 mt-4">
                 <div className="bg-dark-800 p-3 rounded-lg text-center">
                   <p className="text-lg font-bold text-red-400">{stats.totalSuspects}</p>
-                  <p className="text-xs text-dark-400">ผู้ต้องสงสัย</p>
+                  <p className="text-xs text-dark-400">Suspects</p>
                 </div>
                 <div className="bg-dark-800 p-3 rounded-lg text-center">
                   <p className="text-lg font-bold text-green-400">{stats.totalVictims}</p>
-                  <p className="text-xs text-dark-400">ผู้เสียหาย</p>
+                  <p className="text-xs text-dark-400">Victims</p>
                 </div>
                 <div className="bg-dark-800 p-3 rounded-lg text-center">
                   <p className="text-lg font-bold text-yellow-400">{stats.totalMuleAccounts}</p>
-                  <p className="text-xs text-dark-400">บัญชีม้า</p>
+                  <p className="text-xs text-dark-400">Mule Accounts</p>
                 </div>
                 <div className="bg-dark-800 p-3 rounded-lg text-center">
                   <p className="text-lg font-bold text-blue-400">{stats.totalTransactions}</p>
-                  <p className="text-xs text-dark-400">ธุรกรรม</p>
+                  <p className="text-xs text-dark-400">Transactions</p>
                 </div>
                 <div className="bg-dark-800 p-3 rounded-lg text-center">
                   <p className="text-lg font-bold text-emerald-400">{formatCurrency(stats.totalAmount)}</p>
-                  <p className="text-xs text-dark-400">มูลค่ารวม</p>
+                  <p className="text-xs text-dark-400">Total Value</p>
                 </div>
               </div>
             )}
@@ -211,19 +211,19 @@ export const ReportGenerator = () => {
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Settings className="text-primary-400" />
-              เลือกส่วนที่ต้องการในรายงาน
+              Select Report Sections
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { key: 'includeExecutiveSummary', label: 'บทสรุปผู้บริหาร', icon: FileText },
-                { key: 'includeNetworkDiagram', label: 'แผนผังเครือข่าย', icon: Shield },
-                { key: 'includeTimeline', label: 'ไทม์ไลน์เหตุการณ์', icon: Clock },
-                { key: 'includeTransactionList', label: 'รายการธุรกรรม', icon: CreditCard },
-                { key: 'includeSuspectList', label: 'รายชื่อผู้ต้องสงสัย', icon: AlertTriangle },
-                { key: 'includeVictimList', label: 'รายชื่อผู้เสียหาย', icon: User },
-                { key: 'includeEvidenceSummary', label: 'สรุปพยานหลักฐาน', icon: FileCheck },
-                { key: 'includeMethodology', label: 'วิธีการวิเคราะห์', icon: Settings },
-                { key: 'includeConclusion', label: 'บทสรุปและข้อเสนอแนะ', icon: CheckCircle2 },
+                { key: 'includeExecutiveSummary', label: 'Executive Summary', icon: FileText },
+                { key: 'includeNetworkDiagram', label: 'Network Diagram', icon: Shield },
+                { key: 'includeTimeline', label: 'Event Timeline', icon: Clock },
+                { key: 'includeTransactionList', label: 'ListTransactions', icon: CreditCard },
+                { key: 'includeSuspectList', label: 'Suspect List', icon: AlertTriangle },
+                { key: 'includeVictimList', label: 'Victim List', icon: User },
+                { key: 'includeEvidenceSummary', label: 'Evidence Summary', icon: FileCheck },
+                { key: 'includeMethodology', label: 'Analysis Methodology', icon: Settings },
+                { key: 'includeConclusion', label: 'Conclusion and Recommendations', icon: CheckCircle2 },
               ].map(item => (
                 <label key={item.key} className="flex items-center gap-3 p-3 bg-dark-800 rounded-lg cursor-pointer hover:bg-dark-750">
                   <input
@@ -243,27 +243,27 @@ export const ReportGenerator = () => {
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <User className="text-primary-400" />
-              ข้อมูลผู้จัดทำรายงาน
+              Report Author Information
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">ชื่อ-นามสกุล</label>
+                <label className="text-sm text-dark-400 mb-1 block">Name</label>
                 <Input
                   value={config.investigatorName}
                   onChange={(e) => setConfig(prev => ({ ...prev, investigatorName: e.target.value }))}
-                  placeholder="พ.ต.ท. ชื่อ นามสกุล"
+                  placeholder="Pol. Lt. Col. Name Surname"
                 />
               </div>
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">ยศ/ตำแหน่ง</label>
+                <label className="text-sm text-dark-400 mb-1 block">Rank/Position</label>
                 <Input
                   value={config.investigatorRank}
                   onChange={(e) => setConfig(prev => ({ ...prev, investigatorRank: e.target.value }))}
-                  placeholder="พนักงานสอบสวน"
+                  placeholder="Investigator"
                 />
               </div>
               <div className="col-span-2">
-                <label className="text-sm text-dark-400 mb-1 block">หน่วยงาน</label>
+                <label className="text-sm text-dark-400 mb-1 block">Organization</label>
                 <Input
                   value={config.investigatorUnit}
                   onChange={(e) => setConfig(prev => ({ ...prev, investigatorUnit: e.target.value }))}
@@ -276,19 +276,19 @@ export const ReportGenerator = () => {
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Scale className="text-primary-400" />
-              ข้อมูลศาล
+              Court Information
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">ศาล</label>
+                <label className="text-sm text-dark-400 mb-1 block">Court</label>
                 <Input
                   value={config.courtName}
                   onChange={(e) => setConfig(prev => ({ ...prev, courtName: e.target.value }))}
-                  placeholder="ศาลอาญา"
+                  placeholder="Criminal Court"
                 />
               </div>
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">วันที่จัดทำรายงาน</label>
+                <label className="text-sm text-dark-400 mb-1 block">Report Date</label>
                 <Input
                   type="date"
                   value={config.reportDate}
@@ -302,18 +302,18 @@ export const ReportGenerator = () => {
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setShowPreview(true)} disabled={!selectedCase}>
               <Eye size={18} className="mr-2" />
-              ดูตัวอย่าง
+              Preview
             </Button>
             <Button onClick={generatePDF} disabled={isGenerating || !selectedCase}>
               {isGenerating ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  กำลังสร้าง...
+                  Generating...
                 </>
               ) : (
                 <>
                   <Download size={18} className="mr-2" />
-                  สร้างรายงาน PDF
+                  Generate PDF Report
                 </>
               )}
             </Button>
@@ -325,76 +325,76 @@ export const ReportGenerator = () => {
           <Card className="p-4 sticky top-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Eye className="text-primary-400" />
-              ตัวอย่างรายงาน
+              Report Preview
             </h3>
             
             {selectedCase ? (
               <div className="bg-white text-black p-4 rounded-lg text-xs space-y-3 max-h-[600px] overflow-y-auto">
                 {/* Report Header */}
                 <div className="text-center border-b pb-3">
-                  <p className="font-bold">รายงานผลการวิเคราะห์ทางดิจิทัล</p>
+                  <p className="font-bold">Digital Analysis Report</p>
                   <p className="font-bold">Digital Forensic Analysis Report</p>
-                  <p className="text-[10px] text-gray-600 mt-1">เลขที่คดี: {selectedCase.case_number}</p>
+                  <p className="text-[10px] text-gray-600 mt-1">Case Number: {selectedCase.case_number}</p>
                 </div>
 
                 {/* Case Info */}
                 <div className="border-b pb-2">
-                  <p className="font-semibold">ข้อมูลคดี</p>
-                  <p>ชื่อคดี: {selectedCase.title}</p>
-                  <p>สถานะ: {selectedCase.status}</p>
+                  <p className="font-semibold">Case Information</p>
+                  <p>Case Name: {selectedCase.title}</p>
+                  <p>Status: {selectedCase.status}</p>
                   {stats && (
-                    <p>ช่วงเวลา: {stats.dateRange.start} - {stats.dateRange.end}</p>
+                    <p>Time Period: {stats.dateRange.start} - {stats.dateRange.end}</p>
                   )}
                 </div>
 
                 {/* Summary Stats */}
                 {stats && config.includeExecutiveSummary && (
                   <div className="border-b pb-2">
-                    <p className="font-semibold">สรุปผลการวิเคราะห์</p>
+                    <p className="font-semibold">Analysis Summary</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>ผู้ต้องสงสัย {stats.totalSuspects} ราย</li>
-                      <li>ผู้เสียหาย {stats.totalVictims} ราย</li>
-                      <li>บัญชีม้า {stats.totalMuleAccounts} บัญชี</li>
-                      <li>ธุรกรรมที่วิเคราะห์ {stats.totalTransactions} รายการ</li>
-                      <li>มูลค่าความเสียหายรวม {formatCurrency(stats.totalAmount)}</li>
+                      <li>Suspects {stats.totalSuspects} persons</li>
+                      <li>Victims {stats.totalVictims} persons</li>
+                      <li>Mule Accounts {stats.totalMuleAccounts} accounts</li>
+                      <li>Transactions Analyzed {stats.totalTransactions} List</li>
+                      <li>Total Damage Value {formatCurrency(stats.totalAmount)}</li>
                     </ul>
                   </div>
                 )}
 
                 {/* Sections Preview */}
                 <div className="space-y-2">
-                  <p className="font-semibold">สารบัญ</p>
+                  <p className="font-semibold">Table of Contents</p>
                   <ol className="list-decimal pl-4 text-[10px] space-y-0.5">
-                    {config.includeExecutiveSummary && <li>บทสรุปผู้บริหาร</li>}
-                    {config.includeNetworkDiagram && <li>แผนผังเครือข่ายอาชญากรรม</li>}
-                    {config.includeTimeline && <li>ไทม์ไลน์เหตุการณ์</li>}
-                    {config.includeSuspectList && <li>รายชื่อผู้ต้องสงสัย</li>}
-                    {config.includeVictimList && <li>รายชื่อผู้เสียหาย</li>}
-                    {config.includeTransactionList && <li>รายการธุรกรรม</li>}
-                    {config.includeEvidenceSummary && <li>สรุปพยานหลักฐาน</li>}
-                    {config.includeMethodology && <li>วิธีการวิเคราะห์</li>}
-                    {config.includeConclusion && <li>บทสรุปและข้อเสนอแนะ</li>}
+                    {config.includeExecutiveSummary && <li>Executive Summary</li>}
+                    {config.includeNetworkDiagram && <li>Criminal Network Diagram</li>}
+                    {config.includeTimeline && <li>Event Timeline</li>}
+                    {config.includeSuspectList && <li>Suspect List</li>}
+                    {config.includeVictimList && <li>Victim List</li>}
+                    {config.includeTransactionList && <li>ListTransactions</li>}
+                    {config.includeEvidenceSummary && <li>Evidence Summary</li>}
+                    {config.includeMethodology && <li>Analysis Methodology</li>}
+                    {config.includeConclusion && <li>Conclusion and Recommendations</li>}
                   </ol>
                 </div>
 
                 {/* Footer */}
                 <div className="border-t pt-2 text-center text-[10px] text-gray-500">
-                  <p>จัดทำโดย: {config.investigatorName || '[ชื่อผู้จัดทำ]'}</p>
+                  <p>Prepared by: {config.investigatorName || '[Report Author]'}</p>
                   <p>{config.investigatorUnit}</p>
-                  <p>วันที่: {formatDate(config.reportDate)}</p>
+                  <p>Date: {formatDate(config.reportDate)}</p>
                 </div>
               </div>
             ) : (
               <div className="text-center text-dark-400 py-8">
                 <FileText size={48} className="mx-auto mb-3 opacity-30" />
-                <p>เลือกคดีเพื่อดูตัวอย่าง</p>
+                <p>Select Case to Preview</p>
               </div>
             )}
 
             {reportGenerated && (
               <Button className="w-full mt-4" onClick={downloadPDF}>
                 <Printer size={18} className="mr-2" />
-                ดาวน์โหลด / พิมพ์
+                Download / Print
               </Button>
             )}
           </Card>
@@ -406,20 +406,20 @@ export const ReportGenerator = () => {
         {/* Full report content for printing */}
         <div className="p-8 text-black bg-white">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">รายงานผลการวิเคราะห์ทางดิจิทัล</h1>
+            <h1 className="text-2xl font-bold">Digital Analysis Report</h1>
             <h2 className="text-xl">Digital Forensic Analysis Report</h2>
-            <p className="mt-2">เลขที่คดี: {selectedCase?.case_number}</p>
+            <p className="mt-2">Case Number: {selectedCase?.case_number}</p>
           </div>
 
           {/* Case Information */}
           <section className="mb-6">
-            <h3 className="text-lg font-bold border-b-2 border-black pb-1 mb-3">1. ข้อมูลคดี</h3>
+            <h3 className="text-lg font-bold border-b-2 border-black pb-1 mb-3">1. Case Information</h3>
             <table className="w-full">
               <tbody>
-                <tr><td className="font-semibold w-40">ชื่อคดี:</td><td>{selectedCase?.title}</td></tr>
-                <tr><td className="font-semibold">หมายเลขคดี:</td><td>{selectedCase?.case_number}</td></tr>
-                <tr><td className="font-semibold">สถานะ:</td><td>{selectedCase?.status}</td></tr>
-                <tr><td className="font-semibold">ระดับความสำคัญ:</td><td>{selectedCase?.priority}</td></tr>
+                <tr><td className="font-semibold w-40">Case Name:</td><td>{selectedCase?.title}</td></tr>
+                <tr><td className="font-semibold">NumberCase:</td><td>{selectedCase?.case_number}</td></tr>
+                <tr><td className="font-semibold">Status:</td><td>{selectedCase?.status}</td></tr>
+                <tr><td className="font-semibold">Priority Level:</td><td>{selectedCase?.priority}</td></tr>
               </tbody>
             </table>
           </section>
@@ -427,17 +427,17 @@ export const ReportGenerator = () => {
           {/* Executive Summary */}
           {config.includeExecutiveSummary && stats && (
             <section className="mb-6">
-              <h3 className="text-lg font-bold border-b-2 border-black pb-1 mb-3">2. บทสรุปผู้บริหาร</h3>
+              <h3 className="text-lg font-bold border-b-2 border-black pb-1 mb-3">2. Executive Summary</h3>
               <p className="mb-3">
-                จากการวิเคราะห์ข้อมูลทางดิจิทัลในคดีนี้ พบหลักฐานที่บ่งชี้การกระทำความผิด
-                เกี่ยวกับการพนันออนไลน์และการฟอกเงิน โดยมีรายละเอียดดังนี้:
+                From digital data analysis in this case, evidence indicating criminal activity was found
+                related to online gambling and money laundering, with the following details:
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>ผู้ต้องสงสัยในเครือข่าย: <strong>{stats.totalSuspects}</strong> ราย</li>
-                <li>ผู้เสียหาย: <strong>{stats.totalVictims}</strong> ราย</li>
-                <li>บัญชีม้าที่ใช้ในการกระทำผิด: <strong>{stats.totalMuleAccounts}</strong> บัญชี</li>
-                <li>ธุรกรรมที่ตรวจพบ: <strong>{stats.totalTransactions}</strong> รายการ</li>
-                <li>มูลค่าความเสียหายรวม: <strong>{formatCurrency(stats.totalAmount)}</strong></li>
+                <li>Suspects in Network: <strong>{stats.totalSuspects}</strong> persons</li>
+                <li>Victims: <strong>{stats.totalVictims}</strong> persons</li>
+                <li>Mule Accounts used in crime: <strong>{stats.totalMuleAccounts}</strong> accounts</li>
+                <li>Transactions detected: <strong>{stats.totalTransactions}</strong> List</li>
+                <li>Total Damage Value: <strong>{formatCurrency(stats.totalAmount)}</strong></li>
               </ul>
             </section>
           )}
@@ -445,15 +445,15 @@ export const ReportGenerator = () => {
           {/* Suspect List */}
           {config.includeSuspectList && (
             <section className="mb-6">
-              <h3 className="text-lg font-bold border-b-2 border-black pb-1 mb-3">3. รายชื่อผู้ต้องสงสัย</h3>
+              <h3 className="text-lg font-bold border-b-2 border-black pb-1 mb-3">3. Suspect List</h3>
               <table className="w-full border-collapse border border-black text-sm">
                 <thead>
                   <tr className="bg-gray-200">
-                    <th className="border border-black p-2">ลำดับ</th>
-                    <th className="border border-black p-2">ชื่อ-นามสกุล</th>
-                    <th className="border border-black p-2">เลขประจำตัว</th>
-                    <th className="border border-black p-2">บทบาท</th>
-                    <th className="border border-black p-2">ระดับความเสี่ยง</th>
+                    <th className="border border-black p-2">No.</th>
+                    <th className="border border-black p-2">Name</th>
+                    <th className="border border-black p-2">ID Number</th>
+                    <th className="border border-black p-2">Role</th>
+                    <th className="border border-black p-2">Risk Level</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -473,11 +473,11 @@ export const ReportGenerator = () => {
 
           {/* Signature */}
           <section className="mt-12 text-center">
-            <p>ลงชื่อ ............................................. ผู้จัดทำรายงาน</p>
+            <p>Signature ............................................. Report Author</p>
             <p className="mt-1">({config.investigatorName || '..............................'})</p>
             <p>{config.investigatorRank}</p>
             <p>{config.investigatorUnit}</p>
-            <p className="mt-4">วันที่ {formatDate(config.reportDate)}</p>
+            <p className="mt-4">Date {formatDate(config.reportDate)}</p>
           </section>
         </div>
       </div>

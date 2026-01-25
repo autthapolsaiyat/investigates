@@ -101,26 +101,26 @@ interface SuspiciousPattern {
 // ============================================
 
 const SAMPLE_ENTITIES: Entity[] = [
-  // CLUSTER 1: หัวหน้าเครือข่าย
-  { id: 'P001', type: 'person', label: 'นาย ก. (Big Boss)', subLabel: 'หัวหน้าเครือข่าย', risk: 'critical', clusterId: 1, metadata: { age: 45, priors: 3 } },
-  { id: 'PH001', type: 'phone', label: '081-XXX-1111', subLabel: 'เบอร์หลัก', risk: 'critical', clusterId: 1, metadata: {} },
-  { id: 'PH002', type: 'phone', label: '082-XXX-2222', subLabel: 'เบอร์สำรอง', risk: 'high', clusterId: 1, metadata: {} },
+  // CLUSTER 1: Network Boss
+  { id: 'P001', type: 'person', label: 'Mr. A (Big Boss)', subLabel: 'Network Boss', risk: 'critical', clusterId: 1, metadata: { age: 45, priors: 3 } },
+  { id: 'PH001', type: 'phone', label: '081-XXX-1111', subLabel: 'Primary Phone', risk: 'critical', clusterId: 1, metadata: {} },
+  { id: 'PH002', type: 'phone', label: '082-XXX-2222', subLabel: 'Backup Phone', risk: 'high', clusterId: 1, metadata: {} },
   { id: 'ACC001', type: 'account', label: 'xxx-x-x1234-x', subLabel: 'KBank', risk: 'critical', clusterId: 1, metadata: { balance: 15000000 } },
-  { id: 'ADDR001', type: 'address', label: 'คอนโด ABC Tower', subLabel: 'พระราม 9', risk: 'high', clusterId: 1, metadata: {} },
+  { id: 'ADDR001', type: 'address', label: 'ABC Tower Condo', subLabel: 'Rama 9', risk: 'high', clusterId: 1, metadata: {} },
   { id: 'CRYPTO001', type: 'crypto', label: '0x7a2B...9c3D', subLabel: 'ETH Wallet', risk: 'critical', clusterId: 1, metadata: {} },
   
-  // CLUSTER 2: ผู้ประสานงาน
-  { id: 'P002', type: 'person', label: 'นาย ข. (Coordinator)', subLabel: 'ผู้ประสานงาน', risk: 'high', clusterId: 2, metadata: { age: 38 } },
-  { id: 'P003', type: 'person', label: 'น.ส. ค. (Money)', subLabel: 'ดูแลการเงิน', risk: 'high', clusterId: 2, metadata: { age: 35 } },
-  { id: 'PH003', type: 'phone', label: '083-XXX-3333', subLabel: 'เบอร์ ข.', risk: 'high', clusterId: 2, metadata: {} },
-  { id: 'PH004', type: 'phone', label: '084-XXX-4444', subLabel: 'เบอร์ ค.', risk: 'high', clusterId: 2, metadata: {} },
+  // CLUSTER 2: Coordinator
+  { id: 'P002', type: 'person', label: 'Mr. B (Coordinator)', subLabel: 'Coordinator', risk: 'high', clusterId: 2, metadata: { age: 38 } },
+  { id: 'P003', type: 'person', label: 'Ms. C (Money)', subLabel: 'Finance Manager', risk: 'high', clusterId: 2, metadata: { age: 35 } },
+  { id: 'PH003', type: 'phone', label: '083-XXX-3333', subLabel: 'Phone B', risk: 'high', clusterId: 2, metadata: {} },
+  { id: 'PH004', type: 'phone', label: '084-XXX-4444', subLabel: 'Phone C', risk: 'high', clusterId: 2, metadata: {} },
   { id: 'ACC002', type: 'account', label: 'xxx-x-x5678-x', subLabel: 'SCB', risk: 'high', clusterId: 2, metadata: {} },
-  { id: 'ORG001', type: 'organization', label: 'บ.XYZ', subLabel: 'บังหน้า', risk: 'high', clusterId: 2, metadata: {} },
+  { id: 'ORG001', type: 'organization', label: 'XYZ Co.', subLabel: 'Shell Company', risk: 'high', clusterId: 2, metadata: {} },
   
-  // CLUSTER 3: ผู้ค้ารายย่อย
-  { id: 'P004', type: 'person', label: 'นาย ง. (Dealer 1)', subLabel: 'คลองเตย', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'P005', type: 'person', label: 'นาย จ. (Dealer 2)', subLabel: 'หนองจอก', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'P006', type: 'person', label: 'น.ส. ฉ. (Dealer 3)', subLabel: 'บางกะปิ', risk: 'medium', clusterId: 3, metadata: {} },
+  // CLUSTER 3: Small Dealers
+  { id: 'P004', type: 'person', label: 'Mr. D (Dealer 1)', subLabel: 'Klong Toey', risk: 'medium', clusterId: 3, metadata: {} },
+  { id: 'P005', type: 'person', label: 'Mr. E (Dealer 2)', subLabel: 'Nong Chok', risk: 'medium', clusterId: 3, metadata: {} },
+  { id: 'P006', type: 'person', label: 'Ms. F (Dealer 3)', subLabel: 'Bang Kapi', risk: 'medium', clusterId: 3, metadata: {} },
   { id: 'PH005', type: 'phone', label: '085-XXX-5555', risk: 'medium', clusterId: 3, metadata: {} },
   { id: 'PH006', type: 'phone', label: '086-XXX-6666', risk: 'medium', clusterId: 3, metadata: {} },
   { id: 'PH007', type: 'phone', label: '087-XXX-7777', risk: 'medium', clusterId: 3, metadata: {} },
@@ -129,16 +129,16 @@ const SAMPLE_ENTITIES: Entity[] = [
   { id: 'P007', type: 'person', label: 'Mr. Z (Supplier)', subLabel: 'Myanmar', risk: 'critical', clusterId: 4, metadata: {} },
   { id: 'PH008', type: 'phone', label: '+95-XXX-8888', subLabel: 'Myanmar', risk: 'critical', clusterId: 4, metadata: {} },
   { id: 'CRYPTO002', type: 'crypto', label: 'TRX...abc123', subLabel: 'USDT', risk: 'critical', clusterId: 4, metadata: {} },
-  { id: 'ADDR002', type: 'address', label: 'Warehouse Tachileik', subLabel: 'ชายแดน', risk: 'critical', clusterId: 4, metadata: {} },
+  { id: 'ADDR002', type: 'address', label: 'Warehouse Tachileik', subLabel: 'Border', risk: 'critical', clusterId: 4, metadata: {} },
   
   // CLUSTER 5: Logistics
-  { id: 'P008', type: 'person', label: 'นาย ช. (Driver)', subLabel: 'คนขนส่ง', risk: 'medium', clusterId: 5, metadata: {} },
-  { id: 'VEH001', type: 'vehicle', label: 'กข 1234', subLabel: 'รถบรรทุก', risk: 'high', clusterId: 5, metadata: {} },
+  { id: 'P008', type: 'person', label: 'Mr. G (Driver)', subLabel: 'Transporter', risk: 'medium', clusterId: 5, metadata: {} },
+  { id: 'VEH001', type: 'vehicle', label: 'AB 1234', subLabel: 'Truck', risk: 'high', clusterId: 5, metadata: {} },
   { id: 'PH009', type: 'phone', label: '089-XXX-9999', risk: 'medium', clusterId: 5, metadata: {} },
-  { id: 'ADDR003', type: 'address', label: 'โกดังเชียงราย', subLabel: 'จุดพัก', risk: 'high', clusterId: 5, metadata: {} },
+  { id: 'ADDR003', type: 'address', label: 'Chiang Rai Warehouse', subLabel: 'Rest Stop', risk: 'high', clusterId: 5, metadata: {} },
   
   // Unknown
-  { id: 'P009', type: 'person', label: 'Unknown Male', subLabel: 'ไม่ระบุตัวตน', risk: 'unknown', metadata: {} },
+  { id: 'P009', type: 'person', label: 'Unknown Male', subLabel: 'Unidentified', risk: 'unknown', metadata: {} },
   { id: 'PH010', type: 'phone', label: '090-XXX-0000', subLabel: 'Burner', risk: 'high', metadata: {} },
 ];
 
@@ -181,19 +181,19 @@ const SAMPLE_LINKS: Link[] = [
 ];
 
 const SAMPLE_CLUSTERS: Cluster[] = [
-  { id: 1, name: 'หัวหน้าเครือข่าย', color: '#ef4444', entities: [], risk: 'critical', description: 'กลุ่มบัญชาการหลัก' },
-  { id: 2, name: 'ผู้ประสานงาน', color: '#f97316', entities: [], risk: 'high', description: 'กลุ่มประสานงาน' },
-  { id: 3, name: 'ผู้ค้ารายย่อย', color: '#22c55e', entities: [], risk: 'medium', description: 'กลุ่มค้าปลีก' },
-  { id: 4, name: 'แหล่งผลิต Myanmar', color: '#8b5cf6', entities: [], risk: 'critical', description: 'กลุ่ม Supplier' },
-  { id: 5, name: 'ขนส่ง/Logistics', color: '#3b82f6', entities: [], risk: 'high', description: 'กลุ่มขนส่ง' },
+  { id: 1, name: 'Network Boss', color: '#ef4444', entities: [], risk: 'critical', description: 'Main command group' },
+  { id: 2, name: 'Coordinator', color: '#f97316', entities: [], risk: 'high', description: 'Coordination group' },
+  { id: 3, name: 'Small Dealers', color: '#22c55e', entities: [], risk: 'medium', description: 'Retail group' },
+  { id: 4, name: 'Myanmar Production', color: '#8b5cf6', entities: [], risk: 'critical', description: 'Supplier group' },
+  { id: 5, name: 'Transport/Logistics', color: '#3b82f6', entities: [], risk: 'high', description: 'Transport group' },
 ];
 
 const SAMPLE_PATTERNS: SuspiciousPattern[] = [
-  { id: 'SP001', type: 'Burner Phone Pattern', severity: 'critical', description: 'พบการใช้เบอร์โทรศัพท์แบบใช้แล้วทิ้ง', entities: ['PH002', 'PH010', 'P009'], evidence: ['ใช้งานเพียง 3 วัน', 'โทรเฉพาะช่วงกลางคืน'] },
-  { id: 'SP002', type: 'Layered Communication', severity: 'high', description: 'การสื่อสารแบบหลายชั้น', entities: ['P001', 'P002', 'P003'], evidence: ['ไม่มีการโทรตรง Boss-Dealers'] },
-  { id: 'SP003', type: 'Crypto Money Flow', severity: 'critical', description: 'การโอนเงินผ่าน Crypto ข้ามประเทศ', entities: ['CRYPTO001', 'CRYPTO002'], evidence: ['ETH → USDT conversion'] },
-  { id: 'SP004', type: 'Timing Pattern', severity: 'medium', description: 'โทรเฉพาะช่วง 22:00-04:00', entities: ['PH003', 'PH009'], evidence: ['95% โทรหลังเที่ยงคืน'] },
-  { id: 'SP005', type: 'Shell Company', severity: 'high', description: 'บริษัทบังหน้า', entities: ['ORG001', 'P002', 'P003'], evidence: ['พนักงานจริง 2 คน'] },
+  { id: 'SP001', type: 'Burner Phone Pattern', severity: 'critical', description: 'Found disposable phone usage pattern', entities: ['PH002', 'PH010', 'P009'], evidence: ['Used for only 3 days', 'Calls only at night'] },
+  { id: 'SP002', type: 'Layered Communication', severity: 'high', description: 'Multi-layered communication', entities: ['P001', 'P002', 'P003'], evidence: ['No direct calls Boss-Dealers'] },
+  { id: 'SP003', type: 'Crypto Money Flow', severity: 'critical', description: 'Cross-border crypto money transfer', entities: ['CRYPTO001', 'CRYPTO002'], evidence: ['ETH → USDT conversion'] },
+  { id: 'SP004', type: 'Timing Pattern', severity: 'medium', description: 'Calls only during 22:00-04:00', entities: ['PH003', 'PH009'], evidence: ['95% calls after midnight'] },
+  { id: 'SP005', type: 'Shell Company', severity: 'high', description: 'Shell company', entities: ['ORG001', 'P002', 'P003'], evidence: ['Only 2 actual employees'] },
 ];
 
 // ============================================
@@ -319,7 +319,7 @@ const ClusterLegend = ({ clusters, selectedCluster, onSelectCluster, collapsed, 
     <button onClick={onToggle} className="w-full p-3 flex items-center justify-between text-sm font-semibold text-white hover:bg-dark-700 rounded-t-xl">
       <span className="flex items-center gap-2">
         <Users size={16} className="text-primary-400" />
-        กลุ่ม/เก๊ง ({clusters.length})
+        Clusters ({clusters.length})
       </span>
       {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
     </button>
@@ -329,7 +329,7 @@ const ClusterLegend = ({ clusters, selectedCluster, onSelectCluster, collapsed, 
           onClick={() => onSelectCluster(null)}
           className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCluster === null ? 'bg-primary-500/20 text-primary-400' : 'hover:bg-dark-700 text-dark-300'}`}
         >
-          ทั้งหมด
+          All
         </button>
         {clusters.map(cluster => (
           <button
@@ -365,13 +365,13 @@ const FilterPanel = ({ riskFilter, setRiskFilter, typeFilter, setTypeFilter, col
   ];
   
   const types: { type: EntityType; label: string; emoji: string }[] = [
-    { type: 'person', label: 'บุคคล', emoji: '👤' },
-    { type: 'phone', label: 'เบอร์โทร', emoji: '📱' },
-    { type: 'account', label: 'บัญชี', emoji: '🏦' },
-    { type: 'address', label: 'ที่อยู่', emoji: '🏠' },
-    { type: 'organization', label: 'องค์กร', emoji: '🏢' },
+    { type: 'person', label: 'Person', emoji: '👤' },
+    { type: 'phone', label: 'Phone', emoji: '📱' },
+    { type: 'account', label: 'Account', emoji: '🏦' },
+    { type: 'address', label: 'Address', emoji: '🏠' },
+    { type: 'organization', label: 'Organization', emoji: '🏢' },
     { type: 'crypto', label: 'Crypto', emoji: '₿' },
-    { type: 'vehicle', label: 'ยานพาหนะ', emoji: '🚗' },
+    { type: 'vehicle', label: 'Vehicle', emoji: '🚗' },
   ];
   
   return (
@@ -379,14 +379,14 @@ const FilterPanel = ({ riskFilter, setRiskFilter, typeFilter, setTypeFilter, col
       <button onClick={onToggle} className="w-full p-3 flex items-center justify-between text-sm font-semibold text-white hover:bg-dark-700 rounded-t-xl">
         <span className="flex items-center gap-2">
           <Filter size={16} className="text-primary-400" />
-          ตัวกรอง
+          Filters
         </span>
         {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
       {!collapsed && (
         <div className="p-3 pt-0 space-y-3">
           <div>
-            <p className="text-xs text-dark-400 mb-2">ระดับความเสี่ยง</p>
+            <p className="text-xs text-dark-400 mb-2">Risk Level</p>
             <div className="flex flex-wrap gap-1">
               {risks.map(r => (
                 <button
@@ -401,7 +401,7 @@ const FilterPanel = ({ riskFilter, setRiskFilter, typeFilter, setTypeFilter, col
             </div>
           </div>
           <div>
-            <p className="text-xs text-dark-400 mb-2">ประเภท Entity</p>
+            <p className="text-xs text-dark-400 mb-2">Type Entity</p>
             <div className="grid grid-cols-2 gap-1">
               {types.map(t => (
                 <button
@@ -728,7 +728,7 @@ export const CallAnalysis = () => {
               Intelligence Network Analysis
               <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded ml-2">react-cytoscapejs</span>
             </h1>
-            <p className="text-sm text-dark-400">Link Analysis - คดีเครือข่ายค้ายาเสพติด</p>
+            <p className="text-sm text-dark-400">Link Analysis - Drug Network Case</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={handleExportPNG}>
@@ -810,7 +810,7 @@ export const CallAnalysis = () => {
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-400" size={14} />
                     <input
                       type="text"
-                      placeholder="ค้นหา Entity..."
+                      placeholder="Search Entity..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-48 pl-8 pr-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-500 focus:outline-none focus:border-primary-500"
@@ -877,10 +877,10 @@ export const CallAnalysis = () => {
                 
                 {/* Instructions */}
                 <div className="absolute bottom-4 left-4 flex items-center gap-4 text-xs text-dark-500 bg-dark-900/80 px-3 py-2 rounded-lg">
-                  <span>🖱️ ลาก Node</span>
-                  <span>📍 Pan พื้นหลัง</span>
-                  <span>🔍 Scroll ซูม</span>
-                  <span>👆 คลิกเลือก</span>
+                  <span>🖱️ Drag Node</span>
+                  <span>📍 Pan Background</span>
+                  <span>🔍 Scroll Zoom</span>
+                  <span>👆 Click Select</span>
                 </div>
               </div>
               
@@ -888,11 +888,11 @@ export const CallAnalysis = () => {
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
                 <span className="text-dark-400">Link Types:</span>
                 {[
-                  { type: 'call', label: 'โทรศัพท์' },
+                  { type: 'call', label: 'Phone' },
                   { type: 'sms', label: 'SMS' },
-                  { type: 'transfer', label: 'โอนเงิน' },
-                  { type: 'meeting', label: 'พบปะ' },
-                  { type: 'business', label: 'ธุรกิจ' },
+                  { type: 'transfer', label: 'Transfer' },
+                  { type: 'meeting', label: 'Meeting' },
+                  { type: 'business', label: 'Business' },
                 ].map(item => (
                   <div key={item.type} className="flex items-center gap-1">
                     <div className="w-4 h-1 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
@@ -947,7 +947,7 @@ export const CallAnalysis = () => {
                   <Zap className="text-amber-400" />
                   AI Pattern Detection
                 </h3>
-                <p className="text-sm text-dark-400">พบ {patterns.length} รูปแบบที่น่าสงสัย</p>
+                <p className="text-sm text-dark-400">Found {patterns.length} suspicious patterns</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {patterns.map(pattern => (

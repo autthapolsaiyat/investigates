@@ -24,7 +24,7 @@ export const CaseInfoBar = ({ compact = false }: CaseInfoBarProps) => {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
@@ -35,7 +35,7 @@ export const CaseInfoBar = ({ compact = false }: CaseInfoBarProps) => {
     return (
       <div className="bg-dark-800/50 border border-dark-700 rounded-lg p-3 text-center text-dark-400 text-sm">
         <Briefcase className="inline-block w-4 h-4 mr-2" />
-        กรุณาเลือกคดีจากเมนูด้านซ้าย
+        Please select a case from the left menu
       </div>
     );
   }
@@ -86,28 +86,28 @@ export const CaseInfoBar = ({ compact = false }: CaseInfoBarProps) => {
         <div className="flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-green-400" />
           <div>
-            <p className="text-xs text-dark-400">มูลค่า</p>
+            <p className="text-xs text-dark-400">Amount</p>
             <p className="text-sm font-medium text-white">{formatCurrency(selectedCase.total_amount)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-red-400" />
           <div>
-            <p className="text-xs text-dark-400">ผู้เสียหาย</p>
-            <p className="text-sm font-medium text-white">{selectedCase.victims_count || 0} คน</p>
+            <p className="text-xs text-dark-400">Victims</p>
+            <p className="text-sm font-medium text-white">{selectedCase.victims_count || 0} people</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-orange-400" />
           <div>
-            <p className="text-xs text-dark-400">ผู้ต้องสงสัย</p>
-            <p className="text-sm font-medium text-white">{selectedCase.suspects_count || 0} คน</p>
+            <p className="text-xs text-dark-400">Suspects</p>
+            <p className="text-sm font-medium text-white">{selectedCase.suspects_count || 0} people</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-blue-400" />
           <div>
-            <p className="text-xs text-dark-400">สร้างเมื่อ</p>
+            <p className="text-xs text-dark-400">Created</p>
             <p className="text-sm font-medium text-white">{formatDate(selectedCase.created_at)}</p>
           </div>
         </div>

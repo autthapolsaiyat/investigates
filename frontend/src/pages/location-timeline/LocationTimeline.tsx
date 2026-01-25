@@ -1,6 +1,6 @@
 /**
  * LocationTimeline - Location Tracking & Timeline Visualization
- * แสดงการเคลื่อนที่ของเป้าหมายบนแผนที่พร้อมไทม์ไลน์
+ * Display target movement on map with timeline
  */
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
@@ -48,7 +48,7 @@ const DEMO_LOCATIONS: LocationPoint[] = [
     label: 'Glen Park Library',
     source: 'gps',
     address: '2825 Diamond St, San Francisco, CA',
-    notes: 'สถานที่จับกุม Ross Ulbricht',
+    notes: 'Ross Ulbricht arrest location',
     personName: 'Ross Ulbricht',
   },
   {
@@ -59,7 +59,7 @@ const DEMO_LOCATIONS: LocationPoint[] = [
     label: 'Bernal Heights Coffee',
     source: 'wifi',
     address: 'Bernal Heights, San Francisco, CA',
-    notes: 'ใช้ WiFi สาธารณะ',
+    notes: 'Using public WiFi',
     personName: 'Ross Ulbricht',
   },
   {
@@ -67,10 +67,10 @@ const DEMO_LOCATIONS: LocationPoint[] = [
     lat: 37.7649,
     lng: -122.4294,
     timestamp: new Date('2013-10-01T10:00:00'),
-    label: 'ที่พักอาศัย',
+    label: 'Residence',
     source: 'gps',
     address: '15th Street, San Francisco, CA',
-    notes: 'ออกจากบ้านพัก',
+    notes: 'Left residence',
     personName: 'Ross Ulbricht',
   },
   {
@@ -78,10 +78,10 @@ const DEMO_LOCATIONS: LocationPoint[] = [
     lat: 34.0522,
     lng: -83.9886,
     timestamp: new Date('2022-11-06T09:00:00'),
-    label: 'บ้านพัก James Zhong',
+    label: 'James Zhong residence',
     source: 'gps',
     address: 'Gainesville, Georgia, USA',
-    notes: 'สถานที่ค้นบ้าน - พบ BTC 50,676 เหรียญ',
+    notes: 'House search location - found 50,676 BTC',
     personName: 'James Zhong',
   },
   {
@@ -89,10 +89,10 @@ const DEMO_LOCATIONS: LocationPoint[] = [
     lat: 34.0622,
     lng: -83.9786,
     timestamp: new Date('2022-11-06T14:00:00'),
-    label: 'สำนักงาน FBI Atlanta',
+    label: 'FBI Atlanta Office',
     source: 'manual',
     address: 'Atlanta, Georgia, USA',
-    notes: 'นำตัวสอบปากคำ',
+    notes: 'Interrogation',
     personName: 'James Zhong',
   },
 ];
@@ -254,8 +254,8 @@ export const LocationTimeline = () => {
         marker.bindPopup(`
           <div style="min-width: 200px;">
             <strong>${loc.label}</strong><br/>
-            <small>${loc.address || 'ไม่ระบุที่อยู่'}</small><br/>
-            <small>${loc.timestamp.toLocaleString('th-TH')}</small>
+            <small>${loc.address || 'No address specified'}</small><br/>
+            <small>${loc.timestamp.toLocaleString('en-US')}</small>
           </div>
         `).openPopup();
       }
@@ -328,8 +328,8 @@ export const LocationTimeline = () => {
     const diff = end.getTime() - start.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    if (hours > 0) return `${hours}ชม. ${minutes}น.`;
-    return `${minutes} นาที`;
+    if (hours > 0) return `${hours}hrs  ${minutes}min`;
+    return `${minutes} minutes`;
   };
 
   return (
@@ -341,20 +341,20 @@ export const LocationTimeline = () => {
             <MapPin className="text-primary-500" />
             Location Timeline
           </h1>
-          <p className="text-dark-400 mt-1">ติดตามการเคลื่อนที่ของเป้าหมายบนแผนที่</p>
+          <p className="text-dark-400 mt-1">Track target movement on map</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={() => setShowAddModal(true)}>
             <Plus size={18} className="mr-2" />
-            เพิ่มตำแหน่ง
+            Add Location
           </Button>
           <Button variant="ghost">
             <Upload size={18} className="mr-2" />
-            นำเข้า GPS
+            Import GPS
           </Button>
           <Button variant="secondary">
             <Download size={18} className="mr-2" />
-            ส่งออก KML
+            Export KML
           </Button>
         </div>
       </div>
@@ -372,7 +372,7 @@ export const LocationTimeline = () => {
               onChange={(e) => setFilterPerson(e.target.value)}
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"
             >
-              <option value="all">ทุกคน ({locations.length} จุด)</option>
+              <option value="all">Everyone ({locations.length} points)</option>
               {persons.map(p => (
                 <option key={p} value={p}>{p}</option>
               ))}
@@ -385,7 +385,7 @@ export const LocationTimeline = () => {
               onChange={(e) => setFilterSource(e.target.value)}
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-sm"
             >
-              <option value="all">ทุกแหล่งข้อมูล</option>
+              <option value="all">All Data Sources</option>
               {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
                 <option key={key} value={key}>{config.icon} {config.label}</option>
               ))}
@@ -394,7 +394,7 @@ export const LocationTimeline = () => {
           <div className="flex-1" />
           <div className="flex items-center gap-2 text-sm text-dark-400">
             <Navigation size={16} />
-            <span>{filteredLocations.length} ตำแหน่ง</span>
+            <span>{filteredLocations.length} Location</span>
           </div>
         </div>
       </Card>
@@ -407,7 +407,7 @@ export const LocationTimeline = () => {
             {!mapLoaded ? (
               <div className="h-full flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-                <span className="ml-3">กำลังโหลดแผนที่...</span>
+                <span className="ml-3">Loading map...</span>
               </div>
             ) : (
               <div ref={mapRef} className="h-full w-full" />
@@ -485,7 +485,7 @@ export const LocationTimeline = () => {
                   <p className="text-sm text-dark-400">{selectedLocation.address}</p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-dark-400">
                     <Clock size={12} />
-                    {selectedLocation.timestamp.toLocaleString('th-TH')}
+                    {selectedLocation.timestamp.toLocaleString('en-US')}
                   </div>
                   {selectedLocation.personName && (
                     <Badge variant="info" className="mt-2">
@@ -507,7 +507,7 @@ export const LocationTimeline = () => {
             <div className="p-3 border-b border-dark-700">
               <h3 className="font-semibold flex items-center gap-2">
                 <Clock size={16} className="text-primary-400" />
-                ไทม์ไลน์
+                Timeline
               </h3>
             </div>
             <div className="flex-1 overflow-y-auto p-2">
@@ -548,7 +548,7 @@ export const LocationTimeline = () => {
                             <div className="font-medium text-sm truncate">{loc.label}</div>
                             <div className="text-xs text-dark-400 truncate">{loc.address}</div>
                             <div className="text-xs text-dark-500 mt-1">
-                              {loc.timestamp.toLocaleString('th-TH')}
+                              {loc.timestamp.toLocaleString('en-US')}
                             </div>
                           </div>
                         </div>
@@ -585,7 +585,7 @@ export const LocationTimeline = () => {
           <Card className="w-[500px] p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Plus className="text-primary-400" />
-              เพิ่มตำแหน่งใหม่
+              Add New Location
             </h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -599,15 +599,15 @@ export const LocationTimeline = () => {
                 </div>
               </div>
               <div>
-                <label className="text-sm text-dark-400 block mb-1">ชื่อสถานที่</label>
-                <input type="text" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" placeholder="บ้านพักผู้ต้องหา" />
+                <label className="text-sm text-dark-400 block mb-1">Location Name</label>
+                <input type="text" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" placeholder="Suspect's residence" />
               </div>
               <div>
-                <label className="text-sm text-dark-400 block mb-1">วันเวลา</label>
+                <label className="text-sm text-dark-400 block mb-1">Date Time</label>
                 <input type="datetime-local" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" />
               </div>
               <div>
-                <label className="text-sm text-dark-400 block mb-1">แหล่งข้อมูล</label>
+                <label className="text-sm text-dark-400 block mb-1">Data Source</label>
                 <select className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2">
                   {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
                     <option key={key} value={key}>{config.icon} {config.label}</option>
@@ -615,16 +615,16 @@ export const LocationTimeline = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-dark-400 block mb-1">หมายเหตุ</label>
-                <textarea rows={2} className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2 resize-none" placeholder="รายละเอียดเพิ่มเติม..." />
+                <label className="text-sm text-dark-400 block mb-1">Notes</label>
+                <textarea rows={2} className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2 resize-none" placeholder="Additional details..." />
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" className="flex-1" onClick={() => setShowAddModal(false)}>
-                  ยกเลิก
+                  Cancel
                 </Button>
                 <Button variant="primary" className="flex-1" onClick={() => setShowAddModal(false)}>
                   <Plus size={16} className="mr-2" />
-                  เพิ่มตำแหน่ง
+                  Add Location
                 </Button>
               </div>
             </div>

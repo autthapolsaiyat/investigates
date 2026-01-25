@@ -1,6 +1,6 @@
 /**
  * Landing Page - InvestiGate SaaS
- * หน้าขายสินค้า
+ * Product Sales Page
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,37 +22,37 @@ const LandingPage = () => {
     {
       icon: Sparkles,
       title: 'Smart Import',
-      desc: 'นำเข้าข้อมูลอัตโนมัติ รองรับ Cellebrite, UFED, XRY',
+      desc: 'Auto import data, supports Cellebrite, UFED, XRY',
       color: 'text-yellow-400 bg-yellow-500/20'
     },
     {
       icon: Network,
       title: 'Money Flow',
-      desc: 'วิเคราะห์เส้นทางเงินด้วย Network Graph',
+      desc: 'Analyze money trail with Network Graph',
       color: 'text-green-400 bg-green-500/20'
     },
     {
       icon: Wallet,
       title: 'Crypto Tracker',
-      desc: 'ติดตาม Cryptocurrency ทุก Chain',
+      desc: 'Track Cryptocurrency on all chains',
       color: 'text-orange-400 bg-orange-500/20'
     },
     {
       icon: Phone,
       title: 'Call Analysis',
-      desc: 'วิเคราะห์สายโทรและ SMS',
+      desc: 'Analyze calls and SMS',
       color: 'text-purple-400 bg-purple-500/20'
     },
     {
       icon: MapPin,
       title: 'Location Timeline',
-      desc: 'ติดตามตำแหน่งบนแผนที่',
+      desc: 'Track location on map',
       color: 'text-red-400 bg-red-500/20'
     },
     {
       icon: FileText,
       title: 'Forensic Report',
-      desc: 'รายงานมาตรฐานศาล พร้อม QR Code',
+      desc: 'Court-standard reports with QR Code',
       color: 'text-cyan-400 bg-cyan-500/20'
     }
   ];
@@ -60,93 +60,93 @@ const LandingPage = () => {
   const pricing = [
     {
       name: 'Starter',
-      price: 'ฟรี',
-      period: ' 30 วัน',
-      desc: 'ทดลองใช้งานก่อนตัดสินใจ',
+      price: 'Free',
+      period: ' 30 days',
+      desc: 'Try before you decide',
       features: [
         '1 User License',
-        'สร้างคดีไม่จำกัด',
+        'Unlimited case creation',
         'Smart Import',
         'Money Flow Analysis',
         'Crypto Tracker',
         'Forensic Report',
-        'พื้นที่เก็บข้อมูล 5GB',
+        'Storage space 5GB',
         'Email Support'
       ],
       highlight: false,
-      cta: 'สมัครใช้ฟรี',
+      cta: 'Sign up Free',
       isFree: true
     },
     {
       name: 'Professional',
       price: '150,000',
-      period: '/คน/ปี',
-      desc: 'สำหรับงานสืบสวนขั้นสูง',
+      period: '/user/year',
+      desc: 'For advanced investigation',
       features: [
         '1 User License',
-        'ทุกอย่างใน Starter',
+        'Everything in Starter',
         'Call Analysis',
         'Location Timeline',
         'Chain of Custody',
-        'พื้นที่เก็บข้อมูล 20GB',
+        'Storage space 20GB',
         'Priority Support',
         'Online Training'
       ],
       highlight: true,
-      cta: 'แนะนำ',
+      cta: 'Recommended',
       isFree: false
     },
     {
       name: 'Enterprise',
       price: '250,000',
-      period: '/คน/ปี',
-      desc: 'สำหรับหน่วยงานขนาดใหญ่',
+      period: '/user/year',
+      desc: 'For large organizations',
       features: [
         '1 User License',
-        'ทุกอย่างใน Professional',
+        'Everything in Professional',
         'API Access',
         'Custom Integration',
-        'พื้นที่เก็บข้อมูล 100GB',
+        'Storage space 100GB',
         'Dedicated Support',
         'On-site Training',
         'SLA 99.9%'
       ],
       highlight: false,
-      cta: 'ติดต่อเรา',
+      cta: 'Contact Us',
       isFree: false
     }
   ];
 
   const faqs = [
     {
-      q: 'InvestiGate เหมาะกับใคร?',
-      a: 'InvestiGate ออกแบบมาสำหรับเจ้าหน้าที่สืบสวน ตำรวจ และหน่วยงานที่ต้องการวิเคราะห์ข้อมูลดิจิทัลในคดีอาชญากรรมทางการเงิน ยาเสพติด และอื่นๆ'
+      q: 'Who is InvestiGate for??',
+      a: 'InvestiGate is designed for investigators, police and agencies that need digital data analysis in financial crime, drug and other cases'
     },
     {
-      q: 'รองรับไฟล์อะไรบ้าง?',
-      a: 'รองรับไฟล์จาก Cellebrite UFED, MSAB XRY, Oxygen Forensic และไฟล์ CSV/Excel ทั่วไป เช่น Bank Statement, Call Records, Crypto Transactions'
+      q: 'What file formats are supported??',
+      a: 'Supports files from Cellebrite UFED, MSAB XRY, Oxygen Forensic and general CSV/Excel files like Bank Statements, Call Records, Crypto Transactions'
     },
     {
-      q: 'ข้อมูลปลอดภัยไหม?',
-      a: 'ข้อมูลถูกเข้ารหัสทั้งขณะส่งและจัดเก็บ (Encryption at rest & in transit) เก็บบน Azure Cloud มาตรฐาน ISO 27001 และมีระบบ Chain of Custody ยืนยันความถูกต้องด้วย SHA-256 Hash'
+      q: 'Is data secure??',
+      a: 'Data is encrypted at rest and in transit, stored on ISO 27001 Azure Cloud with Chain of Custody system and SHA-256 Hash verification'
     },
     {
-      q: 'ใช้ในศาลได้ไหม?',
-      a: 'ได้ ระบบสร้างรายงานตามมาตรฐาน Digital Forensic มี Chain of Custody, QR Code สำหรับตรวจสอบหลักฐาน และ SHA-256 Hash ยืนยันว่าข้อมูลไม่ถูกแก้ไข'
+      q: 'Can it be used in court??',
+      a: 'Yes. System creates reports per Digital Forensic standards with Chain of Custody, QR Code for evidence verification and SHA-256 Hash confirming data integrity'
     },
     {
-      q: 'มีอบรมการใช้งานไหม?',
-      a: 'มีบริการอบรม 2 วัน (คิดแยก) โดยวิทยากรผู้เชี่ยวชาญ สามารถอบรม On-site หรือ Online ได้'
+      q: 'Is training available??',
+      a: '2-day training available (charged separately) by expert trainers, On-site or Online'
     },
     {
-      q: 'ยกเลิกได้ไหม?',
-      a: 'สามารถยกเลิกได้ทุกเมื่อ แต่ไม่มีการคืนเงินสำหรับระยะเวลาที่เหลือ ข้อมูลจะถูกเก็บไว้ 30 วันหลังหมดอายุ'
+      q: 'Can I cancel??',
+      a: 'You can cancel anytime but no refund for remaining period. Data kept for 30 days after expiry'
     }
   ];
 
   const stats = [
-    { value: '500+', label: 'คดีที่วิเคราะห์' },
-    { value: '50+', label: 'หน่วยงานใช้งาน' },
+    { value: '500+', label: 'Cases Analyzed' },
+    { value: '50+', label: 'Agencies Using' },
     { value: '99.9%', label: 'Uptime' },
     { value: '24/7', label: 'Support' }
   ];
@@ -162,10 +162,10 @@ const LandingPage = () => {
               <img src="/images/logo.png" alt="InvestiGate" className="h-20 md:h-24 w-auto" />
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-dark-300 hover:text-white transition-colors">คุณสมบัติ</a>
-              <a href="#pricing" className="text-dark-300 hover:text-white transition-colors">ราคา</a>
-              <a href="#faq" className="text-dark-300 hover:text-white transition-colors">คำถาม</a>
-              <a href="/guide" target="_blank" className="text-dark-300 hover:text-white transition-colors">คู่มือ</a>
+              <a href="#features" className="text-dark-300 hover:text-white transition-colors">Features</a>
+              <a href="#pricing" className="text-dark-300 hover:text-white transition-colors">Pricing</a>
+              <a href="#faq" className="text-dark-300 hover:text-white transition-colors">FAQ</a>
+              <a href="/guide" target="_blank" className="text-dark-300 hover:text-white transition-colors">Guide</a>
             </div>
             <div className="flex items-center gap-4">
               {isAuthenticated ? (
@@ -173,7 +173,7 @@ const LandingPage = () => {
                   onClick={() => navigate('/app/dashboard')}
                   className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors"
                 >
-                  เข้าสู่ Dashboard
+                  Go to Dashboard
                 </button>
               ) : (
                 <>
@@ -181,13 +181,13 @@ const LandingPage = () => {
                     onClick={() => navigate('/login')}
                     className="text-dark-300 hover:text-white transition-colors"
                   >
-                    เข้าสู่ระบบ
+                    Sign In
                   </button>
                   <button
                     onClick={() => navigate('/login')}
                     className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors"
                   >
-                    ทดลองใช้ฟรี
+                    Try for Free
                   </button>
                 </>
               )}
@@ -206,35 +206,35 @@ const LandingPage = () => {
                 <span>Digital Forensic Platform</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                วิเคราะห์คดีดิจิทัล
+                Analyze Digital Cases
                 <br />
-                <span className="text-primary-400">มาตรฐานศาล</span>
+                <span className="text-primary-400">Court Standard</span>
               </h1>
               <p className="text-xl text-dark-400 mb-8 max-w-lg">
-                นำเข้าข้อมูลจาก Cellebrite, UFED, XRY วิเคราะห์เส้นทางเงิน Crypto 
-                สร้างรายงานที่ใช้ในชั้นศาลได้ทันที
+                Import data from Cellebrite, UFED, XRY. Analyze crypto money trail 
+                Create court-ready reports instantly
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => navigate('/login')}
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors"
                 >
-                  เริ่มใช้งานฟรี 14 วัน
+                  Start Free 14-day trial
                   <ArrowRight size={20} />
                 </button>
                 <button className="flex items-center justify-center gap-2 px-6 py-3 border border-dark-600 hover:border-dark-500 rounded-lg font-medium transition-colors">
                   <Play size={20} />
-                  ดูวิดีโอสาธิต
+                  Watch Demo Video
                 </button>
               </div>
               <div className="flex items-center gap-6 mt-8 text-sm text-dark-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-green-400" />
-                  <span>ไม่ต้องใส่บัตรเครดิต</span>
+                  <span>No credit card required</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-green-400" />
-                  <span>ยกเลิกได้ทุกเมื่อ</span>
+                  <span>Cancel anytime</span>
                 </div>
               </div>
             </div>
@@ -269,9 +269,9 @@ const LandingPage = () => {
       <section id="features" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">คุณสมบัติครบครัน</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Comprehensive Features</h2>
             <p className="text-dark-400 max-w-2xl mx-auto">
-              เครื่องมือวิเคราะห์ข้อมูลดิจิทัลครบวงจร ตั้งแต่นำเข้าข้อมูลจนถึงสร้างรายงานส่งศาล
+              Complete digital data analysis tools, from data import to court report generation
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -297,18 +297,18 @@ const LandingPage = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                ปลอดภัยระดับ
+                Enterprise Security
                 <span className="text-primary-400"> Enterprise</span>
               </h2>
               <p className="text-dark-400 mb-8">
-                ข้อมูลคดีของคุณถูกปกป้องด้วยมาตรฐานความปลอดภัยสูงสุด 
-                เหมาะสำหรับข้อมูลที่เป็นความลับ
+                Your case data is protected with highest security standards 
+                Suitable for confidential data
               </p>
               <div className="space-y-4">
                 {[
                   { icon: Lock, text: 'Encryption at rest & in transit (AES-256)' },
-                  { icon: Shield, text: 'Chain of Custody ด้วย SHA-256 Hash' },
-                  { icon: QrCode, text: 'QR Code ตรวจสอบหลักฐาน' },
+                  { icon: Shield, text: 'Chain of Custody with SHA-256 Hash' },
+                  { icon: QrCode, text: 'QR Code evidence verification' },
                   { icon: Globe, text: 'Azure Cloud - ISO 27001 Certified' },
                   { icon: Users, text: 'Role-based Access Control' }
                 ].map((item, i) => (
@@ -328,7 +328,7 @@ const LandingPage = () => {
                 </div>
                 <h3 className="text-2xl font-bold mb-2">Court-Ready Reports</h3>
                 <p className="text-dark-400 mb-6">
-                  รายงานที่สร้างจากระบบสามารถใช้เป็นหลักฐานในชั้นศาลได้
+                  Reports generated from system can be used as court evidence
                 </p>
                 <div className="flex justify-center gap-4">
                   <div className="px-4 py-2 bg-dark-700 rounded-lg text-sm">
@@ -350,9 +350,9 @@ const LandingPage = () => {
       <section id="pricing" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">ราคาที่คุ้มค่า</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Value Pricing</h2>
             <p className="text-dark-400 max-w-2xl mx-auto">
-              เลือกแพ็คเกจที่เหมาะกับความต้องการของคุณ (ราคายังไม่รวม VAT 7%)
+              Select package that fits your needs (Prices exclude 7% VAT)
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -367,7 +367,7 @@ const LandingPage = () => {
               >
                 {plan.highlight && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary-500 rounded-full text-sm font-medium">
-                    แนะนำ
+                    Recommended
                   </div>
                 )}
                 <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
@@ -398,8 +398,8 @@ const LandingPage = () => {
             ))}
           </div>
           <div className="text-center mt-8 text-dark-400">
-            <p>* ค่าอบรมคิดแยก เริ่มต้น ฿10,000/คน (2 วัน)</p>
-            <p>* Volume discount สำหรับ 5+ licenses - ติดต่อเรา</p>
+            <p>* Training charged separately from ฿10,000/person (2 days)</p>
+            <p>* Volume discount for 5+ licenses - Contact Us</p>
           </div>
         </div>
       </section>
@@ -408,7 +408,7 @@ const LandingPage = () => {
       <section id="faq" className="py-20 px-6 bg-dark-800/50">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">คำถามที่พบบ่อย</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
           </div>
           <div className="space-y-4">
             {faqs.map((faq, i) => (
@@ -442,16 +442,16 @@ const LandingPage = () => {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            พร้อมเริ่มวิเคราะห์คดีแล้วหรือยัง?
+            Ready to start analyzing cases??
           </h2>
           <p className="text-xl text-dark-400 mb-8">
-            ทดลองใช้ฟรี 30 วัน ไม่ต้องใส่บัตรเครดิต
+            Try for Free 30 days No credit card required
           </p>
           <button
             onClick={() => navigate('/login')}
             className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium text-lg transition-colors"
           >
-            เริ่มใช้งานฟรี
+            Start Free
             <ArrowRight size={24} />
           </button>
         </div>
@@ -467,7 +467,7 @@ const LandingPage = () => {
               </div>
               <p className="text-dark-400 text-sm">
                 Digital Forensic Investigation Platform
-                มาตรฐานการสืบสวนดิจิทัล
+                Digital Investigation Standard
               </p>
             </div>
             <div>

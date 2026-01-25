@@ -1,6 +1,6 @@
 /**
  * CryptoImportModal - Import Crypto Wallet to Money Flow
- * เชื่อมโยง Wallet กับคดีใน Money Flow
+ * Link Wallet to Case in Money Flow
  */
 import { useState, useEffect } from 'react';
 import {
@@ -223,14 +223,14 @@ export const CryptoImportModal = ({
 
       setResult({
         success: true,
-        message: `นำเข้าสำเร็จ! สร้าง ${nodesCreated} nodes และ ${edgesCreated} edges`
+        message: `Import successful! Created ${nodesCreated} nodes and ${edgesCreated} edges`
       });
 
     } catch (error) {
       console.error('Import error:', error);
       setResult({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล'
+        message: 'Error importing data'
       });
     } finally {
       setIsImporting(false);
@@ -279,11 +279,11 @@ export const CryptoImportModal = ({
 
           {/* Case Selection */}
           <div>
-            <label className="text-sm text-dark-400 mb-2 block">เลือกคดีที่จะนำเข้า:</label>
+            <label className="text-sm text-dark-400 mb-2 block">Select Case to Import:</label>
             {isLoading ? (
               <div className="flex items-center gap-2 text-dark-400">
                 <Loader2 size={16} className="animate-spin" />
-                กำลังโหลด...
+                Loading...
               </div>
             ) : (
               <select
@@ -292,7 +292,7 @@ export const CryptoImportModal = ({
                 onChange={(e) => setSelectedCaseId(Number(e.target.value))}
               >
                 {cases.length === 0 ? (
-                  <option value="">ไม่พบคดี</option>
+                  <option value="">Not foundCase</option>
                 ) : (
                   cases.map(c => (
                     <option key={c.id} value={c.id}>
@@ -306,7 +306,7 @@ export const CryptoImportModal = ({
 
           {/* Import Options */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-dark-300">ตัวเลือกการนำเข้า:</p>
+            <p className="text-sm font-medium text-dark-300">Import Options:</p>
             
             <label className="flex items-center gap-3 p-3 bg-dark-900 rounded-lg cursor-pointer hover:bg-dark-850">
               <input
@@ -316,7 +316,7 @@ export const CryptoImportModal = ({
                 className="w-4 h-4 rounded"
               />
               <Wallet size={16} className="text-primary-400" />
-              <span className="text-sm">นำเข้า Wallet หลัก</span>
+              <span className="text-sm">Import Main Wallet</span>
             </label>
 
             <label className="flex items-center gap-3 p-3 bg-dark-900 rounded-lg cursor-pointer hover:bg-dark-850">
@@ -327,7 +327,7 @@ export const CryptoImportModal = ({
                 className="w-4 h-4 rounded"
               />
               <Link2 size={16} className="text-green-400" />
-              <span className="text-sm">นำเข้า Counterparties (Wallet ที่เกี่ยวข้อง)</span>
+              <span className="text-sm">Import Counterparties (Related Wallets)</span>
             </label>
 
             <label className="flex items-center gap-3 p-3 bg-dark-900 rounded-lg cursor-pointer hover:bg-dark-850">
@@ -338,13 +338,13 @@ export const CryptoImportModal = ({
                 className="w-4 h-4 rounded"
               />
               <ArrowRight size={16} className="text-blue-400" />
-              <span className="text-sm">นำเข้าธุรกรรม (Edges)</span>
+              <span className="text-sm">Import Transactions (Edges)</span>
             </label>
 
             {importOptions.importTransactions && (
               <div className="pl-8 space-y-3">
                 <div className="flex items-center gap-4">
-                  <label className="text-sm text-dark-400">จำนวนสูงสุด:</label>
+                  <label className="text-sm text-dark-400">Maximum:</label>
                   <input
                     type="number"
                     value={importOptions.maxTransactions}
@@ -353,10 +353,10 @@ export const CryptoImportModal = ({
                     min={1}
                     max={200}
                   />
-                  <span className="text-xs text-dark-500">รายการ</span>
+                  <span className="text-xs text-dark-500">List</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <label className="text-sm text-dark-400">มูลค่าขั้นต่ำ:</label>
+                  <label className="text-sm text-dark-400">Minimum Value:</label>
                   <input
                     type="number"
                     value={importOptions.minValueUSD}
@@ -372,7 +372,7 @@ export const CryptoImportModal = ({
 
           {/* Stats Preview */}
           <div className="p-4 bg-dark-900 rounded-lg">
-            <p className="text-sm text-dark-400 mb-2">จะนำเข้าประมาณ:</p>
+            <p className="text-sm text-dark-400 mb-2">Will Import approximately:</p>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Database className="text-primary-400" size={16} />
@@ -408,7 +408,7 @@ export const CryptoImportModal = ({
                     href="/money-flow"
                     className="inline-flex items-center gap-2 text-sm text-primary-400 hover:underline"
                   >
-                    ไปดูที่ Money Flow
+                    Go to Money Flow
                     <ExternalLink size={14} />
                   </a>
                 </div>
@@ -420,7 +420,7 @@ export const CryptoImportModal = ({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 border-t border-dark-700">
           <Button variant="ghost" onClick={onClose}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button 
             onClick={importToMoneyFlow} 
@@ -429,12 +429,12 @@ export const CryptoImportModal = ({
             {isImporting ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                กำลังนำเข้า...
+                LoadingImport...
               </>
             ) : (
               <>
                 <Plus size={18} className="mr-2" />
-                นำเข้า Money Flow
+                Import Money Flow
               </>
             )}
           </Button>

@@ -29,7 +29,7 @@ import { useAuthStore } from '../../store/authStore';
 
 const formatDate = (dateStr?: string) => {
   if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('th-TH', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -40,13 +40,13 @@ const formatDate = (dateStr?: string) => {
 
 const getCaseTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    online_gambling: 'พนันออนไลน์',
-    money_laundering: 'ฟอกเงิน',
-    fraud: 'ฉ้อโกง',
-    call_center_scam: 'แก๊งคอลเซ็นเตอร์',
-    romance_scam: 'หลอกรัก',
-    investment_scam: 'หลอกลงทุน',
-    other: 'อื่นๆ'
+    online_gambling: 'Online Gambling',
+    money_laundering: 'Money Laundering',
+    fraud: 'Fraud',
+    call_center_scam: 'Call Center Scam',
+    romance_scam: 'Romance Scam',
+    investment_scam: 'Investment Scam',
+    other: 'Other'
   };
   return labels[type] || type;
 };
@@ -74,8 +74,8 @@ const RestoreModal = ({ case_, onClose, onConfirm, isLoading }: RestoreModalProp
               <RotateCcw className="text-green-400" size={24} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">กู้คืนคดี</h2>
-              <p className="text-sm text-dark-400">คุณต้องการกู้คืนคดีนี้หรือไม่?</p>
+              <h2 className="text-lg font-semibold text-white">Restore Case</h2>
+              <p className="text-sm text-dark-400">Do you want to restore this case?</p>
             </div>
           </div>
         </div>
@@ -91,8 +91,8 @@ const RestoreModal = ({ case_, onClose, onConfirm, isLoading }: RestoreModalProp
             <div className="flex gap-3">
               <CheckCircle className="text-green-400 flex-shrink-0" size={20} />
               <div className="text-sm text-green-300">
-                <p className="font-medium">คดีจะกลับมาแสดงในระบบปกติ</p>
-                <p className="text-green-400 mt-1">ผู้ใช้จะสามารถเข้าถึงได้อีกครั้ง</p>
+                <p className="font-medium">Case will be visible in the system again</p>
+                <p className="text-green-400 mt-1">Users will be able to access it again</p>
               </div>
             </div>
           </div>
@@ -101,7 +101,7 @@ const RestoreModal = ({ case_, onClose, onConfirm, isLoading }: RestoreModalProp
         {/* Actions */}
         <div className="p-6 border-t border-dark-700 flex gap-3">
           <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isLoading}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button 
             variant="primary" 
@@ -112,12 +112,12 @@ const RestoreModal = ({ case_, onClose, onConfirm, isLoading }: RestoreModalProp
             {isLoading ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                กำลังกู้คืน...
+                Restoring...
               </>
             ) : (
               <>
                 <RotateCcw size={18} className="mr-2" />
-                กู้คืน
+                Restore
               </>
             )}
           </Button>
@@ -153,8 +153,8 @@ const PermanentDeleteModal = ({ case_, onClose, onConfirm, isLoading }: Permanen
               <AlertTriangle className="text-red-400" size={24} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-red-400">ลบถาวร</h2>
-              <p className="text-sm text-red-300">การกระทำนี้ไม่สามารถย้อนกลับได้!</p>
+              <h2 className="text-lg font-semibold text-red-400">Permanently Delete</h2>
+              <p className="text-sm text-red-300">This action cannot be undone!</p>
             </div>
           </div>
         </div>
@@ -170,15 +170,15 @@ const PermanentDeleteModal = ({ case_, onClose, onConfirm, isLoading }: Permanen
             <div className="flex gap-3">
               <XCircle className="text-red-400 flex-shrink-0" size={20} />
               <div className="text-sm text-red-300">
-                <p className="font-medium">ข้อมูลจะถูกลบออกจากระบบอย่างถาวร</p>
-                <p className="text-red-400 mt-1">ไม่สามารถกู้คืนได้อีก</p>
+                <p className="font-medium">Data will be permanently deleted from the system</p>
+                <p className="text-red-400 mt-1">Cannot be restored</p>
               </div>
             </div>
           </div>
 
           <div>
             <label className="text-sm text-dark-400 mb-2 block">
-              พิมพ์ <span className="text-red-400 font-mono">DELETE</span> เพื่อยืนยัน
+              Type <span className="text-red-400 font-mono">DELETE</span> to confirm
             </label>
             <Input
               value={confirmText}
@@ -192,7 +192,7 @@ const PermanentDeleteModal = ({ case_, onClose, onConfirm, isLoading }: Permanen
         {/* Actions */}
         <div className="p-6 border-t border-dark-700 flex gap-3">
           <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isLoading}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button 
             variant="primary" 
@@ -203,12 +203,12 @@ const PermanentDeleteModal = ({ case_, onClose, onConfirm, isLoading }: Permanen
             {isLoading ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                กำลังลบ...
+                Deleting...
               </>
             ) : (
               <>
                 <Trash2 size={18} className="mr-2" />
-                ลบถาวร
+                Permanently Delete
               </>
             )}
           </Button>
@@ -269,7 +269,7 @@ export const DeletedCases = () => {
       fetchDeletedCases();
     } catch (error) {
       console.error('Error restoring case:', error);
-      alert('เกิดข้อผิดพลาดในการกู้คืนคดี');
+      alert('Error restoring case');
     } finally {
       setIsProcessing(false);
     }
@@ -285,7 +285,7 @@ export const DeletedCases = () => {
       fetchDeletedCases();
     } catch (error) {
       console.error('Error permanently deleting case:', error);
-      alert('เกิดข้อผิดพลาดในการลบคดีถาวร');
+      alert('Error permanently deleting case');
     } finally {
       setIsProcessing(false);
     }
@@ -296,9 +296,9 @@ export const DeletedCases = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">คดีที่ถูกลบ</h1>
+          <h1 className="text-2xl font-bold text-white">Deleted Cases</h1>
           <p className="text-dark-400 mt-1">
-            {deletedCount} คดีถูกลบ (สามารถกู้คืนได้)
+            {deletedCount} cases deleted (can be restored)
           </p>
         </div>
         <Button variant="ghost" onClick={fetchDeletedCases} disabled={loading}>
@@ -310,7 +310,7 @@ export const DeletedCases = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={20} />
         <Input
-          placeholder="ค้นหาคดีที่ถูกลบ..."
+          placeholder="Search deleted cases..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
@@ -325,9 +325,9 @@ export const DeletedCases = () => {
       ) : cases.length === 0 ? (
         <div className="text-center py-20 bg-dark-800 rounded-xl border border-dark-700">
           <Trash2 size={64} className="text-dark-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">ไม่มีคดีที่ถูกลบ</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">No deleted cases</h3>
           <p className="text-dark-400">
-            {searchQuery ? 'ลองค้นหาด้วยคำอื่น' : 'ยังไม่มีคดีใดถูกลบจากระบบ'}
+            {searchQuery ? 'Try different search terms' : 'No cases have been deleted yet'}
           </p>
         </div>
       ) : (
@@ -336,19 +336,19 @@ export const DeletedCases = () => {
             <thead>
               <tr className="border-b border-dark-700 bg-dark-700/50">
                 <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">
-                  หมายเลขคดี
+                  Case Number
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">
-                  ชื่อคดี
+                  Case Title
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">
-                  ประเภท
+                  Type
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">
-                  ลบโดย
+                  Deleted By
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">
-                  วันที่ลบ
+                  Deleted Date
                 </th>
                 <th className="text-center px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">
                   Actions
@@ -390,10 +390,10 @@ export const DeletedCases = () => {
                       <button
                         onClick={() => setRestoringCase(case_)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors text-sm"
-                        title="กู้คืน"
+                        title="Restore"
                       >
                         <RotateCcw size={14} />
-                        กู้คืน
+                        Restore
                       </button>
 
                       {/* Permanent Delete Button (Super Admin Only) */}
@@ -401,10 +401,10 @@ export const DeletedCases = () => {
                         <button
                           onClick={() => setDeletingCase(case_)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm"
-                          title="ลบถาวร"
+                          title="Permanently Delete"
                         >
                           <Trash2 size={14} />
-                          ลบถาวร
+                          Permanently Delete
                         </button>
                       )}
                     </div>
@@ -418,12 +418,12 @@ export const DeletedCases = () => {
 
       {/* Info Box */}
       <div className="bg-dark-800 border border-dark-700 rounded-xl p-4">
-        <h3 className="text-white font-medium mb-2">ℹ️ เกี่ยวกับการลบคดี</h3>
+        <h3 className="text-white font-medium mb-2">ℹ️ About deleted cases</h3>
         <ul className="space-y-1 text-sm text-dark-400">
-          <li>• คดีที่ถูกลบจะถูกซ่อนจากผู้ใช้ทั่วไป แต่ข้อมูลยังคงอยู่ในระบบ</li>
-          <li>• Admin สามารถกู้คืนคดีได้ทุกเมื่อ โดยคดีจะกลับไปแสดงในระบบตามปกติ</li>
+          <li>• Deleted cases are hidden from users but data remains in the system</li>
+          <li>• Admin can restore cases anytime and they will be visible again</li>
           {isSuperAdmin && (
-            <li className="text-red-400">• Super Admin สามารถลบคดีถาวรได้ ซึ่งจะไม่สามารถกู้คืนได้อีก</li>
+            <li className="text-red-400">• Super Admin can permanently delete cases which cannot be restored</li>
           )}
         </ul>
       </div>

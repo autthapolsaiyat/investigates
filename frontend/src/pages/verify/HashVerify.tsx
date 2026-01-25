@@ -1,8 +1,8 @@
 /**
- * HashVerify v2 - หน้ายืนยัน Hash จาก QR Code
- * รองรับ 2 modes:
- * 1. ?hash=xxx - ตรวจสอบหลักฐานเดียว
- * 2. ?case=xxx - แสดงหลักฐานทั้งหมดของคดี
+ * HashVerify v2 - Hash verification page from QR Code
+ * Supports 2 modes:
+ * 1. ?hash=xxx - Verify single evidence
+ * 2. ?case=xxx - Show all evidence of the case
  */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -78,7 +78,7 @@ export const HashVerify = () => {
           setCaseEvidences(response.data);
         }
       } catch (err: any) {
-        setError(err.response?.data?.detail || 'ไม่สามารถโหลดข้อมูลได้');
+        setError(err.response?.data?.detail || 'Unable to load data');
       } finally {
         setLoading(false);
       }
@@ -100,7 +100,7 @@ export const HashVerify = () => {
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleString('th-TH', {
+      return date.toLocaleString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric',
         hour: '2-digit', minute: '2-digit'
       });
@@ -122,7 +122,7 @@ export const HashVerify = () => {
       <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-primary-900/20 flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 size={48} className="text-primary-400 animate-spin mx-auto mb-4" />
-          <p className="text-dark-400">กำลังตรวจสอบหลักฐาน...</p>
+          <p className="text-dark-400">Verifying evidence...</p>
         </div>
       </div>
     );
@@ -137,19 +137,19 @@ export const HashVerify = () => {
             <AlertTriangle size={40} className="text-red-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">
-            {error || 'ไม่พบข้อมูล'}
+            {error || 'No data found'}
           </h1>
           <p className="text-dark-400">
             {mode === 'none' 
-              ? 'QR Code ไม่ถูกต้องหรือไม่มีข้อมูล'
-              : 'กรุณาลองใหม่อีกครั้ง'}
+              ? 'Invalid QR Code or no data'
+              : 'Please try again'}
           </p>
         </div>
       </div>
     );
   }
 
-  // Case mode - แสดงหลักฐานทั้งหมดของคดี
+  // Case mode - Show all evidence of the case
   if (mode === 'case' && caseEvidences) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-green-900/20 p-4">
@@ -173,7 +173,7 @@ export const HashVerify = () => {
                   </div>
                 </div>
                 <div className="text-left">
-                  <h1 className="text-xl font-bold text-white">หลักฐานดิจิทัล</h1>
+                  <h1 className="text-xl font-bold text-white">Digital Evidence</h1>
                   <p className="text-green-400 text-sm">Chain of Custody</p>
                 </div>
               </div>
@@ -186,14 +186,14 @@ export const HashVerify = () => {
                   <Lock size={20} className="text-red-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-dark-400">เลขที่คดี</div>
+                  <div className="text-xs text-dark-400">Case Number</div>
                   <div className="text-white font-bold">{caseEvidences.case_number}</div>
                 </div>
               </div>
               <div className="text-dark-300 text-sm mb-4">{caseEvidences.case_title}</div>
               <div className="flex items-center gap-2 text-green-400">
                 <Database size={16} />
-                <span className="text-sm font-medium">{caseEvidences.evidences_count} หลักฐาน</span>
+                <span className="text-sm font-medium">{caseEvidences.evidences_count} Evidence</span>
               </div>
             </div>
           </div>
@@ -273,14 +273,14 @@ export const HashVerify = () => {
               <Shield size={12} />
               <span>InvestiGate Investigation Platform</span>
             </div>
-            <p>วิธีตรวจสอบ: นำไฟล์ต้นฉบับไปคำนวณ SHA-256 หากค่าตรงกัน = ไฟล์ไม่ถูกแก้ไข ✓</p>
+            <p>Verification: Calculate SHA-256 of original file. If matched = file not modified ✓</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Hash mode - แสดงหลักฐานเดียว
+  // Hash mode - Show single evidence
   if (mode === 'hash' && singleEvidence) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-green-900/20 flex items-center justify-center p-4">
@@ -306,7 +306,7 @@ export const HashVerify = () => {
                   </div>
                 </div>
                 <div className="text-left">
-                  <h1 className="text-xl font-bold text-white">หลักฐานถูกต้อง</h1>
+                  <h1 className="text-xl font-bold text-white">Evidence Verified</h1>
                   <p className="text-green-400 text-sm">Evidence Verified ✓</p>
                 </div>
               </div>
@@ -316,7 +316,7 @@ export const HashVerify = () => {
             <div className={`p-4 bg-green-500/10 border-b border-green-500/20 transition-all duration-700 delay-200 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
               <div className="flex items-center justify-center gap-2 text-green-400">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm font-medium">ผ่านการตรวจสอบความถูกต้อง</span>
+                <span className="text-sm font-medium">Verification passed</span>
               </div>
             </div>
 
@@ -329,7 +329,7 @@ export const HashVerify = () => {
                     <FileText size={20} className="text-primary-400" />
                   </div>
                   <div>
-                    <div className="text-xs text-dark-400">ชื่อไฟล์</div>
+                    <div className="text-xs text-dark-400">Filename</div>
                     <div className="text-white font-medium text-sm">{singleEvidence.file_name}</div>
                   </div>
                 </div>
@@ -338,7 +338,7 @@ export const HashVerify = () => {
                     <Clock size={20} className="text-amber-400" />
                   </div>
                   <div>
-                    <div className="text-xs text-dark-400">วันที่บันทึก</div>
+                    <div className="text-xs text-dark-400">Date Recorded</div>
                     <div className="text-white font-medium text-sm">{formatDate(singleEvidence.collected_at)}</div>
                   </div>
                 </div>
@@ -348,7 +348,7 @@ export const HashVerify = () => {
               <div className={`bg-dark-900/50 rounded-xl p-4 border border-dark-700 transition-all duration-500 delay-400 ${isAnimating ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
                 <div className="flex items-center gap-2 mb-3">
                   <Fingerprint size={18} className="text-amber-400" />
-                  <span className="text-sm font-semibold text-white">ลายนิ้วมือดิจิทัล (SHA-256)</span>
+                  <span className="text-sm font-semibold text-white">Digital Fingerprint (SHA-256)</span>
                 </div>
                 <div className="relative">
                   <div className="bg-dark-800 rounded-lg p-3 border border-amber-500/30">
@@ -376,7 +376,7 @@ export const HashVerify = () => {
                     <Lock size={20} className="text-red-400" />
                   </div>
                   <div>
-                    <div className="text-xs text-dark-400">เลขที่คดี</div>
+                    <div className="text-xs text-dark-400">Case Number</div>
                     <div className="text-white font-medium">{singleEvidence.case_number}</div>
                   </div>
                 </div>
@@ -386,18 +386,18 @@ export const HashVerify = () => {
               <div className={`bg-green-500/10 border border-green-500/30 rounded-xl p-4 transition-all duration-500 delay-600 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
                 <h3 className="text-sm font-semibold text-green-400 mb-2 flex items-center gap-2">
                   <Shield size={14} />
-                  นี่คืออะไร?
+                  What is this?
                 </h3>
                 <p className="text-xs text-dark-300 leading-relaxed">
-                  <strong>SHA-256 Hash</strong> คือ "ลายนิ้วมือดิจิทัล" ของไฟล์ 
-                  ใช้ยืนยันว่าหลักฐานไม่ถูกแก้ไขหรือปลอมแปลง 
-                  หากไฟล์ถูกเปลี่ยนแปลงแม้เพียง 1 ตัวอักษร ค่า Hash จะเปลี่ยนทั้งหมด
+                  <strong>SHA-256 Hash</strong> is the "Digital Fingerprint" of a file 
+                  Used to verify that evidence has not been modified or tampered with 
+                  If file is changed by even 1 character, Hash value will change completely
                 </p>
               </div>
 
               <div className={`text-center text-xs text-dark-400 transition-all duration-500 delay-700 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-                <p>วิธีตรวจสอบ: นำไฟล์ต้นฉบับไปคำนวณ SHA-256</p>
-                <p>หากค่าตรงกัน = ไฟล์ไม่ถูกแก้ไข ✓</p>
+                <p>Verification: Calculate SHA-256 of original file</p>
+                <p>If matched = file not modified ✓</p>
               </div>
             </div>
 

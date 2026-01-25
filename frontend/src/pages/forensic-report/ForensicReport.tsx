@@ -1,6 +1,6 @@
 /**
  * Forensic Report Page - Enhanced with Cytoscape.js Visualization
- * รายงานสรุปสำหรับส่งศาล - มาตรฐาน Digital Forensic
+ * Court Summary Report - Digital Forensic Standard
  */
 import { useEffect, useState, useCallback } from 'react';
 import { 
@@ -25,10 +25,10 @@ interface Statistics {
 
 // Thai labels
 const nodeTypeLabels: Record<string, string> = {
-  person: 'บุคคล',
-  bank_account: 'บัญชีธนาคาร',
-  crypto_wallet: 'กระเป๋าคริปโต',
-  exchange: 'ศูนย์แลกเปลี่ยน',
+  person: 'Person',
+  bank_account: 'Bank Account',
+  crypto_wallet: 'Crypto Wallet',
+  exchange: 'Exchange',
 };
 
 export const ForensicReport = () => {
@@ -104,12 +104,12 @@ export const ForensicReport = () => {
   };
 
   const getNodeTypeLabel = (node: MoneyFlowNode): string => {
-    if (node.is_suspect && node.label?.includes('หัวหน้า')) return 'หัวหน้าเครือข่าย';
-    if (node.is_suspect && node.label?.includes('OP-')) return 'ผู้ดูแลระบบ';
-    if (node.is_suspect && node.label?.includes('AG-')) return 'เอเย่นต์';
-    if (node.is_suspect) return 'ผู้ต้องสงสัย';
-    if (node.is_victim) return 'ผู้เสียหาย';
-    if (node.node_type === 'bank_account') return 'บัญชีม้า';
+    if (node.is_suspect && node.label?.includes('Boss')) return 'Network Boss';
+    if (node.is_suspect && node.label?.includes('OP-')) return 'System Admin';
+    if (node.is_suspect && node.label?.includes('AG-')) return 'Agent';
+    if (node.is_suspect) return 'Suspect';
+    if (node.is_victim) return 'Victim';
+    if (node.node_type === 'bank_account') return 'Mule Account';
     return nodeTypeLabels[node.node_type] || node.node_type;
   };
 
@@ -136,20 +136,20 @@ export const ForensicReport = () => {
             <FileText className="text-primary-500" />
             Forensic Investigation Report
           </h1>
-          <p className="text-dark-400 mt-1">รายงานสรุปคดี - มาตรฐาน Digital Forensic สำหรับส่งศาล</p>
+          <p className="text-dark-400 mt-1">Case Summary Report - Digital Forensic Standard for Court</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={fetchMoneyFlow}>
             <RefreshCw size={18} className="mr-2" />
-            รีเฟรช
+            Refresh
           </Button>
           <Button variant="secondary">
             <Printer size={18} className="mr-2" />
-            พิมพ์
+            Print
           </Button>
           <Button>
             <Download size={18} className="mr-2" />
-            ส่งออก PDF
+            Export PDF
           </Button>
         </div>
       </div>
@@ -159,7 +159,7 @@ export const ForensicReport = () => {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <label className="text-sm text-dark-400">คดี:</label>
+              <label className="text-sm text-dark-400">Case:</label>
               <select
                 className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2"
                 value={selectedCaseId || ''}
@@ -181,11 +181,11 @@ export const ForensicReport = () => {
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Users size={18} className="text-primary-400" />
-                <span className="text-sm">{stats.totalNodes} บุคคล</span>
+                <span className="text-sm">{stats.totalNodes} Person</span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp size={18} className="text-amber-400" />
-                <span className="text-sm">{stats.totalTransactions} ธุรกรรม</span>
+                <span className="text-sm">{stats.totalTransactions} transactions</span>
               </div>
               <div className="flex items-center gap-2 font-semibold text-amber-400">
                 {formatCurrency(stats.totalAmount)}
@@ -200,15 +200,15 @@ export const ForensicReport = () => {
         <div className="grid grid-cols-5 gap-4">
           <Card className="p-4 bg-red-500/10 border-red-500/20">
             <div className="text-2xl font-bold text-red-400">{stats.suspects}</div>
-            <div className="text-sm text-dark-400">ผู้ต้องสงสัย</div>
+            <div className="text-sm text-dark-400">Suspect</div>
           </Card>
           <Card className="p-4 bg-green-500/10 border-green-500/20">
             <div className="text-2xl font-bold text-green-400">{stats.victims}</div>
-            <div className="text-sm text-dark-400">ผู้เสียหาย</div>
+            <div className="text-sm text-dark-400">Victim</div>
           </Card>
           <Card className="p-4 bg-amber-500/10 border-amber-500/20">
             <div className="text-2xl font-bold text-amber-400">{stats.muleAccounts}</div>
-            <div className="text-sm text-dark-400">บัญชีม้า</div>
+            <div className="text-sm text-dark-400">Mule Account</div>
           </Card>
           <Card className="p-4 bg-purple-500/10 border-purple-500/20">
             <div className="text-2xl font-bold text-purple-400">{stats.cryptoWallets}</div>
@@ -216,7 +216,7 @@ export const ForensicReport = () => {
           </Card>
           <Card className="p-4 bg-blue-500/10 border-blue-500/20">
             <div className="text-2xl font-bold text-blue-400">{formatCurrency(stats.totalAmount)}</div>
-            <div className="text-sm text-dark-400">ยอดรวม</div>
+            <div className="text-sm text-dark-400">Total Amount</div>
           </Card>
         </div>
       )}
@@ -224,11 +224,11 @@ export const ForensicReport = () => {
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-dark-700">
         {[
-          { id: 'hierarchy', labelTh: 'โครงสร้างเครือข่าย', icon: GitBranch },
-          { id: 'network', labelTh: 'แผนผังความสัมพันธ์', icon: Network },
-          { id: 'timeline', labelTh: 'ไทม์ไลน์', icon: Clock },
-          { id: 'accounts', labelTh: 'บัญชี', icon: List },
-          { id: 'transactions', labelTh: 'ธุรกรรม', icon: BarChart3 }
+          { id: 'hierarchy', labelTh: 'Network Structure', icon: GitBranch },
+          { id: 'network', labelTh: 'Network Map', icon: Network },
+          { id: 'timeline', labelTh: 'Timeline', icon: Clock },
+          { id: 'accounts', labelTh: 'Accounts', icon: List },
+          { id: 'transactions', labelTh: 'transactions', icon: BarChart3 }
         ].map(tab => (
           <button
             key={tab.id}
@@ -261,7 +261,7 @@ export const ForensicReport = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Clock className="text-primary-400" />
-            ไทม์ไลน์ธุรกรรม
+            Timelinetransactions
           </h3>
           <div className="relative">
             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-dark-600" />
@@ -281,14 +281,14 @@ export const ForensicReport = () => {
                       <div className="bg-dark-800 rounded-lg p-4 hover:bg-dark-750 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-dark-400">
-                            {edge.transaction_date ? new Date(edge.transaction_date).toLocaleString('th-TH') : 'ไม่ระบุวันที่'}
+                            {edge.transaction_date ? new Date(edge.transaction_date).toLocaleString('en-US') : 'Date not specified'}
                           </span>
                           <Badge variant={(edge.amount || 0) > 500000 ? 'danger' : (edge.amount || 0) > 100000 ? 'warning' : 'info'}>
                             ฿{(edge.amount || 0).toLocaleString()}
                           </Badge>
                         </div>
                         <p className="font-medium">
-                          {fromNode?.label || 'ไม่ทราบ'} <ChevronRight className="inline" size={16} /> {toNode?.label || 'ไม่ทราบ'}
+                          {fromNode?.label || 'Unknown'} <ChevronRight className="inline" size={16} /> {toNode?.label || 'Unknown'}
                         </p>
                         {edge.label && <p className="text-sm text-dark-400 mt-1">{edge.label}</p>}
                       </div>
@@ -305,19 +305,19 @@ export const ForensicReport = () => {
         <Card className="p-4 overflow-hidden">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <List className="text-primary-400" />
-            รายการบัญชี ({nodes.length} รายการ)
+            itemsAccounts ({nodes.length} items)
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-dark-800 border-b border-dark-700">
                 <tr>
                   <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">#</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ชื่อ</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ประเภท</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">เลขประจำตัว</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ธนาคาร</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ความเสี่ยง</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">สถานะ</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Name</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Type</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ID Number</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Bank</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Risk</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700">
@@ -349,8 +349,8 @@ export const ForensicReport = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      {node.is_suspect && <Badge variant="danger">ผู้ต้องสงสัย</Badge>}
-                      {node.is_victim && <Badge variant="success">ผู้เสียหาย</Badge>}
+                      {node.is_suspect && <Badge variant="danger">Suspect</Badge>}
+                      {node.is_victim && <Badge variant="success">Victim</Badge>}
                       {!node.is_suspect && !node.is_victim && <Badge variant="default">-</Badge>}
                     </td>
                   </tr>
@@ -359,7 +359,7 @@ export const ForensicReport = () => {
             </table>
           </div>
           {nodes.length > 100 && (
-            <p className="text-center text-dark-400 text-sm mt-4">แสดง 100 จาก {nodes.length} รายการ</p>
+            <p className="text-center text-dark-400 text-sm mt-4">Showing 100 of {nodes.length} items</p>
           )}
         </Card>
       )}
@@ -369,19 +369,19 @@ export const ForensicReport = () => {
         <Card className="p-4 overflow-hidden">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="text-primary-400" />
-            รายการธุรกรรม ({edges.length} รายการ)
+            itemstransactions ({edges.length} items)
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-dark-800 border-b border-dark-700">
                 <tr>
                   <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">#</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">วันที่</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">จาก</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ถึง</th>
-                  <th className="text-right px-4 py-3 text-sm font-medium text-dark-300">จำนวนเงิน</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">ประเภท</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">อ้างอิง</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Date</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">From</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">To</th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-dark-300">Amount</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Type</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-dark-300">Reference</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700">
@@ -392,7 +392,7 @@ export const ForensicReport = () => {
                     <tr key={edge.id} className="hover:bg-dark-800/50">
                       <td className="px-4 py-3 text-sm text-dark-400">{i + 1}</td>
                       <td className="px-4 py-3 text-sm">
-                        {edge.transaction_date ? new Date(edge.transaction_date).toLocaleDateString('th-TH') : '-'}
+                        {edge.transaction_date ? new Date(edge.transaction_date).toLocaleDateString('en-US') : '-'}
                       </td>
                       <td className="px-4 py-3">{fromNode?.label || '-'}</td>
                       <td className="px-4 py-3">{toNode?.label || '-'}</td>
@@ -403,11 +403,11 @@ export const ForensicReport = () => {
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={edge.edge_type === 'crypto_purchase' ? 'info' : 'default'}>
-                          {edge.edge_type === 'deposit' ? 'ฝากเงิน' : 
-                           edge.edge_type === 'transfer' ? 'โอนเงิน' :
-                           edge.edge_type === 'crypto_purchase' ? 'ซื้อคริปโต' :
-                           edge.edge_type === 'crypto_transfer' ? 'โอนคริปโต' :
-                           edge.edge_type || 'โอนเงิน'}
+                          {edge.edge_type === 'deposit' ? 'Deposit' : 
+                           edge.edge_type === 'transfer' ? 'Transfer' :
+                           edge.edge_type === 'crypto_purchase' ? 'Crypto Purchase' :
+                           edge.edge_type === 'crypto_transfer' ? 'Crypto Transfer' :
+                           edge.edge_type || 'Transfer'}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs">{edge.transaction_ref || '-'}</td>
@@ -418,7 +418,7 @@ export const ForensicReport = () => {
             </table>
           </div>
           {edges.length > 100 && (
-            <p className="text-center text-dark-400 text-sm mt-4">แสดง 100 จาก {edges.length} รายการ</p>
+            <p className="text-center text-dark-400 text-sm mt-4">Showing 100 of {edges.length} items</p>
           )}
         </Card>
       )}

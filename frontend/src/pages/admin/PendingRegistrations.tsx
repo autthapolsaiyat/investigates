@@ -29,16 +29,16 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
   const [customDays, setCustomDays] = useState('');
 
   const presetDays = [
-    { label: '30 วัน (ทดลองใช้)', value: 30 },
-    { label: '90 วัน (3 เดือน)', value: 90 },
-    { label: '365 วัน (1 ปี)', value: 365 },
-    { label: 'กำหนดเอง', value: -1 },
+    { label: '30 days (Trial)', value: 30 },
+    { label: '90 days (3 months)', value: 90 },
+    { label: '365 days (1 year)', value: 365 },
+    { label: 'Custom', value: -1 },
   ];
 
   const roles = [
-    { label: 'Viewer (ดูอย่างเดียว)', value: 'viewer' },
-    { label: 'Analyst (วิเคราะห์)', value: 'analyst' },
-    { label: 'Investigator (สืบสวน)', value: 'investigator' },
+    { label: 'Viewer (View Only)', value: 'viewer' },
+    { label: 'Analyst', value: 'analyst' },
+    { label: 'Investigator', value: 'investigator' },
   ];
 
   const handleApprove = () => {
@@ -51,7 +51,7 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
       <Card className="w-full max-w-md p-6">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Check className="w-5 h-5 text-green-400" />
-          อนุมัติการลงทะเบียน
+          Approve Registration
         </h3>
 
         {/* User Info */}
@@ -66,7 +66,7 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
         {/* Subscription Duration */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            ระยะเวลาใช้งาน
+            Usage Duration
           </label>
           <div className="grid grid-cols-2 gap-2">
             {presetDays.map((preset) => (
@@ -86,7 +86,7 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
           {days === -1 && (
             <Input
               type="number"
-              placeholder="จำนวนวัน"
+              placeholder="Number of days"
               value={customDays}
               onChange={(e) => setCustomDays(e.target.value)}
               className="mt-2"
@@ -99,7 +99,7 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
         {/* Role Selection */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            สิทธิ์การใช้งาน
+            Access Rights
           </label>
           <select
             value={role}
@@ -115,18 +115,18 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
         {/* Actions */}
         <div className="flex gap-3">
           <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isLoading}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button className="flex-1" onClick={handleApprove} disabled={isLoading}>
             {isLoading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                กำลังอนุมัติ...
+                Approving...
               </>
             ) : (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                อนุมัติ
+                Approve
               </>
             )}
           </Button>
@@ -147,10 +147,10 @@ function RejectModal({ registration, onClose, onReject, isLoading }: RejectModal
   const [reason, setReason] = useState('');
 
   const quickReasons = [
-    'ข้อมูลไม่ครบถ้วน',
-    'ไม่สามารถยืนยันตัวตนได้',
-    'ไม่ได้รับอนุญาตจากหน่วยงาน',
-    'หน่วยงานไม่อยู่ในเงื่อนไข',
+    'Incomplete information',
+    'Cannot verify identity',
+    'Not authorized by organization',
+    'Organization does not meet requirements',
   ];
 
   return (
@@ -158,7 +158,7 @@ function RejectModal({ registration, onClose, onReject, isLoading }: RejectModal
       <Card className="w-full max-w-md p-6">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <X className="w-5 h-5 text-red-400" />
-          ปฏิเสธการลงทะเบียน
+          Reject Registration
         </h3>
 
         {/* User Info */}
@@ -170,7 +170,7 @@ function RejectModal({ registration, onClose, onReject, isLoading }: RejectModal
         {/* Quick Reasons */}
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            เลือกเหตุผล
+            Select reason
           </label>
           <div className="flex flex-wrap gap-2">
             {quickReasons.map((r) => (
@@ -192,12 +192,12 @@ function RejectModal({ registration, onClose, onReject, isLoading }: RejectModal
         {/* Custom Reason */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            หรือระบุเหตุผล
+            Or specify reason
           </label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="ระบุเหตุผลในการปฏิเสธ..."
+            placeholder="Enter rejection reason..."
             className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 h-24 resize-none"
           />
         </div>
@@ -205,7 +205,7 @@ function RejectModal({ registration, onClose, onReject, isLoading }: RejectModal
         {/* Actions */}
         <div className="flex gap-3">
           <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isLoading}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button 
             variant="danger" 
@@ -216,12 +216,12 @@ function RejectModal({ registration, onClose, onReject, isLoading }: RejectModal
             {isLoading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                กำลังปฏิเสธ...
+                Rejecting...
               </>
             ) : (
               <>
                 <X className="w-4 h-4 mr-2" />
-                ปฏิเสธ
+                Reject
               </>
             )}
           </Button>
@@ -260,7 +260,7 @@ export default function PendingRegistrations() {
       setTotalPages(response.pages);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'ไม่สามารถโหลดข้อมูลได้');
+      setError(err.response?.data?.detail || 'Unable to load data');
     } finally {
       setIsLoading(false);
     }
@@ -288,7 +288,7 @@ export default function PendingRegistrations() {
       fetchRegistrations();
       fetchStats();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'เกิดข้อผิดพลาด');
+      alert(err.response?.data?.detail || 'Error occurred');
     } finally {
       setIsActionLoading(false);
     }
@@ -302,7 +302,7 @@ export default function PendingRegistrations() {
       fetchRegistrations();
       fetchStats();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'เกิดข้อผิดพลาด');
+      alert(err.response?.data?.detail || 'Error occurred');
     } finally {
       setIsActionLoading(false);
     }
@@ -311,11 +311,11 @@ export default function PendingRegistrations() {
   const getStatusBadge = (status: RegistrationStatus) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="warning">รอการอนุมัติ</Badge>;
+        return <Badge variant="warning">Pending Approval</Badge>;
       case 'approved':
-        return <Badge variant="success">อนุมัติแล้ว</Badge>;
+        return <Badge variant="success">Approved</Badge>;
       case 'rejected':
-        return <Badge variant="danger">ปฏิเสธ</Badge>;
+        return <Badge variant="danger">Reject</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -328,13 +328,13 @@ export default function PendingRegistrations() {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <UserPlus className="w-7 h-7 text-primary-400" />
-            คำขอลงทะเบียน
+            Registration Requests
           </h1>
-          <p className="text-gray-400 mt-1">จัดการคำขอลงทะเบียนจากผู้ใช้ใหม่</p>
+          <p className="text-gray-400 mt-1">Manage registration requests from new users</p>
         </div>
         <Button onClick={() => { fetchRegistrations(); fetchStats(); }}>
           <RefreshCw className="w-4 h-4 mr-2" />
-          รีเฟรช
+          Refresh
         </Button>
       </div>
 
@@ -348,7 +348,7 @@ export default function PendingRegistrations() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                <p className="text-sm text-gray-400">รอการอนุมัติ</p>
+                <p className="text-sm text-gray-400">Pending Approval</p>
               </div>
             </div>
           </Card>
@@ -359,7 +359,7 @@ export default function PendingRegistrations() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.approved}</p>
-                <p className="text-sm text-gray-400">อนุมัติแล้ว</p>
+                <p className="text-sm text-gray-400">Approved</p>
               </div>
             </div>
           </Card>
@@ -370,7 +370,7 @@ export default function PendingRegistrations() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.rejected}</p>
-                <p className="text-sm text-gray-400">ปฏิเสธ</p>
+                <p className="text-sm text-gray-400">Reject</p>
               </div>
             </div>
           </Card>
@@ -381,7 +381,7 @@ export default function PendingRegistrations() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.today}</p>
-                <p className="text-sm text-gray-400">วันนี้</p>
+                <p className="text-sm text-gray-400">Today</p>
               </div>
             </div>
           </Card>
@@ -396,7 +396,7 @@ export default function PendingRegistrations() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input
               type="text"
-              placeholder="ค้นหาชื่อ, อีเมล, หน่วยงาน..."
+              placeholder="Search name, email, organization..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-10"
@@ -411,10 +411,10 @@ export default function PendingRegistrations() {
               onChange={(e) => { setStatusFilter(e.target.value as any); setPage(1); }}
               className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">ทั้งหมด</option>
-              <option value="pending">รอการอนุมัติ</option>
-              <option value="approved">อนุมัติแล้ว</option>
-              <option value="rejected">ปฏิเสธ</option>
+              <option value="">All</option>
+              <option value="pending">Pending Approval</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Reject</option>
             </select>
           </div>
         </div>
@@ -433,12 +433,12 @@ export default function PendingRegistrations() {
         {isLoading ? (
           <div className="p-8 text-center">
             <RefreshCw className="w-8 h-8 text-primary-400 animate-spin mx-auto mb-2" />
-            <p className="text-gray-400">กำลังโหลด...</p>
+            <p className="text-gray-400">Loading...</p>
           </div>
         ) : registrations.length === 0 ? (
           <div className="p-8 text-center">
             <UserPlus className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-            <p className="text-gray-400">ไม่พบคำขอลงทะเบียน</p>
+            <p className="text-gray-400">No registration requests found</p>
           </div>
         ) : (
           <div className="divide-y divide-dark-700">
@@ -481,20 +481,20 @@ export default function PendingRegistrations() {
 
                     {/* Timestamp */}
                     <p className="text-xs text-gray-500 mt-2">
-                      ส่งคำขอเมื่อ {new Date(reg.created_at).toLocaleString('th-TH')}
+                      Submitted at {new Date(reg.created_at).toLocaleString('en-US')}
                     </p>
 
                     {/* Rejection reason */}
                     {reg.status === 'rejected' && reg.rejection_reason && (
                       <p className="text-sm text-red-400 mt-2">
-                        เหตุผล: {reg.rejection_reason}
+                        Reason: {reg.rejection_reason}
                       </p>
                     )}
 
                     {/* Approval info */}
                     {reg.status === 'approved' && reg.subscription_days && (
                       <p className="text-sm text-green-400 mt-2">
-                        อนุมัติ {reg.subscription_days} วัน
+                        Approve {reg.subscription_days} days
                       </p>
                     )}
                   </div>
@@ -527,7 +527,7 @@ export default function PendingRegistrations() {
         {totalPages > 1 && (
           <div className="p-4 border-t border-dark-700 flex items-center justify-between">
             <p className="text-sm text-gray-400">
-              หน้า {page} จาก {totalPages}
+              Page {page} of {totalPages}
             </p>
             <div className="flex gap-2">
               <Button

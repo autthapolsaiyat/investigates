@@ -94,7 +94,7 @@ export const AdminSidebar = () => {
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">Admin Panel</h1>
-            <p className="text-xs text-dark-400">ระบบจัดการ</p>
+            <p className="text-xs text-dark-400">Management System</p>
           </div>
         </div>
         
@@ -104,7 +104,7 @@ export const AdminSidebar = () => {
           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-dark-300 hover:text-white hover:bg-dark-700 rounded-lg transition-colors"
         >
           <ArrowLeft size={16} />
-          <span>กลับไปหน้าแอป</span>
+          <span>Back to App</span>
         </button>
       </div>
 

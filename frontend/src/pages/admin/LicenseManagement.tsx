@@ -161,7 +161,7 @@ export const LicenseManagement = () => {
   };
 
   const handleRevoke = async (licenseId: number) => {
-    if (!confirm('ยืนยันการยกเลิก License Key นี้?')) return;
+    if (!confirm('Confirm revoking this License Key??')) return;
     
     try {
       const response = await fetch(`${API_URL}/licenses/${licenseId}/revoke`, {
@@ -185,10 +185,10 @@ export const LicenseManagement = () => {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { color: string; icon: any; text: string }> = {
-      unused: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle, text: 'พร้อมใช้' },
-      activated: { color: 'bg-blue-500/20 text-blue-400', icon: Key, text: 'เปิดใช้แล้ว' },
-      expired: { color: 'bg-yellow-500/20 text-yellow-400', icon: Clock, text: 'หมดอายุ' },
-      revoked: { color: 'bg-red-500/20 text-red-400', icon: XCircle, text: 'ยกเลิก' }
+      unused: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle, text: 'Available' },
+      activated: { color: 'bg-blue-500/20 text-blue-400', icon: Key, text: 'Activated' },
+      expired: { color: 'bg-yellow-500/20 text-yellow-400', icon: Clock, text: 'Expired' },
+      revoked: { color: 'bg-red-500/20 text-red-400', icon: XCircle, text: 'Revoked' }
     };
     const badge = badges[status] || badges.unused;
     const Icon = badge.icon;
@@ -216,7 +216,7 @@ export const LicenseManagement = () => {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -228,12 +228,12 @@ export const LicenseManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">จัดการ License Keys</h1>
-          <p className="text-dark-400 mt-1">สร้างและจัดการ License สำหรับลูกค้า</p>
+          <h1 className="text-2xl font-bold text-white">License Key Managements</h1>
+          <p className="text-dark-400 mt-1">Create and manage licenses for customers</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus size={18} className="mr-2" />
-          สร้าง License Key
+          Generate License Key
         </Button>
       </div>
 
@@ -247,7 +247,7 @@ export const LicenseManagement = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_unused}</p>
-                <p className="text-xs text-dark-400">พร้อมใช้</p>
+                <p className="text-xs text-dark-400">Available</p>
               </div>
             </div>
           </Card>
@@ -259,7 +259,7 @@ export const LicenseManagement = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_activated}</p>
-                <p className="text-xs text-dark-400">เปิดใช้แล้ว</p>
+                <p className="text-xs text-dark-400">Activated</p>
               </div>
             </div>
           </Card>
@@ -271,7 +271,7 @@ export const LicenseManagement = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_expired}</p>
-                <p className="text-xs text-dark-400">หมดอายุ</p>
+                <p className="text-xs text-dark-400">Expired</p>
               </div>
             </div>
           </Card>
@@ -283,7 +283,7 @@ export const LicenseManagement = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_revoked}</p>
-                <p className="text-xs text-dark-400">ยกเลิก</p>
+                <p className="text-xs text-dark-400">Revoked</p>
               </div>
             </div>
           </Card>
@@ -297,7 +297,7 @@ export const LicenseManagement = () => {
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
               <Input
-                placeholder="ค้นหา Key, ชื่อลูกค้า..."
+                placeholder="Search Key, Customer Name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -311,11 +311,11 @@ export const LicenseManagement = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white"
           >
-            <option value="">สถานะทั้งหมด</option>
-            <option value="unused">พร้อมใช้</option>
-            <option value="activated">เปิดใช้แล้ว</option>
-            <option value="expired">หมดอายุ</option>
-            <option value="revoked">ยกเลิก</option>
+            <option value="">StatusAll</option>
+            <option value="unused">Available</option>
+            <option value="activated">Activated</option>
+            <option value="expired">Expired</option>
+            <option value="revoked">Revoked</option>
           </select>
           
           <select
@@ -323,7 +323,7 @@ export const LicenseManagement = () => {
             onChange={(e) => setPlanFilter(e.target.value)}
             className="px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white"
           >
-            <option value="">แพ็คเกจทั้งหมด</option>
+            <option value="">All Packages</option>
             <option value="basic">Basic</option>
             <option value="professional">Professional</option>
             <option value="enterprise">Enterprise</option>
@@ -331,7 +331,7 @@ export const LicenseManagement = () => {
           
           <Button variant="secondary" onClick={handleSearch}>
             <Filter size={18} className="mr-2" />
-            กรอง
+            Filter
           </Button>
           
           <Button variant="ghost" onClick={fetchLicenses}>
@@ -347,11 +347,11 @@ export const LicenseManagement = () => {
             <thead>
               <tr className="border-b border-dark-700">
                 <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">License Key</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">แพ็คเกจ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">สถานะ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">ลูกค้า</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">วันที่สร้าง</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">หมดอายุ</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">Package</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">Created Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-dark-400 uppercase">Expired</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-dark-400 uppercase">Actions</th>
               </tr>
             </thead>
@@ -360,13 +360,13 @@ export const LicenseManagement = () => {
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-dark-400">
                     <RefreshCw className="animate-spin mx-auto mb-2" size={24} />
-                    กำลังโหลด...
+                    Loading...
                   </td>
                 </tr>
               ) : licenses.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-dark-400">
-                    ไม่พบ License Keys
+                    Not found License Keys
                   </td>
                 </tr>
               ) : (
@@ -378,7 +378,7 @@ export const LicenseManagement = () => {
                         <button
                           onClick={() => copyToClipboard(license.license_key)}
                           className="p-1 hover:bg-dark-700 rounded"
-                          title="คัดลอก"
+                          title="Copy"
                         >
                           {copiedKey === license.license_key ? (
                             <CheckCircle size={14} className="text-green-400" />
@@ -390,7 +390,7 @@ export const LicenseManagement = () => {
                     </td>
                     <td className="px-4 py-3">
                       {getPlanBadge(license.plan_type)}
-                      <span className="ml-2 text-xs text-dark-400">{license.days_valid} วัน</span>
+                      <span className="ml-2 text-xs text-dark-400">{license.days_valid} days</span>
                     </td>
                     <td className="px-4 py-3">{getStatusBadge(license.status)}</td>
                     <td className="px-4 py-3">
@@ -413,7 +413,7 @@ export const LicenseManagement = () => {
                         <div>
                           <p className="text-dark-300">{formatDate(license.expires_at)}</p>
                           {license.days_remaining !== undefined && license.days_remaining > 0 && (
-                            <p className="text-xs text-green-400">เหลือ {license.days_remaining} วัน</p>
+                            <p className="text-xs text-green-400">remaining {license.days_remaining} days</p>
                           )}
                         </div>
                       ) : (
@@ -428,7 +428,7 @@ export const LicenseManagement = () => {
                             setIsDetailModalOpen(true);
                           }}
                           className="p-1.5 hover:bg-dark-700 rounded text-dark-400 hover:text-white"
-                          title="ดูรายละเอียด"
+                          title="View Details"
                         >
                           <Eye size={16} />
                         </button>
@@ -436,7 +436,7 @@ export const LicenseManagement = () => {
                           <button
                             onClick={() => handleRevoke(license.id)}
                             className="p-1.5 hover:bg-red-500/20 rounded text-dark-400 hover:text-red-400"
-                            title="ยกเลิก"
+                            title="Revoked"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -453,7 +453,7 @@ export const LicenseManagement = () => {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-dark-700">
-            <p className="text-sm text-dark-400">หน้า {page} จาก {totalPages}</p>
+            <p className="text-sm text-dark-400">Page {page} from {totalPages}</p>
             <div className="flex gap-2">
               <Button
                 variant="secondary"
@@ -461,7 +461,7 @@ export const LicenseManagement = () => {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
-                ก่อนหน้า
+                Previous
               </Button>
               <Button
                 variant="secondary"
@@ -469,7 +469,7 @@ export const LicenseManagement = () => {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
               >
-                ถัดไป
+                Next
               </Button>
             </div>
           </div>
@@ -482,7 +482,7 @@ export const LicenseManagement = () => {
           <Card className="w-full max-w-md p-6 m-4">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Key size={20} />
-              สร้าง License Key
+              Generate License Key
             </h2>
             
             {createError && (
@@ -493,20 +493,20 @@ export const LicenseManagement = () => {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-dark-400 mb-1">แพ็คเกจ</label>
+                <label className="block text-sm text-dark-400 mb-1">Package</label>
                 <select
                   value={createForm.plan_type}
                   onChange={(e) => setCreateForm({ ...createForm, plan_type: e.target.value })}
                   className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white"
                 >
-                  <option value="basic">Basic - ฿30,000/ปี</option>
-                  <option value="professional">Professional - ฿60,000/ปี</option>
-                  <option value="enterprise">Enterprise - ฿120,000/ปี</option>
+                  <option value="basic">Basic - ฿30,000/year</option>
+                  <option value="professional">Professional - ฿60,000/year</option>
+                  <option value="enterprise">Enterprise - ฿120,000/year</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm text-dark-400 mb-1">จำนวนวัน</label>
+                <label className="block text-sm text-dark-400 mb-1">Number of days</label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -546,36 +546,36 @@ export const LicenseManagement = () => {
                           : 'bg-dark-700 text-dark-300 hover:bg-dark-600'
                       }`}
                     >
-                      {days === 30 ? '1เดือน' : days === 90 ? '3เดือน' : days === 180 ? '6เดือน' : days === 365 ? '1ปี' : '2ปี'}
+                      {days === 30 ? '1month' : days === 90 ? '3month' : days === 180 ? '6month' : days === 365 ? '1year' : '2year'}
                     </button>
                   ))}
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm text-dark-400 mb-1">ชื่อลูกค้า</label>
+                <label className="block text-sm text-dark-400 mb-1">Customer Name</label>
                 <Input
                   value={createForm.customer_name}
                   onChange={(e) => setCreateForm({ ...createForm, customer_name: e.target.value })}
-                  placeholder="ชื่อ-นามสกุล หรือ องค์กร"
+                  placeholder="Name-Surname or Organization"
                 />
               </div>
               
               <div>
-                <label className="block text-sm text-dark-400 mb-1">ช่องทางติดต่อ</label>
+                <label className="block text-sm text-dark-400 mb-1">Contact Channel</label>
                 <Input
                   value={createForm.customer_contact}
                   onChange={(e) => setCreateForm({ ...createForm, customer_contact: e.target.value })}
-                  placeholder="LINE ID / เบอร์โทร"
+                  placeholder="LINE ID / Phone"
                 />
               </div>
               
               <div>
-                <label className="block text-sm text-dark-400 mb-1">โน้ต</label>
+                <label className="block text-sm text-dark-400 mb-1">Notes</label>
                 <textarea
                   value={createForm.notes}
                   onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
-                  placeholder="บันทึกเพิ่มเติม..."
+                  placeholder="Additional notes..."
                   className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white resize-none h-20"
                 />
               </div>
@@ -583,18 +583,18 @@ export const LicenseManagement = () => {
             
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>
-                ยกเลิก
+                Revoked
               </Button>
               <Button onClick={handleCreateLicense} disabled={isCreating}>
                 {isCreating ? (
                   <>
                     <RefreshCw className="animate-spin mr-2" size={16} />
-                    กำลังสร้าง...
+                    LoadingCreate...
                   </>
                 ) : (
                   <>
                     <Key size={16} className="mr-2" />
-                    สร้าง Key
+                    Create Key
                   </>
                 )}
               </Button>
@@ -608,7 +608,7 @@ export const LicenseManagement = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="w-full max-w-lg p-6 m-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">รายละเอียด License</h2>
+              <h2 className="text-xl font-bold text-white">License Details</h2>
               <button
                 onClick={() => setIsDetailModalOpen(false)}
                 className="p-1 hover:bg-dark-700 rounded"
@@ -636,16 +636,16 @@ export const LicenseManagement = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-dark-400">แพ็คเกจ</p>
+                  <p className="text-xs text-dark-400">Package</p>
                   <p className="text-white">{getPlanBadge(selectedLicense.plan_type)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-dark-400">สถานะ</p>
+                  <p className="text-xs text-dark-400">Status</p>
                   <p className="text-white">{getStatusBadge(selectedLicense.status)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-dark-400">ระยะเวลา</p>
-                  <p className="text-white">{selectedLicense.days_valid} วัน</p>
+                  <p className="text-xs text-dark-400">Duration</p>
+                  <p className="text-white">{selectedLicense.days_valid} days</p>
                 </div>
                 <div>
                   <p className="text-xs text-dark-400">Max Users</p>
@@ -655,7 +655,7 @@ export const LicenseManagement = () => {
               
               {selectedLicense.customer_name && (
                 <div>
-                  <p className="text-xs text-dark-400">ลูกค้า</p>
+                  <p className="text-xs text-dark-400">Customer</p>
                   <p className="text-white">{selectedLicense.customer_name}</p>
                   {selectedLicense.customer_contact && (
                     <p className="text-sm text-dark-400">{selectedLicense.customer_contact}</p>
@@ -665,40 +665,40 @@ export const LicenseManagement = () => {
               
               {selectedLicense.activated_by_email && (
                 <div>
-                  <p className="text-xs text-dark-400">เปิดใช้โดย</p>
+                  <p className="text-xs text-dark-400">Activated by</p>
                   <p className="text-white">{selectedLicense.activated_by_email}</p>
                   {selectedLicense.activated_at && (
-                    <p className="text-sm text-dark-400">เมื่อ {formatDate(selectedLicense.activated_at)}</p>
+                    <p className="text-sm text-dark-400">at {formatDate(selectedLicense.activated_at)}</p>
                   )}
                 </div>
               )}
               
               {selectedLicense.expires_at && (
                 <div>
-                  <p className="text-xs text-dark-400">หมดอายุ</p>
+                  <p className="text-xs text-dark-400">Expired</p>
                   <p className="text-white">{formatDate(selectedLicense.expires_at)}</p>
                   {selectedLicense.days_remaining !== undefined && selectedLicense.days_remaining > 0 && (
-                    <p className="text-sm text-green-400">เหลือ {selectedLicense.days_remaining} วัน</p>
+                    <p className="text-sm text-green-400">remaining {selectedLicense.days_remaining} days</p>
                   )}
                 </div>
               )}
               
               {selectedLicense.notes && (
                 <div>
-                  <p className="text-xs text-dark-400">โน้ต</p>
+                  <p className="text-xs text-dark-400">Notes</p>
                   <p className="text-white">{selectedLicense.notes}</p>
                 </div>
               )}
               
               <div className="pt-4 border-t border-dark-700">
-                <p className="text-xs text-dark-400">สร้างโดย: {selectedLicense.created_by_email}</p>
-                <p className="text-xs text-dark-400">เมื่อ: {formatDate(selectedLicense.created_at)}</p>
+                <p className="text-xs text-dark-400">Created by: {selectedLicense.created_by_email}</p>
+                <p className="text-xs text-dark-400">at: {formatDate(selectedLicense.created_at)}</p>
               </div>
             </div>
             
             <div className="flex justify-end mt-6">
               <Button variant="secondary" onClick={() => setIsDetailModalOpen(false)}>
-                ปิด
+                Close
               </Button>
             </div>
           </Card>

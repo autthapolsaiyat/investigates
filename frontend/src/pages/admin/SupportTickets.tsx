@@ -57,11 +57,11 @@ const formatRelativeTime = (dateStr: string) => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'เมื่อสักครู่';
-  if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
-  if (diffHours < 24) return `${diffHours} ชม. ที่แล้ว`;
-  if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
-  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 };
 
 export const SupportTickets = () => {
@@ -186,7 +186,7 @@ export const SupportTickets = () => {
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           🎫 Support Tickets
         </h1>
-        <p className="text-dark-400 text-sm mt-1">จัดการ Ticket จากผู้ใช้งาน</p>
+        <p className="text-dark-400 text-sm mt-1">Manage tickets from users</p>
       </div>
 
       {/* Stats Cards */}
@@ -221,7 +221,7 @@ export const SupportTickets = () => {
           }}
           className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm focus:border-primary-500 outline-none"
         >
-          <option value="">ทุกสถานะ</option>
+          <option value="">All Status</option>
           <option value="open">Open</option>
           <option value="in_progress">In Progress</option>
           <option value="resolved">Resolved</option>
@@ -236,7 +236,7 @@ export const SupportTickets = () => {
           }}
           className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm focus:border-primary-500 outline-none"
         >
-          <option value="">ทุกประเภท</option>
+          <option value="">All Types</option>
           <option value="bug">Bug</option>
           <option value="feature">Feature</option>
           <option value="question">Question</option>
@@ -249,7 +249,7 @@ export const SupportTickets = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="ค้นหา Ticket..."
+            placeholder="Search Ticket..."
             className="flex-1 max-w-xs px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm placeholder-dark-500 focus:border-primary-500 outline-none"
           />
           <button
@@ -280,8 +280,8 @@ export const SupportTickets = () => {
       ) : tickets.length === 0 ? (
         <div className="text-center py-12 bg-dark-800 rounded-xl border border-dark-700">
           <AlertCircle className="mx-auto text-dark-500 mb-3" size={48} />
-          <h3 className="text-lg font-medium text-white">ไม่พบ Ticket</h3>
-          <p className="text-dark-400 text-sm">ลองเปลี่ยน filter หรือ keyword</p>
+          <h3 className="text-lg font-medium text-white">No tickets found</h3>
+          <p className="text-dark-400 text-sm">Try changing filter or keyword</p>
         </div>
       ) : (
         <div className="bg-dark-800 rounded-xl border border-dark-700 overflow-hidden">
@@ -360,7 +360,7 @@ export const SupportTickets = () => {
             <ChevronLeft size={20} />
           </button>
           <span className="text-sm text-dark-400">
-            หน้า {page} / {totalPages}
+            Page {page} / {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -408,13 +408,13 @@ export const SupportTickets = () => {
                       </div>
                     </div>
                     <div className="ml-auto text-xs text-dark-500">
-                      {new Date(selectedTicket.created_at).toLocaleString('th-TH')}
+                      {new Date(selectedTicket.created_at).toLocaleString('en-US')}
                     </div>
                   </div>
 
                   {/* Description */}
                   <div>
-                    <h4 className="text-sm font-medium text-dark-300 mb-2">รายละเอียด</h4>
+                    <h4 className="text-sm font-medium text-dark-300 mb-2">Details</h4>
                     <div className="p-3 bg-dark-700 rounded-lg text-white whitespace-pre-wrap text-sm">
                       {selectedTicket.description}
                     </div>
@@ -434,7 +434,7 @@ export const SupportTickets = () => {
 
                   {/* Edit Section */}
                   <div className="border-t border-dark-700 pt-4 space-y-4">
-                    <h4 className="text-sm font-medium text-primary-400">จัดการ Ticket</h4>
+                    <h4 className="text-sm font-medium text-primary-400">Manage Ticket</h4>
 
                     {/* Status & Priority */}
                     <div className="grid grid-cols-2 gap-4">
@@ -468,11 +468,11 @@ export const SupportTickets = () => {
 
                     {/* Response */}
                     <div>
-                      <label className="block text-xs text-dark-400 mb-1">ตอบกลับ</label>
+                      <label className="block text-xs text-dark-400 mb-1">Reply</label>
                       <textarea
                         value={editResponse}
                         onChange={(e) => setEditResponse(e.target.value)}
-                        placeholder="พิมพ์คำตอบถึงผู้ใช้..."
+                        placeholder="Type reply to user..."
                         rows={4}
                         className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm placeholder-dark-500 focus:border-primary-500 outline-none resize-none"
                       />
@@ -487,7 +487,7 @@ export const SupportTickets = () => {
                     className="px-4 py-2 text-dark-300 hover:text-white transition-colors"
                     disabled={isSaving}
                   >
-                    ยกเลิก
+                    Cancel
                   </button>
                   <button
                     onClick={saveChanges}
@@ -495,7 +495,7 @@ export const SupportTickets = () => {
                     className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-dark-700 disabled:text-dark-500 text-white rounded-lg transition-colors"
                   >
                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                    <span>บันทึก</span>
+                    <span>Save</span>
                   </button>
                 </div>
               </>

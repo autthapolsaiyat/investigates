@@ -1,6 +1,6 @@
 /**
  * Crypto Tracker - Professional Blockchain Forensics
- * มาตรฐาน Digital Forensic สำหรับการสืบสวนคดีคริปโต
+ * Digital Forensic standard for Crypto Case Investigation
  * 
  * Features:
  * - Multi-chain Wallet Lookup (BTC, ETH, USDT-TRC20, BNB, Polygon)
@@ -252,7 +252,7 @@ export const CryptoTracker = () => {
   // Search wallet - with real API integration
   const searchWallet = async () => {
     if (!searchAddress.trim()) {
-      setError('กรุณาใส่ Wallet Address');
+      setError('Please enter Wallet Address');
       return;
     }
     
@@ -332,9 +332,9 @@ export const CryptoTracker = () => {
   };
 
   const getRiskLabel = (score: number) => {
-    if (score >= 70) return 'ความเสี่ยงสูง';
-    if (score >= 40) return 'ความเสี่ยงปานกลาง';
-    return 'ความเสี่ยงต่ำ';
+    if (score >= 70) return 'High Risk';
+    if (score >= 40) return 'Medium Risk';
+    return 'Low Risk';
   };
 
   const getSeverityColor = (severity: string) => {
@@ -359,7 +359,7 @@ export const CryptoTracker = () => {
             Crypto Tracker
           </h1>
           <p className="text-dark-400 mt-1">
-            Blockchain Forensics - วิเคราะห์ธุรกรรมคริปโตระดับมืออาชีพ
+            Blockchain Forensics - Professional Crypto Transaction Analysis
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -390,7 +390,7 @@ export const CryptoTracker = () => {
           )}
           <Button variant="secondary">
             <FileText size={18} className="mr-2" />
-            รายงาน
+            Report
           </Button>
           <Button variant="secondary">
             <Download size={18} className="mr-2" />
@@ -432,7 +432,7 @@ export const CryptoTracker = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={18} />
             <input
               type="text"
-              placeholder="ใส่ Wallet Address (0x... หรือ T... หรือ bc1...)"
+              placeholder="Enter Wallet Address (0x... or T... or bc1...)"
               value={searchAddress}
               onChange={(e) => setSearchAddress(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && searchWallet()}
@@ -444,12 +444,12 @@ export const CryptoTracker = () => {
             {isLoading ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                กำลังค้นหา...
+                LoadingSearch...
               </>
             ) : (
               <>
                 <Search size={18} className="mr-2" />
-                ค้นหา
+                Search
               </>
             )}
           </Button>
@@ -457,7 +457,7 @@ export const CryptoTracker = () => {
 
         {/* Quick Search Examples */}
         <div className="mt-3 flex items-center gap-2 text-xs">
-          <span className="text-dark-500">ตัวอย่าง:</span>
+          <span className="text-dark-500">Example:</span>
           <button
             onClick={() => setSearchAddress('0x28c6c06298d514db089934071355e5743bf21d60')}
             className="text-primary-400 hover:underline"
@@ -498,12 +498,12 @@ export const CryptoTracker = () => {
             {dataSource === 'api' ? (
               <>
                 <CheckCircle2 size={16} />
-                <span>ข้อมูลจาก API จริง (Real-time)</span>
+                <span>Data from real API (Real-time)</span>
               </>
             ) : (
               <>
                 <AlertTriangle size={16} />
-                <span>ข้อมูลจำลอง (Demo Mode) - API ไม่พร้อมใช้งานหรือถูก rate limit</span>
+                <span>Demo data (Demo Mode) - API unavailable or rate limited</span>
               </>
             )}
           </div>
@@ -517,7 +517,7 @@ export const CryptoTracker = () => {
                   <span className="text-2xl">{currentChain.icon}</span>
                 </div>
                 <div>
-                  <p className="text-sm text-dark-400">ยอดคงเหลือ</p>
+                  <p className="text-sm text-dark-400">Balance</p>
                   <p className="text-2xl font-bold">{formatCrypto(walletInfo.balance, currentChain.symbol)}</p>
                   <p className="text-sm text-dark-400">{formatUSD(walletInfo.balanceUSD)}</p>
                 </div>
@@ -528,7 +528,7 @@ export const CryptoTracker = () => {
             <Card className="p-4">
               <div className="flex items-center gap-2 text-green-400 mb-1">
                 <ArrowDownLeft size={16} />
-                <span className="text-sm">รับเข้า</span>
+                <span className="text-sm">Incoming</span>
               </div>
               <p className="text-xl font-bold text-green-400">{formatUSD(walletInfo.totalReceived)}</p>
             </Card>
@@ -537,7 +537,7 @@ export const CryptoTracker = () => {
             <Card className="p-4">
               <div className="flex items-center gap-2 text-red-400 mb-1">
                 <ArrowUpRight size={16} />
-                <span className="text-sm">ส่งออก</span>
+                <span className="text-sm">Export</span>
               </div>
               <p className="text-xl font-bold text-red-400">{formatUSD(walletInfo.totalSent)}</p>
             </Card>
@@ -546,7 +546,7 @@ export const CryptoTracker = () => {
             <Card className="p-4">
               <div className="flex items-center gap-2 text-blue-400 mb-1">
                 <Activity size={16} />
-                <span className="text-sm">ธุรกรรม</span>
+                <span className="text-sm">Transactions</span>
               </div>
               <p className="text-xl font-bold">{walletInfo.txCount.toLocaleString()}</p>
             </Card>
@@ -590,11 +590,11 @@ export const CryptoTracker = () => {
               <div className="flex items-center gap-4 text-sm">
                 <div>
                   <p className="text-dark-400">First TX</p>
-                  <p>{walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('th-TH') : '-'}</p>
+                  <p>{walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('en-US') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-dark-400">Last TX</p>
-                  <p>{walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('th-TH') : '-'}</p>
+                  <p>{walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('en-US') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-dark-400">Type</p>
@@ -646,11 +646,11 @@ export const CryptoTracker = () => {
           {/* Tabs */}
           <div className="flex items-center gap-1 border-b border-dark-700">
             {[
-              { id: 'overview', label: 'ภาพรวม', icon: Eye },
-              { id: 'transactions', label: 'ธุรกรรม', icon: Activity },
-              { id: 'graph', label: 'กราฟเครือข่าย', icon: Network },
-              { id: 'risk', label: 'วิเคราะห์ความเสี่ยง', icon: ShieldAlert },
-              { id: 'evidence', label: 'หลักฐาน', icon: Fingerprint },
+              { id: 'overview', label: 'Overview', icon: Eye },
+              { id: 'transactions', label: 'Transactions', icon: Activity },
+              { id: 'graph', label: 'Network Graph', icon: Network },
+              { id: 'risk', label: 'Risk Analysis', icon: ShieldAlert },
+              { id: 'evidence', label: 'Evidence', icon: Fingerprint },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -674,7 +674,7 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Clock className="text-primary-400" />
-                  ธุรกรรมล่าสุด
+                  Recent Transactions
                 </h3>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {transactions.slice(0, 10).map((tx) => {
@@ -693,7 +693,7 @@ export const CryptoTracker = () => {
                                 {entity?.name || formatAddress(tx.type === 'in' ? tx.from : tx.to)}
                               </p>
                               <p className="text-xs text-dark-400">
-                                {new Date(tx.timestamp).toLocaleString('th-TH')}
+                                {new Date(tx.timestamp).toLocaleString('en-US')}
                               </p>
                             </div>
                           </div>
@@ -724,7 +724,7 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Link2 className="text-primary-400" />
-                  Counterparties หลัก
+                  Main Counterparties
                 </h3>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {(() => {
@@ -753,7 +753,7 @@ export const CryptoTracker = () => {
                                 <p className="font-medium text-sm">
                                   {entity?.name || formatAddress(cp.address)}
                                 </p>
-                                <p className="text-xs text-dark-400">{cp.txCount} ธุรกรรม</p>
+                                <p className="text-xs text-dark-400">{cp.txCount} Transactions</p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -777,7 +777,7 @@ export const CryptoTracker = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Activity className="text-primary-400" />
-                  รายการธุรกรรม ({filteredTx.length} รายการ)
+                  Transactions ({filteredTx.length} List)
                 </h3>
                 <div className="flex items-center gap-2">
                   <select
@@ -785,9 +785,9 @@ export const CryptoTracker = () => {
                     value={txFilter}
                     onChange={(e) => setTxFilter(e.target.value as typeof txFilter)}
                   >
-                    <option value="all">ทั้งหมด</option>
-                    <option value="in">รับเข้า</option>
-                    <option value="out">ส่งออก</option>
+                    <option value="all">All</option>
+                    <option value="in">Incoming</option>
+                    <option value="out">Export</option>
                   </select>
                 </div>
               </div>
@@ -796,10 +796,10 @@ export const CryptoTracker = () => {
                   <thead className="bg-dark-800">
                     <tr>
                       <th className="text-left px-4 py-3">Hash</th>
-                      <th className="text-left px-4 py-3">เวลา</th>
-                      <th className="text-left px-4 py-3">ประเภท</th>
-                      <th className="text-left px-4 py-3">จาก/ถึง</th>
-                      <th className="text-right px-4 py-3">จำนวน</th>
+                      <th className="text-left px-4 py-3">Time</th>
+                      <th className="text-left px-4 py-3">Type</th>
+                      <th className="text-left px-4 py-3">from/to</th>
+                      <th className="text-right px-4 py-3">Quantity</th>
                       <th className="text-left px-4 py-3">Entity</th>
                       <th className="text-center px-4 py-3">Explorer</th>
                     </tr>
@@ -811,7 +811,7 @@ export const CryptoTracker = () => {
                       return (
                         <tr key={tx.hash} className="hover:bg-dark-800/50">
                           <td className="px-4 py-3 font-mono text-xs">{formatAddress(tx.hash, 8)}</td>
-                          <td className="px-4 py-3 text-dark-400">{new Date(tx.timestamp).toLocaleString('th-TH')}</td>
+                          <td className="px-4 py-3 text-dark-400">{new Date(tx.timestamp).toLocaleString('en-US')}</td>
                           <td className="px-4 py-3">
                             <Badge variant={tx.type === 'in' ? 'success' : 'danger'}>{tx.type === 'in' ? 'IN' : 'OUT'}</Badge>
                           </td>
@@ -840,7 +840,7 @@ export const CryptoTracker = () => {
               {filteredTx.length > 50 && !showAllTx && (
                 <div className="text-center mt-4">
                   <Button variant="ghost" onClick={() => setShowAllTx(true)}>
-                    แสดงทั้งหมด ({filteredTx.length} รายการ)
+                    ShowAll ({filteredTx.length} List)
                   </Button>
                 </div>
               )}
@@ -884,7 +884,7 @@ export const CryptoTracker = () => {
               <Card className="p-4 col-span-2">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <AlertTriangle className="text-yellow-400" />
-                  ปัจจัยความเสี่ยงที่ตรวจพบ
+                  Detected Risk Factors
                 </h3>
                 {walletInfo.riskFactors.length > 0 ? (
                   <div className="space-y-3">
@@ -903,10 +903,10 @@ export const CryptoTracker = () => {
                             </div>
                             <div>
                               <p className="font-medium">{factor.description}</p>
-                              <p className="text-xs text-dark-400 mt-1">ความรุนแรง: {factor.severity.toUpperCase()}</p>
+                              <p className="text-xs text-dark-400 mt-1">Severity: {factor.severity.toUpperCase()}</p>
                             </div>
                           </div>
-                          <Badge variant="danger">+{factor.score} คะแนน</Badge>
+                          <Badge variant="danger">+{factor.score} points</Badge>
                         </div>
                       </div>
                     ))}
@@ -914,36 +914,36 @@ export const CryptoTracker = () => {
                 ) : (
                   <div className="text-center py-8">
                     <ShieldCheck size={48} className="mx-auto text-green-400 mb-3" />
-                    <p className="text-lg font-medium text-green-400">ไม่พบความเสี่ยงที่มีนัยสำคัญ</p>
-                    <p className="text-sm text-dark-400 mt-1">Wallet นี้มีพฤติกรรมปกติ</p>
+                    <p className="text-lg font-medium text-green-400">No significant risks found</p>
+                    <p className="text-sm text-dark-400 mt-1">This wallet has normal behavior</p>
                   </div>
                 )}
 
                 <div className="mt-6 p-4 bg-dark-900 rounded-lg">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Info size={16} className="text-primary-400" />
-                    คำแนะนำสำหรับการสืบสวน
+                    Investigation Recommendations
                   </h4>
                   <ul className="space-y-2 text-sm">
                     {walletInfo.riskScore >= 70 && (
                       <>
                         <li className="flex items-start gap-2">
                           <CheckCircle2 size={14} className="text-red-400 mt-0.5" />
-                          <span>ควรตรวจสอบธุรกรรมที่เกี่ยวข้องกับ Mixer อย่างละเอียด</span>
+                          <span>Thoroughly investigate transactions related to Mixer</span>
                         </li>
                         <li className="flex items-start gap-2">
                           <CheckCircle2 size={14} className="text-red-400 mt-0.5" />
-                          <span>ติดตาม counterparties ที่มีปริมาณธุรกรรมสูง</span>
+                          <span>Track counterparties with high transaction volume</span>
                         </li>
                       </>
                     )}
                     <li className="flex items-start gap-2">
                       <CheckCircle2 size={14} className="text-primary-400 mt-0.5" />
-                      <span>ตรวจสอบ Exchange ที่ใช้ในการ Cash-out และขอข้อมูล KYC</span>
+                      <span>Check Exchange used for Cash-out and request KYC data</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 size={14} className="text-primary-400 mt-0.5" />
-                      <span>วิเคราะห์ Time Pattern เพื่อระบุพฤติกรรมผิดปกติ</span>
+                      <span>Analyze Time Pattern to identify abnormal behavior</span>
                     </li>
                   </ul>
                 </div>
@@ -957,7 +957,7 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Fingerprint className="text-primary-400" />
-                  สรุปหลักฐาน
+                  SummaryEvidence
                 </h3>
                 <div className="space-y-4">
                   <div className="p-4 bg-dark-800 rounded-lg">
@@ -969,19 +969,19 @@ export const CryptoTracker = () => {
                     <p className="font-medium">{currentChain.name} ({currentChain.symbol})</p>
                   </div>
                   <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-dark-400 mb-2">ช่วงเวลาธุรกรรม</p>
+                    <p className="text-sm text-dark-400 mb-2">Transaction Time Range</p>
                     <p className="font-medium">
-                      {walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('th-TH') : '-'}
+                      {walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('en-US') : '-'}
                       {' → '}
-                      {walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('th-TH') : '-'}
+                      {walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('en-US') : '-'}
                     </p>
                   </div>
                   <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-dark-400 mb-2">มูลค่ารวม</p>
+                    <p className="text-sm text-dark-400 mb-2">Total Value</p>
                     <p className="font-medium text-lg">{formatUSD(walletInfo.totalReceived + walletInfo.totalSent)}</p>
                   </div>
                   <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-dark-400 mb-2">แหล่งข้อมูล</p>
+                    <p className="text-sm text-dark-400 mb-2">Data Source</p>
                     <Badge variant={dataSource === 'api' ? 'success' : 'warning'}>
                       {dataSource === 'api' ? 'Real-time API' : 'Demo Data'}
                     </Badge>
@@ -992,14 +992,14 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Download className="text-primary-400" />
-                  Export หลักฐาน
+                  Export Evidence
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { icon: FileText, color: 'text-red-400', title: 'PDF Report', desc: 'รายงานสำหรับส่งศาล พร้อม Chain of Custody' },
-                    { icon: BarChart3, color: 'text-green-400', title: 'Excel/CSV', desc: 'ข้อมูลธุรกรรมทั้งหมดสำหรับวิเคราะห์เพิ่มเติม' },
-                    { icon: Network, color: 'text-blue-400', title: 'Graph Export', desc: 'ภาพ Network Graph (PNG/SVG)' },
-                    { icon: Hash, color: 'text-purple-400', title: 'JSON Data', desc: 'ข้อมูลดิบสำหรับ Import เข้าระบบอื่น' },
+                    { icon: FileText, color: 'text-red-400', title: 'PDF Report', desc: 'Report for court submission with Chain of Custody' },
+                    { icon: BarChart3, color: 'text-green-400', title: 'Excel/CSV', desc: 'All transaction data for additional analysis' },
+                    { icon: Network, color: 'text-blue-400', title: 'Graph Export', desc: 'Network Graph image (PNG/SVG)' },
+                    { icon: Hash, color: 'text-purple-400', title: 'JSON Data', desc: 'Raw data for import to other systems' },
                   ].map((item, idx) => (
                     <button key={idx} className="w-full p-4 bg-dark-800 rounded-lg hover:bg-dark-750 transition-colors text-left">
                       <div className="flex items-center gap-3">
@@ -1016,7 +1016,7 @@ export const CryptoTracker = () => {
                 <div className="mt-6">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Globe size={16} className="text-primary-400" />
-                    ลิงก์ Blockchain Explorer
+                    Blockchain Explorer Links
                   </h4>
                   <div className="space-y-2">
                     <a href={getExplorerUrl(walletInfo.blockchain as BlockchainType, 'address', walletInfo.address)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-dark-800 rounded-lg hover:bg-dark-750 transition-colors">
@@ -1045,9 +1045,9 @@ export const CryptoTracker = () => {
       {!walletInfo && !isLoading && (
         <Card className="p-12 text-center">
           <Wallet size={64} className="mx-auto text-dark-600 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">ค้นหา Wallet เพื่อเริ่มวิเคราะห์</h2>
+          <h2 className="text-xl font-semibold mb-2">Search Wallet to start Analysis</h2>
           <p className="text-dark-400 mb-6">
-            ใส่ Wallet Address เพื่อดูข้อมูลธุรกรรม, วิเคราะห์ความเสี่ยง และติดตามการเคลื่อนไหวของเงิน
+            Enter Wallet Address to view transaction data, analyze risks, and track money movement
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {blockchains.map(chain => (

@@ -57,7 +57,7 @@ const getRoleLabel = (role: string) => {
 
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return 'Never';
-  return new Date(dateString).toLocaleDateString('th-TH', {
+  return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -569,9 +569,9 @@ export const Users = () => {
                 <div className="flex items-start gap-3">
                   <Key className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-yellow-400 font-medium">รีเซ็ตรหัสผ่าน</p>
+                    <p className="text-yellow-400 font-medium">Reset Password</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      ระบบจะสร้างรหัสผ่านชั่วคราวแบบสุ่มให้ผู้ใช้ ผู้ใช้ควรเปลี่ยนรหัสผ่านเมื่อ Login ครั้งถัดไป
+                      System will generate a random temporary password. User should change password on next login
                     </p>
                   </div>
                 </div>
@@ -588,7 +588,7 @@ export const Users = () => {
                   className="flex-1" 
                   onClick={() => setShowResetPasswordModal(false)}
                 >
-                  ยกเลิก
+                  Cancel
                 </Button>
                 <Button 
                   className="flex-1" 
@@ -596,7 +596,7 @@ export const Users = () => {
                   disabled={saving}
                 >
                   {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  สร้างรหัสผ่านใหม่
+                  Generate New Password
                 </Button>
               </div>
             </>
@@ -605,11 +605,11 @@ export const Users = () => {
               {/* Show new password */}
               <div className="text-center py-2">
                 <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                <p className="text-green-400 font-medium">รีเซ็ตรหัสผ่านสำเร็จ!</p>
+                <p className="text-green-400 font-medium">Password reset successful!</p>
               </div>
 
               <div className="p-3 bg-dark-700 rounded-lg">
-                <p className="text-sm text-gray-400 mb-2">รหัสผ่านชั่วคราว:</p>
+                <p className="text-sm text-gray-400 mb-2">Temporary password:</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-dark-800 px-3 py-2 rounded font-mono text-primary-400 text-lg">
                     {newPassword}
@@ -626,14 +626,14 @@ export const Users = () => {
               </div>
 
               <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-sm text-yellow-400">
-                ⚠️ กรุณาบันทึกรหัสผ่านนี้ไว้ ระบบจะไม่แสดงรหัสผ่านนี้อีกครั้ง
+                ⚠️ Please save this password. It will not be shown again
               </div>
 
               <Button 
                 className="w-full" 
                 onClick={() => setShowResetPasswordModal(false)}
               >
-                ปิด
+                Close
               </Button>
             </>
           )}

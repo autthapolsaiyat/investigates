@@ -28,12 +28,12 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  draft: 'ร่าง',
-  open: 'เปิด',
-  in_progress: 'กำลังดำเนินการ',
-  pending_review: 'รอตรวจสอบ',
-  closed: 'ปิด',
-  archived: 'เก็บถาวร',
+  draft: 'Draft',
+  open: 'Open',
+  in_progress: 'In Progress',
+  pending_review: 'Pending Review',
+  closed: 'Closed',
+  archived: 'Archived',
 };
 
 const priorityColors: Record<string, string> = {
@@ -124,7 +124,7 @@ export const CaseSelector = ({
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
@@ -135,7 +135,7 @@ export const CaseSelector = ({
     return (
       <div className="flex items-center gap-2 text-dark-400">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span>กำลังโหลดคดี...</span>
+        <span>Loading cases...</span>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export const CaseSelector = ({
                 <p className="text-xs text-dark-400 truncate max-w-[300px]">{selectedCase.title}</p>
               </div>
             ) : (
-              <span className="text-dark-400">-- เลือกคดี --</span>
+              <span className="text-dark-400">-- Select Case --</span>
             )}
           </div>
           <ChevronDown className={`w-4 h-4 text-dark-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -189,7 +189,7 @@ export const CaseSelector = ({
               </button>
             )) : (
               <div className="p-4 text-center text-dark-400">
-                ไม่มีคดีในระบบ
+                No cases in system
               </div>
             )}
           </div>
@@ -218,28 +218,28 @@ export const CaseSelector = ({
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-green-400" />
               <div>
-                <p className="text-xs text-dark-400">มูลค่า</p>
+                <p className="text-xs text-dark-400">Amount</p>
                 <p className="text-sm font-medium text-white">{formatCurrency(selectedCase.total_amount || 0)}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-red-400" />
               <div>
-                <p className="text-xs text-dark-400">ผู้เสียหาย</p>
-                <p className="text-sm font-medium text-white">{selectedCase.victims_count || 0} คน</p>
+                <p className="text-xs text-dark-400">Victims</p>
+                <p className="text-sm font-medium text-white">{selectedCase.victims_count || 0} people</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-orange-400" />
               <div>
-                <p className="text-xs text-dark-400">ผู้ต้องสงสัย</p>
-                <p className="text-sm font-medium text-white">{selectedCase.suspects_count || 0} คน</p>
+                <p className="text-xs text-dark-400">Suspects</p>
+                <p className="text-sm font-medium text-white">{selectedCase.suspects_count || 0} people</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-400" />
               <div>
-                <p className="text-xs text-dark-400">สร้างเมื่อ</p>
+                <p className="text-xs text-dark-400">Created</p>
                 <p className="text-sm font-medium text-white">{formatDate(selectedCase.created_at)}</p>
               </div>
             </div>

@@ -26,10 +26,10 @@ import { CreateTicketModal } from './CreateTicketModal';
 
 // Status config
 const statusConfig: Record<TicketStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  open: { label: 'รอดำเนินการ', color: 'text-blue-400 bg-blue-500/20', icon: <Circle size={14} /> },
-  in_progress: { label: 'กำลังดำเนินการ', color: 'text-yellow-400 bg-yellow-500/20', icon: <Clock size={14} /> },
-  resolved: { label: 'แก้ไขแล้ว', color: 'text-green-400 bg-green-500/20', icon: <CheckCircle size={14} /> },
-  closed: { label: 'ปิดแล้ว', color: 'text-gray-400 bg-gray-500/20', icon: <CheckCircle size={14} /> },
+  open: { label: 'Pending', color: 'text-blue-400 bg-blue-500/20', icon: <Circle size={14} /> },
+  in_progress: { label: 'In Progress', color: 'text-yellow-400 bg-yellow-500/20', icon: <Clock size={14} /> },
+  resolved: { label: 'Resolved', color: 'text-green-400 bg-green-500/20', icon: <CheckCircle size={14} /> },
+  closed: { label: 'Closed', color: 'text-gray-400 bg-gray-500/20', icon: <CheckCircle size={14} /> },
 };
 
 // Category config
@@ -49,11 +49,11 @@ const formatRelativeTime = (dateStr: string) => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'เมื่อสักครู่';
-  if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
-  if (diffHours < 24) return `${diffHours} ชม. ที่แล้ว`;
-  if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
-  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 };
 
 export const MyTickets = () => {
@@ -125,21 +125,21 @@ export const MyTickets = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            🎫 Tickets ของฉัน
+            🎫 My Tickets
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-                {unreadCount} ใหม่
+                {unreadCount} new
               </span>
             )}
           </h1>
-          <p className="text-dark-400 text-sm mt-1">ติดตามสถานะการแจ้งปัญหาของคุณ</p>
+          <p className="text-dark-400 text-sm mt-1">Track your issue report status</p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
         >
           <Plus size={18} />
-          <span>แจ้งปัญหาใหม่</span>
+          <span>Report New Issue</span>
         </button>
       </div>
 
@@ -153,11 +153,11 @@ export const MyTickets = () => {
           }}
           className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm focus:border-primary-500 outline-none"
         >
-          <option value="">ทุกสถานะ</option>
-          <option value="open">รอดำเนินการ</option>
-          <option value="in_progress">กำลังดำเนินการ</option>
-          <option value="resolved">แก้ไขแล้ว</option>
-          <option value="closed">ปิดแล้ว</option>
+          <option value="">All Status</option>
+          <option value="open">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="resolved">Resolved</option>
+          <option value="closed">Closed</option>
         </select>
 
         <button
@@ -179,14 +179,14 @@ export const MyTickets = () => {
           <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <Bug className="text-dark-500" size={32} />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">ยังไม่มี Ticket</h3>
-          <p className="text-dark-400 text-sm mb-4">พบปัญหา? แจ้งเราได้เลย!</p>
+          <h3 className="text-lg font-medium text-white mb-2">No tickets yet</h3>
+          <p className="text-dark-400 text-sm mb-4">Having issues? Let us know!</p>
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
           >
             <Plus size={18} />
-            <span>แจ้งปัญหาใหม่</span>
+            <span>Report New Issue</span>
           </button>
         </div>
       ) : (
@@ -229,13 +229,13 @@ export const MyTickets = () => {
                       {ticket.has_screenshot && (
                         <span className="flex items-center gap-1">
                           <ImageIcon size={12} />
-                          มีภาพ
+                          Has image
                         </span>
                       )}
                       {ticket.has_admin_response && (
                         <span className="flex items-center gap-1 text-green-400">
                           <MessageSquare size={12} />
-                          มีคำตอบ
+                          Has reply
                         </span>
                       )}
                       <span className="flex items-center gap-1">
@@ -266,7 +266,7 @@ export const MyTickets = () => {
             <ChevronLeft size={20} />
           </button>
           <span className="text-sm text-dark-400">
-            หน้า {page} / {totalPages}
+            Page {page} / {totalPages}
           </span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
@@ -320,13 +320,13 @@ export const MyTickets = () => {
                       {categoryConfig[selectedTicket.category].label}
                     </span>
                     <span className="text-xs text-dark-500">
-                      {new Date(selectedTicket.created_at).toLocaleString('th-TH')}
+                      {new Date(selectedTicket.created_at).toLocaleString('en-US')}
                     </span>
                   </div>
 
                   {/* Description */}
                   <div>
-                    <h4 className="text-sm font-medium text-dark-300 mb-2">รายละเอียด</h4>
+                    <h4 className="text-sm font-medium text-dark-300 mb-2">Details</h4>
                     <div className="p-3 bg-dark-700 rounded-lg text-white whitespace-pre-wrap">
                       {selectedTicket.description}
                     </div>
@@ -349,14 +349,14 @@ export const MyTickets = () => {
                     <div className="border-t border-dark-700 pt-4">
                       <h4 className="text-sm font-medium text-green-400 mb-2 flex items-center gap-2">
                         <MessageSquare size={16} />
-                        คำตอบจาก Admin
+                        Reply from Admin
                       </h4>
                       <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-white whitespace-pre-wrap">
                         {selectedTicket.admin_response}
                       </div>
                       {selectedTicket.resolved_at && (
                         <p className="text-xs text-dark-500 mt-2">
-                          ตอบเมื่อ {new Date(selectedTicket.resolved_at).toLocaleString('th-TH')}
+                          Replied at {new Date(selectedTicket.resolved_at).toLocaleString('en-US')}
                         </p>
                       )}
                     </div>

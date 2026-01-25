@@ -1,5 +1,5 @@
 /**
- * UserGuide - คู่มือการใช้งาน InvestiGate
+ * UserGuide - User Guide InvestiGate
  */
 import { 
   BookOpen, Sparkles, Network, Wallet, Phone, MapPin, 
@@ -18,13 +18,13 @@ const UserGuide = () => {
               <BookOpen className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">คู่มือการใช้งาน InvestiGate</h1>
+              <h1 className="text-3xl font-bold">User Guide InvestiGate</h1>
               <p className="text-primary-200">Investigation Platform - Digital Forensic Standard</p>
             </div>
           </div>
           <p className="text-primary-100 max-w-2xl">
-            ระบบวิเคราะห์และสืบสวนคดีดิจิทัล สำหรับเจ้าหน้าที่สืบสวน มาตรฐาน Digital Forensic 
-            รองรับการนำเข้าข้อมูลจาก Cellebrite, UFED, XRY และรายงานที่ใช้ได้ในชั้นศาล
+            Digital case analysis and investigation system for investigators, Digital Forensic standard 
+            Supports importing data from Cellebrite, UFED, XRY and court-ready reports
           </p>
         </div>
       </div>
@@ -36,14 +36,14 @@ const UserGuide = () => {
         <section>
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <Sparkles className="text-yellow-400" />
-            เริ่มต้นใช้งาน (Quick Start)
+            Getting Started (Quick Start)
           </h2>
           <div className="grid md:grid-cols-4 gap-4">
             {[
-              { step: 1, icon: Briefcase, title: 'สร้างคดี', desc: 'Cases → + สร้างคดีใหม่' },
-              { step: 2, icon: Upload, title: 'นำเข้าข้อมูล', desc: 'Smart Import → อัปโหลดไฟล์' },
-              { step: 3, icon: Network, title: 'วิเคราะห์', desc: 'ดู Money Flow, Crypto, Call' },
-              { step: 4, icon: FileText, title: 'สร้างรายงาน', desc: 'Forensic Report → Export PDF' },
+              { step: 1, icon: Briefcase, title: 'Create Case', desc: 'Cases → + Create New Case' },
+              { step: 2, icon: Upload, title: 'Import Data', desc: 'Smart Import → Upload files' },
+              { step: 3, icon: Network, title: 'Analysis', desc: 'View Money Flow, Crypto, Call' },
+              { step: 4, icon: FileText, title: 'CreateReport', desc: 'Forensic Report → Export PDF' },
             ].map((item) => (
               <div key={item.step} className="bg-dark-800 border border-dark-700 rounded-xl p-4 relative">
                 <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center font-bold">
@@ -61,7 +61,7 @@ const UserGuide = () => {
         <section>
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <Search className="text-blue-400" />
-            อธิบายเมนู
+            Menu Description
           </h2>
           <div className="space-y-4">
             
@@ -72,15 +72,15 @@ const UserGuide = () => {
                   <Briefcase className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Cases - จัดการคดี</h3>
+                  <h3 className="text-lg font-semibold mb-2">Cases - Case Management</h3>
                   <p className="text-dark-400 mb-3">
-                    สร้างและจัดการคดีทั้งหมด แต่ละคดีจะเก็บข้อมูลแยกกัน 
-                    รวมถึงมูลค่าความเสียหาย จำนวนผู้เสียหาย และผู้ต้องสงสัย
+                    Create and manage all cases. Each case stores data separately 
+                    Including damage value, victim count, and suspects
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">สร้างคดีใหม่</span>
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">ดูรายละเอียด</span>
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">แก้ไขสถานะ</span>
+                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">Create New Case</span>
+                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">ViewDetails</span>
+                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">EditStatus</span>
                   </div>
                 </div>
               </div>
@@ -93,10 +93,10 @@ const UserGuide = () => {
                   <Sparkles className="w-6 h-6 text-yellow-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Smart Import - นำเข้าข้อมูลอัจฉริยะ</h3>
+                  <h3 className="text-lg font-semibold mb-2">Smart Import - Intelligent Data Import</h3>
                   <p className="text-dark-400 mb-3">
-                    นำเข้าข้อมูลจากไฟล์ CSV/Excel รองรับ Cellebrite, UFED, XRY 
-                    ระบบจะ Auto-detect ประเภทไฟล์และ Mapping คอลัมน์อัตโนมัติ
+                    Import data from CSV/Excel files, supports Cellebrite, UFED, XRY 
+                    System auto-detects file type and maps columns automatically
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">✓ Auto-detect</span>
@@ -115,15 +115,15 @@ const UserGuide = () => {
                   <DollarSign className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Money Flow - ติดตามเส้นทางเงิน</h3>
+                  <h3 className="text-lg font-semibold mb-2">Money Flow - Track Money Trail</h3>
                   <p className="text-dark-400 mb-3">
-                    แสดง Network Graph ของการโอนเงินระหว่างบัญชี 
-                    เห็นความเชื่อมโยงระหว่างบุคคล บัญชีธนาคาร และ Crypto Wallet
+                    Shows network graph of money transfers between accounts 
+                    See connections between persons, bank accounts, and crypto wallets
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-2 py-1 bg-dark-700 rounded text-xs">Network Graph</span>
                     <span className="px-2 py-1 bg-dark-700 rounded text-xs">Export PNG/SVG</span>
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">เพิ่ม Node</span>
+                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">Add Node</span>
                   </div>
                 </div>
               </div>
@@ -136,10 +136,10 @@ const UserGuide = () => {
                   <Wallet className="w-6 h-6 text-orange-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Crypto Tracker - ติดตาม Cryptocurrency</h3>
+                  <h3 className="text-lg font-semibold mb-2">Crypto Tracker - Track Cryptocurrency</h3>
                   <p className="text-dark-400 mb-3">
-                    ค้นหาและวิเคราะห์ Wallet Address รองรับ ETH, BTC, USDT-TRC20, BNB, Polygon
-                    ตรวจจับ Mixer/Tumbler และ Risk Scoring
+                    Search and analyze wallet addresses, supports ETH, BTC, USDT-TRC20, BNB, Polygon
+                    Detects Mixer/Tumbler and Risk Scoring
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-2 py-1 bg-dark-700 rounded text-xs">Multi-chain</span>
@@ -157,10 +157,10 @@ const UserGuide = () => {
                   <Phone className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Call Analysis - วิเคราะห์สายโทร</h3>
+                  <h3 className="text-lg font-semibold mb-2">Call Analysis - Analyze Call Records</h3>
                   <p className="text-dark-400 mb-3">
-                    แสดง Network ของการโทรและ SMS วิเคราะห์ความถี่ ช่วงเวลา 
-                    และค้นหากลุ่มบุคคลที่ติดต่อกันบ่อย
+                    Shows call and SMS network, analyzes frequency and time periods 
+                    and finds groups of frequently contacting persons
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-2 py-1 bg-dark-700 rounded text-xs">Link Analysis</span>
@@ -178,13 +178,13 @@ const UserGuide = () => {
                   <MapPin className="w-6 h-6 text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Location Timeline - ไทม์ไลน์ตำแหน่ง</h3>
+                  <h3 className="text-lg font-semibold mb-2">Location Timeline - Position Timeline</h3>
                   <p className="text-dark-400 mb-3">
-                    แสดงตำแหน่งของเป้าหมายบนแผนที่ตามเวลา 
-                    รองรับ GPS, Cell Tower, WiFi และรูปภาพที่มี EXIF
+                    Shows target position on map over time 
+                    Supports GPS, Cell Tower, WiFi and photos with EXIF
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">แผนที่</span>
+                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">Map</span>
                     <span className="px-2 py-1 bg-dark-700 rounded text-xs">Play Animation</span>
                     <span className="px-2 py-1 bg-dark-700 rounded text-xs">Export KML</span>
                   </div>
@@ -199,10 +199,10 @@ const UserGuide = () => {
                   <FileText className="w-6 h-6 text-cyan-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Forensic Report - รายงานมาตรฐานศาล</h3>
+                  <h3 className="text-lg font-semibold mb-2">Forensic Report - Court Standard Report</h3>
                   <p className="text-dark-400 mb-3">
-                    สร้างรายงานสรุปคดีที่พร้อมนำไปใช้ในชั้นศาล 
-                    มี QR Code สำหรับตรวจสอบหลักฐาน และ Chain of Custody
+                    Create case summary report ready for court use 
+                    Includes QR Code for evidence verification and Chain of Custody
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ Network Graph</span>
@@ -221,27 +221,27 @@ const UserGuide = () => {
         <section>
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <Lock className="text-green-400" />
-            Chain of Custody - การรักษาหลักฐาน
+            Chain of Custody - Evidence Preservation
           </h2>
           <div className="bg-dark-800 border border-dark-700 rounded-xl p-6">
             <p className="text-dark-400 mb-4">
-              ระบบบันทึก SHA-256 Hash ของทุกไฟล์ที่นำเข้า เพื่อยืนยันว่าหลักฐานไม่ถูกแก้ไข
+              System saves SHA-256 hash of all imported files to confirm evidence was not edited
             </p>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="bg-dark-700 rounded-lg p-4 text-center">
                 <Upload className="w-8 h-8 text-primary-400 mx-auto mb-2" />
-                <h4 className="font-semibold mb-1">1. นำเข้าไฟล์</h4>
-                <p className="text-xs text-dark-400">ระบบคำนวณ SHA-256 Hash อัตโนมัติ</p>
+                <h4 className="font-semibold mb-1">1. Import File</h4>
+                <p className="text-xs text-dark-400">System calculates SHA-256 hash automatically</p>
               </div>
               <div className="bg-dark-700 rounded-lg p-4 text-center">
                 <QrCode className="w-8 h-8 text-primary-400 mx-auto mb-2" />
                 <h4 className="font-semibold mb-1">2. QR Code</h4>
-                <p className="text-xs text-dark-400">สแกนเพื่อตรวจสอบหลักฐานได้ทันที</p>
+                <p className="text-xs text-dark-400">Scan to verify evidence instantly</p>
               </div>
               <div className="bg-dark-700 rounded-lg p-4 text-center">
                 <Shield className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                <h4 className="font-semibold mb-1">3. ยืนยันความถูกต้อง</h4>
-                <p className="text-xs text-dark-400">เปรียบเทียบ Hash กับต้นฉบับ</p>
+                <h4 className="font-semibold mb-1">3. Verify Integrity</h4>
+                <p className="text-xs text-dark-400">Compare hash with original</p>
               </div>
             </div>
           </div>
@@ -251,7 +251,7 @@ const UserGuide = () => {
         <section>
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <Upload className="text-purple-400" />
-            ไฟล์ที่รองรับ
+            Supported Files
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-dark-800 border border-dark-700 rounded-xl p-5">
@@ -264,7 +264,7 @@ const UserGuide = () => {
               </ul>
             </div>
             <div className="bg-dark-800 border border-dark-700 rounded-xl p-5">
-              <h3 className="font-semibold mb-3 text-blue-400">✓ ข้อมูลทั่วไป</h3>
+              <h3 className="font-semibold mb-3 text-blue-400">✓ DataGeneral</h3>
               <ul className="space-y-2 text-dark-400 text-sm">
                 <li>• Bank Statement (.csv, .xlsx)</li>
                 <li>• Call/SMS Records</li>
@@ -279,25 +279,25 @@ const UserGuide = () => {
         <section>
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <CheckCircle className="text-yellow-400" />
-            เคล็ดลับการใช้งาน
+            Usage Tips
           </h2>
           <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-6">
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span><strong>เลือกคดีก่อนทำงาน:</strong> เลือกคดีจาก Sidebar ด้านซ้ายก่อนเสมอ ข้อมูลจะแยกตามคดี</span>
+                <span><strong>Select Case First:</strong> Always select case from left sidebar first. Data is separated by case</span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span><strong>ดู Badge ใน Sidebar:</strong> ตัวเลขจะบอกจำนวนข้อมูลในแต่ละประเภท</span>
+                <span><strong>View Sidebar Badge:</strong> Numbers show data count for each type</span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span><strong>รีเฟรชข้อมูล:</strong> หลังนำเข้าข้อมูลใหม่ กดปุ่ม "รีเฟรชข้อมูล" ใต้ Case Selector</span>
+                <span><strong>Refresh Data:</strong> After importing new data, click "Refresh Data" button below Case Selector</span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span><strong>Export รายงาน:</strong> ใช้ Forensic Report → Print/PDF เพื่อพิมพ์รายงานส่งศาล</span>
+                <span><strong>Export Report:</strong> Use Forensic Report → Print/PDF to print court report</span>
               </li>
             </ul>
           </div>
@@ -306,7 +306,7 @@ const UserGuide = () => {
         {/* Footer */}
         <footer className="text-center text-dark-500 pt-8 border-t border-dark-700">
           <p>InvestiGate v1.0 - Digital Forensic Investigation Platform</p>
-          <p className="text-sm mt-2">© 2026 - มาตรฐานการสืบสวนดิจิทัล</p>
+          <p className="text-sm mt-2">© 2026 - Digital Investigation Standard</p>
         </footer>
 
       </div>

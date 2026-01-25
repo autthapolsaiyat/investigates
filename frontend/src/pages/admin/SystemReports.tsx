@@ -19,10 +19,10 @@ import {
 } from '../../services/api';
 
 const daysOptions = [
-  { value: 7, label: '7 วันล่าสุด' },
-  { value: 30, label: '30 วันล่าสุด' },
-  { value: 90, label: '90 วันล่าสุด' },
-  { value: 365, label: '1 ปี' },
+  { value: 7, label: 'Last 7 days' },
+  { value: 30, label: 'Last 30 days' },
+  { value: 90, label: 'Last 90 days' },
+  { value: 365, label: '1 year' },
 ];
 
 export const SystemReports = () => {
@@ -79,7 +79,7 @@ export const SystemReports = () => {
       document.body.removeChild(a);
     } catch (err) {
       console.error('Failed to export report:', err);
-      alert('ไม่สามารถดาวน์โหลดรายงานได้');
+      alert('Cannot download report');
     } finally {
       setExporting(null);
     }
@@ -90,7 +90,7 @@ export const SystemReports = () => {
   };
 
   const formatNumber = (num: number) => {
-    return num.toLocaleString('th-TH');
+    return num.toLocaleString('en-US');
   };
 
   return (
@@ -102,7 +102,7 @@ export const SystemReports = () => {
             <FileText className="w-7 h-7 text-primary-400" />
             System Reports
           </h1>
-          <p className="text-gray-400 mt-1">สถิติและรายงานระบบ</p>
+          <p className="text-gray-400 mt-1">Statistics and System Reports</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ export const SystemReports = () => {
           
           <Button variant="secondary" onClick={loadData} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            รีเฟรช
+            Refresh
           </Button>
         </div>
       </div>
@@ -131,7 +131,7 @@ export const SystemReports = () => {
       {loading ? (
         <div className="p-12 text-center">
           <RefreshCw className="w-10 h-10 animate-spin mx-auto text-primary-400" />
-          <p className="text-gray-400 mt-4">กำลังโหลดข้อมูลรายงาน...</p>
+          <p className="text-gray-400 mt-4">Loading report data...</p>
         </div>
       ) : (
         <>
@@ -190,7 +190,7 @@ export const SystemReports = () => {
               >
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary-400" />
-                  ฟีเจอร์ที่ใช้มากที่สุด ({days} วัน)
+                  Most Used Features ({days} days)
                 </h2>
                 {expandedSection === 'features' ? (
                   <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -208,7 +208,7 @@ export const SystemReports = () => {
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-white">{feature.name}</span>
                           <span className="text-sm text-gray-400">
-                            {formatNumber(feature.usage)} ครั้ง ({feature.percentage}%)
+                            {formatNumber(feature.usage)} times ({feature.percentage}%)
                           </span>
                         </div>
                         <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
@@ -234,7 +234,7 @@ export const SystemReports = () => {
               >
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Users className="w-5 h-5 text-green-400" />
-                  สถิติผู้ใช้
+                  User Statistics
                 </h2>
                 {expandedSection === 'users' ? (
                   <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -247,7 +247,7 @@ export const SystemReports = () => {
                 <div className="mt-4 grid md:grid-cols-3 gap-6">
                   {/* By Role */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">จำแนกตาม Role</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">By Role</h3>
                     <div className="space-y-2">
                       {Object.entries(userStats.by_role).map(([role, count]) => (
                         <div key={role} className="flex items-center justify-between">
@@ -260,7 +260,7 @@ export const SystemReports = () => {
                   
                   {/* Subscription Status */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">สถานะ Subscription</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">Subscription Status</h3>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-green-400">Active</span>
@@ -279,7 +279,7 @@ export const SystemReports = () => {
                   
                   {/* Top Active Users */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">ผู้ใช้งานมากที่สุด</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">Most Active Users</h3>
                     <div className="space-y-2">
                       {userStats.top_active_users.slice(0, 5).map((user, i) => (
                         <div key={user.user_id} className="flex items-center justify-between">
@@ -305,7 +305,7 @@ export const SystemReports = () => {
               >
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Briefcase className="w-5 h-5 text-purple-400" />
-                  สถิติคดี
+                  Case Statistics
                 </h2>
                 {expandedSection === 'cases' ? (
                   <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -318,7 +318,7 @@ export const SystemReports = () => {
                 <div className="mt-4 grid md:grid-cols-2 gap-6">
                   {/* By Status */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">จำแนกตามสถานะ</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">By Status</h3>
                     <div className="space-y-2">
                       {Object.entries(caseStats.by_status).map(([status, count]) => (
                         <div key={status} className="flex items-center justify-between">
@@ -327,7 +327,7 @@ export const SystemReports = () => {
                         </div>
                       ))}
                       <div className="flex items-center justify-between border-t border-dark-600 pt-2 mt-2">
-                        <span className="text-white font-medium">รวมทั้งหมด</span>
+                        <span className="text-white font-medium">Total</span>
                         <span className="text-white font-medium">{formatNumber(caseStats.total_cases)}</span>
                       </div>
                     </div>
@@ -335,7 +335,7 @@ export const SystemReports = () => {
                   
                   {/* By Type */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">จำแนกตามประเภท</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">By Type</h3>
                     {Object.keys(caseStats.by_type).length > 0 ? (
                       <div className="space-y-2">
                         {Object.entries(caseStats.by_type).map(([type, count]) => (
@@ -346,12 +346,12 @@ export const SystemReports = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">ยังไม่มีข้อมูลประเภทคดี</p>
+                      <p className="text-gray-500 text-sm">No case type data yet</p>
                     )}
                     
                     <div className="mt-4 pt-2 border-t border-dark-600">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-red-400">คดีที่ถูกลบ</span>
+                        <span className="text-red-400">Deleted Cases</span>
                         <span className="text-red-400 font-medium">{formatNumber(caseStats.deleted_cases)}</span>
                       </div>
                     </div>
@@ -370,7 +370,7 @@ export const SystemReports = () => {
               >
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <LogIn className="w-5 h-5 text-blue-400" />
-                  สถิติการเข้าสู่ระบบ
+                  Login Statistics
                 </h2>
                 {expandedSection === 'logins' ? (
                   <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -383,7 +383,7 @@ export const SystemReports = () => {
                 <div className="mt-4 grid md:grid-cols-2 gap-6">
                   {/* By Device */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">จำแนกตามอุปกรณ์</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">By Device</h3>
                     <div className="space-y-2">
                       {Object.entries(loginStats.by_device).map(([device, count]) => (
                         <div key={device} className="flex items-center justify-between">
@@ -405,7 +405,7 @@ export const SystemReports = () => {
                   
                   {/* By Country */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">จำแนกตามประเทศ</h3>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">By Country</h3>
                     {loginStats.by_country.length > 0 ? (
                       <div className="space-y-2">
                         {loginStats.by_country.slice(0, 5).map((item) => (
@@ -416,7 +416,7 @@ export const SystemReports = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">ยังไม่มีข้อมูลประเทศ</p>
+                      <p className="text-gray-500 text-sm">No country data yet</p>
                     )}
                   </div>
                 </div>
@@ -428,7 +428,7 @@ export const SystemReports = () => {
           <Card className="p-5">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <PieChart className="w-5 h-5 text-primary-400" />
-              ดาวน์โหลดรายงาน
+              Download Report
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[

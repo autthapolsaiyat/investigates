@@ -1,12 +1,12 @@
 /**
- * EvidenceManager V4 - ระบบจัดการหลักฐานครบวงจร
+ * EvidenceManager V4 - Complete Evidence Management System
  * Features:
- * 1. รายงานกรอกข้อมูลได้
- * 2. เพิ่มข้อมูล Wallet/ผู้ต้องหา ในรายงาน
- * 3. บันทึกหลักฐานลง LocalStorage (จำลอง Database)
- * 4. แนบรูปหลักฐานในรายงาน PDF
- * 5. เชื่อม Evidence กับ Cases
- * 6. QR Code ตรวจสอบ Hash
+ * 1. Fillable report
+ * 2. Add Wallet/Suspect data in report
+ * 3. Save evidence to LocalStorage (simulate Database)
+ * 4. Attach evidence images in PDF report
+ * 5. Link Evidence to Cases
+ * 6. QR Code for Hash verification
  */
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -115,7 +115,7 @@ const formatFileSize = (bytes: number): string => {
 
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
-  return date.toLocaleString('th-TH', {
+  return date.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -127,12 +127,12 @@ const formatDate = (dateStr: string): string => {
 
 const formatThaiDate = (dateStr: string): string => {
   const date = new Date(dateStr);
-  const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  const thaiMonths = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
   const day = date.getDate();
   const month = thaiMonths[date.getMonth()];
   const year = date.getFullYear() + 543;
-  return `${day} ${month} พ.ศ. ${year}`;
+  return `${day} ${month} B.E. ${year}`;
 };
 
 const getFileIcon = (fileType: string) => {
@@ -142,11 +142,11 @@ const getFileIcon = (fileType: string) => {
 };
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string; thaiLabel: string }> = {
-  screenshot: { label: 'Screenshot', color: 'bg-blue-500/20 text-blue-400', thaiLabel: 'ภาพถ่ายหน้าจอ' },
-  document: { label: 'เอกสาร', color: 'bg-purple-500/20 text-purple-400', thaiLabel: 'เอกสาร' },
-  blockchain: { label: 'Blockchain', color: 'bg-amber-500/20 text-amber-400', thaiLabel: 'ข้อมูล Blockchain' },
-  communication: { label: 'การติดต่อสื่อสาร', color: 'bg-green-500/20 text-green-400', thaiLabel: 'หลักฐานการสื่อสาร' },
-  other: { label: 'อื่นๆ', color: 'bg-dark-500/20 text-dark-300', thaiLabel: 'อื่นๆ' }
+  screenshot: { label: 'Screenshot', color: 'bg-blue-500/20 text-blue-400', thaiLabel: 'ภาพถ่ายPageจอ' },
+  document: { label: 'Document', color: 'bg-purple-500/20 text-purple-400', thaiLabel: 'เอกสาร' },
+  blockchain: { label: 'Blockchain', color: 'bg-amber-500/20 text-amber-400', thaiLabel: 'Blockchain Data' },
+  communication: { label: 'Communication', color: 'bg-green-500/20 text-green-400', thaiLabel: 'Evidenceการสื่อสาร' },
+  other: { label: 'Other', color: 'bg-dark-500/20 text-dark-300', thaiLabel: 'อื่นๆ' }
 };
 
 // Storage key for localStorage
@@ -205,7 +205,7 @@ const generateCourtReportHTML = (
       <td style="padding: 10px; border: 1px solid #ddd; font-size: 12px;">${formatThaiDate(item.uploadedAt)}</td>
       <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
         <img src="${qrDataUrl}" width="50" height="50" style="margin-bottom: 4px;"/><br/>
-        <span style="background: #28a745; color: #fff; padding: 2px 8px; border-radius: 3px; font-size: 10px;">✓ ยืนยัน</span>
+        <span style="background: #28a745; color: #fff; padding: 2px 8px; border-radius: 3px; font-size: 10px;">✓ Verified</span>
       </td>
     </tr>
     <tr>
@@ -218,9 +218,9 @@ const generateCourtReportHTML = (
   // Wallets section
   const walletsHTML = config.includeWallets && wallets && wallets.length > 0 ? `
     <div class="section">
-      <div class="section-title">💰 กระเป๋าสินทรัพย์ดิจิทัลที่เกี่ยวข้อง</div>
+      <div class="section-title">💰 Related Digital Asset Wallets</div>
       <table>
-        <thead><tr><th>ลำดับ</th><th>ที่อยู่กระเป๋า</th><th>ประเภท</th><th>ยอดคงเหลือ</th></tr></thead>
+        <thead><tr><th>No.</th><th>Wallet Address</th><th>Type</th><th>Balance</th></tr></thead>
         <tbody>
           ${wallets.map((w, i) => `
             <tr>
@@ -238,9 +238,9 @@ const generateCourtReportHTML = (
   // Suspects section
   const suspectsHTML = config.includeSuspects && suspects && suspects.length > 0 ? `
     <div class="section">
-      <div class="section-title">👤 ผู้ต้องหา/ผู้ต้องสงสัย</div>
+      <div class="section-title">👤 Accused/Suspects</div>
       <table>
-        <thead><tr><th>ลำดับ</th><th>ชื่อ-นามสกุล</th><th>เลขประจำตัว</th><th>บทบาท</th></tr></thead>
+        <thead><tr><th>No.</th><th>Full Name</th><th>ID Number</th><th>Role</th></tr></thead>
         <tbody>
           ${suspects.map((s, i) => `
             <tr>
@@ -260,7 +260,7 @@ const generateCourtReportHTML = (
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>รายงานหลักฐานดิจิทัล - ${caseId}</title>
+  <title>Digital Evidence Report - ${caseId}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -290,22 +290,22 @@ const generateCourtReportHTML = (
 <body>
   <div class="header">
     <div style="font-size: 40px; margin-bottom: 10px;">⚖️</div>
-    <div class="header-title">รายงานหลักฐานดิจิทัล</div>
+    <div class="header-title">Digital Evidence Report</div>
     <div class="header-subtitle">Digital Evidence Report</div>
   </div>
   <div class="report-info">
-    <div class="report-info-item"><div class="report-info-label">เลขที่รายงาน</div><div class="report-info-value">${reportId}</div></div>
-    <div class="report-info-item"><div class="report-info-label">เลขที่คดี</div><div class="report-info-value">${caseId}</div></div>
-    <div class="report-info-item"><div class="report-info-label">วันที่จัดทำ</div><div class="report-info-value">${reportDate}</div></div>
-    <div class="report-info-item"><div class="report-info-label">จำนวนหลักฐาน</div><div class="report-info-value">${evidence.length} รายการ</div></div>
+    <div class="report-info-item"><div class="report-info-label">Report Number</div><div class="report-info-value">${reportId}</div></div>
+    <div class="report-info-item"><div class="report-info-label">Case Number</div><div class="report-info-value">${caseId}</div></div>
+    <div class="report-info-item"><div class="report-info-label">Date Created</div><div class="report-info-value">${reportDate}</div></div>
+    <div class="report-info-item"><div class="report-info-label">Evidence Count</div><div class="report-info-value">${evidence.length} items</div></div>
   </div>
   
   <div class="section">
-    <div class="section-title">📋 ข้อมูลคดี</div>
+    <div class="section-title">📋 Case Information</div>
     <table>
-      <tr><td style="width: 150px; padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">เลขที่คดี:</td><td style="padding: 10px; border: 1px solid #ddd;">${caseId}</td></tr>
-      <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">ชื่อคดี:</td><td style="padding: 10px; border: 1px solid #ddd;">${caseName}</td></tr>
-      <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">วันที่จัดทำรายงาน:</td><td style="padding: 10px; border: 1px solid #ddd;">${reportDate}</td></tr>
+      <tr><td style="width: 150px; padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">Case Number:</td><td style="padding: 10px; border: 1px solid #ddd;">${caseId}</td></tr>
+      <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">Case Name:</td><td style="padding: 10px; border: 1px solid #ddd;">${caseName}</td></tr>
+      <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: 600; background: #f9f9f9;">Report Date:</td><td style="padding: 10px; border: 1px solid #ddd;">${reportDate}</td></tr>
     </table>
   </div>
 
@@ -313,30 +313,30 @@ const generateCourtReportHTML = (
   ${walletsHTML}
   
   <div class="section">
-    <div class="section-title">📁 รายการหลักฐานดิจิทัล</div>
+    <div class="section-title">📁 Digital Evidence Items</div>
     <table>
-      <thead><tr><th style="width: 50px;">ลำดับ</th><th>ชื่อไฟล์ / คำอธิบาย</th><th style="width: 100px;">ประเภท</th><th style="width: 80px;">ขนาด</th><th style="width: 130px;">วันที่บันทึก</th><th style="width: 80px;">QR/สถานะ</th></tr></thead>
+      <thead><tr><th style="width: 50px;">No.</th><th>File Name / Description</th><th style="width: 100px;">Type</th><th style="width: 80px;">Size</th><th style="width: 130px;">Date Recorded</th><th style="width: 80px;">QR/Status</th></tr></thead>
       <tbody>${evidenceRows}</tbody>
     </table>
   </div>
   
   <div class="hash-verification">
-    <div class="hash-verification-title">🔐 การรับรองความถูกต้องของหลักฐาน (Hash Verification)</div>
+    <div class="hash-verification-title">🔐 Evidence Verification (Hash Verification)</div>
     <div style="font-size: 14px;">
-      หลักฐานทุกรายการได้รับการตรวจสอบด้วย <strong>SHA-256</strong> ซึ่งเป็นมาตรฐานที่ใช้ในระบบ Blockchain<br><br>
-      <strong>วิธีตรวจสอบ:</strong> นำไฟล์ต้นฉบับไปคำนวณ SHA-256 Hash หากตรงกัน แสดงว่าไฟล์ไม่ถูกแก้ไข<br>
-      <strong>QR Code:</strong> สแกน QR Code เพื่อตรวจสอบค่า Hash ของแต่ละหลักฐาน
+      All evidence items are verified with <strong>SHA-256</strong> which is the standard used in Blockchain systems<br><br>
+      <strong>Verification Method:</strong> Calculate SHA-256 Hash of the original file. If it matches, the file has not been modified<br>
+      <strong>QR Code:</strong> Scan QR Code to verify Hash value of each evidence
     </div>
   </div>
   
   <div class="signature-section">
-    <div class="signature-box"><div class="signature-line">ผู้จัดทำรายงาน</div><div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div></div>
-    <div class="signature-box"><div class="signature-line">ผู้ตรวจสอบ</div><div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div></div>
-    <div class="signature-box"><div class="signature-line">ผู้อนุมัติ</div><div style="margin-top: 5px; font-size: 12px;">วันที่ _______________</div></div>
+    <div class="signature-box"><div class="signature-line">Report Author</div><div style="margin-top: 5px; font-size: 12px;">Date _______________</div></div>
+    <div class="signature-box"><div class="signature-line">Examiner</div><div style="margin-top: 5px; font-size: 12px;">Date _______________</div></div>
+    <div class="signature-box"><div class="signature-line">Approver</div><div style="margin-top: 5px; font-size: 12px;">Date _______________</div></div>
   </div>
   
-  <div class="disclaimer"><strong>หมายเหตุ:</strong> เอกสารนี้จัดทำโดยระบบ InvestiGate Investigation Platform<br><strong>Report ID:</strong> ${reportId}</div>
-  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+  <div class="disclaimer"><strong>Note:</strong> This document was created by InvestiGate Investigation Platform<br><strong>Report ID:</strong> ${reportId}</div>
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
 </body>
 </html>`;
 };
@@ -350,7 +350,7 @@ const generateForensicReportHTML = (
   suspects?: SuspectInfo[]
 ): string => {
   const reportDate = formatThaiDate(new Date().toISOString());
-  const reportNumber = `พฐ.${new Date().getFullYear() + 543}/${String(Date.now()).slice(-6)}`;
+  const reportNumber = `EVID.${new Date().getFullYear() + 543}/${String(Date.now()).slice(-6)}`;
 
   const evidenceRows = evidence.map((item, index) => {
     // For PDF report, use direct hash (can't use dynamic URL in print)
@@ -371,33 +371,33 @@ const generateForensicReportHTML = (
   `}).join('');
 
   const methods = [
-    'การตรวจสอบความถูกต้องของไฟล์ด้วย SHA-256 Hash Algorithm',
-    'การวิเคราะห์ธุรกรรม Blockchain ด้วยเครื่องมือ Chainalysis/Elliptic',
-    'การติดตามเส้นทางการเงิน (Fund Tracing)',
-    'การตรวจสอบข้อมูล KYC จาก Exchange',
-    'การจัดทำ Timeline เหตุการณ์'
+    'File verification using SHA-256 Hash Algorithm',
+    'Blockchain transaction analysis using Chainalysis/Elliptic',
+    'Fund Tracing (Fund Tracing)',
+    'KYC data verification from Exchange',
+    'Event Timeline Creation'
   ];
 
   const tools = [
-    'Chainalysis Reactor - วิเคราะห์ธุรกรรม Blockchain',
-    'Blockchain Explorer - ตรวจสอบธุรกรรม',
-    'SHA-256 Hash Calculator - ตรวจสอบความถูกต้องของไฟล์',
-    'InvestiGate Platform - บริหารจัดการคดีและหลักฐาน'
+    'Chainalysis Reactor - Analyze Blockchain transactions',
+    'Blockchain Explorer - Verify transactions',
+    'SHA-256 Hash Calculator - Verify file integrity',
+    'InvestiGate Platform - Case and Evidence Management'
   ];
 
   const findings = [
-    `ตรวจพบหลักฐานดิจิทัลที่เกี่ยวข้องกับคดีจำนวน ${evidence.length} รายการ`,
-    'หลักฐานทั้งหมดผ่านการตรวจสอบความถูกต้องด้วย SHA-256 Hash',
-    'สามารถใช้เป็นพยานหลักฐานในชั้นศาลได้',
-    'มีการบันทึก Chain of Custody อย่างครบถ้วน'
+    `Found digital evidence related to case: ${evidence.length} items`,
+    'All evidence verified with SHA-256 Hash',
+    'Can be used as evidence in court',
+    'Complete Chain of Custody recorded'
   ];
 
   // Wallets section
   const walletsHTML = config.includeWallets && wallets && wallets.length > 0 ? `
     <div class="section">
-      <div class="section-title">5. กระเป๋าสินทรัพย์ดิจิทัลที่เกี่ยวข้อง</div>
+      <div class="section-title">5. Related Digital Asset Wallets</div>
       <table>
-        <thead><tr><th style="width: 40px;">ลำดับ</th><th>ที่อยู่กระเป๋า (Wallet Address)</th><th style="width: 100px;">ประเภท</th><th style="width: 100px;">ยอดคงเหลือ</th></tr></thead>
+        <thead><tr><th style="width: 40px;">No.</th><th>Wallet Address (Wallet Address)</th><th style="width: 100px;">Type</th><th style="width: 100px;">Balance</th></tr></thead>
         <tbody>
           ${wallets.map((w, i) => `
             <tr>
@@ -415,9 +415,9 @@ const generateForensicReportHTML = (
   // Suspects section
   const suspectsHTML = config.includeSuspects && suspects && suspects.length > 0 ? `
     <div class="section">
-      <div class="section-title">6. ผู้ต้องหา/ผู้ต้องสงสัย</div>
+      <div class="section-title">6. Accused/Suspects</div>
       <table>
-        <thead><tr><th style="width: 40px;">ลำดับ</th><th>ชื่อ-นามสกุล</th><th style="width: 150px;">เลขประจำตัว</th><th style="width: 150px;">บทบาท</th></tr></thead>
+        <thead><tr><th style="width: 40px;">No.</th><th>Full Name</th><th style="width: 150px;">ID Number</th><th style="width: 150px;">Role</th></tr></thead>
         <tbody>
           ${suspects.map((s, i) => `
             <tr>
@@ -439,7 +439,7 @@ const generateForensicReportHTML = (
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>รายงานผลการตรวจพิสูจน์หลักฐาน - ${caseId}</title>
+  <title>Evidence Examination Report - ${caseId}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -479,54 +479,54 @@ const generateForensicReportHTML = (
 <body>
   <div class="header">
     <div class="header-logo">🔬</div>
-    <div class="header-org">${config.examinerUnit || 'กลุ่มงานตรวจพิสูจน์หลักฐานดิจิทัล'}</div>
+    <div class="header-org">${config.examinerUnit || 'Digital Forensics Unit'}</div>
     <div class="header-unit">Digital Forensics Division</div>
   </div>
   <div class="document-title">
-    <h1>รายงานผลการตรวจพิสูจน์หลักฐานดิจิทัล</h1>
+    <h1>Digital Evidence Examination Report</h1>
     <h2>Digital Forensic Examination Report</h2>
   </div>
   <div class="report-number">
-    <div><strong>เลขที่รายงาน:</strong> ${reportNumber}</div>
-    <div><strong>วันที่รายงาน:</strong> ${reportDate}</div>
+    <div><strong>Report Number:</strong> ${reportNumber}</div>
+    <div><strong>Report Date:</strong> ${reportDate}</div>
   </div>
 
   <div class="section">
-    <div class="section-title">1. ข้อมูลคดี</div>
+    <div class="section-title">1. Case Information</div>
     <div class="info-grid">
-      <div class="info-label">เลขที่คดี:</div><div>${caseId}</div>
-      <div class="info-label">ชื่อคดี:</div><div>${caseName}</div>
-      <div class="info-label">ประเภทคดี:</div><div>คดีอาญาเกี่ยวกับสินทรัพย์ดิจิทัล</div>
+      <div class="info-label">Case Number:</div><div>${caseId}</div>
+      <div class="info-label">Case Name:</div><div>${caseName}</div>
+      <div class="info-label">Case Type:</div><div>Criminal case involving digital assets</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">2. ข้อมูลการส่งตรวจ</div>
+    <div class="section-title">2. Submission Information</div>
     <div class="info-grid">
-      <div class="info-label">ผู้ส่งตรวจ:</div><div>${config.requestedBy || '......................................'}</div>
-      <div class="info-label">หน่วยงาน:</div><div>${config.requestedUnit || '......................................'}</div>
-      <div class="info-label">เลขที่หนังสือ:</div><div>${config.requestNumber || '......................................'}</div>
-      <div class="info-label">วันที่ส่งตรวจ:</div><div>${config.requestDate ? formatThaiDate(config.requestDate) : '......................................'}</div>
-      <div class="info-label">วันที่ตรวจเสร็จ:</div><div>${reportDate}</div>
+      <div class="info-label">Submitter:</div><div>${config.requestedBy || '......................................'}</div>
+      <div class="info-label">Unit:</div><div>${config.requestedUnit || '......................................'}</div>
+      <div class="info-label">Document Number:</div><div>${config.requestNumber || '......................................'}</div>
+      <div class="info-label">Submission Date:</div><div>${config.requestDate ? formatThaiDate(config.requestDate) : '......................................'}</div>
+      <div class="info-label">Completion Date:</div><div>${reportDate}</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">3. วัตถุพยาน/หลักฐานที่ส่งตรวจ</div>
+    <div class="section-title">3. Evidence/Items Submitted</div>
     <table>
-      <thead><tr><th style="width: 40px;">ลำดับ</th><th>รายการ</th><th style="width: 100px;">ประเภท</th><th style="width: 70px;">ขนาด</th><th style="width: 180px;">SHA-256 Hash</th><th style="width: 60px;">QR</th></tr></thead>
+      <thead><tr><th style="width: 40px;">No.</th><th>items</th><th style="width: 100px;">Type</th><th style="width: 70px;">Size</th><th style="width: 180px;">SHA-256 Hash</th><th style="width: 60px;">QR</th></tr></thead>
       <tbody>${evidenceRows}</tbody>
     </table>
-    <div class="hash-notice"><strong>🔐 หมายเหตุ:</strong> ค่า SHA-256 Hash และ QR Code ใช้ยืนยันว่าไฟล์ไม่ถูกแก้ไข สแกน QR เพื่อตรวจสอบ</div>
+    <div class="hash-notice"><strong>🔐 Note:</strong> SHA-256 Hash and QR Code are used to verify that the file has not been modified. Scan QR to verify</div>
   </div>
 
   <div class="section">
-    <div class="section-title">4. วิธีการตรวจพิสูจน์</div>
+    <div class="section-title">4. Examination Methods</div>
     <div class="list-section">
-      <p><strong>4.1 วิธีการที่ใช้:</strong></p>
+      <p><strong>4.1 Methods Used:</strong></p>
       <ul>${methods.map(m => `<li>${m}</li>`).join('')}</ul>
       <br>
-      <p><strong>4.2 เครื่องมือที่ใช้:</strong></p>
+      <p><strong>4.2 Tools Used:</strong></p>
       <ul>${tools.map(t => `<li>${t}</li>`).join('')}</ul>
     </div>
   </div>
@@ -535,46 +535,46 @@ const generateForensicReportHTML = (
   ${suspectsHTML}
 
   <div class="section">
-    <div class="section-title">${5 + sectionOffset}. ผลการตรวจพิสูจน์</div>
+    <div class="section-title">${5 + sectionOffset}. Examination Results</div>
     <div class="list-section">
       <ul>${findings.map(f => `<li>${f}</li>`).join('')}</ul>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">${6 + sectionOffset}. ความเห็นของผู้ตรวจพิสูจน์</div>
+    <div class="section-title">${6 + sectionOffset}. Examiner's Opinion</div>
     <div class="opinion-box">
-      จากการตรวจพิสูจน์หลักฐานดิจิทัลดังกล่าวข้างต้น พบว่าหลักฐานทั้งหมดได้รับการจัดเก็บอย่างถูกต้องตามหลัก Chain of Custody 
-      และผ่านการตรวจสอบความถูกต้องด้วย Cryptographic Hash Function สามารถใช้เป็นพยานหลักฐานในชั้นศาลได้
+      Based on the digital evidence examination above, all evidence has been properly stored according to Chain of Custody principles 
+      and verified with Cryptographic Hash Function. Can be used as evidence in court
     </div>
   </div>
 
   <div class="signature-section">
     <div class="signature-box">
-      <div class="stamp-area">ประทับตรา<br>หน่วยงาน</div>
-      <div class="signature-line">ผู้ตรวจพิสูจน์</div>
+      <div class="stamp-area">Unit<br>Stamp</div>
+      <div class="signature-line">Examiner</div>
       <div class="signature-name">(${config.examinerName || '......................................'})</div>
-      <div class="signature-position">${config.examinerPosition || 'นักวิทยาศาสตร์ (พิสูจน์หลักฐานดิจิทัล)'}</div>
+      <div class="signature-position">${config.examinerPosition || 'Digital Forensic Scientist'}</div>
     </div>
     <div class="signature-box">
-      <div class="stamp-area">ประทับตรา<br>ผู้บังคับบัญชา</div>
-      <div class="signature-line">หัวหน้ากลุ่มงาน</div>
+      <div class="stamp-area">Supervisor<br>Stamp</div>
+      <div class="signature-line">Unit Head</div>
       <div class="signature-name">(......................................)</div>
-      <div class="signature-position">หัวหน้ากลุ่มงานตรวจพิสูจน์หลักฐานดิจิทัล</div>
+      <div class="signature-position">Head of Digital Forensics Unit</div>
     </div>
   </div>
 
   <div class="footer">
-    <p><strong>หมายเหตุ:</strong></p>
+    <p><strong>Note:</strong></p>
     <ol style="margin-left: 20px; font-size: 13px;">
-      <li>รายงานนี้จัดทำตามหลักวิชาการด้านนิติวิทยาศาสตร์ดิจิทัล (Digital Forensics)</li>
-      <li>หลักฐานทั้งหมดได้รับการจัดเก็บตามหลัก Chain of Custody</li>
-      <li>ผลการตรวจพิสูจน์นี้เป็นความเห็นทางวิชาการ การวินิจฉัยทางกฎหมายขึ้นอยู่กับดุลพินิจของศาล</li>
+      <li>This report is prepared according to Digital Forensics standards (Digital Forensics)</li>
+      <li>All evidence stored according to Chain of Custody</li>
+      <li>This examination result is a technical opinion. Legal judgment is at the discretion of the court</li>
     </ol>
-    <p style="margin-top: 15px; text-align: center;"><strong>เลขที่รายงาน:</strong> ${reportNumber} | <strong>จัดทำโดย:</strong> InvestiGate Platform</p>
+    <p style="margin-top: 15px; text-align: center;"><strong>Report Number:</strong> ${reportNumber} | <strong>Created by:</strong> InvestiGate Platform</p>
   </div>
 
-  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
 </body>
 </html>`;
 };
@@ -585,7 +585,7 @@ const generateForensicReportHTML = (
 
 export const EvidenceManager = ({ 
   caseId = 'CASE-DEMO', 
-  caseName = 'คดีตัวอย่าง',
+  caseName = 'Sample Case',
   wallets = [],
   suspects = [],
   cases = [],
@@ -614,8 +614,8 @@ export const EvidenceManager = ({
   // Report config state
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     examinerName: '',
-    examinerPosition: 'นักวิทยาศาสตร์ (พิสูจน์หลักฐานดิจิทัล)',
-    examinerUnit: 'กลุ่มงานตรวจพิสูจน์หลักฐานดิจิทัล',
+    examinerPosition: 'Digital Forensic Scientist',
+    examinerUnit: 'Digital Forensics Unit',
     requestedBy: '',
     requestedUnit: '',
     requestNumber: '',
@@ -652,12 +652,12 @@ export const EvidenceManager = ({
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      alert('รองรับเฉพาะไฟล์ PNG, JPG, PDF เท่านั้น');
+      alert('Only PNG, JPG, PDF files are supported');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('ไฟล์ต้องมีขนาดไม่เกิน 10MB');
+      alert('File size must not exceed 10MB');
       return;
     }
 
@@ -679,7 +679,7 @@ export const EvidenceManager = ({
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error processing file:', error);
-      alert('เกิดข้อผิดพลาดในการประมวลผลไฟล์');
+      alert('Error processing file');
       setIsUploading(false);
     }
   };
@@ -726,7 +726,7 @@ export const EvidenceManager = ({
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('ต้องการลบหลักฐานนี้หรือไม่?')) return;
+    if (!confirm('Do you want to delete this evidence?')) return;
     const updatedList = evidenceList.filter(e => e.id !== id);
     setEvidenceList(updatedList);
     onEvidenceChange?.(updatedList);
@@ -795,7 +795,7 @@ export const EvidenceManager = ({
 
   // Clear all evidence from storage
   const handleClearStorage = () => {
-    if (!confirm('ต้องการลบหลักฐานทั้งหมดจากฐานข้อมูลหรือไม่?')) return;
+    if (!confirm('Do you want to delete all evidence from database?')) return;
     setEvidenceList([]);
     localStorage.removeItem(`${STORAGE_KEY}_${caseId}`);
   };
@@ -810,12 +810,12 @@ export const EvidenceManager = ({
               <Shield size={20} className="text-green-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">หลักฐานดิจิทัล</h2>
+              <h2 className="text-lg font-semibold text-white">Digital Evidence</h2>
               <p className="text-xs text-dark-400">
-                {evidenceList.length} รายการ • 
+                {evidenceList.length} items • 
                 <span className="text-green-400 ml-1">
                   <Database size={10} className="inline mr-1" />
-                  บันทึกอัตโนมัติ
+                  Auto Save
                 </span>
               </p>
             </div>
@@ -830,7 +830,7 @@ export const EvidenceManager = ({
                   className="text-sm text-red-400 hover:text-red-300"
                 >
                   <Trash2 size={14} className="mr-1" />
-                  ล้างข้อมูล
+                  Clear Data
                 </Button>
                 <div className="relative">
                   <Button 
@@ -839,7 +839,7 @@ export const EvidenceManager = ({
                     className="text-sm"
                   >
                     <Printer size={14} className="mr-1" />
-                    พิมพ์รายงาน
+                    Print Report
                     <ChevronDown size={14} className="ml-1" />
                   </Button>
                   
@@ -851,8 +851,8 @@ export const EvidenceManager = ({
                       >
                         <span className="text-2xl">⚖️</span>
                         <div>
-                          <div className="text-white font-medium">รายงานหลักฐานดิจิทัล</div>
-                          <div className="text-xs text-dark-400">สำหรับยื่นศาล</div>
+                          <div className="text-white font-medium">Digital Evidence Report</div>
+                          <div className="text-xs text-dark-400">For Court Submission</div>
                         </div>
                       </button>
                       <button
@@ -861,8 +861,8 @@ export const EvidenceManager = ({
                       >
                         <span className="text-2xl">🔬</span>
                         <div>
-                          <div className="text-white font-medium">รายงานผลการตรวจพิสูจน์</div>
-                          <div className="text-xs text-dark-400">สำหรับพนักงานสอบสวน</div>
+                          <div className="text-white font-medium">ReportExamination Results</div>
+                          <div className="text-xs text-dark-400">For Investigator</div>
                         </div>
                       </button>
                     </div>
@@ -886,9 +886,9 @@ export const EvidenceManager = ({
                   className="text-sm"
                 >
                   {isUploading ? (
-                    <><span className="animate-spin mr-1">⏳</span>กำลังประมวลผล...</>
+                    <><span className="animate-spin mr-1">⏳</span>Processing...</>
                   ) : (
-                    <><Plus size={14} className="mr-1" />เพิ่มหลักฐาน</>
+                    <><Plus size={14} className="mr-1" />Add Evidence</>
                   )}
                 </Button>
               </>
@@ -904,8 +904,8 @@ export const EvidenceManager = ({
             <div className="w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <Upload size={24} className="text-dark-500" />
             </div>
-            <div className="text-dark-400 mb-2">ยังไม่มีหลักฐาน</div>
-            <div className="text-xs text-dark-500">กด "เพิ่มหลักฐาน" เพื่อ Upload ไฟล์ (PNG, JPG, PDF)</div>
+            <div className="text-dark-400 mb-2">No evidence yet</div>
+            <div className="text-xs text-dark-500">Click "Add Evidence" to upload files (PNG, JPG, PDF)</div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -953,19 +953,19 @@ export const EvidenceManager = ({
                       <button onClick={() => handleShowQR(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="QR Code">
                         <QrCode size={16} className="text-primary-400" />
                       </button>
-                      <button onClick={() => handlePreview(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="ดูตัวอย่าง">
+                      <button onClick={() => handlePreview(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="Preview">
                         <Eye size={16} className="text-dark-400" />
                       </button>
-                      <button onClick={() => handleDownload(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="ดาวน์โหลด">
+                      <button onClick={() => handleDownload(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="Download">
                         <Download size={16} className="text-dark-400" />
                       </button>
                       {cases.length > 0 && (
-                        <button onClick={() => handleLinkCase(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="เชื่อมคดี">
+                        <button onClick={() => handleLinkCase(evidence)} className="p-2 hover:bg-dark-700 rounded-lg transition-colors" title="Link to Case">
                           <Link2 size={16} className="text-dark-400" />
                         </button>
                       )}
                       {!readOnly && (
-                        <button onClick={() => handleDelete(evidence.id)} className="p-2 hover:bg-red-500/20 rounded-lg transition-colors" title="ลบ">
+                        <button onClick={() => handleDelete(evidence.id)} className="p-2 hover:bg-red-500/20 rounded-lg transition-colors" title="Delete">
                           <Trash2 size={16} className="text-red-400" />
                         </button>
                       )}
@@ -984,9 +984,9 @@ export const EvidenceManager = ({
           <div className="flex items-start gap-2">
             <Shield size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
             <div>
-              <div className="text-sm font-medium text-green-400">พร้อมใช้ในชั้นศาล</div>
+              <div className="text-sm font-medium text-green-400">Court ready</div>
               <div className="text-xs text-dark-300 mt-1">
-                หลักฐานทุกชิ้นถูกตรวจสอบด้วย SHA-256 Hash พร้อม Timestamp, Chain of Custody และ QR Code สำหรับตรวจสอบ
+                All evidence verified with SHA-256 Hash, Timestamp, Chain of Custody and QR Code for verification
               </div>
             </div>
           </div>
@@ -999,7 +999,7 @@ export const EvidenceManager = ({
           <div className="bg-dark-800 rounded-xl border border-dark-700 p-6 w-[500px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Upload size={20} className="text-primary-400" />เพิ่มหลักฐาน
+                <Upload size={20} className="text-primary-400" />Add Evidence
               </h3>
               <button onClick={handleCancelUpload} className="p-1 hover:bg-dark-700 rounded"><X size={18} className="text-dark-400" /></button>
             </div>
@@ -1020,7 +1020,7 @@ export const EvidenceManager = ({
                 <div className="p-3 bg-dark-800 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <Lock size={14} className="text-green-400" />
-                    <span className="text-xs text-dark-400">SHA-256 Hash (คำนวณอัตโนมัติ)</span>
+                    <span className="text-xs text-dark-400">SHA-256 Hash (Auto calculated)</span>
                   </div>
                   <code className="text-xs text-green-400 font-mono break-all">{pendingHash}</code>
                 </div>
@@ -1029,13 +1029,13 @@ export const EvidenceManager = ({
             <div className="space-y-4">
               {cases.length > 0 && (
                 <div>
-                  <label className="text-sm text-dark-400 mb-1 block">เชื่อมกับคดี:</label>
+                  <label className="text-sm text-dark-400 mb-1 block">Link to Case:</label>
                   <select 
                     value={selectedCaseId} 
                     onChange={(e) => setSelectedCaseId(e.target.value)} 
                     className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white"
                   >
-                    <option value={caseId}>{caseId} (ปัจจุบัน)</option>
+                    <option value={caseId}>{caseId} (Current)</option>
                     {cases.filter(c => c.id !== caseId).map(c => (
                       <option key={c.id} value={c.id}>{c.id} - {c.name}</option>
                     ))}
@@ -1043,31 +1043,31 @@ export const EvidenceManager = ({
                 </div>
               )}
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">หมวดหมู่:</label>
+                <label className="text-sm text-dark-400 mb-1 block">Category:</label>
                 <select value={uploadCategory} onChange={(e) => setUploadCategory(e.target.value as Evidence['category'])} className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white">
                   <option value="screenshot">📸 Screenshot</option>
                   <option value="blockchain">⛓️ Blockchain Transaction</option>
-                  <option value="document">📄 เอกสาร</option>
-                  <option value="communication">💬 การติดต่อสื่อสาร</option>
-                  <option value="other">📁 อื่นๆ</option>
+                  <option value="document">📄 Document</option>
+                  <option value="communication">💬 Communication</option>
+                  <option value="other">📁 Other</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm text-dark-400 mb-1 block">คำอธิบาย:</label>
-                <textarea value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} placeholder="อธิบายหลักฐานนี้..." rows={3} className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none" />
+                <label className="text-sm text-dark-400 mb-1 block">Description:</label>
+                <textarea value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} placeholder="Describe this evidence..." rows={3} className="w-full bg-dark-900 border border-dark-600 rounded-lg p-3 text-white resize-none" />
               </div>
               <div className="p-3 bg-dark-900 rounded-lg">
-                <div className="text-xs text-dark-400 mb-2">ข้อมูลที่จะบันทึก:</div>
+                <div className="text-xs text-dark-400 mb-2">Data to be saved:</div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div><span className="text-dark-500">วันที่:</span> <span className="text-white">{formatDate(new Date().toISOString())}</span></div>
-                  <div><span className="text-dark-500">ผู้บันทึก:</span> <span className="text-white">admin@test.com</span></div>
-                  <div><span className="text-dark-500">คดี:</span> <span className="text-white">{selectedCaseId}</span></div>
-                  <div><span className="text-dark-500">สถานะ:</span> <span className="text-green-400">Verified ✓</span></div>
+                  <div><span className="text-dark-500">Date:</span> <span className="text-white">{formatDate(new Date().toISOString())}</span></div>
+                  <div><span className="text-dark-500">Recorded by:</span> <span className="text-white">admin@test.com</span></div>
+                  <div><span className="text-dark-500">Case:</span> <span className="text-white">{selectedCaseId}</span></div>
+                  <div><span className="text-dark-500">Status:</span> <span className="text-green-400">Verified ✓</span></div>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={handleCancelUpload} className="flex-1">ยกเลิก</Button>
-                <Button variant="primary" onClick={handleConfirmUpload} className="flex-1"><CheckCircle size={14} className="mr-1" />บันทึกหลักฐาน</Button>
+                <Button variant="ghost" onClick={handleCancelUpload} className="flex-1">Cancel</Button>
+                <Button variant="primary" onClick={handleConfirmUpload} className="flex-1"><CheckCircle size={14} className="mr-1" />Save Evidence</Button>
               </div>
             </div>
           </div>
@@ -1087,7 +1087,7 @@ export const EvidenceManager = ({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={() => handleDownload(selectedEvidence)}><Download size={14} className="mr-1" />ดาวน์โหลด</Button>
+                <Button variant="ghost" onClick={() => handleDownload(selectedEvidence)}><Download size={14} className="mr-1" />Download</Button>
                 <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-dark-700 rounded"><X size={18} className="text-dark-400" /></button>
               </div>
             </div>
@@ -1097,15 +1097,15 @@ export const EvidenceManager = ({
               ) : selectedEvidence.fileType === 'application/pdf' ? (
                 <iframe src={selectedEvidence.fileData} className="w-full h-[500px] rounded-lg" title={selectedEvidence.fileName} />
               ) : (
-                <div className="text-center py-12 text-dark-400">ไม่สามารถแสดงตัวอย่างไฟล์นี้ได้</div>
+                <div className="text-center py-12 text-dark-400">Cannot preview this file</div>
               )}
             </div>
             <div className="p-4 border-t border-dark-700 bg-dark-800">
               <div className="grid grid-cols-4 gap-4 text-sm">
                 <div><div className="text-xs text-dark-400">ID</div><div className="text-white font-mono text-xs">{selectedEvidence.id}</div></div>
-                <div><div className="text-xs text-dark-400">ขนาดไฟล์</div><div className="text-white">{formatFileSize(selectedEvidence.fileSize)}</div></div>
-                <div><div className="text-xs text-dark-400">หมวดหมู่</div><div className="text-white">{CATEGORY_LABELS[selectedEvidence.category].label}</div></div>
-                <div><div className="text-xs text-dark-400">สถานะ</div><div className="text-green-400 flex items-center gap-1"><CheckCircle size={12} />Verified</div></div>
+                <div><div className="text-xs text-dark-400">File Size</div><div className="text-white">{formatFileSize(selectedEvidence.fileSize)}</div></div>
+                <div><div className="text-xs text-dark-400">Category</div><div className="text-white">{CATEGORY_LABELS[selectedEvidence.category].label}</div></div>
+                <div><div className="text-xs text-dark-400">Status</div><div className="text-green-400 flex items-center gap-1"><CheckCircle size={12} />Verified</div></div>
               </div>
               <div className="mt-3 p-2 bg-dark-900 rounded flex items-center gap-2">
                 <Lock size={12} className="text-amber-400 flex-shrink-0" />
@@ -1123,7 +1123,7 @@ export const EvidenceManager = ({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <QrCode size={20} className="text-primary-400" />
-                QR Code ตรวจสอบ Hash
+                QR Code for Hash verification
               </h3>
               <button onClick={() => setShowQRModal(false)} className="p-1 hover:bg-dark-700 rounded">
                 <X size={18} className="text-dark-400" />
@@ -1149,8 +1149,8 @@ export const EvidenceManager = ({
               
               <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-left">
                 <div className="text-xs text-green-400">
-                  <strong>วิธีใช้:</strong> สแกน QR Code จะเปิดหน้ายืนยันหลักฐาน
-                  แสดงข้อมูล Hash และรายละเอียดไฟล์
+                  <strong>How to use:</strong> Scan QR Code to open evidence verification page
+                  Show Hash and File Details
                 </div>
               </div>
             </div>
@@ -1165,7 +1165,7 @@ export const EvidenceManager = ({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Link2 size={20} className="text-primary-400" />
-                เชื่อมกับคดี
+                Link to Case
               </h3>
               <button onClick={() => setShowCaseLinkModal(false)} className="p-1 hover:bg-dark-700 rounded">
                 <X size={18} className="text-dark-400" />
@@ -1173,8 +1173,8 @@ export const EvidenceManager = ({
             </div>
             
             <div className="mb-4">
-              <div className="text-sm text-dark-400 mb-2">หลักฐาน: {selectedEvidence.fileName}</div>
-              <div className="text-xs text-dark-500">ปัจจุบัน: {selectedEvidence.caseId || 'ไม่ได้เชื่อม'}</div>
+              <div className="text-sm text-dark-400 mb-2">Evidence: {selectedEvidence.fileName}</div>
+              <div className="text-xs text-dark-500">Current: {selectedEvidence.caseId || 'Not linked'}</div>
             </div>
             
             <div className="space-y-2">
@@ -1204,7 +1204,7 @@ export const EvidenceManager = ({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Settings size={20} className="text-primary-400" />
-                ตั้งค่ารายงาน {reportType === 'court' ? '⚖️ ศาล' : '🔬 ตรวจพิสูจน์'}
+                Report Settings {reportType === 'court' ? '⚖️ Court' : '🔬 Examination'}
               </h3>
               <button onClick={() => setShowReportModal(false)} className="p-1 hover:bg-dark-700 rounded">
                 <X size={18} className="text-dark-400" />
@@ -1216,21 +1216,21 @@ export const EvidenceManager = ({
               <div className="p-4 bg-dark-900 rounded-lg">
                 <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <User size={14} />
-                  ข้อมูลผู้ตรวจพิสูจน์
+                  Examiner Information
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-dark-400">ชื่อผู้ตรวจพิสูจน์:</label>
+                    <label className="text-xs text-dark-400">Examiner Name:</label>
                     <input
                       type="text"
                       value={reportConfig.examinerName}
                       onChange={(e) => setReportConfig({...reportConfig, examinerName: e.target.value})}
-                      placeholder="ชื่อ-นามสกุล"
+                      placeholder="Full Name"
                       className="w-full bg-dark-800 border border-dark-600 rounded p-2 text-white text-sm mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-dark-400">ตำแหน่ง:</label>
+                    <label className="text-xs text-dark-400">Position:</label>
                     <input
                       type="text"
                       value={reportConfig.examinerPosition}
@@ -1239,7 +1239,7 @@ export const EvidenceManager = ({
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-xs text-dark-400">หน่วยงาน:</label>
+                    <label className="text-xs text-dark-400">Unit:</label>
                     <input
                       type="text"
                       value={reportConfig.examinerUnit}
@@ -1254,41 +1254,41 @@ export const EvidenceManager = ({
               <div className="p-4 bg-dark-900 rounded-lg">
                 <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <FileText size={14} />
-                  ข้อมูลการส่งตรวจ
+                  Submission Information
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-dark-400">ผู้ส่งตรวจ:</label>
+                    <label className="text-xs text-dark-400">Submitter:</label>
                     <input
                       type="text"
                       value={reportConfig.requestedBy}
                       onChange={(e) => setReportConfig({...reportConfig, requestedBy: e.target.value})}
-                      placeholder="ชื่อ-นามสกุล"
+                      placeholder="Full Name"
                       className="w-full bg-dark-800 border border-dark-600 rounded p-2 text-white text-sm mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-dark-400">หน่วยงานผู้ส่ง:</label>
+                    <label className="text-xs text-dark-400">Submitting Unit:</label>
                     <input
                       type="text"
                       value={reportConfig.requestedUnit}
                       onChange={(e) => setReportConfig({...reportConfig, requestedUnit: e.target.value})}
-                      placeholder="ชื่อหน่วยงาน"
+                      placeholder="Unit Name"
                       className="w-full bg-dark-800 border border-dark-600 rounded p-2 text-white text-sm mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-dark-400">เลขที่หนังสือ:</label>
+                    <label className="text-xs text-dark-400">Document Number:</label>
                     <input
                       type="text"
                       value={reportConfig.requestNumber}
                       onChange={(e) => setReportConfig({...reportConfig, requestNumber: e.target.value})}
-                      placeholder="เลขที่หนังสือ"
+                      placeholder="Document Number"
                       className="w-full bg-dark-800 border border-dark-600 rounded p-2 text-white text-sm mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-dark-400">วันที่ส่งตรวจ:</label>
+                    <label className="text-xs text-dark-400">Submission Date:</label>
                     <input
                       type="date"
                       value={reportConfig.requestDate}
@@ -1303,7 +1303,7 @@ export const EvidenceManager = ({
               <div className="p-4 bg-dark-900 rounded-lg">
                 <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <Settings size={14} />
-                  ตัวเลือกเพิ่มเติม
+                  More Options
                 </h4>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm text-dark-300 cursor-pointer">
@@ -1314,7 +1314,7 @@ export const EvidenceManager = ({
                       className="rounded"
                     />
                     <Image size={14} />
-                    แนบรูปภาพหลักฐานในรายงาน
+                    Attach evidence images in report
                   </label>
                   <label className="flex items-center gap-2 text-sm text-dark-300 cursor-pointer">
                     <input
@@ -1324,7 +1324,7 @@ export const EvidenceManager = ({
                       className="rounded"
                     />
                     <Wallet size={14} />
-                    รวมข้อมูลกระเป๋า ({wallets.length} รายการ)
+                    Include Wallet Data ({wallets.length} items)
                   </label>
                   <label className="flex items-center gap-2 text-sm text-dark-300 cursor-pointer">
                     <input
@@ -1334,7 +1334,7 @@ export const EvidenceManager = ({
                       className="rounded"
                     />
                     <Users size={14} />
-                    รวมข้อมูลผู้ต้องหา ({suspects.length} รายการ)
+                    Include Suspect Data ({suspects.length} items)
                   </label>
                 </div>
               </div>
@@ -1342,21 +1342,21 @@ export const EvidenceManager = ({
               {/* Preview Info */}
               <div className="p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg">
                 <div className="text-sm text-primary-400">
-                  <strong>รายงานจะประกอบด้วย:</strong>
+                  <strong>Report will include:</strong>
                   <ul className="mt-1 ml-4 list-disc text-xs">
-                    <li>หลักฐาน {evidenceList.length} รายการ พร้อม SHA-256 Hash และ QR Code</li>
-                    {reportConfig.includeImages && <li>รูปภาพหลักฐาน (ถ้ามี)</li>}
-                    {reportConfig.includeWallets && wallets.length > 0 && <li>ข้อมูลกระเป๋า {wallets.length} รายการ</li>}
-                    {reportConfig.includeSuspects && suspects.length > 0 && <li>ข้อมูลผู้ต้องหา {suspects.length} ราย</li>}
+                    <li>Evidence {evidenceList.length} items with SHA-256 Hash and QR Code</li>
+                    {reportConfig.includeImages && <li>Evidence images (if any)</li>}
+                    {reportConfig.includeWallets && wallets.length > 0 && <li>Wallet data {wallets.length} items</li>}
+                    {reportConfig.includeSuspects && suspects.length > 0 && <li>Suspect data {suspects.length} person</li>}
                   </ul>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => setShowReportModal(false)} className="flex-1">ยกเลิก</Button>
+                <Button variant="ghost" onClick={() => setShowReportModal(false)} className="flex-1">Cancel</Button>
                 <Button variant="primary" onClick={handleGenerateReport} className="flex-1">
                   <Printer size={14} className="mr-1" />
-                  สร้างรายงาน
+                  Generate Report
                 </Button>
               </div>
             </div>

@@ -45,13 +45,13 @@ type LayoutType = 'breadthfirst' | 'cose' | 'circle' | 'grid' | 'concentric';
 
 // Node type configuration
 const NODE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
-  boss: { emoji: '👑', color: '#DC2626', label: 'หัวหน้าเครือข่าย' },
-  suspect: { emoji: '⚠️', color: '#F97316', label: 'ผู้ต้องสงสัย' },
-  victim: { emoji: '🛡️', color: '#22C55E', label: 'ผู้เสียหาย' },
-  mule: { emoji: '🏦', color: '#F59E0B', label: 'บัญชีม้า' },
+  boss: { emoji: '👑', color: '#DC2626', label: 'Network Boss' },
+  suspect: { emoji: '⚠️', color: '#F97316', label: 'Suspect' },
+  victim: { emoji: '🛡️', color: '#22C55E', label: 'Victim' },
+  mule: { emoji: '🏦', color: '#F59E0B', label: 'Mule Account' },
   crypto: { emoji: '💰', color: '#8B5CF6', label: 'Crypto Wallet' },
   exchange: { emoji: '🔄', color: '#3B82F6', label: 'Exchange' },
-  person: { emoji: '👤', color: '#6B7280', label: 'บุคคล' },
+  person: { emoji: '👤', color: '#6B7280', label: 'Person' },
 };
 
 // Edge type colors
@@ -74,7 +74,7 @@ const formatCurrency = (amount: number | undefined): string => {
 
 // Get node group/type
 const getNodeGroup = (node: MoneyFlowNode): string => {
-  if (node.is_suspect && node.label?.includes('หัวหน้า')) return 'boss';
+  if (node.is_suspect && node.label?.includes('Boss')) return 'boss';
   if (node.is_suspect) return 'suspect';
   if (node.is_victim) return 'victim';
   if (node.node_type === 'crypto_wallet') return 'crypto';
@@ -437,10 +437,10 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
   ];
 
   const filterOptions = [
-    { id: 'all', label: 'ทั้งหมด' },
-    { id: 'suspects', label: 'ผู้ต้องสงสัย' },
-    { id: 'victims', label: 'ผู้เสียหาย' },
-    { id: 'mules', label: 'บัญชีม้า' },
+    { id: 'all', label: 'All' },
+    { id: 'suspects', label: 'Suspect' },
+    { id: 'victims', label: 'Victim' },
+    { id: 'mules', label: 'Mule Account' },
     { id: 'crypto', label: 'Crypto' },
   ];
 
@@ -500,7 +500,7 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
             <Search size={14} className={`absolute left-2 top-1/2 -translate-y-1/2 ${darkMode ? 'text-dark-400' : 'text-gray-500'}`} />
             <input
               type="text"
-              placeholder="ค้นหา..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`text-sm rounded-lg pl-7 pr-3 py-1 w-40 ${darkMode ? 'bg-dark-700 text-white border-dark-600 placeholder-dark-400' : 'bg-white text-gray-900 border-gray-200'} border`}
@@ -513,14 +513,14 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
               {summary.nodeCount} Nodes
             </span>
             <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'}`}>
-              {summary.edgeCount} ธุรกรรม
+              {summary.edgeCount} transactions
             </span>
             <span className={`px-2 py-1 rounded text-xs bg-amber-500/20 text-amber-400`}>
               {formatCurrency(summary.totalFlow)}
             </span>
             {summary.suspectCount > 0 && (
               <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">
-                ⚠️ {summary.suspectCount} ผู้ต้องสงสัย
+                ⚠️ {summary.suspectCount} Suspect
               </span>
             )}
           </div>
@@ -569,9 +569,9 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
 
         {/* Instructions */}
         <div className={`absolute bottom-3 left-3 flex items-center gap-3 text-xs px-3 py-2 rounded-lg ${darkMode ? 'bg-dark-900/90 text-dark-400' : 'bg-white/90 text-gray-500'}`}>
-          <span>🖱️ ลาก Node</span>
-          <span>🔍 Scroll ซูม</span>
-          <span>👆 คลิกดู Connections</span>
+          <span>🖱️ Drag Node</span>
+          <span>🔍 Scroll to Zoom</span>
+          <span>👆 Click to view Connections</span>
         </div>
 
         {/* Selected Node Info */}
@@ -636,7 +636,7 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
         <div className={`flex items-center gap-4 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>โอนเงิน</span>
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Transfer</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
@@ -644,7 +644,7 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
           </div>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_purchase }} />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>ซื้อคริปโต</span>
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Crypto Purchase</span>
           </div>
         </div>
       </div>

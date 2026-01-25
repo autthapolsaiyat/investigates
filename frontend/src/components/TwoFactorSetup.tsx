@@ -14,36 +14,36 @@ interface TwoFactorSetupProps {
 
 const translations = {
   th: {
-    title: 'การยืนยันตัวตนสองขั้นตอน',
-    description: 'เพิ่มความปลอดภัยให้บัญชีด้วยการยืนยันตัวตนสองขั้นตอน',
-    enabled: 'เปิดใช้งานแล้ว',
-    disabled: 'ยังไม่ได้เปิดใช้งาน',
-    enabledAt: 'เปิดใช้งานเมื่อ',
-    enable: 'เปิดใช้งาน 2FA',
-    disable: 'ปิดการใช้งาน 2FA',
-    setup: 'ตั้งค่า 2FA',
-    scanQR: 'สแกน QR Code ด้วยแอป Google Authenticator',
-    orEnterManually: 'หรือใส่รหัสนี้ด้วยตนเอง',
-    enterCode: 'ใส่รหัส 6 หลักจากแอป',
-    verify: 'ยืนยัน',
-    cancel: 'ยกเลิก',
-    backupCodes: 'รหัสสำรอง',
-    backupCodesDesc: 'เก็บรหัสเหล่านี้ไว้ในที่ปลอดภัย ใช้สำหรับเข้าระบบเมื่อไม่สามารถเข้าถึงแอป Authenticator ได้',
-    copyAll: 'คัดลอกทั้งหมด',
-    copied: 'คัดลอกแล้ว',
-    done: 'เสร็จสิ้น',
-    confirmDisable: 'ยืนยันการปิด 2FA',
-    enterPassword: 'ใส่รหัสผ่านเพื่อยืนยัน',
-    enter2FACode: 'ใส่รหัส 2FA หรือรหัสสำรอง',
-    regenerateCodes: 'สร้างรหัสสำรองใหม่',
-    loading: 'กำลังโหลด...',
-    error: 'เกิดข้อผิดพลาด',
-    success: 'สำเร็จ',
-    invalidCode: 'รหัสไม่ถูกต้อง',
-    step1: 'ขั้นตอนที่ 1: ติดตั้งแอป',
-    step1Desc: 'ดาวน์โหลด Google Authenticator หรือ Authy บนมือถือ',
-    step2: 'ขั้นตอนที่ 2: สแกน QR Code',
-    step3: 'ขั้นตอนที่ 3: ใส่รหัสยืนยัน',
+    title: 'Two-Factor Authentication',
+    description: 'Add extra security to your account with Two-Factor Authentication',
+    enabled: 'Enabled',
+    disabled: 'Not enabled yet',
+    enabledAt: 'Enabled at',
+    enable: 'Enable 2FA',
+    disable: 'Disable 2FA',
+    setup: 'Setup 2FA',
+    scanQR: 'Scan QR Code with Google Authenticator app',
+    orEnterManually: 'or enter this code manually',
+    enterCode: 'Enter 6-digit code from app',
+    verify: 'Verify',
+    cancel: 'Cancel',
+    backupCodes: 'Backup Codes',
+    backupCodesDesc: 'Keep these codes in a safe place. Use them to sign in when you cannot access the Authenticator app',
+    copyAll: 'Copy all',
+    copied: 'Copied',
+    done: 'Done',
+    confirmDisable: 'Confirm disable 2FA',
+    enterPassword: 'Enter password to verify',
+    enter2FACode: 'Enter 2FA code or backup code',
+    regenerateCodes: 'Generate new backup codes',
+    loading: 'Loading...',
+    error: 'Error occurred',
+    success: 'Success',
+    invalidCode: 'Invalid code',
+    step1: 'Step 1: Install App',
+    step1Desc: 'Download Google Authenticator or Authy on your phone',
+    step2: 'Step 2: Scan QR Code',
+    step3: 'Step 3: Enter verification code',
   },
   en: {
     title: 'Two-Factor Authentication',
@@ -344,7 +344,7 @@ export default function TwoFactorSetup({ language = 'th' }: TwoFactorSetupProps)
             type="text"
             value={disableCode}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDisableCode(e.target.value)}
-            placeholder="000000 หรือ XXXX-XXXX"
+            placeholder="000000 or XXXX-XXXX"
           />
         </div>
 
@@ -393,7 +393,7 @@ export default function TwoFactorSetup({ language = 'th' }: TwoFactorSetupProps)
               </p>
               {status?.enabled && status.enabled_at && (
                 <p className="text-dark-500 text-sm">
-                  {t.enabledAt}: {new Date(status.enabled_at).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US')}
+                  {t.enabledAt}: {new Date(status.enabled_at).toLocaleDateString(language === 'th' ? 'en-US' : 'en-US')}
                 </p>
               )}
             </div>

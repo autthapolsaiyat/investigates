@@ -23,12 +23,12 @@ const priorityColors: Record<string, string> = {
 };
 
 const typeLabels: Record<string, string> = {
-  system: 'ระบบ',
-  welcome: 'ต้อนรับ',
+  system: 'System',
+  welcome: 'Welcome',
   subscription: 'Subscription',
-  case: 'คดี',
+  case: 'Case',
   ticket: 'Ticket',
-  alert: 'แจ้งเตือน',
+  alert: 'Alert',
 };
 
 export const Notifications = () => {
@@ -89,14 +89,14 @@ export const Notifications = () => {
       loadData();
     } catch (err) {
       console.error('Failed to create notification:', err);
-      alert('ไม่สามารถสร้างการแจ้งเตือนได้');
+      alert('Cannot create notification');
     } finally {
       setCreating(false);
     }
   };
 
   const handleSend = async (id: number) => {
-    if (!confirm('ต้องการส่งการแจ้งเตือนนี้ไปยังผู้ใช้ที่เลือกหรือไม่?')) return;
+    if (!confirm('Do you want to send this notification to selected users?')) return;
     
     setSending(id);
     try {
@@ -104,7 +104,7 @@ export const Notifications = () => {
       loadData();
     } catch (err) {
       console.error('Failed to send notification:', err);
-      alert('ไม่สามารถส่งการแจ้งเตือนได้');
+      alert('Cannot send notification');
     } finally {
       setSending(null);
     }
@@ -120,14 +120,14 @@ export const Notifications = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('ต้องการลบการแจ้งเตือนนี้หรือไม่?')) return;
+    if (!confirm('Do you want to delete this notification?')) return;
     
     try {
       await notificationsAPI.delete(id);
       loadData();
     } catch (err) {
       console.error('Failed to delete notification:', err);
-      alert('ไม่สามารถลบการแจ้งเตือนได้');
+      alert('Cannot delete notification');
     }
   };
 
@@ -153,16 +153,16 @@ export const Notifications = () => {
             <Bell className="w-7 h-7 text-primary-400" />
             Notifications
           </h1>
-          <p className="text-gray-400 mt-1">ส่งการแจ้งเตือนให้ผู้ใช้</p>
+          <p className="text-gray-400 mt-1">Send notifications to users</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={loadData} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            รีเฟรช
+            Refresh
           </Button>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            สร้างใหม่
+            Create New
           </Button>
         </div>
       </div>
@@ -177,7 +177,7 @@ export const Notifications = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_sent}</p>
-                <p className="text-sm text-gray-400">ส่งแล้ว</p>
+                <p className="text-sm text-gray-400">Sent</p>
               </div>
             </div>
           </Card>
@@ -201,7 +201,7 @@ export const Notifications = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_read}</p>
-                <p className="text-sm text-gray-400">อ่านแล้ว</p>
+                <p className="text-sm text-gray-400">Read</p>
               </div>
             </div>
           </Card>
@@ -213,7 +213,7 @@ export const Notifications = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.read_rate}%</p>
-                <p className="text-sm text-gray-400">อัตราอ่าน</p>
+                <p className="text-sm text-gray-400">Read Rate</p>
               </div>
             </div>
           </Card>
@@ -226,7 +226,7 @@ export const Notifications = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Plus className="w-5 h-5 text-primary-400" />
-              สร้างการแจ้งเตือนใหม่
+              Create New Notification
             </h2>
             <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-white">
               <X className="w-5 h-5" />
@@ -235,19 +235,19 @@ export const Notifications = () => {
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">หัวข้อ *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Title *</label>
               <Input
                 type="text"
-                placeholder="หัวข้อการแจ้งเตือน"
+                placeholder="Notification title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">ข้อความ *</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Message *</label>
               <textarea
-                placeholder="เนื้อหาการแจ้งเตือน..."
+                placeholder="Notification content..."
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none"
@@ -256,43 +256,43 @@ export const Notifications = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">ประเภท</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Type</label>
                 <select
                   value={formData.notification_type}
                   onChange={(e) => setFormData({ ...formData, notification_type: e.target.value })}
                   className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white"
                 >
-                  <option value="system">ระบบ</option>
-                  <option value="welcome">ต้อนรับ</option>
+                  <option value="system">System</option>
+                  <option value="welcome">Welcome</option>
                   <option value="subscription">Subscription</option>
-                  <option value="alert">แจ้งเตือน</option>
+                  <option value="alert">Alert</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">ความสำคัญ</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Priority</label>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                   className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white"
                 >
-                  <option value="low">ต่ำ</option>
-                  <option value="normal">ปกติ</option>
-                  <option value="high">สูง</option>
-                  <option value="urgent">ด่วน</option>
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">ส่งถึง</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Sendto</label>
                 <select
                   value={formData.target_audience}
                   onChange={(e) => setFormData({ ...formData, target_audience: e.target.value })}
                   className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white"
                 >
-                  <option value="all">ผู้ใช้ทั้งหมด</option>
-                  <option value="active">เฉพาะผู้ใช้ Active</option>
-                  <option value="expiring">Subscription ใกล้หมด</option>
+                  <option value="all">All Users</option>
+                  <option value="active">Active Users Only</option>
+                  <option value="expiring">Subscription expiring</option>
                 </select>
               </div>
             </div>
@@ -307,10 +307,10 @@ export const Notifications = () => {
                 ) : (
                   <Plus className="w-4 h-4 mr-2" />
                 )}
-                สร้าง (บันทึกเป็น Draft)
+                Create (Save as Draft)
               </Button>
               <Button variant="secondary" onClick={() => setShowForm(false)}>
-                ยกเลิก
+                Cancel
               </Button>
             </div>
           </div>
@@ -321,7 +321,7 @@ export const Notifications = () => {
       <Card className="p-5">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary-400" />
-          เทมเพลต
+          Templates
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {templates.map((template) => (
@@ -361,10 +361,10 @@ export const Notifications = () => {
                   <p className="text-sm text-gray-400 truncate">{notif.message}</p>
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                     <span>{typeLabels[notif.notification_type] || notif.notification_type}</span>
-                    <span>→ {notif.target_audience === 'all' ? 'ทุกคน' : notif.target_audience}</span>
+                    <span>→ {notif.target_audience === 'all' ? 'Everyone' : notif.target_audience}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {new Date(notif.created_at).toLocaleDateString('th-TH')}
+                      {new Date(notif.created_at).toLocaleDateString('en-US')}
                     </span>
                   </div>
                 </div>
@@ -394,18 +394,18 @@ export const Notifications = () => {
       <Card className="p-5">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <CheckCircle className="w-5 h-5 text-green-400" />
-          ส่งแล้ว ({sentNotifications.length})
+          Sent ({sentNotifications.length})
         </h2>
         
         {loading ? (
           <div className="p-8 text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-primary-400" />
-            <p className="text-gray-400 mt-2">กำลังโหลด...</p>
+            <p className="text-gray-400 mt-2">Loading...</p>
           </div>
         ) : sentNotifications.length === 0 ? (
           <div className="p-8 text-center">
             <Bell className="w-12 h-12 mx-auto text-gray-600" />
-            <p className="text-gray-400 mt-2">ยังไม่มีการแจ้งเตือนที่ส่งแล้ว</p>
+            <p className="text-gray-400 mt-2">No notifications sent yet</p>
           </div>
         ) : (
           <div className="divide-y divide-dark-700">
@@ -419,7 +419,7 @@ export const Notifications = () => {
                     </span>
                     {!notif.is_active && (
                       <span className="px-2 py-0.5 text-xs rounded bg-gray-500/20 text-gray-400">
-                        ปิดใช้งาน
+                        Deactivate
                       </span>
                     )}
                   </div>
@@ -427,13 +427,13 @@ export const Notifications = () => {
                   <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
                     <span className="flex items-center gap-1">
                       <Users className="w-3 h-3" />
-                      {notif.recipients_count} คน
+                      {notif.recipients_count} users
                     </span>
                     <span className="flex items-center gap-1">
                       <Eye className="w-3 h-3" />
-                      {notif.read_count} อ่าน
+                      {notif.read_count} read
                     </span>
-                    <span>{notif.sent_at ? new Date(notif.sent_at).toLocaleString('th-TH') : '-'}</span>
+                    <span>{notif.sent_at ? new Date(notif.sent_at).toLocaleString('en-US') : '-'}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -441,7 +441,7 @@ export const Notifications = () => {
                     size="sm" 
                     variant="secondary"
                     onClick={() => handleToggleActive(notif)}
-                    title={notif.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
+                    title={notif.is_active ? 'Deactivate' : 'เDeactivate'}
                   >
                     {notif.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>

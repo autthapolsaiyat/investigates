@@ -29,29 +29,29 @@ export default function TwoFactorAdmin() {
 
   const t = {
     th: {
-      title: 'จัดการ 2FA',
-      subtitle: 'ดูและรีเซ็ต 2FA ของผู้ใช้',
-      totalUsers: 'ผู้ใช้ทั้งหมด',
-      with2FA: 'เปิดใช้งาน 2FA',
-      without2FA: 'ยังไม่เปิด 2FA',
-      adoptionRate: 'อัตราการใช้งาน',
-      search: 'ค้นหาผู้ใช้...',
-      filterAll: 'ทั้งหมด',
-      filterEnabled: 'เปิด 2FA',
-      filterDisabled: 'ไม่ได้เปิด 2FA',
-      enabled: 'เปิดใช้งาน',
-      disabled: 'ไม่ได้เปิด',
-      enabledAt: 'เปิดใช้งานเมื่อ',
-      reset: 'รีเซ็ต 2FA',
-      noAction: 'ไม่มี 2FA',
-      confirmReset: 'ยืนยันการรีเซ็ต 2FA',
-      confirmResetDesc: 'ผู้ใช้จะต้องตั้งค่า 2FA ใหม่',
-      cancel: 'ยกเลิก',
-      confirm: 'ยืนยัน',
-      loading: 'กำลังโหลด...',
-      error: 'เกิดข้อผิดพลาด',
-      noUsers: 'ไม่พบผู้ใช้',
-      resetSuccess: 'รีเซ็ต 2FA สำเร็จสำหรับ',
+      title: 'Manage 2FA',
+      subtitle: 'View and reset user 2FA',
+      totalUsers: 'Total Users',
+      with2FA: 'Enabled 2FA',
+      without2FA: 'Without 2FA',
+      adoptionRate: 'Adoption Rate',
+      search: 'Search users...',
+      filterAll: 'All',
+      filterEnabled: '2FA Enabled',
+      filterDisabled: '2FA Not Enabled',
+      enabled: 'Enabled',
+      disabled: 'Not Enabled',
+      enabledAt: 'Enabled at',
+      reset: 'Reset 2FA',
+      noAction: 'No 2FA',
+      confirmReset: 'Confirm Reset 2FA',
+      confirmResetDesc: 'User will need to setup 2FA again',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      loading: 'Loading...',
+      error: 'Error occurred',
+      noUsers: 'No users found',
+      resetSuccess: '2FA reset successful for',
     },
     en: {
       title: '2FA Management',
@@ -311,7 +311,7 @@ export default function TwoFactorAdmin() {
                     <td className="p-4 text-dark-400 text-sm">
                       {user.two_fa_enabled_at
                         ? new Date(user.two_fa_enabled_at).toLocaleDateString(
-                            language === 'th' ? 'th-TH' : 'en-US'
+                            language === 'th' ? 'en-US' : 'en-US'
                           )
                         : '-'}
                     </td>

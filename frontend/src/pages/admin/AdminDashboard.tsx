@@ -66,7 +66,7 @@ export const AdminDashboard = () => {
       });
     } catch (err: any) {
       console.error('Error fetching dashboard stats:', err);
-      setError('ไม่สามารถโหลดข้อมูลได้');
+      setError('Unable to load data');
     } finally {
       setIsLoading(false);
     }
@@ -78,30 +78,30 @@ export const AdminDashboard = () => {
 
   const quickActions = [
     {
-      label: 'ดูคำขอลงทะเบียน',
-      description: `${stats.registrations?.pending || 0} รายการรอการอนุมัติ`,
+      label: 'View Registration Requests',
+      description: `${stats.registrations?.pending || 0} items pending approval`,
       icon: UserPlus,
       to: '/admin/registrations',
       color: 'from-yellow-500 to-orange-500',
       highlight: (stats.registrations?.pending || 0) > 0,
     },
     {
-      label: 'จัดการผู้ใช้',
-      description: `${stats.totalUsers} ผู้ใช้งานทั้งหมด`,
+      label: 'Manage Users',
+      description: `${stats.totalUsers} total users`,
       icon: Users,
       to: '/admin/users',
       color: 'from-blue-500 to-cyan-500',
     },
     {
-      label: 'จัดการหน่วยงาน',
-      description: `${stats.totalOrganizations} หน่วยงาน`,
+      label: 'Manage Organizations',
+      description: `${stats.totalOrganizations} organizations`,
       icon: Building2,
       to: '/admin/organizations',
       color: 'from-purple-500 to-pink-500',
     },
     {
-      label: 'ตั้งค่าระบบ',
-      description: 'กำหนดค่าระบบ',
+      label: 'System Settings',
+      description: 'Configure system',
       icon: Shield,
       to: '/admin/settings',
       color: 'from-gray-500 to-gray-600',
@@ -117,11 +117,11 @@ export const AdminDashboard = () => {
             <Shield className="w-7 h-7 text-red-400" />
             Admin Dashboard
           </h1>
-          <p className="text-gray-400 mt-1">ภาพรวมและการจัดการระบบ</p>
+          <p className="text-gray-400 mt-1">Overview and system management</p>
         </div>
         <Button onClick={fetchStats} variant="secondary" disabled={isLoading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          รีเฟรช
+          Refresh
         </Button>
       </div>
 
@@ -139,7 +139,7 @@ export const AdminDashboard = () => {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">ผู้ใช้งานทั้งหมด</p>
+              <p className="text-sm text-gray-400 mb-1">total users</p>
               <p className="text-3xl font-bold text-white">
                 {isLoading ? '-' : stats.totalUsers}
               </p>
@@ -154,7 +154,7 @@ export const AdminDashboard = () => {
         <Card className={`p-5 ${(stats.registrations?.pending || 0) > 0 ? 'ring-2 ring-yellow-500/50' : ''}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">รอการอนุมัติ</p>
+              <p className="text-sm text-gray-400 mb-1">Pending Approval</p>
               <p className="text-3xl font-bold text-white">
                 {isLoading ? '-' : stats.registrations?.pending || 0}
               </p>
@@ -168,7 +168,7 @@ export const AdminDashboard = () => {
               onClick={() => navigate('/admin/registrations')}
               className="mt-3 text-sm text-yellow-400 hover:text-yellow-300 flex items-center gap-1"
             >
-              ตรวจสอบเลย <ArrowRight className="w-4 h-4" />
+              Check now <ArrowRight className="w-4 h-4" />
             </button>
           )}
         </Card>
@@ -177,7 +177,7 @@ export const AdminDashboard = () => {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">หน่วยงาน</p>
+              <p className="text-sm text-gray-400 mb-1">organizations</p>
               <p className="text-3xl font-bold text-white">
                 {isLoading ? '-' : stats.totalOrganizations}
               </p>
@@ -192,7 +192,7 @@ export const AdminDashboard = () => {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">คดีทั้งหมด</p>
+              <p className="text-sm text-gray-400 mb-1">Total Cases</p>
               <p className="text-3xl font-bold text-white">
                 {isLoading ? '-' : stats.totalCases}
               </p>
@@ -209,33 +209,33 @@ export const AdminDashboard = () => {
         <Card className="p-5">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-primary-400" />
-            สถิติการลงทะเบียน
+            Registration Statistics
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 bg-dark-800 rounded-lg text-center">
               <p className="text-2xl font-bold text-white">{stats.registrations.total}</p>
-              <p className="text-sm text-gray-400">ทั้งหมด</p>
+              <p className="text-sm text-gray-400">All</p>
             </div>
             <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-yellow-400" />
                 <p className="text-2xl font-bold text-yellow-400">{stats.registrations.pending}</p>
               </div>
-              <p className="text-sm text-gray-400">รอการอนุมัติ</p>
+              <p className="text-sm text-gray-400">Pending Approval</p>
             </div>
             <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <CheckCircle className="w-4 h-4 text-green-400" />
                 <p className="text-2xl font-bold text-green-400">{stats.registrations.approved}</p>
               </div>
-              <p className="text-sm text-gray-400">อนุมัติแล้ว</p>
+              <p className="text-sm text-gray-400">Approved</p>
             </div>
             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <XCircle className="w-4 h-4 text-red-400" />
                 <p className="text-2xl font-bold text-red-400">{stats.registrations.rejected}</p>
               </div>
-              <p className="text-sm text-gray-400">ปฏิเสธ</p>
+              <p className="text-sm text-gray-400">Rejected</p>
             </div>
           </div>
           
@@ -244,7 +244,7 @@ export const AdminDashboard = () => {
             <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center gap-3">
               <Calendar className="w-5 h-5 text-blue-400" />
               <p className="text-blue-400">
-                วันนี้มีคำขอลงทะเบียนใหม่ <span className="font-bold">{stats.registrations.today}</span> รายการ
+                Today has new registration requests: <span className="font-bold">{stats.registrations.today}</span> items
               </p>
             </div>
           )}
@@ -255,7 +255,7 @@ export const AdminDashboard = () => {
       <div>
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Activity className="w-5 h-5 text-primary-400" />
-          การดำเนินการด่วน
+          Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action) => (
@@ -276,7 +276,7 @@ export const AdminDashboard = () => {
               {action.highlight && (
                 <div className="mt-2 flex items-center gap-1 text-yellow-400 text-sm">
                   <AlertCircle className="w-4 h-4" />
-                  <span>ต้องการการดำเนินการ</span>
+                  <span>Needs action</span>
                 </div>
               )}
             </button>
@@ -288,23 +288,23 @@ export const AdminDashboard = () => {
       <Card className="p-5">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary-400" />
-          ข้อมูลระบบ
+          System Info
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <p className="text-gray-500">เวอร์ชัน</p>
+            <p className="text-gray-500">Version</p>
             <p className="text-white font-medium">1.0.0</p>
           </div>
           <div>
-            <p className="text-gray-500">สถานะ API</p>
+            <p className="text-gray-500">Status API</p>
             <p className="text-green-400 font-medium flex items-center gap-1">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              ออนไลน์
+              Online
             </p>
           </div>
           <div>
-            <p className="text-gray-500">อัพเดทล่าสุด</p>
-            <p className="text-white font-medium">{new Date().toLocaleDateString('th-TH')}</p>
+            <p className="text-gray-500">Last Update</p>
+            <p className="text-white font-medium">{new Date().toLocaleDateString('en-US')}</p>
           </div>
           <div>
             <p className="text-gray-500">Environment</p>

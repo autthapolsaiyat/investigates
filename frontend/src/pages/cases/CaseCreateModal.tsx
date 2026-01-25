@@ -1,5 +1,5 @@
 /**
- * CaseCreateModal - สร้างคดีใหม่
+ * CaseCreateModal - Create New Case
  */
 import { useState } from 'react';
 import { X, Plus, Loader2, FileText } from 'lucide-react';
@@ -27,7 +27,7 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
     e.preventDefault();
     
     if (!formData.case_number || !formData.title) {
-      setError('กรุณากรอกหมายเลขคดีและชื่อคดี');
+      setError('Please enter case number and case title');
       return;
     }
 
@@ -58,10 +58,10 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
         });
       } else {
         const data = await response.json();
-        setError(data.detail || 'เกิดข้อผิดพลาดในการสร้างคดี');
+        setError(data.detail || 'Error creating case');
       }
     } catch (err) {
-      setError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      setError('Unable to connect to server');
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +80,7 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
         <div className="flex items-center justify-between p-4 border-b border-dark-700">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <FileText className="text-primary-400" />
-            สร้างคดีใหม่
+            Create New Case
           </h2>
           <button onClick={onClose} className="p-1 hover:bg-dark-700 rounded">
             <X size={20} />
@@ -91,35 +91,35 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Case Number */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">หมายเลขคดี *</label>
+            <label className="block text-sm text-dark-400 mb-1">Case Number *</label>
             <input
               type="text"
               value={formData.case_number}
               onChange={(e) => setFormData(prev => ({ ...prev, case_number: e.target.value }))}
-              placeholder="เช่น CRYPTO-001"
+              placeholder="e.g. CRYPTO-001"
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none"
             />
           </div>
 
           {/* Title */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">ชื่อคดี *</label>
+            <label className="block text-sm text-dark-400 mb-1">Case Title *</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="เช่น คดีฉ้อโกง Crypto"
+              placeholder="e.g. Crypto Fraud Case"
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">รายละเอียด</label>
+            <label className="block text-sm text-dark-400 mb-1">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="รายละเอียดคดี..."
+              placeholder="Case description..."
               rows={3}
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none resize-none"
             />
@@ -128,47 +128,47 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
           {/* Status & Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-dark-400 mb-1">สถานะ</label>
+              <label className="block text-sm text-dark-400 mb-1">Status</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                 className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
               >
-                <option value="open">เปิด</option>
-                <option value="in_progress">กำลังดำเนินการ</option>
-                <option value="pending">รอดำเนินการ</option>
-                <option value="closed">ปิด</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="pending">Pending</option>
+                <option value="closed">Closed</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm text-dark-400 mb-1">ความสำคัญ</label>
+              <label className="block text-sm text-dark-400 mb-1">Priority</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
                 className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
               >
-                <option value="low">ต่ำ</option>
-                <option value="medium">ปานกลาง</option>
-                <option value="high">สูง</option>
-                <option value="critical">วิกฤต</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
               </select>
             </div>
           </div>
 
           {/* Case Type */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">ประเภทคดี</label>
+            <label className="block text-sm text-dark-400 mb-1">Case Type</label>
             <select
               value={formData.case_type}
               onChange={(e) => setFormData(prev => ({ ...prev, case_type: e.target.value }))}
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
             >
-              <option value="fraud">ฉ้อโกง</option>
-              <option value="money_laundering">ฟอกเงิน</option>
-              <option value="cybercrime">อาชญากรรมไซเบอร์</option>
-              <option value="theft">ลักทรัพย์</option>
-              <option value="corruption">คอร์รัปชั่น</option>
-              <option value="other">อื่นๆ</option>
+              <option value="fraud">Fraud</option>
+              <option value="money_laundering">Money Laundering</option>
+              <option value="cybercrime">Cybercrime</option>
+              <option value="theft">Theft</option>
+              <option value="corruption">Corruption</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
@@ -182,18 +182,18 @@ export const CaseCreateModal = ({ isOpen, onClose, onSuccess }: CaseCreateModalP
           {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>
-              ยกเลิก
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  กำลังสร้าง...
+                  Creating...
                 </>
               ) : (
                 <>
                   <Plus size={18} className="mr-2" />
-                  สร้างคดี
+                  Create Case
                 </>
               )}
             </Button>

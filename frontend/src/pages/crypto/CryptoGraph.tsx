@@ -332,7 +332,7 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
   ];
 
   const legends = [
-    { emoji: '💎', label: 'Wallet หลัก', color: '#3b82f6' },
+    { emoji: '💎', label: 'Main Wallet', color: '#3b82f6' },
     { emoji: '🏦', label: 'Exchange', color: '#22c55e' },
     { emoji: '🌀', label: 'Mixer (High Risk)', color: '#ef4444' },
     { emoji: '📊', label: 'DeFi', color: '#8b5cf6' },
@@ -417,9 +417,9 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
 
         {/* Instructions */}
         <div className={`absolute bottom-3 left-3 flex items-center gap-3 text-xs px-3 py-2 rounded-lg ${darkMode ? 'bg-dark-900/90 text-dark-400' : 'bg-white/90 text-gray-500'}`}>
-          <span>🖱️ ลาก Node</span>
-          <span>🔍 Scroll ซูม</span>
-          <span>👆 คลิกดู Connections</span>
+          <span>🖱️ Drag Node</span>
+          <span>🔍 Scroll Zoom</span>
+          <span>👆 Click to View Connections</span>
         </div>
       </div>
 
@@ -436,11 +436,11 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
         <div className="flex items-center gap-4 mt-2 pt-2 border-t border-dark-700">
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 bg-green-500 rounded" />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>เงินเข้า (Receive)</span>
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Incoming (Receive)</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 bg-red-500 rounded" />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>เงินออก (Send)</span>
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Outgoing (Send)</span>
           </div>
         </div>
       </div>

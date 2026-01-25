@@ -163,7 +163,7 @@ export const LoginMap = () => {
             </div>
             <div class="flex items-center gap-2">
               <span class="text-gray-500">🕐</span>
-              <span>${new Date(point.login_at).toLocaleString('th-TH')}</span>
+              <span>${new Date(point.login_at).toLocaleString('en-US')}</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="${point.is_online ? 'text-green-500' : 'text-gray-400'}">●</span>
@@ -213,7 +213,7 @@ export const LoginMap = () => {
             <MapIcon className="w-7 h-7 text-primary-400" />
             Login Map
           </h1>
-          <p className="text-gray-400 mt-1">ติดตามการ Login ของผู้ใช้บนแผนที่</p>
+          <p className="text-gray-400 mt-1">Track user logins on map</p>
         </div>
         <div className="flex items-center gap-3">
           <select
@@ -221,21 +221,21 @@ export const LoginMap = () => {
             onChange={(e) => setDays(Number(e.target.value))}
             className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white"
           >
-            <option value={1}>24 ชั่วโมง</option>
-            <option value={7}>7 วัน</option>
-            <option value={30}>30 วัน</option>
-            <option value={90}>90 วัน</option>
+            <option value={1}>24 hours</option>
+            <option value={7}>7 days</option>
+            <option value={30}>30 days</option>
+            <option value={90}>90 days</option>
           </select>
           <Button 
             variant="secondary" 
             onClick={() => setShowList(!showList)}
           >
             <List className="w-4 h-4 mr-2" />
-            {showList ? 'ซ่อนรายการ' : 'แสดงรายการ'}
+            {showList ? 'Hide List' : 'Show List'}
           </Button>
           <Button onClick={fetchData} variant="secondary" disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            รีเฟรช
+            Refresh
           </Button>
         </div>
       </div>
@@ -334,7 +334,7 @@ export const LoginMap = () => {
                       <div className="flex items-center gap-2 mt-1">
                         <Clock size={12} className="text-gray-500" />
                         <span className="text-xs text-gray-500">
-                          {new Date(item.login_at).toLocaleString('th-TH')}
+                          {new Date(item.login_at).toLocaleString('en-US')}
                         </span>
                         {item.login_success ? (
                           <CheckCircle size={12} className="text-green-400" />
@@ -348,7 +348,7 @@ export const LoginMap = () => {
               ))}
               {loginHistory.length === 0 && (
                 <div className="p-8 text-center text-gray-400">
-                  ไม่มีข้อมูล Login
+                  No Login Data
                 </div>
               )}
             </div>
@@ -363,7 +363,7 @@ export const LoginMap = () => {
           <Card className="p-4">
             <h3 className="font-medium text-white mb-4 flex items-center gap-2">
               <MapPin size={18} className="text-primary-400" />
-              Top Locations (7 วัน)
+              Top Locations (7 days)
             </h3>
             <div className="space-y-3">
               {stats.top_locations.map((loc, index) => (
@@ -376,7 +376,7 @@ export const LoginMap = () => {
                 </div>
               ))}
               {stats.top_locations.length === 0 && (
-                <p className="text-gray-400 text-center">ไม่มีข้อมูล</p>
+                <p className="text-gray-400 text-center">No Data</p>
               )}
             </div>
           </Card>
@@ -385,7 +385,7 @@ export const LoginMap = () => {
           <Card className="p-4">
             <h3 className="font-medium text-white mb-4 flex items-center gap-2">
               <Monitor size={18} className="text-primary-400" />
-              Top Devices (7 วัน)
+              Top Devices (7 days)
             </h3>
             <div className="space-y-3">
               {stats.top_devices.map((dev, index) => (
@@ -398,7 +398,7 @@ export const LoginMap = () => {
                 </div>
               ))}
               {stats.top_devices.length === 0 && (
-                <p className="text-gray-400 text-center">ไม่มีข้อมูล</p>
+                <p className="text-gray-400 text-center">No Data</p>
               )}
             </div>
           </Card>

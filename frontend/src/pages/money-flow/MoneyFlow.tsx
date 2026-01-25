@@ -55,10 +55,10 @@ export const MoneyFlow = () => {
         setNodes(nodesData || []);
         setEdges(edgesData || []);
       } else {
-        setError('ไม่สามารถโหลดข้อมูลได้');
+        setError('Unable to load data');
       }
     } catch (err) {
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      setError('Connection error');
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +114,7 @@ export const MoneyFlow = () => {
           ) : (
             <div className="px-3 py-1.5 bg-dark-700/50 rounded-lg text-sm text-dark-400">
               <Briefcase size={14} className="inline mr-2" />
-              กรุณาเลือกคดีจากเมนูด้านซ้าย
+              Please select a case from the left menu
             </div>
           )}
         </div>
@@ -136,7 +136,7 @@ export const MoneyFlow = () => {
 
           <Button size="sm" onClick={() => setShowAddNode(true)}>
             <Plus size={16} />
-            เพิ่ม Node
+            Add Node
           </Button>
         </div>
       </div>
@@ -166,14 +166,14 @@ export const MoneyFlow = () => {
             <div className="text-center">
               <Network size={64} className="text-dark-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-white mb-2">
-                ยังไม่มีข้อมูล
+                No data yet
               </h3>
               <p className="text-dark-400 mb-4">
-                Import จาก Crypto Tracker หรือเพิ่ม Node ใหม่
+                Import from Crypto Tracker or Add new Node
               </p>
               <Button onClick={() => setShowAddNode(true)}>
                 <Plus size={16} className="mr-2" />
-                เพิ่ม Node แรก
+                Add first Node
               </Button>
             </div>
           </div>

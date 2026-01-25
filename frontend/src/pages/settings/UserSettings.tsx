@@ -27,39 +27,39 @@ interface TabInfo {
 // Inline translations
 const translations = {
   th: {
-    settings: 'ตั้งค่า',
-    settingsDesc: 'จัดการบัญชีและการตั้งค่าแอปพลิเคชัน',
-    profile: 'โปรไฟล์',
-    security: 'ความปลอดภัย',
-    appearance: 'การแสดงผล',
-    language: 'ภาษา',
-    profileSettings: 'ข้อมูลโปรไฟล์',
-    firstName: 'ชื่อ',
-    lastName: 'นามสกุล',
-    email: 'อีเมล',
-    phone: 'เบอร์โทรศัพท์',
-    department: 'แผนก',
-    position: 'ตำแหน่ง',
-    save: 'บันทึก',
-    saveChanges: 'บันทึกการเปลี่ยนแปลง',
-    changesSaved: 'บันทึกสำเร็จ',
-    securitySettings: 'ความปลอดภัย',
-    changePassword: 'เปลี่ยนรหัสผ่าน',
-    currentPassword: 'รหัสผ่านปัจจุบัน',
-    newPassword: 'รหัสผ่านใหม่',
-    confirmPassword: 'ยืนยันรหัสผ่านใหม่',
-    passwordChanged: 'เปลี่ยนรหัสผ่านสำเร็จ',
-    passwordMismatch: 'รหัสผ่านไม่ตรงกัน',
-    passwordTooShort: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
-    appearanceSettings: 'การแสดงผล',
-    theme: 'ธีม',
-    lightTheme: 'สว่าง',
-    darkTheme: 'มืด',
-    systemTheme: 'ตามระบบ',
-    languageSettings: 'ภาษาและภูมิภาค',
-    selectLanguage: 'เลือกภาษา',
-    timezone: 'เขตเวลา',
-    dateFormat: 'รูปแบบวันที่',
+    settings: 'Settings',
+    settingsDesc: 'Manage account and application settings',
+    profile: 'Profile',
+    security: 'Security',
+    appearance: 'Appearance',
+    language: 'Language',
+    profileSettings: 'DataProfile',
+    firstName: 'Name',
+    lastName: 'Last Name',
+    email: 'Email',
+    phone: 'Phone',
+    department: 'Department',
+    position: 'Position',
+    save: 'Save',
+    saveChanges: 'Save Changes',
+    changesSaved: 'SaveSuccess',
+    securitySettings: 'Security',
+    changePassword: 'Change Password',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'ConfirmNew Password',
+    passwordChanged: 'Change PasswordSuccess',
+    passwordMismatch: 'Passwords do not match',
+    passwordTooShort: 'Password must be at least 8 characters',
+    appearanceSettings: 'Appearance',
+    theme: 'Theme',
+    lightTheme: 'Light',
+    darkTheme: 'Dark',
+    systemTheme: 'System',
+    languageSettings: 'Language and Region',
+    selectLanguage: 'SelectLanguage',
+    timezone: 'Timezone',
+    dateFormat: 'Date Format',
   },
   en: {
     settings: 'Settings',
@@ -170,10 +170,10 @@ export default function UserSettings() {
   };
 
   const tabs: TabInfo[] = [
-    { id: 'profile', labelTh: 'โปรไฟล์', labelEn: 'Profile', icon: <User size={18} /> },
-    { id: 'security', labelTh: 'ความปลอดภัย', labelEn: 'Security', icon: <Shield size={18} /> },
-    { id: 'appearance', labelTh: 'การแสดงผล', labelEn: 'Appearance', icon: <Palette size={18} /> },
-    { id: 'language', labelTh: 'ภาษา', labelEn: 'Language', icon: <Globe size={18} /> },
+    { id: 'profile', labelTh: 'Profile', labelEn: 'Profile', icon: <User size={18} /> },
+    { id: 'security', labelTh: 'Security', labelEn: 'Security', icon: <Shield size={18} /> },
+    { id: 'appearance', labelTh: 'Appearance', labelEn: 'Appearance', icon: <Palette size={18} /> },
+    { id: 'language', labelTh: 'Language', labelEn: 'Language', icon: <Globe size={18} /> },
   ];
 
   // Save profile
@@ -588,7 +588,7 @@ export default function UserSettings() {
                       }`}
                     >
                       <span className="text-2xl">🇹🇭</span>
-                      <span>ภาษาไทย</span>
+                      <span>LanguageThai</span>
                       {settings.language === 'th' && <Check size={16} className="text-primary-400" />}
                     </button>
                     <button

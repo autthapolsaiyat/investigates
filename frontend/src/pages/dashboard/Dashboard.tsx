@@ -61,7 +61,7 @@ import {
 const STATS = [
   {
     id: 'total-cases',
-    label: 'คดีทั้งหมด',
+    label: 'Total Cases',
     value: 156,
     change: +12,
     changePercent: 8.3,
@@ -73,7 +73,7 @@ const STATS = [
   },
   {
     id: 'active-cases',
-    label: 'คดีที่กำลังดำเนินการ',
+    label: 'Active Cases',
     value: 42,
     change: +5,
     changePercent: 13.5,
@@ -85,7 +85,7 @@ const STATS = [
   },
   {
     id: 'seized-amount',
-    label: 'มูลค่ายึดทรัพย์',
+    label: 'Seized Amount',
     value: '฿847M',
     change: +127,
     changePercent: 17.6,
@@ -97,7 +97,7 @@ const STATS = [
   },
   {
     id: 'suspects',
-    label: 'ผู้ต้องหา',
+    label: 'Suspects',
     value: 89,
     change: +7,
     changePercent: 8.5,
@@ -110,20 +110,20 @@ const STATS = [
 ];
 
 const CASE_TREND_DATA = [
-  { month: 'ก.ค.', cases: 12, closed: 8, seized: 45 },
-  { month: 'ส.ค.', cases: 19, closed: 12, seized: 78 },
-  { month: 'ก.ย.', cases: 15, closed: 14, seized: 62 },
-  { month: 'ต.ค.', cases: 25, closed: 18, seized: 124 },
-  { month: 'พ.ย.', cases: 32, closed: 22, seized: 189 },
-  { month: 'ธ.ค.', cases: 28, closed: 25, seized: 156 },
-  { month: 'ม.ค.', cases: 35, closed: 20, seized: 203 }
+  { month: 'Jul', cases: 12, closed: 8, seized: 45 },
+  { month: 'Aug', cases: 19, closed: 12, seized: 78 },
+  { month: 'Sep', cases: 15, closed: 14, seized: 62 },
+  { month: 'Oct', cases: 25, closed: 18, seized: 124 },
+  { month: 'Nov', cases: 32, closed: 22, seized: 189 },
+  { month: 'Dec', cases: 28, closed: 25, seized: 156 },
+  { month: 'Jan', cases: 35, closed: 20, seized: 203 }
 ];
 
 const CASE_STATUS_DATA = [
-  { name: 'กำลังสืบสวน', value: 42, color: '#3b82f6' },
-  { name: 'รอพนักงานอัยการ', value: 28, color: '#f59e0b' },
-  { name: 'อยู่ในชั้นศาล', value: 35, color: '#8b5cf6' },
-  { name: 'ปิดคดี', value: 51, color: '#22c55e' }
+  { name: 'Investigating', value: 42, color: '#3b82f6' },
+  { name: 'Pending Prosecutor', value: 28, color: '#f59e0b' },
+  { name: 'In Court', value: 35, color: '#8b5cf6' },
+  { name: 'Closed', value: 51, color: '#22c55e' }
 ];
 
 const RISK_LEVEL_DATA = [
@@ -137,10 +137,10 @@ const RECENT_ACTIVITIES = [
   {
     id: 1,
     type: 'case_created',
-    title: 'สร้างคดีใหม่',
-    description: 'CASE-20260111-ABC123 - คดีฟอกเงินผ่าน Crypto',
-    user: 'พ.ต.ท. สมชาย',
-    time: '5 นาทีที่แล้ว',
+    title: 'Create New Case',
+    description: 'CASE-20260111-ABC123 - Crypto Money Laundering Case',
+    user: 'Lt. Col. John',
+    time: '5 minutes ago',
     icon: Plus,
     color: 'text-green-400',
     bgColor: 'bg-green-500/20'
@@ -148,10 +148,10 @@ const RECENT_ACTIVITIES = [
   {
     id: 2,
     type: 'evidence_added',
-    title: 'เพิ่มหลักฐาน',
-    description: 'อัพโหลด 3 ไฟล์ พร้อม Hash verification',
-    user: 'ร.ต.อ. สมหญิง',
-    time: '15 นาทีที่แล้ว',
+    title: 'Evidence Added',
+    description: 'Uploaded 3 files with Hash verification',
+    user: 'Capt. Jane',
+    time: '15 minutes ago',
     icon: Shield,
     color: 'text-primary-400',
     bgColor: 'bg-primary-500/20'
@@ -159,10 +159,10 @@ const RECENT_ACTIVITIES = [
   {
     id: 3,
     type: 'wallet_traced',
-    title: 'ติดตาม Wallet สำเร็จ',
-    description: 'พบเส้นทางเงิน 5.2 BTC → Exchange → KYC',
-    user: 'พ.ต.ต. วิชัย',
-    time: '32 นาทีที่แล้ว',
+    title: 'Wallet Traced Successfully',
+    description: 'Found money trail 5.2 BTC → Exchange → KYC',
+    user: 'Maj. Mike',
+    time: '32 minutes ago',
     icon: Wallet,
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/20'
@@ -170,10 +170,10 @@ const RECENT_ACTIVITIES = [
   {
     id: 4,
     type: 'suspect_identified',
-    title: 'ระบุตัวผู้ต้องหา',
-    description: 'ได้ข้อมูล KYC จาก Bitkub Exchange',
-    user: 'พ.ต.ท. สมชาย',
-    time: '1 ชั่วโมงที่แล้ว',
+    title: 'Suspect Identified',
+    description: 'KYC data obtained from Bitkub Exchange',
+    user: 'Lt. Col. John',
+    time: '1 hour ago',
     icon: Users,
     color: 'text-red-400',
     bgColor: 'bg-red-500/20'
@@ -181,10 +181,10 @@ const RECENT_ACTIVITIES = [
   {
     id: 5,
     type: 'report_generated',
-    title: 'สร้างรายงานศาล',
-    description: 'CASE-20260110-XYZ789 พร้อมยื่นอัยการ',
-    user: 'ร.ต.อ. สมหญิง',
-    time: '2 ชั่วโมงที่แล้ว',
+    title: 'Court Report Generated',
+    description: 'CASE-20260110-XYZ789 Ready for prosecutor',
+    user: 'Capt. Jane',
+    time: '2 hours ago',
     icon: FileText,
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/20'
@@ -194,7 +194,7 @@ const RECENT_ACTIVITIES = [
 const ACTIVE_CASES = [
   {
     id: 'CASE-20260111-001',
-    name: 'คดี Silk Road Thailand',
+    name: 'Silk Road Thailand Case',
     type: 'Cryptocurrency Fraud',
     status: 'investigating',
     progress: 75,
@@ -205,7 +205,7 @@ const ACTIVE_CASES = [
   },
   {
     id: 'CASE-20260110-002',
-    name: 'คดีแชร์ลูกโซ่ออนไลน์',
+    name: 'Online Ponzi Scheme Case',
     type: 'Ponzi Scheme',
     status: 'investigating',
     progress: 45,
@@ -216,7 +216,7 @@ const ACTIVE_CASES = [
   },
   {
     id: 'CASE-20260109-003',
-    name: 'คดีฟอกเงินคาสิโน',
+    name: 'Casino Money Laundering Case',
     type: 'Money Laundering',
     status: 'prosecutor',
     progress: 90,
@@ -227,7 +227,7 @@ const ACTIVE_CASES = [
   },
   {
     id: 'CASE-20260108-004',
-    name: 'คดีหลอกลงทุน Forex',
+    name: 'Forex Investment Fraud Case',
     type: 'Investment Fraud',
     status: 'investigating',
     progress: 30,
@@ -239,12 +239,12 @@ const ACTIVE_CASES = [
 ];
 
 const QUICK_ACTIONS = [
-  { id: 'new-case', label: 'สร้างคดีใหม่', icon: Plus, color: 'primary', path: '/cases' },
-  { id: 'trace-wallet', label: 'ติดตาม Wallet', icon: Wallet, color: 'amber', path: '/crypto' },
-  { id: 'money-flow', label: 'วิเคราะห์ Money Flow', icon: Activity, color: 'green', path: '/money-flow' },
-  { id: 'import-data', label: 'นำเข้าข้อมูล', icon: FileText, color: 'purple', path: '/import' },
-  { id: 'call-analysis', label: 'วิเคราะห์ CDR', icon: Phone, color: 'blue', path: '/call-analysis' },
-  { id: 'generate-report', label: 'สร้างรายงาน', icon: FileText, color: 'red', path: '/report' }
+  { id: 'new-case', label: 'Create New Case', icon: Plus, color: 'primary', path: '/cases' },
+  { id: 'trace-wallet', label: 'Trace Wallet', icon: Wallet, color: 'amber', path: '/crypto' },
+  { id: 'money-flow', label: 'Analyze Money Flow', icon: Activity, color: 'green', path: '/money-flow' },
+  { id: 'import-data', label: 'Import Data', icon: FileText, color: 'purple', path: '/import' },
+  { id: 'call-analysis', label: 'CDR Analysis', icon: Phone, color: 'blue', path: '/call-analysis' },
+  { id: 'generate-report', label: 'Generate Report', icon: FileText, color: 'red', path: '/report' }
 ];
 
 // ============================================
@@ -276,7 +276,7 @@ const StatCard = ({ stat, index }: { stat: typeof STATS[0]; index: number }) => 
           }`}>
             {stat.trend === 'up' ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
             <span>+{stat.change} ({stat.changePercent}%)</span>
-            <span className="text-dark-500 ml-1">จากเดือนก่อน</span>
+            <span className="text-dark-500 ml-1">from last month</span>
           </div>
         </div>
         <div className={`w-14 h-14 ${stat.bgColor} rounded-xl flex items-center justify-center`}>
@@ -291,17 +291,17 @@ const CaseTrendChart = () => (
   <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h3 className="text-lg font-semibold text-white">แนวโน้มคดี</h3>
-        <p className="text-sm text-dark-400">จำนวนคดีและมูลค่ายึดทรัพย์รายเดือน</p>
+        <h3 className="text-lg font-semibold text-white">Case Trends</h3>
+        <p className="text-sm text-dark-400">Monthly cases and seized amount</p>
       </div>
       <div className="flex items-center gap-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-primary-500 rounded-full" />
-          <span className="text-dark-400">คดีใหม่</span>
+          <span className="text-dark-400">New Cases</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-green-500 rounded-full" />
-          <span className="text-dark-400">ปิดคดี</span>
+          <span className="text-dark-400">Closed</span>
         </div>
       </div>
     </div>
@@ -327,8 +327,8 @@ const CaseTrendChart = () => (
             borderRadius: '8px'
           }}
         />
-        <Area type="monotone" dataKey="cases" stroke="#3b82f6" fillOpacity={1} fill="url(#colorCases)" name="คดีใหม่" />
-        <Area type="monotone" dataKey="closed" stroke="#22c55e" fillOpacity={1} fill="url(#colorClosed)" name="ปิดคดี" />
+        <Area type="monotone" dataKey="cases" stroke="#3b82f6" fillOpacity={1} fill="url(#colorCases)" name="New Cases" />
+        <Area type="monotone" dataKey="closed" stroke="#22c55e" fillOpacity={1} fill="url(#colorClosed)" name="Closed" />
       </AreaChart>
     </ResponsiveContainer>
   </div>
@@ -338,8 +338,8 @@ const CaseStatusChart = () => (
   <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h3 className="text-lg font-semibold text-white">สถานะคดี</h3>
-        <p className="text-sm text-dark-400">การกระจายตามสถานะ</p>
+        <h3 className="text-lg font-semibold text-white">Case Status</h3>
+        <p className="text-sm text-dark-400">Distribution by status</p>
       </div>
       <PieChart size={20} className="text-dark-400" />
     </div>
@@ -385,8 +385,8 @@ const RiskLevelChart = () => (
   <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h3 className="text-lg font-semibold text-white">ระดับความเสี่ยง</h3>
-        <p className="text-sm text-dark-400">การจำแนกตามความรุนแรง</p>
+        <h3 className="text-lg font-semibold text-white">Risk Level</h3>
+        <p className="text-sm text-dark-400">Classification by severity</p>
       </div>
       <BarChart3 size={20} className="text-dark-400" />
     </div>
@@ -419,11 +419,11 @@ const RecentActivities = () => {
     <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-white">กิจกรรมล่าสุด</h3>
-          <p className="text-sm text-dark-400">อัพเดตจากทีม</p>
+          <h3 className="text-lg font-semibold text-white">Recent Activities</h3>
+          <p className="text-sm text-dark-400">Team updates</p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => navigate('/cases')}>
-          ดูทั้งหมด <ChevronRight size={16} />
+          View All <ChevronRight size={16} />
         </Button>
       </div>
       <div className="space-y-4">
@@ -459,7 +459,7 @@ const QuickActions = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">Quick Actions</h3>
-          <p className="text-sm text-dark-400">ทางลัดการทำงาน</p>
+          <p className="text-sm text-dark-400">Workflow shortcuts</p>
         </div>
         <Zap size={20} className="text-amber-400" />
       </div>
@@ -504,10 +504,10 @@ const ActiveCasesTable = () => {
   
   const getStatusBadge = (status: string) => {
     const styles: Record<string, { bg: string; text: string; label: string }> = {
-      investigating: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'กำลังสืบสวน' },
-      prosecutor: { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'รอพนักงานอัยการ' },
-      court: { bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'อยู่ในชั้นศาล' },
-      closed: { bg: 'bg-green-500/20', text: 'text-green-400', label: 'ปิดคดี' }
+      investigating: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'Investigating' },
+      prosecutor: { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'Pending Prosecutor' },
+      court: { bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'In Court' },
+      closed: { bg: 'bg-green-500/20', text: 'text-green-400', label: 'Closed' }
     };
     const style = styles[status] || styles.investigating;
     return (
@@ -536,23 +536,23 @@ const ActiveCasesTable = () => {
     <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-white">คดีที่กำลังดำเนินการ</h3>
-          <p className="text-sm text-dark-400">คดีสำคัญที่ต้องติดตาม</p>
+          <h3 className="text-lg font-semibold text-white">Active Cases</h3>
+          <p className="text-sm text-dark-400">Priority cases to track</p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => navigate('/cases')}>
-          ดูทั้งหมด <ChevronRight size={16} />
+          View All <ChevronRight size={16} />
         </Button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-dark-700">
-              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">คดี</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">สถานะ</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">ความคืบหน้า</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">มูลค่า</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">Case</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">Status</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">Progress</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">Amount</th>
               <th className="text-left py-3 px-4 text-sm font-medium text-dark-400">Priority</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-dark-400">กำหนด</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-dark-400">Due</th>
             </tr>
           </thead>
           <tbody>
@@ -585,7 +585,7 @@ const ActiveCasesTable = () => {
                   {getPriorityBadge(case_.priority)}
                 </td>
                 <td className="py-4 px-4 text-right">
-                  <span className="text-sm text-dark-400">{new Date(case_.dueDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</span>
+                  <span className="text-sm text-dark-400">{new Date(case_.dueDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
                 </td>
               </tr>
             ))}
@@ -616,14 +616,14 @@ export const Dashboard = () => {
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-dark-400 mt-1">
-            ยินดีต้อนรับกลับ! นี่คือภาพรวมของวันนี้
+            Welcome back! Here's your overview for today
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-sm text-dark-400">วันที่</p>
+            <p className="text-sm text-dark-400">Date</p>
             <p className="text-white font-medium">
-              {currentTime.toLocaleDateString('th-TH', { 
+              {currentTime.toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
@@ -633,7 +633,7 @@ export const Dashboard = () => {
           </div>
           <Button variant="primary" onClick={() => navigate('/cases')}>
             <Plus size={18} className="mr-2" />
-            สร้างคดีใหม่
+            Create New Case
           </Button>
         </div>
       </div>

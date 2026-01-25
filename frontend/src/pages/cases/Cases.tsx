@@ -35,32 +35,32 @@ import { casesAPI, type Case } from '../../services/api';
 // ============================================
 
 const CASE_TYPES = [
-  { value: '', label: 'ทุกประเภท' },
-  { value: 'online_gambling', label: 'พนันออนไลน์' },
-  { value: 'money_laundering', label: 'ฟอกเงิน' },
-  { value: 'fraud', label: 'ฉ้อโกง' },
-  { value: 'call_center_scam', label: 'แก๊งคอลเซ็นเตอร์' },
-  { value: 'romance_scam', label: 'หลอกรัก' },
-  { value: 'investment_scam', label: 'หลอกลงทุน' },
-  { value: 'other', label: 'อื่นๆ' }
+  { value: '', label: 'All Types' },
+  { value: 'online_gambling', label: 'Online Gambling' },
+  { value: 'money_laundering', label: 'Money Laundering' },
+  { value: 'fraud', label: 'Fraud' },
+  { value: 'call_center_scam', label: 'Call Center Scam' },
+  { value: 'romance_scam', label: 'Romance Scam' },
+  { value: 'investment_scam', label: 'Investment Scam' },
+  { value: 'other', label: 'Other' }
 ];
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'ทุกสถานะ' },
-  { value: 'draft', label: 'ร่าง' },
-  { value: 'open', label: 'เปิด' },
-  { value: 'in_progress', label: 'กำลังดำเนินการ' },
-  { value: 'pending_review', label: 'รอตรวจสอบ' },
-  { value: 'closed', label: 'ปิด' },
-  { value: 'archived', label: 'จัดเก็บ' }
+  { value: '', label: 'All Status' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'pending_review', label: 'Pending Review' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'archived', label: 'Archived' }
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: '', label: 'ทุกความสำคัญ' },
-  { value: 'critical', label: 'วิกฤต' },
-  { value: 'high', label: 'สูง' },
-  { value: 'medium', label: 'ปานกลาง' },
-  { value: 'low', label: 'ต่ำ' }
+  { value: '', label: 'All Priority' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' }
 ];
 
 // ============================================
@@ -77,12 +77,12 @@ const getStatusBadge = (status: string) => {
     archived: 'bg-purple-500/20 text-purple-400'
   };
   const labels: Record<string, string> = {
-    draft: 'ร่าง',
-    open: 'เปิด',
-    in_progress: 'กำลังดำเนินการ',
-    pending_review: 'รอตรวจสอบ',
-    closed: 'ปิด',
-    archived: 'จัดเก็บ'
+    draft: 'Draft',
+    open: 'Open',
+    in_progress: 'In Progress',
+    pending_review: 'Pending Review',
+    closed: 'Closed',
+    archived: 'Archived'
   };
   return (
     <span className={`px-2 py-1 rounded-full text-xs ${styles[status] || styles.draft}`}>
@@ -99,10 +99,10 @@ const getPriorityBadge = (priority: string) => {
     low: 'bg-gray-500/20 text-gray-400'
   };
   const labels: Record<string, string> = {
-    critical: 'วิกฤต',
-    high: 'สูง',
-    medium: 'ปานกลาง',
-    low: 'ต่ำ'
+    critical: 'Critical',
+    high: 'High',
+    medium: 'Medium',
+    low: 'Low'
   };
   return (
     <span className={`px-2 py-1 rounded-full text-xs ${styles[priority] || styles.medium}`}>
@@ -113,20 +113,20 @@ const getPriorityBadge = (priority: string) => {
 
 const getCaseTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    online_gambling: 'พนันออนไลน์',
-    money_laundering: 'ฟอกเงิน',
-    fraud: 'ฉ้อโกง',
-    call_center_scam: 'แก๊งคอลเซ็นเตอร์',
-    romance_scam: 'หลอกรัก',
-    investment_scam: 'หลอกลงทุน',
-    other: 'อื่นๆ'
+    online_gambling: 'Online Gambling',
+    money_laundering: 'Money Laundering',
+    fraud: 'Fraud',
+    call_center_scam: 'Call Center Scam',
+    romance_scam: 'Romance Scam',
+    investment_scam: 'Investment Scam',
+    other: 'Other'
   };
   return labels[type] || type;
 };
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('th-TH', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
@@ -134,7 +134,7 @@ const formatDate = (dateStr: string) => {
 };
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('th-TH', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'THB',
     minimumFractionDigits: 0
@@ -167,8 +167,8 @@ const DeleteConfirmModal = ({ case_, isOpen, onClose, onConfirm, isDeleting }: D
               <AlertTriangle className="text-red-400" size={24} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">ยืนยันการลบคดี</h2>
-              <p className="text-sm text-dark-400">คุณต้องการลบคดีนี้หรือไม่?</p>
+              <h2 className="text-lg font-semibold text-white">Confirm Delete Case</h2>
+              <p className="text-sm text-dark-400">Are you sure you want to delete this case?</p>
             </div>
           </div>
         </div>
@@ -184,8 +184,8 @@ const DeleteConfirmModal = ({ case_, isOpen, onClose, onConfirm, isDeleting }: D
             <div className="flex gap-3">
               <CheckCircle className="text-blue-400 flex-shrink-0" size={20} />
               <div className="text-sm text-blue-300">
-                <p className="font-medium">ข้อมูลจะถูกซ่อนจากระบบ</p>
-                <p className="text-blue-400 mt-1">แต่ยังสามารถกู้คืนได้โดย Admin</p>
+                <p className="font-medium">Data will be hidden from the system</p>
+                <p className="text-blue-400 mt-1">but can be recovered by Admin</p>
               </div>
             </div>
           </div>
@@ -194,7 +194,7 @@ const DeleteConfirmModal = ({ case_, isOpen, onClose, onConfirm, isDeleting }: D
         {/* Actions */}
         <div className="p-6 border-t border-dark-700 flex gap-3">
           <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isDeleting}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button 
             variant="primary" 
@@ -205,12 +205,12 @@ const DeleteConfirmModal = ({ case_, isOpen, onClose, onConfirm, isDeleting }: D
             {isDeleting ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                กำลังลบ...
+                Deleting...
               </>
             ) : (
               <>
                 <Trash2 size={18} className="mr-2" />
-                ลบคดี
+                Delete Case
               </>
             )}
           </Button>
@@ -256,7 +256,7 @@ const CaseDetailModal = ({ case_, onClose, onEdit, onDelete }: DetailModalProps)
           {/* Description */}
           {case_.description && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-dark-400 mb-2">รายละเอียด</h3>
+              <h3 className="text-sm font-medium text-dark-400 mb-2">Description</h3>
               <p className="text-white">{case_.description}</p>
             </div>
           )}
@@ -264,31 +264,31 @@ const CaseDetailModal = ({ case_, onClose, onEdit, onDelete }: DetailModalProps)
           {/* Info Grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-dark-700 rounded-lg p-4">
-              <p className="text-dark-400 text-sm">ประเภทคดี</p>
+              <p className="text-dark-400 text-sm">Case Type</p>
               <p className="text-white font-medium mt-1">{getCaseTypeLabel(case_.case_type)}</p>
             </div>
             <div className="bg-dark-700 rounded-lg p-4">
-              <p className="text-dark-400 text-sm">มูลค่าความเสียหาย</p>
+              <p className="text-dark-400 text-sm">Damage Amount</p>
               <p className="text-white font-medium mt-1">{formatCurrency(case_.total_amount)}</p>
             </div>
             <div className="bg-dark-700 rounded-lg p-4">
-              <p className="text-dark-400 text-sm">ผู้เสียหาย</p>
-              <p className="text-white font-medium mt-1">{case_.victims_count} คน</p>
+              <p className="text-dark-400 text-sm">Victims</p>
+              <p className="text-white font-medium mt-1">{case_.victims_count} people</p>
             </div>
             <div className="bg-dark-700 rounded-lg p-4">
-              <p className="text-dark-400 text-sm">ผู้ต้องสงสัย</p>
-              <p className="text-white font-medium mt-1">{case_.suspects_count} คน</p>
+              <p className="text-dark-400 text-sm">Suspects</p>
+              <p className="text-white font-medium mt-1">{case_.suspects_count} people</p>
             </div>
           </div>
 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-dark-400 text-sm">วันที่สร้าง</p>
+              <p className="text-dark-400 text-sm">Created Date</p>
               <p className="text-white mt-1">{formatDate(case_.created_at)}</p>
             </div>
             <div>
-              <p className="text-dark-400 text-sm">อัปเดตล่าสุด</p>
+              <p className="text-dark-400 text-sm">Last Updated</p>
               <p className="text-white mt-1">{formatDate(case_.updated_at)}</p>
             </div>
           </div>
@@ -298,15 +298,15 @@ const CaseDetailModal = ({ case_, onClose, onEdit, onDelete }: DetailModalProps)
         <div className="p-6 border-t border-dark-700 flex gap-3">
           <Button variant="ghost" onClick={onDelete} className="text-red-400 hover:bg-red-500/10">
             <Trash2 size={18} className="mr-2" />
-            ลบ
+            Delete
           </Button>
           <div className="flex-1" />
           <Button variant="ghost" onClick={onClose}>
-            ปิด
+            Closed
           </Button>
           <Button variant="primary" onClick={onEdit}>
             <Edit size={18} className="mr-2" />
-            แก้ไข
+            Edit
           </Button>
         </div>
       </div>
@@ -338,7 +338,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
-      alert('กรุณากรอกชื่อคดี');
+      alert('Please enter case title');
       return;
     }
 
@@ -353,7 +353,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
       onClose();
     } catch (error) {
       console.error('Error saving case:', error);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      alert('An error occurred. Please try again');
     } finally {
       setIsLoading(false);
     }
@@ -366,7 +366,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
         {/* Header */}
         <div className="p-6 border-b border-dark-700 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-white">
-            {editingCase ? 'แก้ไขคดี' : 'สร้างคดีใหม่'}
+            {editingCase ? 'EditCases' : 'Create New Case'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-dark-700 rounded-lg">
             <X size={20} className="text-dark-400" />
@@ -376,20 +376,20 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
         {/* Form */}
         <div className="p-6 space-y-4">
           <div>
-            <label className="text-sm text-dark-400 mb-1 block">ชื่อคดี *</label>
+            <label className="text-sm text-dark-400 mb-1 block">Case Title *</label>
             <Input
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="เช่น คดีฟอกเงินผ่าน Crypto"
+              placeholder="e.g. Crypto Money Laundering Case"
             />
           </div>
 
           <div>
-            <label className="text-sm text-dark-400 mb-1 block">รายละเอียด</label>
+            <label className="text-sm text-dark-400 mb-1 block">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="รายละเอียดคดี..."
+              placeholder="DescriptionCases..."
               rows={3}
               className="w-full bg-dark-900 border border-dark-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-primary-500"
             />
@@ -397,7 +397,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">ประเภทคดี</label>
+              <label className="text-sm text-dark-400 mb-1 block">Case Type</label>
               <select
                 value={formData.case_type}
                 onChange={(e) => setFormData({ ...formData, case_type: e.target.value })}
@@ -409,7 +409,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
               </select>
             </div>
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">ความสำคัญ</label>
+              <label className="text-sm text-dark-400 mb-1 block">Priority</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -424,7 +424,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">มูลค่า (บาท)</label>
+              <label className="text-sm text-dark-400 mb-1 block">Amount (THB)</label>
               <Input
                 type="number"
                 value={formData.total_amount}
@@ -433,7 +433,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
               />
             </div>
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">ผู้เสียหาย</label>
+              <label className="text-sm text-dark-400 mb-1 block">Victims</label>
               <Input
                 type="number"
                 value={formData.victims_count}
@@ -442,7 +442,7 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
               />
             </div>
             <div>
-              <label className="text-sm text-dark-400 mb-1 block">ผู้ต้องสงสัย</label>
+              <label className="text-sm text-dark-400 mb-1 block">Suspects</label>
               <Input
                 type="number"
                 value={formData.suspects_count}
@@ -456,18 +456,18 @@ const CreateCaseModal = ({ onClose, onSave, editingCase }: CreateModalProps) => 
         {/* Actions */}
         <div className="p-6 border-t border-dark-700 flex gap-3">
           <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isLoading}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button variant="primary" className="flex-1" onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                กำลังบันทึก...
+                Saving...
               </>
             ) : (
               <>
                 <Plus size={18} className="mr-2" />
-                {editingCase ? 'บันทึก' : 'สร้างคดี'}
+                {editingCase ? 'Save' : 'Create Case'}
               </>
             )}
           </Button>
@@ -514,20 +514,20 @@ const CaseCard = ({ case_, onView, onEdit, onDelete }: CaseCardProps) => {
                   onClick={() => { setShowMenu(false); onView(); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-dark-600"
                 >
-                  <Eye size={16} /> ดูรายละเอียด
+                  <Eye size={16} /> View Details
                 </button>
                 <button
                   onClick={() => { setShowMenu(false); onEdit(); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-dark-600"
                 >
-                  <Edit size={16} /> แก้ไข
+                  <Edit size={16} /> Edit
                 </button>
                 <hr className="border-dark-600 my-1" />
                 <button
                   onClick={() => { setShowMenu(false); onDelete(); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-dark-600"
                 >
-                  <Trash2 size={16} /> ลบคดี
+                  <Trash2 size={16} /> Delete Case
                 </button>
               </div>
             </>
@@ -634,7 +634,7 @@ export const Cases = () => {
       fetchCases();
     } catch (error) {
       console.error('Error deleting case:', error);
-      alert('เกิดข้อผิดพลาดในการลบคดี');
+      alert('Error deleting case');
     } finally {
       setIsDeleting(false);
     }
@@ -645,8 +645,8 @@ export const Cases = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">คดีทั้งหมด</h1>
-          <p className="text-dark-400 mt-1">{total} คดี</p>
+          <h1 className="text-2xl font-bold text-white">All Cases</h1>
+          <p className="text-dark-400 mt-1">{total} Cases</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="ghost" onClick={fetchCases} disabled={loading}>
@@ -654,7 +654,7 @@ export const Cases = () => {
           </Button>
           <Button variant="primary" onClick={() => setShowCreateModal(true)}>
             <Plus size={18} className="mr-2" />
-            สร้างคดีใหม่
+            Create New Case
           </Button>
         </div>
       </div>
@@ -664,7 +664,7 @@ export const Cases = () => {
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={20} />
           <Input
-            placeholder="ค้นหาคดี..."
+            placeholder="Search cases..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             className="pl-10"
@@ -727,14 +727,14 @@ export const Cases = () => {
         /* Empty State */
         <div className="text-center py-20">
           <Briefcase size={64} className="text-dark-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">ไม่พบคดี</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">No cases found</h3>
           <p className="text-dark-400 mb-6">
-            {searchQuery ? 'ลองค้นหาด้วยคำอื่น' : 'สร้างคดีใหม่เพื่อเริ่มต้น'}
+            {searchQuery ? 'Try different search terms' : 'Create New Case to get started'}
           </p>
           {!searchQuery && (
             <Button variant="primary" onClick={() => setShowCreateModal(true)}>
               <Plus size={18} className="mr-2" />
-              สร้างคดีใหม่
+              Create New Case
             </Button>
           )}
         </div>
@@ -745,13 +745,13 @@ export const Cases = () => {
             <thead>
               <tr className="border-b border-dark-700">
                 <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">#</th>
-                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">หมายเลขคดี</th>
-                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">ชื่อคดี</th>
-                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">ประเภท</th>
-                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">สถานะ</th>
-                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">ความสำคัญ</th>
-                <th className="text-right px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">มูลค่า</th>
-                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">วันที่สร้าง</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Case Number</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Case Title</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Type</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Status</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Priority</th>
+                <th className="text-right px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Amount</th>
+                <th className="text-left px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Created Date</th>
                 <th className="text-center px-4 py-3 text-xs text-dark-400 font-medium uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -777,21 +777,21 @@ export const Cases = () => {
                       <button
                         onClick={() => setSelectedCase(case_)}
                         className="p-1.5 hover:bg-dark-600 rounded text-dark-400 hover:text-white"
-                        title="ดูรายละเอียด"
+                        title="View Details"
                       >
                         <Eye size={16} />
                       </button>
                       <button
                         onClick={() => { setEditingCase(case_); setShowCreateModal(true); }}
                         className="p-1.5 hover:bg-dark-600 rounded text-dark-400 hover:text-white"
-                        title="แก้ไข"
+                        title="Edit"
                       >
                         <Edit size={16} />
                       </button>
                       <button
                         onClick={() => setDeletingCase(case_)}
                         className="p-1.5 hover:bg-red-500/20 rounded text-dark-400 hover:text-red-400"
-                        title="ลบ"
+                        title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -806,7 +806,7 @@ export const Cases = () => {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-dark-700">
               <p className="text-sm text-dark-400">
-                แสดง {(page - 1) * 20 + 1}-{Math.min(page * 20, total)} จาก {total} รายการ
+                Showing {(page - 1) * 20 + 1}-{Math.min(page * 20, total)} of {total} items
               </p>
               <div className="flex gap-1">
                 <button
@@ -814,7 +814,7 @@ export const Cases = () => {
                   disabled={page === 1}
                   className="px-3 py-1 text-sm bg-dark-700 text-white rounded disabled:opacity-50"
                 >
-                  ก่อนหน้า
+                  Previous
                 </button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const pageNum = page <= 3 ? i + 1 : page - 2 + i;
@@ -836,7 +836,7 @@ export const Cases = () => {
                   disabled={page === totalPages}
                   className="px-3 py-1 text-sm bg-dark-700 text-white rounded disabled:opacity-50"
                 >
-                  ถัดไป
+                  Next
                 </button>
               </div>
             </div>

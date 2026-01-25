@@ -106,34 +106,34 @@ const REQUIRED_FIELDS: Record<string, { required: string[]; optional: string[]; 
 
 // Column aliases from various sources (Cellebrite, UFED, XRY, Thai, etc.)
 const COLUMN_ALIASES: Record<string, string[]> = {
-  // Person fields (ไม่รวม contact_name เพราะจะ conflict กับ phone records)
-  first_name: ['firstname', 'fname', 'first', 'given_name', 'ชื่อ', 'ชื่อจริง'],
-  last_name: ['lastname', 'lname', 'last', 'surname', 'family_name', 'นามสกุล'],
-  prefix: ['คำนำหน้า', 'title', 'salutation'],
-  id_card: ['idcard', 'id_number', 'citizen_id', 'national_id', 'thai_id', 'เลขบัตรประชาชน', 'รหัสประชาชน'],
-  phone: ['phone_number', 'mobile', 'tel', 'telephone', 'contact_phone', 'เบอร์โทร', 'เบอร์', 'หมายเลขโทรศัพท์'],
-  email: ['email_address', 'mail', 'e-mail', 'อีเมล'],
-  bank_account: ['account_number', 'account_no', 'acc_no', 'bank_acc', 'เลขบัญชี', 'บัญชี'],
+  // Person fields (Excludes contact_name to avoid conflict with phone records)
+  first_name: ['firstname', 'fname', 'first', 'given_name', 'Name', 'First Name'],
+  last_name: ['lastname', 'lname', 'last', 'surname', 'family_name', 'Last Name'],
+  prefix: ['Title', 'title', 'salutation'],
+  id_card: ['idcard', 'id_number', 'citizen_id', 'national_id', 'thai_id', 'ID Card Number', 'Citizen ID'],
+  phone: ['phone_number', 'mobile', 'tel', 'telephone', 'contact_phone', 'Phone', 'Phone', 'Phone Number'],
+  email: ['email_address', 'mail', 'e-mail', 'Email'],
+  bank_account: ['account_number', 'account_no', 'acc_no', 'bank_acc', 'Account Number', 'Account'],
   wallet_address: ['wallet', 'crypto_address', 'btc_address', 'eth_address', 'address_crypto'],
-  role: ['person_type', 'classification', 'บทบาท', 'ประเภท'],
-  occupation: ['job', 'work', 'อาชีพ'],
-  address: ['ที่อยู่', 'home_address'],
+  role: ['person_type', 'classification', 'Role', 'Type'],
+  occupation: ['job', 'work', 'Occupation'],
+  address: ['Address', 'home_address'],
   
   // Bank transaction fields
-  from_account: ['source_account', 'sender_account', 'debit_account', 'from_acc', 'บัญชีต้นทาง', 'บัญชีผู้โอน'],
-  to_account: ['target_account', 'receiver_account', 'credit_account', 'to_acc', 'dest_account', 'บัญชีปลายทาง', 'บัญชีผู้รับ'],
-  from_name: ['sender_name', 'source_name', 'payer_name', 'ชื่อผู้โอน'],
-  to_name: ['receiver_name', 'target_name', 'payee_name', 'beneficiary_name', 'ชื่อผู้รับ'],
-  amount: ['value', 'sum', 'transaction_amount', 'transfer_amount', 'จำนวนเงิน', 'ยอดเงิน'],
-  bank: ['ธนาคาร', 'bank_name'],
+  from_account: ['source_account', 'sender_account', 'debit_account', 'from_acc', 'Source Account', 'Sender Account'],
+  to_account: ['target_account', 'receiver_account', 'credit_account', 'to_acc', 'dest_account', 'Destination Account', 'Receiver Account'],
+  from_name: ['sender_name', 'source_name', 'payer_name', 'Sender Name'],
+  to_name: ['receiver_name', 'target_name', 'payee_name', 'beneficiary_name', 'Receiver Name'],
+  amount: ['value', 'sum', 'transaction_amount', 'transfer_amount', 'Amount', 'Sum'],
+  bank: ['Bank', 'bank_name'],
   
   // Phone record fields (Cellebrite, UFED specific)
-  from_number: ['caller', 'calling_number', 'source_number', 'originating_number', 'a_number', 'msisdn_a', 'msisdn', 'เบอร์ต้นทาง', 'เบอร์โทรออก'],
-  to_number: ['called', 'called_number', 'target_number', 'destination_number', 'b_number', 'msisdn_b', 'เบอร์ปลายทาง', 'เบอร์รับสาย'],
-  duration_sec: ['duration', 'call_duration', 'length', 'seconds', 'duration_seconds', 'ระยะเวลา'],
-  call_type: ['direction', 'call_direction', 'ประเภทการโทร'],
-  cell_tower: ['cell_id', 'tower_id', 'lac', 'cgi', 'เสาสัญญาณ'],
-  location: ['loc', 'place', 'สถานที่'],
+  from_number: ['caller', 'calling_number', 'source_number', 'originating_number', 'a_number', 'msisdn_a', 'msisdn', 'Source Phone', 'Calling Phone'],
+  to_number: ['called', 'called_number', 'target_number', 'destination_number', 'b_number', 'msisdn_b', 'Destination Phone', 'Called Phone'],
+  duration_sec: ['duration', 'call_duration', 'length', 'seconds', 'duration_seconds', 'Duration'],
+  call_type: ['direction', 'call_direction', 'Call Type'],
+  cell_tower: ['cell_id', 'tower_id', 'lac', 'cgi', 'Cell Tower'],
+  location: ['loc', 'place', 'Location'],
   contact_name: ['called_name', 'caller_name'],  // Phone contact names
   
   // Crypto fields (XRY, Chainalysis specific)
@@ -145,10 +145,10 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   currency: ['coin', 'token', 'crypto', 'asset'],
   
   // Common fields
-  date: ['transaction_date', 'trx_date', 'datetime', 'timestamp', 'วันที่'],
-  time: ['transaction_time', 'trx_time', 'เวลา'],
-  note: ['notes', 'remark', 'remarks', 'description', 'memo', 'หมายเหตุ'],
-  ref: ['reference', 'ref_no', 'reference_number', 'transaction_ref', 'เลขอ้างอิง']
+  date: ['transaction_date', 'trx_date', 'datetime', 'timestamp', 'Date'],
+  time: ['transaction_time', 'trx_time', 'Time'],
+  note: ['notes', 'remark', 'remarks', 'description', 'memo', 'Remarks'],
+  ref: ['reference', 'ref_no', 'reference_number', 'transaction_ref', 'Reference Number']
 };
 
 // ==================== HELPERS ====================
@@ -205,31 +205,31 @@ const autoMapColumns = (columns: string[], _fileType: string): ColumnMapping[] =
   });
 };
 
-// Detect file type from mapped columns (ลำดับสำคัญ: specific types ก่อน generic)
+// Detect file type from mapped columns (Order matters: specific types before generic)
 const detectFileType = (mappings: ColumnMapping[]): { type: ParsedFile['type']; typeLabel: string } => {
   const mappedCols = mappings.map(m => m.mapped.toLowerCase());
   
-  // 1. Bank - ต้องมี from_account + to_account + amount
+  // 1. Bank - Requires from_account + to_account + amount
   if (mappedCols.includes('from_account') && mappedCols.includes('to_account') && mappedCols.includes('amount')) {
-    return { type: 'bank', typeLabel: 'ธุรกรรมธนาคาร' };
+    return { type: 'bank', typeLabel: 'Bank Transaction' };
   }
   
-  // 2. Phone - ต้องมี from_number + to_number
+  // 2. Phone - Requires from_number + to_number
   if (mappedCols.includes('from_number') && mappedCols.includes('to_number')) {
-    return { type: 'phone', typeLabel: 'ข้อมูลโทรศัพท์' };
+    return { type: 'phone', typeLabel: 'Phone Data' };
   }
   
-  // 3. Crypto - ต้องมี from_wallet + to_wallet
+  // 3. Crypto - Requires from_wallet + to_wallet
   if (mappedCols.includes('from_wallet') && mappedCols.includes('to_wallet')) {
-    return { type: 'crypto', typeLabel: 'กระเป๋าคริปโต' };
+    return { type: 'crypto', typeLabel: 'Crypto Wallet' };
   }
   
-  // 4. Person - มี first_name หรือ id_card (ตรวจสอบสุดท้ายเพราะ generic)
+  // 4. Person - Has first_name or id_card (check last as generic)
   if (mappedCols.includes('first_name') || mappedCols.includes('id_card')) {
-    return { type: 'person', typeLabel: 'บุคคล' };
+    return { type: 'person', typeLabel: 'Person' };
   }
   
-  return { type: 'unknown', typeLabel: 'ไม่ทราบประเภท' };
+  return { type: 'unknown', typeLabel: 'Unknown Type' };
 };
 
 // Validate fields and generate warnings
@@ -245,9 +245,9 @@ const validateFields = (fileType: string, mappings: ColumnMapping[]): FieldWarni
     if (!mappedFields.includes(req)) {
       warnings.push({
         field: req,
-        message: `ไม่พบ field "${req}" ที่จำเป็น`,
+        message: `Field not found "${req}" required`,
         severity: 'error',
-        impact: 'ไม่สามารถวิเคราะห์ไฟล์นี้ได้'
+        impact: 'Cannot analyze this file'
       });
     }
   });
@@ -256,23 +256,23 @@ const validateFields = (fileType: string, mappings: ColumnMapping[]): FieldWarni
   fields.linkFields.forEach(link => {
     if (!mappedFields.includes(link)) {
       const impacts: Record<string, string> = {
-        phone: 'ไม่สามารถเชื่อมกับข้อมูลโทรศัพท์',
-        bank_account: 'ไม่สามารถเชื่อมกับธุรกรรมธนาคาร',
-        wallet_address: 'ไม่สามารถเชื่อมกับธุรกรรม Crypto',
-        from_name: 'ไม่สามารถระบุชื่อผู้โอนได้',
-        to_name: 'ไม่สามารถระบุชื่อผู้รับได้',
-        from_account: 'ไม่สามารถเชื่อมกับบุคคลเจ้าของบัญชี',
-        to_account: 'ไม่สามารถเชื่อมกับบุคคลเจ้าของบัญชี',
-        from_number: 'ไม่สามารถเชื่อมกับบุคคล',
-        to_number: 'ไม่สามารถเชื่อมกับบุคคล',
-        from_wallet: 'ไม่สามารถเชื่อมกับบุคคล',
-        to_wallet: 'ไม่สามารถเชื่อมกับบุคคล',
+        phone: 'Cannot link with Phone Data',
+        bank_account: 'Cannot link with Bank Transaction',
+        wallet_address: 'Cannot link with Crypto transactions',
+        from_name: 'Cannot identify sender name',
+        to_name: 'Cannot identify receiver name',
+        from_account: 'Cannot link to account owner',
+        to_account: 'Cannot link to account owner',
+        from_number: 'Cannot link to person',
+        to_number: 'Cannot link to person',
+        from_wallet: 'Cannot link to person',
+        to_wallet: 'Cannot link to person',
       };
       warnings.push({
         field: link,
-        message: `ไม่พบ field "${link}" สำหรับเชื่อมโยง`,
+        message: `Field not found "${link}" for linking`,
         severity: 'warning',
-        impact: impacts[link] || 'การเชื่อมโยงอาจไม่สมบูรณ์'
+        impact: impacts[link] || 'Linking may be incomplete'
       });
     }
   });
@@ -282,9 +282,9 @@ const validateFields = (fileType: string, mappings: ColumnMapping[]): FieldWarni
     if (m.autoMapped && m.confidence < 80 && m.confidence > 0) {
       warnings.push({
         field: m.original,
-        message: `"${m.original}" ถูก map เป็น "${m.mapped}" (${m.confidence}% confident)`,
+        message: `"${m.original}" was mapped to "${m.mapped}" (${m.confidence}% confident)`,
         severity: 'info',
-        impact: 'กรุณาตรวจสอบว่าถูกต้อง'
+        impact: 'Please verify this is correct'
       });
     }
   });
@@ -310,44 +310,44 @@ const calculateRiskScore = (entity: LinkedEntity): { score: number; factors: Ris
   const factors: RiskFactor[] = [];
   let score = 0;
   
-  if (entity.metadata.role === 'ผู้ต้องสงสัย') {
-    factors.push({ factor: 'ผู้ต้องสงสัย', score: 30, description: 'ถูกระบุเป็นผู้ต้องสงสัยในคดี' });
+  if (entity.metadata.role === 'Suspect') {
+    factors.push({ factor: 'Suspect', score: 30, description: 'Identified as suspect in case' });
     score += 30;
-  } else if (entity.metadata.role === 'ผู้เสียหาย') {
-    factors.push({ factor: 'ผู้เสียหาย', score: 5, description: 'ถูกระบุเป็นผู้เสียหาย' });
+  } else if (entity.metadata.role === 'Victim') {
+    factors.push({ factor: 'Victim', score: 5, description: 'Identified as victim' });
     score += 5;
   }
   
   if (entity.metadata.totalReceived && entity.metadata.totalReceived > 500000) {
-    factors.push({ factor: 'รับเงิน > ฿500K', score: 25, description: `รับเงินรวม ฿${entity.metadata.totalReceived.toLocaleString()}` });
+    factors.push({ factor: 'Received > ฿500K', score: 25, description: `Total received ฿${entity.metadata.totalReceived.toLocaleString()}` });
     score += 25;
   } else if (entity.metadata.totalReceived && entity.metadata.totalReceived > 100000) {
-    factors.push({ factor: 'รับเงิน > ฿100K', score: 15, description: `รับเงินรวม ฿${entity.metadata.totalReceived.toLocaleString()}` });
+    factors.push({ factor: 'Received > ฿100K', score: 15, description: `Total received ฿${entity.metadata.totalReceived.toLocaleString()}` });
     score += 15;
   }
   
   if (entity.metadata.transactionCount && entity.metadata.transactionCount > 3) {
-    factors.push({ factor: 'ธุรกรรมบ่อย', score: 10, description: `${entity.metadata.transactionCount} ธุรกรรม` });
+    factors.push({ factor: 'Frequent transactions', score: 10, description: `${entity.metadata.transactionCount} transactions` });
     score += 10;
   }
   
   if (entity.metadata.usedMixer) {
-    factors.push({ factor: 'ใช้ Mixer', score: 20, description: 'โอนผ่าน Crypto Mixer' });
+    factors.push({ factor: 'Uses Mixer', score: 20, description: 'Transferred via Crypto Mixer' });
     score += 20;
   }
   
   if (entity.metadata.foreignTransfer) {
-    factors.push({ factor: 'โอนต่างประเทศ', score: 15, description: 'โอนไปต่างประเทศ' });
+    factors.push({ factor: 'International transfer', score: 15, description: 'Transferred overseas' });
     score += 15;
   }
   
   if (entity.metadata.callCount && entity.metadata.callCount > 5) {
-    factors.push({ factor: 'โทรบ่อย', score: 10, description: `โทร ${entity.metadata.callCount} ครั้ง` });
+    factors.push({ factor: 'Frequent calls', score: 10, description: `Call ${entity.metadata.callCount} times` });
     score += 10;
   }
   
   if (entity.sources.length >= 3) {
-    factors.push({ factor: 'หลายแหล่ง', score: 10, description: `พบใน ${entity.sources.length} แหล่ง` });
+    factors.push({ factor: 'Multiple sources', score: 10, description: `Found in ${entity.sources.length} sources` });
     score += 10;
   }
   
@@ -435,9 +435,9 @@ const SmartImport: React.FC = () => {
           records: [],
           columns: [],
           columnMappings: [],
-          warnings: [{ field: 'file', message: 'ไม่สามารถอ่านไฟล์ได้', severity: 'error', impact: '' }],
+          warnings: [{ field: 'file', message: 'Cannot read file', severity: 'error', impact: '' }],
           status: 'error',
-          error: 'ไม่สามารถอ่านไฟล์ได้'
+          error: 'Cannot read file'
         });
       }
     }
@@ -499,13 +499,13 @@ const SmartImport: React.FC = () => {
     const links: { from: string; to: string; possible: boolean; field: string }[] = [];
     
     if (hasPersonFile && hasPhoneFile) {
-      links.push({ from: 'บุคคล', to: 'โทรศัพท์', possible: !!personHasPhone, field: 'phone' });
+      links.push({ from: 'Person', to: 'Phone Call', possible: !!personHasPhone, field: 'phone' });
     }
     if (hasPersonFile && hasBankFile) {
-      links.push({ from: 'บุคคล', to: 'ธนาคาร', possible: !!personHasBank, field: 'bank_account' });
+      links.push({ from: 'Person', to: 'Bank', possible: !!personHasBank, field: 'bank_account' });
     }
     if (hasPersonFile && hasCryptoFile) {
-      links.push({ from: 'บุคคล', to: 'Crypto', possible: !!personHasWallet, field: 'wallet_address' });
+      links.push({ from: 'Person', to: 'Crypto', possible: !!personHasWallet, field: 'wallet_address' });
     }
     
     return links;
@@ -573,17 +573,17 @@ const SmartImport: React.FC = () => {
           if (record.phone) {
             personPhoneMap.set(record.phone.trim(), personKey);
             const phoneKey = getOrCreateEntity('phone', record.phone, record.phone, personFile.name);
-            addEdge(personKey, phoneKey, 'ownership', 'เจ้าของเบอร์');
+            addEdge(personKey, phoneKey, 'ownership', 'Phone owner');
           }
           if (record.bank_account) {
             personAccountMap.set(record.bank_account.trim(), personKey);
             const accountKey = getOrCreateEntity('account', record.bank_account, `${record.bank_account} (${record.bank || ''})`, personFile.name);
-            addEdge(personKey, accountKey, 'ownership', 'เจ้าของบัญชี');
+            addEdge(personKey, accountKey, 'ownership', 'Account owner');
           }
           if (record.wallet_address) {
             personWalletMap.set(record.wallet_address.trim(), personKey);
             const walletKey = getOrCreateEntity('wallet', record.wallet_address, record.wallet_address, personFile.name);
-            addEdge(personKey, walletKey, 'ownership', 'เจ้าของ Wallet');
+            addEdge(personKey, walletKey, 'ownership', 'Wallet owner');
           }
         });
       }
@@ -635,7 +635,7 @@ const SmartImport: React.FC = () => {
           fromEntity.metadata.callCount = (fromEntity.metadata.callCount || 0) + 1;
           fromEntity.metadata.callDuration = (fromEntity.metadata.callDuration || 0) + duration;
           
-          addEdge(fromKey, toKey, 'phone_call', `โทร ${duration}วิ`, undefined, record.date);
+          addEdge(fromKey, toKey, 'phone_call', `Call ${duration}s`, undefined, record.date);
           
           const fromPerson = personPhoneMap.get(record.from_number?.trim());
           if (fromPerson) {
@@ -712,7 +712,7 @@ const SmartImport: React.FC = () => {
       const token = localStorage.getItem('access_token');
       const baseUrl = 'https://investigates-api.azurewebsites.net/api/v1';
       
-      log(`📍 สร้าง ${analysisResult.entities.length} Nodes...`);
+      log(`📍 Create ${analysisResult.entities.length} Nodes...`);
       
       for (const entity of analysisResult.entities) {
         try {
@@ -735,7 +735,7 @@ const SmartImport: React.FC = () => {
         } catch { log(`  ❌ ${entity.label}`); }
       }
       
-      log(`\n🔗 สร้าง ${analysisResult.edges.length} Edges...`);
+      log(`\n🔗 Create ${analysisResult.edges.length} Edges...`);
       let edgeSuccess = 0;
       
       const edgeTypeMap: Record<string, string> = {
@@ -767,10 +767,10 @@ const SmartImport: React.FC = () => {
         }
       }
       
-      log(`  ✅ สร้าง ${edgeSuccess}/${analysisResult.edges.length} edges`);
+      log(`  ✅ Create ${edgeSuccess}/${analysisResult.edges.length} edges`);
       
-      // บันทึก Evidence (Chain of Custody)
-      log(`\n🔐 บันทึก Chain of Custody...`);
+      // Save Evidence (Chain of Custody)
+      log(`\n🔐 Save Chain of Custody...`);
       let evidenceSuccess = 0;
       
       for (const file of files) {
@@ -791,13 +791,13 @@ const SmartImport: React.FC = () => {
             evidenceSuccess++;
             log(`  🔒 ${file.name} (${file.sha256Hash.substring(0, 16)}...)`);
           } catch (err) {
-            log(`  ⚠️ ${file.name} (อาจซ้ำ)`);
+            log(`  ⚠️ ${file.name} (may be duplicate)`);
           }
         }
       }
       
-      log(`  ✅ บันทึก ${evidenceSuccess}/${files.length} หลักฐาน`);
-      log(`\n🎉 เสร็จสิ้น!`);
+      log(`  ✅ Save ${evidenceSuccess}/${files.length} Evidence`);
+      log(`\n🎉 Done!`);
       
       // Refresh sidebar badge counts
       if (selectedCase) {
@@ -833,10 +833,10 @@ const SmartImport: React.FC = () => {
       {/* Steps */}
       <div className="flex items-center justify-center gap-3 mb-6">
         {[
-          { key: 'upload', label: 'อัปโหลด' },
-          { key: 'mapping', label: 'ตรวจสอบ Mapping' },
-          { key: 'analyze', label: 'วิเคราะห์' },
-          { key: 'result', label: 'สร้าง Network' }
+          { key: 'upload', label: 'Upload' },
+          { key: 'mapping', label: 'Review Mapping' },
+          { key: 'analyze', label: 'Analysis' },
+          { key: 'result', label: 'Create Network' }
         ].map((s, i) => (
           <React.Fragment key={s.key}>
             {i > 0 && <ArrowRight className="w-4 h-4 text-dark-600" />}
@@ -855,10 +855,10 @@ const SmartImport: React.FC = () => {
         <div className="lg:col-span-2 space-y-4">
           {/* Case Select */}
           <div className="bg-dark-800 rounded-xl p-4 border border-dark-700">
-            <h3 className="text-sm font-semibold text-white mb-3">เลือกคดี</h3>
+            <h3 className="text-sm font-semibold text-white mb-3">SelectCase</h3>
             <select value={selectedCase || ''} onChange={(e) => setSelectedCase(Number(e.target.value) || null)}
               className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm">
-              <option value="">-- เลือกคดี --</option>
+              <option value="">-- SelectCase --</option>
               {cases.map((c) => <option key={c.id} value={c.id}>{c.case_number} - {c.title}</option>)}
             </select>
           </div>
@@ -868,10 +868,10 @@ const SmartImport: React.FC = () => {
             className="bg-dark-800 rounded-xl p-6 border-2 border-dashed border-dark-600 hover:border-primary-500 transition-colors">
             <div className="flex flex-col items-center text-center">
               <Upload className="w-12 h-12 text-dark-500 mb-3" />
-              <h3 className="text-lg font-semibold text-white mb-1">ลากไฟล์มาวางที่นี่</h3>
-              <p className="text-dark-400 text-sm mb-3">รองรับ CSV จาก Cellebrite, UFED, XRY และอื่นๆ</p>
+              <h3 className="text-lg font-semibold text-white mb-1">Drag and drop files here</h3>
+              <p className="text-dark-400 text-sm mb-3">Supports CSV from Cellebrite, UFED, XRY and more</p>
               <label className="px-4 py-2 bg-primary-500 text-white rounded-lg cursor-pointer hover:bg-primary-600 text-sm">
-                เลือกไฟล์
+                Select File
                 <input type="file" multiple accept=".csv" onChange={handleFileSelect} className="hidden" />
               </label>
             </div>
@@ -886,10 +886,10 @@ const SmartImport: React.FC = () => {
                   <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${hasErrors ? 'text-red-400' : 'text-yellow-400'}`} />
                   <div>
                     <p className={`text-sm font-medium ${hasErrors ? 'text-red-400' : 'text-yellow-400'}`}>
-                      พบ {totalWarnings} รายการที่ต้องตรวจสอบ
+                      Found {totalWarnings} items to review
                     </p>
                     <p className="text-xs text-dark-400 mt-0.5">
-                      {hasErrors ? 'มี field ที่จำเป็นไม่ครบ - ไม่สามารถวิเคราะห์ได้' : 'การเชื่อมโยงอาจไม่สมบูรณ์'}
+                      {hasErrors ? 'Missing required fields - Cannot analyze' : 'Linking may be incomplete'}
                     </p>
                   </div>
                 </div>
@@ -900,7 +900,7 @@ const SmartImport: React.FC = () => {
                 <div className="bg-dark-800 rounded-xl p-4 border border-dark-700">
                   <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                     <Link className="w-4 h-4 text-primary-400" />
-                    สถานะการเชื่อมโยง
+                    Linking Status
                   </h4>
                   <div className="space-y-2">
                     {linkingStatus.map((link, idx) => (
@@ -914,7 +914,7 @@ const SmartImport: React.FC = () => {
                         <ArrowRight className="w-3 h-3 text-dark-500" />
                         <span className="text-dark-300">{link.to}</span>
                         {!link.possible && (
-                          <span className="text-xs text-yellow-400 ml-2">(ขาด field: {link.field})</span>
+                          <span className="text-xs text-yellow-400 ml-2">(missing field: {link.field})</span>
                         )}
                       </div>
                     ))}
@@ -932,7 +932,7 @@ const SmartImport: React.FC = () => {
                       {file.icon}
                       <div>
                         <p className="text-white font-medium text-sm">{file.name}</p>
-                        <p className="text-xs text-dark-400">{file.typeLabel} • {file.records.length} รายการ • {file.columns.length} columns</p>
+                        <p className="text-xs text-dark-400">{file.typeLabel} • {file.records.length} List • {file.columns.length} columns</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -963,7 +963,7 @@ const SmartImport: React.FC = () => {
                       {/* Warnings */}
                       {file.warnings.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs font-medium text-dark-400">คำเตือน:</p>
+                          <p className="text-xs font-medium text-dark-400">Warnings:</p>
                           {file.warnings.map((w, idx) => (
                             <div key={idx} className={`flex items-start gap-2 p-2 rounded text-xs ${
                               w.severity === 'error' ? 'bg-red-500/10 text-red-400' :
@@ -986,7 +986,7 @@ const SmartImport: React.FC = () => {
                       <div>
                         <p className="text-xs font-medium text-dark-400 mb-2 flex items-center gap-2">
                           <Settings className="w-3 h-3" />
-                          Column Mapping (คลิกเพื่อแก้ไข)
+                          Column Mapping (click to edit)
                         </p>
                         <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                           {file.columnMappings.map((m, idx) => (
@@ -1002,7 +1002,7 @@ const SmartImport: React.FC = () => {
                                   'border-dark-500 text-dark-300'
                                 }`}
                               >
-                                <option value={m.original}>{m.original} (ไม่ map)</option>
+                                <option value={m.original}>{m.original} (no mapping)</option>
                                 {Object.keys(COLUMN_ALIASES).map(std => (
                                   <option key={std} value={std}>{std}</option>
                                 ))}
@@ -1022,7 +1022,7 @@ const SmartImport: React.FC = () => {
               {/* Analyze Button */}
               <button onClick={analyzeFiles} disabled={!selectedCase || isAnalyzing || hasErrors || files.length === 0}
                 className="w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
-                {isAnalyzing ? <><Loader2 className="w-4 h-4 animate-spin" />วิเคราะห์...</> : <><Sparkles className="w-4 h-4" />วิเคราะห์ + Risk Score</>}
+                {isAnalyzing ? <><Loader2 className="w-4 h-4 animate-spin" />Analysis...</> : <><Sparkles className="w-4 h-4" />Analysis + Risk Score</>}
               </button>
             </div>
           )}
@@ -1031,7 +1031,7 @@ const SmartImport: React.FC = () => {
           {creationLog.length > 0 && (
             <div className="bg-dark-800 rounded-xl p-4 border border-dark-700">
               <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-primary-400" />สร้าง Network...
+                <Loader2 className="w-4 h-4 animate-spin text-primary-400" />Create Network...
               </h3>
               <div className="bg-dark-900 rounded-lg p-3 max-h-48 overflow-y-auto font-mono text-xs">
                 {creationLog.map((log, idx) => <div key={idx} className="text-dark-300">{log}</div>)}
@@ -1047,12 +1047,12 @@ const SmartImport: React.FC = () => {
               {/* Summary */}
               <div className="bg-dark-800 rounded-xl p-4 border border-dark-700">
                 <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-400" />ผลวิเคราะห์
+                  <CheckCircle className="w-4 h-4 text-green-400" />Analysis Results
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-dark-700 rounded-lg p-2 text-center">
                     <p className="text-lg font-bold text-white">{analysisResult.summary.totalRecords}</p>
-                    <p className="text-xs text-dark-400">รายการ</p>
+                    <p className="text-xs text-dark-400">List</p>
                   </div>
                   <div className="bg-dark-700 rounded-lg p-2 text-center">
                     <p className="text-lg font-bold text-green-400">{analysisResult.summary.totalEntities}</p>
@@ -1104,7 +1104,7 @@ const SmartImport: React.FC = () => {
                     <Shield className="w-4 h-4 text-primary-400" />Risk Breakdown
                   </h3>
                   <p className="text-white text-sm font-medium">{selectedEntity.label}</p>
-                  <p className="text-xs text-dark-400 mb-3">พบใน: {selectedEntity.sources.join(', ')}</p>
+                  <p className="text-xs text-dark-400 mb-3">Found in: {selectedEntity.sources.join(', ')}</p>
                   
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-dark-400 text-xs">Risk Score</span>
@@ -1132,8 +1132,8 @@ const SmartImport: React.FC = () => {
               {/* Create Button */}
               <button onClick={createNetwork} disabled={isCreatingNetwork}
                 className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
-                {isCreatingNetwork ? <><Loader2 className="w-4 h-4 animate-spin" />สร้าง...</> :
-                  <><Network className="w-4 h-4" />สร้าง Network ({analysisResult.summary.totalEntities} nodes, {analysisResult.summary.totalEdges} edges)</>}
+                {isCreatingNetwork ? <><Loader2 className="w-4 h-4 animate-spin" />Create...</> :
+                  <><Network className="w-4 h-4" />Create Network ({analysisResult.summary.totalEntities} nodes, {analysisResult.summary.totalEdges} edges)</>}
               </button>
             </>
           )}
@@ -1141,8 +1141,8 @@ const SmartImport: React.FC = () => {
           {!analysisResult && files.length === 0 && (
             <div className="bg-dark-800 rounded-xl p-6 border border-dark-700 text-center">
               <Eye className="w-10 h-10 text-dark-600 mx-auto mb-3" />
-              <p className="text-dark-400 text-sm">อัปโหลดไฟล์เพื่อเริ่มวิเคราะห์</p>
-              <p className="text-dark-500 text-xs mt-1">รองรับ Cellebrite, UFED, XRY</p>
+              <p className="text-dark-400 text-sm">Upload files to start analysis</p>
+              <p className="text-dark-500 text-xs mt-1">Supports Cellebrite, UFED, XRY</p>
             </div>
           )}
         </div>

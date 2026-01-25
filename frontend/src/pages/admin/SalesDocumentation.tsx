@@ -92,7 +92,7 @@ export const SalesDocumentation = () => {
 
   const tabs = [
     { id: 'security' as const, label: '🔐 Security & Data Protection', icon: Shield },
-    { id: 'faq' as const, label: '❓ FAQ สำหรับขาย', icon: HelpCircle },
+    { id: 'faq' as const, label: '❓ Sales FAQ', icon: HelpCircle },
     { id: 'deployment' as const, label: '🖥️ Deployment Options', icon: Server },
   ];
 
@@ -103,7 +103,7 @@ export const SalesDocumentation = () => {
         <div>
           <h1 className="text-2xl font-bold">📋 Sales Documentation</h1>
           <p className="text-dark-400 mt-1">
-            เอกสารภายในสำหรับทีมขาย - Security, FAQ, และ Deployment Options
+            Internal documentation for sales team - Security, FAQ, and Deployment Options
           </p>
         </div>
         <div className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
@@ -138,15 +138,15 @@ export const SalesDocumentation = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <StatCard icon={Shield} label="Encryption" value="AES-256" color="border-green-500" />
               <StatCard icon={Lock} label="Authentication" value="2FA + JWT" color="border-blue-500" />
-              <StatCard icon={Database} label="Backup Frequency" value="ทุก 5 นาที" color="border-purple-500" />
-              <StatCard icon={Clock} label="Recovery Time" value="< 4 ชม." color="border-orange-500" />
+              <StatCard icon={Database} label="Backup Frequency" value="Every 5 minutes" color="border-purple-500" />
+              <StatCard icon={Clock} label="Recovery Time" value="< 4 hours" color="border-orange-500" />
             </div>
 
             {/* Defense in Depth */}
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Shield className="text-primary-400" />
-                Defense in Depth (การป้องกันแบบหลายชั้น)
+                Defense in Depth (Multi-layer Protection)
               </h2>
               
               <div className="space-y-4">
@@ -264,32 +264,32 @@ export const SalesDocumentation = () => {
                   <tbody>
                     <tr className="border-b border-dark-700">
                       <td className="p-3 font-medium">Transaction Log</td>
-                      <td className="p-3 text-green-400">ทุก 5-10 นาที</td>
-                      <td className="p-3">7 วัน</td>
+                      <td className="p-3 text-green-400">Every 5-10 minutes</td>
+                      <td className="p-3">7 days</td>
                       <td className="p-3">Primary Region</td>
                     </tr>
                     <tr className="border-b border-dark-700">
                       <td className="p-3 font-medium">Differential</td>
-                      <td className="p-3 text-blue-400">ทุก 12 ชั่วโมง</td>
-                      <td className="p-3">30 วัน</td>
+                      <td className="p-3 text-blue-400">Every 12 hours</td>
+                      <td className="p-3">30 days</td>
                       <td className="p-3">Primary Region</td>
                     </tr>
                     <tr className="border-b border-dark-700">
                       <td className="p-3 font-medium">Full Backup</td>
-                      <td className="p-3 text-purple-400">วันละครั้ง (2:00 AM)</td>
-                      <td className="p-3">90 วัน</td>
+                      <td className="p-3 text-purple-400">Daily (2:00 AM)</td>
+                      <td className="p-3">90 days</td>
                       <td className="p-3">Primary + Secondary</td>
                     </tr>
                     <tr className="border-b border-dark-700">
                       <td className="p-3 font-medium">Monthly Archive</td>
-                      <td className="p-3 text-orange-400">วันที่ 1 ของเดือน</td>
-                      <td className="p-3">1 ปี</td>
+                      <td className="p-3 text-orange-400">1st of month</td>
+                      <td className="p-3">1 year</td>
                       <td className="p-3">Geo-Redundant</td>
                     </tr>
                     <tr>
                       <td className="p-3 font-medium">Yearly Archive</td>
-                      <td className="p-3 text-red-400">1 มกราคม</td>
-                      <td className="p-3">7 ปี</td>
+                      <td className="p-3 text-red-400">January 1st</td>
+                      <td className="p-3">7 years</td>
                       <td className="p-3">Geo-Redundant + Offline</td>
                     </tr>
                   </tbody>
@@ -299,18 +299,18 @@ export const SalesDocumentation = () => {
               <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-dark-700 rounded-lg p-4">
                   <h4 className="font-bold text-red-400">Hardware Failure</h4>
-                  <p className="text-sm text-dark-400 mt-1">RTO: &lt; 1 ชั่วโมง</p>
-                  <p className="text-sm text-dark-400">RPO: &lt; 5 นาที</p>
+                  <p className="text-sm text-dark-400 mt-1">RTO: &lt; 1 hours</p>
+                  <p className="text-sm text-dark-400">RPO: &lt; 5 minutes</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <h4 className="font-bold text-orange-400">Ransomware Attack</h4>
-                  <p className="text-sm text-dark-400 mt-1">RTO: &lt; 8 ชั่วโมง</p>
-                  <p className="text-sm text-dark-400">RPO: &lt; 24 ชั่วโมง</p>
+                  <p className="text-sm text-dark-400 mt-1">RTO: &lt; 8 hours</p>
+                  <p className="text-sm text-dark-400">RPO: &lt; 24 hours</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <h4 className="font-bold text-yellow-400">Complete Disaster</h4>
-                  <p className="text-sm text-dark-400 mt-1">RTO: &lt; 24 ชั่วโมง</p>
-                  <p className="text-sm text-dark-400">RPO: &lt; 24 ชั่วโมง</p>
+                  <p className="text-sm text-dark-400 mt-1">RTO: &lt; 24 hours</p>
+                  <p className="text-sm text-dark-400">RPO: &lt; 24 hours</p>
                 </div>
               </div>
             </Card>
@@ -325,8 +325,8 @@ export const SalesDocumentation = () => {
               <div className="bg-dark-700 rounded-lg p-4 mb-4">
                 <h4 className="font-bold text-green-400 mb-2">🛡️ Immutable Backup Strategy</h4>
                 <p className="text-sm text-dark-300">
-                  Backup ที่ใช้ <strong>WORM (Write Once Read Many)</strong> technology - 
-                  ไม่สามารถแก้ไขหรือลบได้แม้แต่ admin หรือ ransomware
+                  Backup uses <strong>WORM (Write Once Read Many)</strong> technology - 
+                  Cannot be edited or deleted even by admin or ransomware
                 </p>
               </div>
 
@@ -359,10 +359,10 @@ export const SalesDocumentation = () => {
           <>
             {/* Quick Reference Card */}
             <Card className="p-6 bg-gradient-to-r from-primary-500/20 to-blue-500/20 border-primary-500/50">
-              <h2 className="text-xl font-bold mb-3">💡 Elevator Pitch (30 วินาที)</h2>
+              <h2 className="text-xl font-bold mb-3">💡 Elevator Pitch (30 seconds)</h2>
               <p className="text-dark-200 italic">
-                "InvestiGate คือแพลตฟอร์มสืบสวนการเงินดิจิทัลสำหรับหน่วยงานสืบสวน รองรับทั้ง Cloud และติดตั้งในเซิร์ฟเวอร์ของท่านเอง 
-                มีระบบ 2FA, Backup อัตโนมัติทุก 5 นาที, และ Immutable backup ป้องกัน Ransomware"
+                "InvestiGate is a digital financial investigation platform for investigation agencies, supporting both Cloud and on-premises installation 
+                Features 2FA, Backup automaticEvery 5 minutes, and Immutable backup for Ransomware protection"
               </p>
             </Card>
 
@@ -372,33 +372,33 @@ export const SalesDocumentation = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-dark-700 rounded-lg p-4">
                   <div className="text-2xl mb-2">🔐</div>
-                  <h4 className="font-bold">ความปลอดภัยระดับสูง</h4>
+                  <h4 className="font-bold">High Security</h4>
                   <p className="text-sm text-dark-400">2FA, Encryption, Audit log</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <div className="text-2xl mb-2">💾</div>
-                  <h4 className="font-bold">Backup ทุก 5 นาที</h4>
-                  <p className="text-sm text-dark-400">ไม่มีทางสูญเสียข้อมูล</p>
+                  <h4 className="font-bold">Backup Every 5 minutes</h4>
+                  <p className="text-sm text-dark-400">No data loss possible</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <div className="text-2xl mb-2">🏢</div>
                   <h4 className="font-bold">On-Premises Option</h4>
-                  <p className="text-sm text-dark-400">ข้อมูลไม่ออกนอกหน่วยงาน</p>
+                  <p className="text-sm text-dark-400">Data stays within organization</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <div className="text-2xl mb-2">📚</div>
-                  <h4 className="font-bold">ใช้งานง่าย</h4>
-                  <p className="text-sm text-dark-400">Training 1 วันเริ่มใช้งานได้</p>
+                  <h4 className="font-bold">Easy to Use</h4>
+                  <p className="text-sm text-dark-400">1-day training to get started</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <div className="text-2xl mb-2">🇹🇭</div>
-                  <h4 className="font-bold">Support ภาษาไทย</h4>
-                  <p className="text-sm text-dark-400">ตอบเร็วภายใน 4 ชม.</p>
+                  <h4 className="font-bold">Thai Support</h4>
+                  <p className="text-sm text-dark-400">Response within 4 hours</p>
                 </div>
                 <div className="bg-dark-700 rounded-lg p-4">
                   <div className="text-2xl mb-2">💰</div>
-                  <h4 className="font-bold">ราคาถูกกว่า 5 เท่า</h4>
-                  <p className="text-sm text-dark-400">เทียบกับ Cellebrite</p>
+                  <h4 className="font-bold">5x Cheaper</h4>
+                  <p className="text-sm text-dark-400">Compared to Cellebrite</p>
                 </div>
               </div>
             </Card>
@@ -407,58 +407,58 @@ export const SalesDocumentation = () => {
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <HelpCircle className="text-primary-400" />
-                🔐 คำถามด้านความปลอดภัย
+                🔐 Security Questions
               </h2>
               
               <div className="divide-y divide-dark-600">
                 <FAQItem 
-                  question='Q1: "ข้อมูลคดีของเราจะถูกเก็บที่ไหน? มีความเสี่ยงรั่วไหลไหม?"'
+                  question='Q1: "Where is our case data stored? Is there risk of leakage?"'
                   answer={
                     <div className="space-y-3">
-                      <p>ข้อมูลถูกเก็บใน Microsoft Azure Data Center ที่สิงคโปร์ (Southeast Asia) ซึ่งผ่านมาตรฐาน ISO 27001, SOC 2, และ CSA STAR Level 2</p>
+                      <p>Data is stored in Microsoft Azure Data Center in Singapore (Southeast Asia) which meets ISO 27001, SOC 2, and CSA STAR Level 2 standards</p>
                       <div className="bg-dark-700 rounded p-3">
-                        <p className="font-bold text-green-400 mb-2">การป้องกันการรั่วไหล:</p>
+                        <p className="font-bold text-green-400 mb-2">Leak prevention:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• เข้ารหัสข้อมูลทั้งหมดด้วย AES-256</li>
-                          <li>• การเข้าถึงต้องผ่าน Authentication 2 ชั้น (รหัสผ่าน + OTP)</li>
-                          <li>• มีระบบ Audit Log บันทึกทุกการเข้าถึง</li>
-                          <li>• พนักงานของเราไม่สามารถเข้าถึงข้อมูลคดีได้ (Zero Access Architecture)</li>
+                          <li>• All data encrypted with AES-256</li>
+                          <li>• Access requires 2-factor authentication (password + OTP)</li>
+                          <li>• Audit log records all access</li>
+                          <li>• Our staff cannot access case data (Zero Access Architecture)</li>
                         </ul>
                       </div>
                       <p className="text-primary-400">
-                        <strong>ทางเลือก:</strong> หากต้องการความมั่นใจสูงสุด เรามี <strong>On-Premises Version</strong> ที่ติดตั้งในเซิร์ฟเวอร์ของท่านเอง ข้อมูลจะไม่ออกนอกหน่วยงานเลย
+                        <strong>Alternative:</strong> For maximum security, we offer <strong>On-Premises Version</strong> that installs on your own server. Data never leaves your organization
                       </p>
                     </div>
                   }
                 />
 
                 <FAQItem 
-                  question='Q2: "ถ้าโดน Ransomware โจมตี ข้อมูลจะหายไหม?"'
+                  question='Q2: "If hit by Ransomware, will data be lost??"'
                   answer={
                     <div className="space-y-3">
-                      <p>เราออกแบบระบบป้องกัน Ransomware หลายชั้น:</p>
+                      <p>We designed multi-layer Ransomware protection:</p>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="bg-dark-700 rounded p-3">
                           <p className="font-bold text-blue-400 mb-1">1. Prevention</p>
                           <ul className="text-xs space-y-1">
                             <li>• Web Application Firewall</li>
-                            <li>• ไม่มีช่องทาง upload file โดยตรง</li>
+                            <li>• No direct file upload channels</li>
                             <li>• Input Validation</li>
                           </ul>
                         </div>
                         <div className="bg-dark-700 rounded p-3">
-                          <p className="font-bold text-green-400 mb-1">2. Backup ที่โจมตีไม่ได้</p>
+                          <p className="font-bold text-green-400 mb-1">2. Backup that cannot be attacked</p>
                           <ul className="text-xs space-y-1">
                             <li>• Immutable Backup</li>
-                            <li>• Backup ทุก 5 นาที</li>
+                            <li>• Backup Every 5 minutes</li>
                             <li>• Offline Backup (Air-gap)</li>
                           </ul>
                         </div>
                         <div className="bg-dark-700 rounded p-3">
                           <p className="font-bold text-orange-400 mb-1">3. Recovery</p>
                           <ul className="text-xs space-y-1">
-                            <li>• กู้คืนได้ภายใน 4-8 ชม.</li>
-                            <li>• สูญเสียข้อมูลไม่เกิน 24 ชม.</li>
+                            <li>• Recovery within 4-8 hours</li>
+                            <li>• Data loss maximum 24 hours</li>
                           </ul>
                         </div>
                       </div>
@@ -467,41 +467,41 @@ export const SalesDocumentation = () => {
                 />
 
                 <FAQItem 
-                  question='Q3: "ระบบ Backup ทำงานอย่างไร? Backup บ่อยแค่ไหน?"'
+                  question='Q3: "How does System Backup work? How often is backup?"'
                   answer={
                     <div className="space-y-3">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-dark-600">
-                            <th className="text-left p-2">ประเภท</th>
-                            <th className="text-left p-2">ความถี่</th>
-                            <th className="text-left p-2">เก็บนานเท่าไร</th>
+                            <th className="text-left p-2">Type</th>
+                            <th className="text-left p-2">Frequency</th>
+                            <th className="text-left p-2">Retention</th>
                           </tr>
                         </thead>
                         <tbody className="text-dark-300">
                           <tr className="border-b border-dark-700">
                             <td className="p-2">Transaction Log</td>
-                            <td className="p-2 text-green-400">ทุก 5-10 นาที</td>
-                            <td className="p-2">7 วัน</td>
+                            <td className="p-2 text-green-400">Every 5-10 minutes</td>
+                            <td className="p-2">7 days</td>
                           </tr>
                           <tr className="border-b border-dark-700">
                             <td className="p-2">Full Backup</td>
-                            <td className="p-2 text-blue-400">วันละครั้ง</td>
-                            <td className="p-2">90 วัน</td>
+                            <td className="p-2 text-blue-400">Daily</td>
+                            <td className="p-2">90 days</td>
                           </tr>
                           <tr>
                             <td className="p-2">Archive</td>
-                            <td className="p-2 text-purple-400">เดือนละครั้ง</td>
-                            <td className="p-2">1 ปี</td>
+                            <td className="p-2 text-purple-400">Monthly</td>
+                            <td className="p-2">1 year</td>
                           </tr>
                         </tbody>
                       </table>
                       <div className="bg-dark-700 rounded p-3">
-                        <p className="font-bold text-primary-400 mb-1">จุดเด่น:</p>
+                        <p className="font-bold text-primary-400 mb-1">Highlights:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• Backup อัตโนมัติ ไม่ต้องทำเอง</li>
-                          <li>• กู้คืนได้ทุกจุดในช่วง 7 วันที่ผ่านมา (Point-in-time recovery)</li>
-                          <li>• Backup เก็บคนละที่กับ Production (Different data center)</li>
+                          <li>• Backup automatic no manual work needed</li>
+                          <li>• Point-in-time recovery for the past 7 days</li>
+                          <li>• Backup stored separately from Production (Different data center)</li>
                         </ul>
                       </div>
                     </div>
@@ -509,29 +509,29 @@ export const SalesDocumentation = () => {
                 />
 
                 <FAQItem 
-                  question='Q4: "ใครบ้างที่สามารถเข้าถึงข้อมูลของเราได้?"'
+                  question='Q4: "Who can access our data??"'
                   answer={
                     <div className="space-y-3">
-                      <p className="font-bold">ภายในหน่วยงานของท่าน:</p>
+                      <p className="font-bold">Within your organization:</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                         <div className="bg-dark-700 rounded p-2">
-                          <span className="text-red-400 font-bold">Super Admin</span> - เข้าถึงทุกอย่าง + จัดการผู้ใช้
+                          <span className="text-red-400 font-bold">Super Admin</span> - Access everything + manage users
                         </div>
                         <div className="bg-dark-700 rounded p-2">
-                          <span className="text-orange-400 font-bold">Org Admin</span> - เข้าถึงคดีในหน่วยงาน
+                          <span className="text-orange-400 font-bold">Org Admin</span> - Access cases in organization
                         </div>
                         <div className="bg-dark-700 rounded p-2">
-                          <span className="text-blue-400 font-bold">Investigator</span> - เข้าถึงเฉพาะคดีที่ตัวเองสร้าง
+                          <span className="text-blue-400 font-bold">Investigator</span> - Access only self-created cases
                         </div>
                         <div className="bg-dark-700 rounded p-2">
-                          <span className="text-green-400 font-bold">Viewer</span> - อ่านอย่างเดียว
+                          <span className="text-green-400 font-bold">Viewer</span> - Read only
                         </div>
                       </div>
                       <div className="bg-yellow-500/20 border border-yellow-500/50 rounded p-3">
-                        <p className="font-bold text-yellow-400">ทีมงานเรา:</p>
+                        <p className="font-bold text-yellow-400">Our team:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• <strong>ไม่สามารถ</strong>เข้าถึงข้อมูลคดีได้ (Zero Access)</li>
-                          <li>• ทุกการเข้าถึงมี Audit log</li>
+                          <li>• <strong>Cannot</strong>access case data (Zero Access)</li>
+                          <li>• All access has Audit log</li>
                         </ul>
                       </div>
                     </div>
@@ -539,16 +539,16 @@ export const SalesDocumentation = () => {
                 />
 
                 <FAQItem 
-                  question='Q5: "ถ้าพนักงานลาออก จะป้องกันการเข้าถึงอย่างไร?"'
+                  question='Q5: "If employee resigns, how to prevent access??"'
                   answer={
                     <div className="space-y-3">
                       <div className="bg-dark-700 rounded p-3">
-                        <p className="font-bold text-green-400 mb-2">มาตรการ:</p>
+                        <p className="font-bold text-green-400 mb-2">Measures:</p>
                         <ol className="text-sm space-y-1 list-decimal list-inside">
-                          <li>Admin สามารถ <strong>Disable account ทันที</strong> - หยุดการเข้าถึงทันที</li>
-                          <li>Session ทั้งหมดของ user จะถูก terminate</li>
-                          <li>ระบบบันทึกว่า user คนนั้นทำอะไรบ้างก่อนออก (Audit trail)</li>
-                          <li>สามารถ export ประวัติการใช้งานเป็นรายงานได้</li>
+                          <li>Admin can <strong>Disable account immediately</strong> - stops access instantly</li>
+                          <li>All user sessions will be terminated</li>
+                          <li>System records what the user did before leaving (Audit trail)</li>
+                          <li>Can export usage history as report</li>
                         </ol>
                       </div>
                     </div>
@@ -561,12 +561,12 @@ export const SalesDocumentation = () => {
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <HelpCircle className="text-primary-400" />
-                💰 คำถามด้านราคาและบริการ
+                💰 Pricing and Service Questions
               </h2>
               
               <div className="divide-y divide-dark-600">
                 <FAQItem 
-                  question='Q6: "ราคาเท่าไร? คิดอย่างไร?"'
+                  question='Q6: "How much is the price? How is it calculated?"'
                   answer={
                     <div className="space-y-4">
                       <div>
@@ -574,9 +574,9 @@ export const SalesDocumentation = () => {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-dark-600">
-                              <th className="text-left p-2">แพ็คเกจ</th>
-                              <th className="text-left p-2">ราคา/user/ปี</th>
-                              <th className="text-left p-2">จำนวน Users</th>
+                              <th className="text-left p-2">Package</th>
+                              <th className="text-left p-2">Price/user/year</th>
+                              <th className="text-left p-2">Number of Users</th>
                             </tr>
                           </thead>
                           <tbody className="text-dark-300">
@@ -603,13 +603,13 @@ export const SalesDocumentation = () => {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-dark-600">
-                              <th className="text-left p-2">รายการ</th>
-                              <th className="text-left p-2">ราคา</th>
+                              <th className="text-left p-2">Item</th>
+                              <th className="text-left p-2">Pricing</th>
                             </tr>
                           </thead>
                           <tbody className="text-dark-300">
                             <tr className="border-b border-dark-700">
-                              <td className="p-2">License (ครั้งเดียว)</td>
+                              <td className="p-2">License (one-time)</td>
                               <td className="p-2 text-green-400">฿500,000</td>
                             </tr>
                             <tr className="border-b border-dark-700">
@@ -618,7 +618,7 @@ export const SalesDocumentation = () => {
                             </tr>
                             <tr className="border-b border-dark-700">
                               <td className="p-2">Annual Support</td>
-                              <td className="p-2">฿150,000/ปี</td>
+                              <td className="p-2">฿150,000/year</td>
                             </tr>
                             <tr>
                               <td className="p-2">Training</td>
@@ -627,38 +627,38 @@ export const SalesDocumentation = () => {
                           </tbody>
                         </table>
                       </div>
-                      <p className="text-xs text-dark-400">*ราคาไม่รวม VAT 7%</p>
+                      <p className="text-xs text-dark-400">*Price excludes 7% VAT</p>
                     </div>
                   }
                 />
 
                 <FAQItem 
-                  question='Q7: "มี Support อย่างไร?"'
+                  question='Q7: "What support is available??"'
                   answer={
                     <div>
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-dark-600">
-                            <th className="text-left p-2">ระดับ</th>
-                            <th className="text-left p-2">ช่องทาง</th>
-                            <th className="text-left p-2">เวลาตอบ</th>
+                            <th className="text-left p-2">Level</th>
+                            <th className="text-left p-2">Channel</th>
+                            <th className="text-left p-2">Response Time</th>
                           </tr>
                         </thead>
                         <tbody className="text-dark-300">
                           <tr className="border-b border-dark-700">
                             <td className="p-2">Standard</td>
                             <td className="p-2">LINE, Email</td>
-                            <td className="p-2">ภายใน 24 ชม.</td>
+                            <td className="p-2">Within 24 hours</td>
                           </tr>
                           <tr className="border-b border-dark-700">
                             <td className="p-2 text-blue-400">Priority</td>
                             <td className="p-2">LINE, Email, Phone</td>
-                            <td className="p-2 text-green-400">ภายใน 4 ชม.</td>
+                            <td className="p-2 text-green-400">Within 4 hours</td>
                           </tr>
                           <tr>
                             <td className="p-2 text-purple-400">Enterprise</td>
                             <td className="p-2">Dedicated Support</td>
-                            <td className="p-2 text-green-400">ภายใน 1 ชม.</td>
+                            <td className="p-2 text-green-400">Within 1 hour</td>
                           </tr>
                         </tbody>
                       </table>
@@ -672,12 +672,12 @@ export const SalesDocumentation = () => {
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Building className="text-primary-400" />
-                🏛️ คำถามจากหน่วยงานราชการ
+                🏛️ Questions from Government Agencies
               </h2>
               
               <div className="divide-y divide-dark-600">
                 <FAQItem 
-                  question='Q9: "ระบบนี้ผ่านมาตรฐานอะไรบ้าง?"'
+                  question='Q9: "What standards does this system meet??"'
                   answer={
                     <div className="space-y-3">
                       <div>
@@ -700,7 +700,7 @@ export const SalesDocumentation = () => {
                         </div>
                       </div>
                       <div className="bg-yellow-500/20 border border-yellow-500/50 rounded p-3">
-                        <p className="font-bold text-yellow-400">อยู่ระหว่างดำเนินการ:</p>
+                        <p className="font-bold text-yellow-400">In progress:</p>
                         <ul className="text-sm space-y-1">
                           <li>• ISO 27001 (Application level) - Q3 2026</li>
                           <li>• SOC 2 Type II - Q4 2026</li>
@@ -711,24 +711,24 @@ export const SalesDocumentation = () => {
                 />
 
                 <FAQItem 
-                  question='Q10: "ต้องการติดตั้งในเซิร์ฟเวอร์ของหน่วยงาน ทำได้ไหม?"'
+                  question='Q10: "Can we install on our organization's server??"'
                   answer={
                     <div className="space-y-3">
-                      <p className="text-green-400 font-bold">✅ ได้ครับ! เรามี On-Premises Version</p>
+                      <p className="text-green-400 font-bold">✅ Yes! We have On-Premises Version</p>
                       <div className="bg-dark-700 rounded p-3">
-                        <p className="font-bold mb-2">สิ่งที่ต้องเตรียม:</p>
+                        <p className="font-bold mb-2">What you need to prepare:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• Server ตาม Spec ที่กำหนด</li>
-                          <li>• SQL Server License (หรือใช้ PostgreSQL ฟรี)</li>
-                          <li>• IT Team สำหรับดูแลระบบ</li>
+                          <li>• Server per specified specs</li>
+                          <li>• SQL Server License (or use PostgreSQL free)</li>
+                          <li>• IT Team to maintain system</li>
                         </ul>
                       </div>
                       <div className="bg-dark-700 rounded p-3">
-                        <p className="font-bold mb-2">เราจัดให้:</p>
+                        <p className="font-bold mb-2">We provide:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• ติดตั้งระบบ</li>
+                          <li>• System installation</li>
                           <li>• Training IT Team</li>
-                          <li>• Documentation ครบถ้วน</li>
+                          <li>• Complete documentation</li>
                           <li>• Remote support</li>
                         </ul>
                       </div>
@@ -737,30 +737,30 @@ export const SalesDocumentation = () => {
                 />
 
                 <FAQItem 
-                  question='Q11: "ข้อมูลสามารถใช้เป็นหลักฐานในชั้นศาลได้ไหม?"'
+                  question='Q11: "Can data be used as evidence in court??"'
                   answer={
                     <div className="space-y-3">
-                      <p className="text-green-400 font-bold">✅ ได้ครับ ระบบออกแบบมาเพื่อรองรับ:</p>
+                      <p className="text-green-400 font-bold">✅ Yes, the system is designed to support:</p>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="bg-dark-700 rounded p-3">
                           <p className="font-bold text-blue-400 mb-1">Chain of Custody</p>
                           <ul className="text-xs space-y-1">
-                            <li>• ทุก action มี timestamp + user ID + IP</li>
-                            <li>• ไม่สามารถแก้ไข log ย้อนหลังได้</li>
+                            <li>• Every action has timestamp + user ID + IP</li>
+                            <li>• Cannot edit historical logs</li>
                           </ul>
                         </div>
                         <div className="bg-dark-700 rounded p-3">
                           <p className="font-bold text-green-400 mb-1">Data Integrity</p>
                           <ul className="text-xs space-y-1">
-                            <li>• Hash verification สำหรับไฟล์</li>
-                            <li>• พิสูจน์ว่าไฟล์ไม่ถูกแก้ไข</li>
+                            <li>• Hash verification for files</li>
+                            <li>• Prove files were not edited</li>
                           </ul>
                         </div>
                         <div className="bg-dark-700 rounded p-3">
-                          <p className="font-bold text-purple-400 mb-1">Export สำหรับศาล</p>
+                          <p className="font-bold text-purple-400 mb-1">Export for Court</p>
                           <ul className="text-xs space-y-1">
-                            <li>• รายงานพร้อม Audit trail</li>
-                            <li>• PDF พร้อม digital signature</li>
+                            <li>• Report with Audit trail</li>
+                            <li>• PDF with digital signature</li>
                           </ul>
                         </div>
                       </div>
@@ -783,20 +783,20 @@ export const SalesDocumentation = () => {
                   </thead>
                   <tbody>
                     <tr className="border-b border-dark-700">
-                      <td className="p-3 text-red-400">"แพงไป"</td>
-                      <td className="p-3">"เทียบกับ Cellebrite ที่เริ่มต้น $10,000/ปี เราถูกกว่า 5 เท่า"</td>
+                      <td className="p-3 text-red-400">"Too expensive"</td>
+                      <td className="p-3">"Compared to Cellebrite starting at $10,000/year we are 5x cheaper"</td>
                     </tr>
                     <tr className="border-b border-dark-700">
-                      <td className="p-3 text-red-400">"กลัวข้อมูลรั่ว"</td>
-                      <td className="p-3">"มี On-Premises ติดตั้งในเซิร์ฟเวอร์ท่านเอง"</td>
+                      <td className="p-3 text-red-400">"Afraid of data leak"</td>
+                      <td className="p-3">"We have On-Premises that installs on your server"</td>
                     </tr>
                     <tr className="border-b border-dark-700">
-                      <td className="p-3 text-red-400">"ไม่มี IT ดูแล"</td>
-                      <td className="p-3">"Cloud version ไม่ต้องดูแลเลย เรา manage ทุกอย่าง"</td>
+                      <td className="p-3 text-red-400">"No IT to maintain"</td>
+                      <td className="p-3">"Cloud version needs no maintenance, we manage everything"</td>
                     </tr>
                     <tr>
-                      <td className="p-3 text-red-400">"ต้องผ่าน กสทช."</td>
-                      <td className="p-3">"รองรับ PDPA และกำลังทำ ISO 27001"</td>
+                      <td className="p-3 text-red-400">"Must pass NBTC"</td>
+                      <td className="p-3">"Supports PDPA and working on ISO 27001"</td>
                     </tr>
                   </tbody>
                 </table>
@@ -905,17 +905,17 @@ export const SalesDocumentation = () => {
                       <div className="bg-dark-700 rounded p-3">
                         <p className="font-bold text-sm text-blue-400">Option 1: Windows App (Tauri)</p>
                         <ul className="text-xs mt-2 space-y-1">
-                          <li>• ติดตั้งง่าย (Download → Install)</li>
+                          <li>• Easy install (Download → Install)</li>
                           <li>• License: Hardware binding</li>
-                          <li>• Dev time: 10-12 สัปดาห์</li>
+                          <li>• Dev time: 10-12 weeks</li>
                         </ul>
                       </div>
                       <div className="bg-dark-700 rounded p-3">
                         <p className="font-bold text-sm text-orange-400">Option 2: Linux Appliance</p>
                         <ul className="text-xs mt-2 space-y-1">
-                          <li>• ขายพร้อม Notebook</li>
+                          <li>• Sell with Notebook</li>
                           <li>• Offline 100%</li>
-                          <li>• Dev time: 8-11 สัปดาห์</li>
+                          <li>• Dev time: 8-11 weeks</li>
                         </ul>
                       </div>
                     </div>
@@ -928,7 +928,7 @@ export const SalesDocumentation = () => {
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Monitor className="text-primary-400" />
-                Desktop App - รายละเอียดการพัฒนา
+                Desktop App - Development Details
               </h2>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -940,10 +940,10 @@ export const SalesDocumentation = () => {
                     <div>
                       <p className="text-sm text-dark-400 mb-2">Assessment:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>ความเป็นไปได้:</div>
+                        <div>Feasibility:</div>
                         <div className="text-green-400">⭐⭐⭐⭐⭐ (95%)</div>
-                        <div>ความยาก:</div>
-                        <div className="text-yellow-400">🟡 ปานกลาง</div>
+                        <div>Difficulty:</div>
+                        <div className="text-yellow-400">🟡 Medium</div>
                         <div>License Protection:</div>
                         <div className="text-green-400">⭐⭐⭐⭐ (75%)</div>
                       </div>
@@ -955,36 +955,36 @@ export const SalesDocumentation = () => {
                         <tbody>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Setup Tauri + Migrate React</td>
-                            <td className="py-1 text-right">1-2 สัปดาห์</td>
+                            <td className="py-1 text-right">1-2 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Convert FastAPI → Rust/SQLite</td>
-                            <td className="py-1 text-right">3-4 สัปดาห์</td>
+                            <td className="py-1 text-right">3-4 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">License System</td>
-                            <td className="py-1 text-right">2 สัปดาห์</td>
+                            <td className="py-1 text-right">2 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Windows Installer</td>
-                            <td className="py-1 text-right">1 สัปดาห์</td>
+                            <td className="py-1 text-right">1 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Testing</td>
-                            <td className="py-1 text-right">2 สัปดาห์</td>
+                            <td className="py-1 text-right">2 weeks</td>
                           </tr>
                           <tr className="font-bold">
-                            <td className="py-1">รวม</td>
-                            <td className="py-1 text-right text-green-400">10-12 สัปดาห์</td>
+                            <td className="py-1">Total</td>
+                            <td className="py-1 text-right text-green-400">10-12 weeks</td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
 
                     <div>
-                      <p className="text-sm text-dark-400 mb-2">ราคาขาย:</p>
-                      <p className="text-lg font-bold text-green-400">฿80,000 (perpetual) หรือ ฿30,000/ปี</p>
-                      <p className="text-xs text-dark-400">+ Annual Support ฿15,000/ปี</p>
+                      <p className="text-sm text-dark-400 mb-2">Selling price:</p>
+                      <p className="text-lg font-bold text-green-400">฿80,000 (perpetual) or ฿30,000/year</p>
+                      <p className="text-xs text-dark-400">+ Annual Support ฿15,000/year</p>
                     </div>
                   </div>
                 </div>
@@ -997,10 +997,10 @@ export const SalesDocumentation = () => {
                     <div>
                       <p className="text-sm text-dark-400 mb-2">Assessment:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>ความเป็นไปได้:</div>
+                        <div>Feasibility:</div>
                         <div className="text-green-400">⭐⭐⭐⭐ (80%)</div>
-                        <div>ความยาก:</div>
-                        <div className="text-red-400">🔴 สูง</div>
+                        <div>Difficulty:</div>
+                        <div className="text-red-400">🔴 High</div>
                         <div>Perceived Value:</div>
                         <div className="text-green-400">⭐⭐⭐⭐⭐</div>
                       </div>
@@ -1012,37 +1012,37 @@ export const SalesDocumentation = () => {
                         <tbody>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Custom Ubuntu ISO (Kiosk)</td>
-                            <td className="py-1 text-right">2-3 สัปดาห์</td>
+                            <td className="py-1 text-right">2-3 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Auto-start Service</td>
-                            <td className="py-1 text-right">1 สัปดาห์</td>
+                            <td className="py-1 text-right">1 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Hardware Binding (License)</td>
-                            <td className="py-1 text-right">2-3 สัปดาห์</td>
+                            <td className="py-1 text-right">2-3 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">BIOS lock + Secure boot</td>
-                            <td className="py-1 text-right">1-2 สัปดาห์</td>
+                            <td className="py-1 text-right">1-2 weeks</td>
                           </tr>
                           <tr className="border-b border-dark-600">
                             <td className="py-1">Testing</td>
-                            <td className="py-1 text-right">2 สัปดาห์</td>
+                            <td className="py-1 text-right">2 weeks</td>
                           </tr>
                           <tr className="font-bold">
-                            <td className="py-1">รวม</td>
-                            <td className="py-1 text-right text-orange-400">8-11 สัปดาห์</td>
+                            <td className="py-1">Total</td>
+                            <td className="py-1 text-right text-orange-400">8-11 weeks</td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
 
                     <div>
-                      <p className="text-sm text-dark-400 mb-2">ราคาขาย:</p>
-                      <p className="text-lg font-bold text-green-400">฿135,000 - 145,000 ต่อชุด</p>
-                      <p className="text-xs text-dark-400">(รวม Notebook + Software + Setup)</p>
-                      <p className="text-xs text-dark-400">+ Annual Support ฿30,000/ปี</p>
+                      <p className="text-sm text-dark-400 mb-2">Selling price:</p>
+                      <p className="text-lg font-bold text-green-400">฿135,000 - 145,000 per set</p>
+                      <p className="text-xs text-dark-400">(Total Notebook + Software + Setup)</p>
+                      <p className="text-xs text-dark-400">+ Annual Support ฿30,000/year</p>
                     </div>
                   </div>
                 </div>
@@ -1065,7 +1065,7 @@ export const SalesDocumentation = () => {
                   </div>
                   <div className="bg-dark-800 rounded p-3">
                     <p className="font-bold text-green-400 text-sm">Layer 2: Online Heartbeat</p>
-                    <p className="text-xs text-dark-400 mt-1">Ping server ทุก 7 วัน, Grace period 14 วัน</p>
+                    <p className="text-xs text-dark-400 mt-1">Ping server every 7 days, Grace period 14 days</p>
                   </div>
                   <div className="bg-dark-800 rounded p-3">
                     <p className="font-bold text-purple-400 text-sm">Layer 3: Code Obfuscation</p>
@@ -1191,25 +1191,25 @@ export const SalesDocumentation = () => {
 
             {/* Recommendation */}
             <Card className="p-6 bg-gradient-to-r from-green-500/20 to-blue-500/20 border-green-500/50">
-              <h2 className="text-xl font-bold mb-4">🎯 คำแนะนำการพัฒนา</h2>
+              <h2 className="text-xl font-bold mb-4">🎯 Development Recommendations</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-dark-800/50 rounded-lg p-4">
-                  <h4 className="font-bold text-green-400 mb-2">✅ Short-term (ทำก่อน): Windows Desktop App</h4>
+                  <h4 className="font-bold text-green-400 mb-2">✅ Short-term (do first): Windows Desktop App</h4>
                   <ul className="text-sm space-y-1">
-                    <li>• ใช้ React code ที่มีอยู่ได้</li>
-                    <li>• ตลาดกว้างกว่า (ทุกคนมี Windows)</li>
-                    <li>• License protection ดีกว่า (Rust binary)</li>
-                    <li>• ต้นทุนต่ำ ไม่ต้องซื้อ Hardware</li>
+                    <li>• Can use existing React code</li>
+                    <li>• Broader market (everyone has Windows)</li>
+                    <li>• Better license protection (Rust binary)</li>
+                    <li>• Low cost, no hardware purchase needed</li>
                   </ul>
                 </div>
                 <div className="bg-dark-800/50 rounded-lg p-4">
                   <h4 className="font-bold text-blue-400 mb-2">📌 Long-term (Phase 2): Linux Appliance</h4>
                   <ul className="text-sm space-y-1">
-                    <li>• สำหรับลูกค้า Premium</li>
-                    <li>• ต้องการ Offline 100%</li>
-                    <li>• ขายพร้อม Hardware ได้ราคาสูง</li>
-                    <li>• ดู Professional เหมือน Cellebrite</li>
+                    <li>• For premium customers</li>
+                    <li>• Need 100% offline</li>
+                    <li>• Can sell with hardware at high price</li>
+                    <li>• Professional look like Cellebrite</li>
                   </ul>
                 </div>
               </div>

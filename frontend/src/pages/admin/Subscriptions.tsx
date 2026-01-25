@@ -53,11 +53,11 @@ const Modal = ({ isOpen, onClose, children, title }: ModalProps) => {
 
 // Subscription Duration Options
 const DURATION_OPTIONS = [
-  { label: '7 วัน (ทดลอง)', days: 7, price: 'ฟรี' },
-  { label: '1 เดือน', days: 30, price: '฿2,500' },
-  { label: '3 เดือน', days: 90, price: '฿6,000' },
-  { label: '6 เดือน', days: 180, price: '฿10,000' },
-  { label: '1 ปี', days: 365, price: '฿18,000' },
+  { label: '7 days (Trial)', days: 7, price: 'Free' },
+  { label: '1 month', days: 30, price: '฿2,500' },
+  { label: '3 months', days: 90, price: '฿6,000' },
+  { label: '6 months', days: 180, price: '฿10,000' },
+  { label: '1 year', days: 365, price: '฿18,000' },
 ];
 
 export const Subscriptions = () => {
@@ -95,15 +95,15 @@ export const Subscriptions = () => {
   }, [page, search]);
 
   const getSubscriptionStatus = (user: UserType) => {
-    if (!user.subscription_end) return { status: 'none', label: 'ไม่มี', color: 'gray' };
+    if (!user.subscription_end) return { status: 'none', label: 'None', color: 'gray' };
     
     const endDate = new Date(user.subscription_end);
     const now = new Date();
     const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysLeft < 0) return { status: 'expired', label: 'หมดอายุ', color: 'red', days: daysLeft };
-    if (daysLeft <= 7) return { status: 'expiring', label: 'ใกล้หมดอายุ', color: 'yellow', days: daysLeft };
-    return { status: 'active', label: 'ใช้งานได้', color: 'green', days: daysLeft };
+    if (daysLeft < 0) return { status: 'expired', label: 'Expired', color: 'red', days: daysLeft };
+    if (daysLeft <= 7) return { status: 'expiring', label: 'Expiring soon', color: 'yellow', days: daysLeft };
+    return { status: 'active', label: 'Active', color: 'green', days: daysLeft };
   };
 
   const getStatusBadge = (status: { status: string; label: string; color: string; days?: number }) => {
@@ -121,7 +121,7 @@ export const Subscriptions = () => {
         {status.status === 'expired' && <XCircle className="w-3 h-3" />}
         {status.status === 'none' && <Clock className="w-3 h-3" />}
         {status.label}
-        {status.days !== undefined && status.days > 0 && ` (${status.days} วัน)`}
+        {status.days !== undefined && status.days > 0 && ` (${status.days} days)`}
       </span>
     );
   };
@@ -161,14 +161,14 @@ export const Subscriptions = () => {
     
     const days = customDays ? parseInt(customDays) : selectedDays;
     if (!days || days < 1) {
-      alert('กรุณาระบุจำนวนวันที่ถูกต้อง');
+      alert('Please enter valid number of days');
       return;
     }
 
     setSaving(true);
     try {
       const result = await usersAPI.renewSubscription(selectedUser.id, days);
-      setSuccessMessage(`ต่ออายุสำเร็จ! หมดอายุวันที่ ${new Date(result.subscription_end).toLocaleDateString('th-TH')}`);
+      setSuccessMessage(`Renewed successfully! Expires on ${new Date(result.subscription_end).toLocaleDateString('en-US')}`);
       fetchUsers();
       
       // Close modal after 2 seconds
@@ -178,7 +178,7 @@ export const Subscriptions = () => {
       }, 2000);
     } catch (err) {
       console.error('Error renewing subscription:', err);
-      alert('เกิดข้อผิดพลาดในการต่ออายุ');
+      alert('Error renewing subscription');
     } finally {
       setSaving(false);
     }
@@ -195,7 +195,7 @@ export const Subscriptions = () => {
       fetchUsers();
     } catch (err) {
       console.error('Error cancelling subscription:', err);
-      alert('เกิดข้อผิดพลาดในการยกเลิก');
+      alert('Error cancelling subscription');
     } finally {
       setSaving(false);
     }
@@ -210,11 +210,11 @@ export const Subscriptions = () => {
             <CreditCard className="w-7 h-7 text-primary-400" />
             Subscriptions
           </h1>
-          <p className="text-gray-400 mt-1">จัดการ Subscription ของผู้ใช้</p>
+          <p className="text-gray-400 mt-1">User Subscription Management</p>
         </div>
         <Button onClick={fetchUsers} variant="secondary" disabled={isLoading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          รีเฟรช
+          Refresh
         </Button>
       </div>
 
@@ -227,7 +227,7 @@ export const Subscriptions = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{statusCounts['active'] || 0}</p>
-              <p className="text-sm text-gray-400">ใช้งานได้</p>
+              <p className="text-sm text-gray-400">Active</p>
             </div>
           </div>
         </Card>
@@ -238,7 +238,7 @@ export const Subscriptions = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{statusCounts['expiring'] || 0}</p>
-              <p className="text-sm text-gray-400">ใกล้หมดอายุ</p>
+              <p className="text-sm text-gray-400">Expiring soon</p>
             </div>
           </div>
         </Card>
@@ -249,7 +249,7 @@ export const Subscriptions = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{statusCounts['expired'] || 0}</p>
-              <p className="text-sm text-gray-400">หมดอายุ</p>
+              <p className="text-sm text-gray-400">Expired</p>
             </div>
           </div>
         </Card>
@@ -260,7 +260,7 @@ export const Subscriptions = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{statusCounts['none'] || 0}</p>
-              <p className="text-sm text-gray-400">ไม่มี Subscription</p>
+              <p className="text-sm text-gray-400">None Subscription</p>
             </div>
           </div>
         </Card>
@@ -273,7 +273,7 @@ export const Subscriptions = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input
               type="text"
-              placeholder="ค้นหาผู้ใช้..."
+              placeholder="Search users..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-10"
@@ -286,11 +286,11 @@ export const Subscriptions = () => {
               onChange={(e) => setFilter(e.target.value)}
               className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white"
             >
-              <option value="">ทั้งหมด</option>
-              <option value="active">ใช้งานได้</option>
-              <option value="expiring">ใกล้หมดอายุ</option>
-              <option value="expired">หมดอายุ</option>
-              <option value="none">ไม่มี Subscription</option>
+              <option value="">All</option>
+              <option value="active">Active</option>
+              <option value="expiring">Expiring soon</option>
+              <option value="expired">Expired</option>
+              <option value="none">None Subscription</option>
             </select>
           </div>
         </div>
@@ -301,12 +301,12 @@ export const Subscriptions = () => {
         {isLoading ? (
           <div className="p-8 text-center">
             <RefreshCw className="w-8 h-8 text-primary-400 animate-spin mx-auto mb-2" />
-            <p className="text-gray-400">กำลังโหลด...</p>
+            <p className="text-gray-400">Loading...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="p-8 text-center">
             <User className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-            <p className="text-gray-400">ไม่พบผู้ใช้</p>
+            <p className="text-gray-400">No users found</p>
           </div>
         ) : (
           <div className="divide-y divide-dark-700">
@@ -336,10 +336,10 @@ export const Subscriptions = () => {
                         <div className="text-right text-sm hidden md:block">
                           <p className="text-gray-500">
                             <Calendar className="w-3 h-3 inline mr-1" />
-                            {new Date(user.subscription_start).toLocaleDateString('th-TH')}
+                            {new Date(user.subscription_start).toLocaleDateString('en-US')}
                           </p>
                           <p className="text-gray-500">
-                            ถึง {new Date(user.subscription_end).toLocaleDateString('th-TH')}
+                            Until {new Date(user.subscription_end).toLocaleDateString('en-US')}
                           </p>
                         </div>
                       )}
@@ -350,10 +350,10 @@ export const Subscriptions = () => {
                           size="sm" 
                           variant="secondary"
                           onClick={() => openRenewModal(user)}
-                          title="ต่ออายุ"
+                          title="Renew"
                         >
                           <Plus className="w-4 h-4 mr-1" />
-                          ต่ออายุ
+                          Renew
                         </Button>
                         {(subStatus.status === 'active' || subStatus.status === 'expiring') && (
                           <Button 
@@ -361,7 +361,7 @@ export const Subscriptions = () => {
                             variant="ghost"
                             className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                             onClick={() => openCancelModal(user)}
-                            title="ยกเลิก"
+                            title="Cancel"
                           >
                             <Ban className="w-4 h-4" />
                           </Button>
@@ -378,7 +378,7 @@ export const Subscriptions = () => {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="p-4 border-t border-dark-700 flex items-center justify-between">
-            <p className="text-sm text-gray-400">หน้า {page} จาก {totalPages}</p>
+            <p className="text-sm text-gray-400">Page {page} of {totalPages}</p>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -405,7 +405,7 @@ export const Subscriptions = () => {
       <Modal 
         isOpen={showRenewModal} 
         onClose={() => setShowRenewModal(false)} 
-        title="ต่ออายุ Subscription"
+        title="Renew Subscription"
       >
         {successMessage ? (
           <div className="text-center py-4">
@@ -420,14 +420,14 @@ export const Subscriptions = () => {
               <p className="text-sm text-gray-400">{selectedUser?.email}</p>
               {selectedUser?.subscription_end && (
                 <p className="text-sm text-gray-500 mt-1">
-                  หมดอายุปัจจุบัน: {new Date(selectedUser.subscription_end).toLocaleDateString('th-TH')}
+                  Current expiry: {new Date(selectedUser.subscription_end).toLocaleDateString('en-US')}
                 </p>
               )}
             </div>
 
             {/* Duration Options */}
             <div>
-              <label className="block text-sm font-medium mb-2">เลือกระยะเวลา</label>
+              <label className="block text-sm font-medium mb-2">Select duration</label>
               <div className="grid grid-cols-2 gap-2">
                 {DURATION_OPTIONS.map((option) => (
                   <button
@@ -448,10 +448,10 @@ export const Subscriptions = () => {
 
             {/* Custom Days */}
             <div>
-              <label className="block text-sm font-medium mb-2">หรือระบุจำนวนวัน</label>
+              <label className="block text-sm font-medium mb-2">Or specify number of days</label>
               <Input
                 type="number"
-                placeholder="เช่น 45"
+                placeholder="e.g. 45"
                 value={customDays}
                 onChange={(e) => setCustomDays(e.target.value)}
                 min={1}
@@ -462,7 +462,7 @@ export const Subscriptions = () => {
             {/* Summary */}
             <div className="p-3 bg-primary-500/10 border border-primary-500/20 rounded-lg">
               <p className="text-primary-400 text-sm">
-                จะเพิ่มระยะเวลา: <strong>{customDays || selectedDays} วัน</strong>
+                Will add duration: <strong>{customDays || selectedDays} days</strong>
               </p>
             </div>
 
@@ -473,7 +473,7 @@ export const Subscriptions = () => {
                 className="flex-1" 
                 onClick={() => setShowRenewModal(false)}
               >
-                ยกเลิก
+                Cancel
               </Button>
               <Button 
                 className="flex-1" 
@@ -481,7 +481,7 @@ export const Subscriptions = () => {
                 disabled={saving}
               >
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                ยืนยันต่ออายุ
+                Confirm Renew
               </Button>
             </div>
           </div>
@@ -492,16 +492,16 @@ export const Subscriptions = () => {
       <Modal 
         isOpen={showCancelModal} 
         onClose={() => setShowCancelModal(false)} 
-        title="ยกเลิก Subscription"
+        title="Cancel Subscription"
       >
         <div className="space-y-4">
           <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-400 font-medium">คำเตือน</p>
+                <p className="text-red-400 font-medium">Warning</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  การยกเลิก Subscription จะทำให้ผู้ใช้ไม่สามารถใช้งานระบบได้ทันที
+                  Cancelling subscription will immediately prevent user from using the system
                 </p>
               </div>
             </div>
@@ -518,7 +518,7 @@ export const Subscriptions = () => {
               className="flex-1" 
               onClick={() => setShowCancelModal(false)}
             >
-              ยกเลิก
+              Cancel
             </Button>
             <Button 
               variant="danger" 
@@ -527,7 +527,7 @@ export const Subscriptions = () => {
               disabled={saving}
             >
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              ยืนยันยกเลิก
+              Confirm Cancel
             </Button>
           </div>
         </div>

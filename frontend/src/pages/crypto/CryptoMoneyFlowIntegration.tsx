@@ -1,6 +1,6 @@
 /**
- * CryptoMoneyFlowIntegration - เชื่อมโยง Crypto Wallet กับ Money Flow
- * ช่วยให้สามารถ import wallet เข้าระบบ Money Flow ได้
+ * CryptoMoneyFlowIntegration - Link Crypto Wallet to Money Flow
+ * Allows importing wallet into Money Flow system
  */
 import { useState, useEffect } from 'react';
 import {
@@ -173,7 +173,7 @@ export const CryptoMoneyFlowIntegration = ({
         success: true,
         nodesCreated,
         edgesCreated,
-        message: `นำเข้าสำเร็จ! สร้าง ${nodesCreated} nodes และ ${edgesCreated} edges`
+        message: `Import successful! Created ${nodesCreated} nodes and ${edgesCreated} edges`
       });
 
     } catch (error) {
@@ -182,7 +182,7 @@ export const CryptoMoneyFlowIntegration = ({
         success: false,
         nodesCreated: 0,
         edgesCreated: 0,
-        message: 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล'
+        message: 'Error importing data'
       });
     } finally {
       setIsImporting(false);
@@ -193,7 +193,7 @@ export const CryptoMoneyFlowIntegration = ({
     return (
       <Card className="p-6 text-center">
         <AlertCircle size={48} className="mx-auto text-yellow-400 mb-3" />
-        <p className="text-dark-400">กรุณาค้นหา Wallet ก่อนเชื่อมโยงกับ Money Flow</p>
+        <p className="text-dark-400">Please search Wallet first before linking to Money Flow</p>
       </Card>
     );
   }
@@ -202,7 +202,7 @@ export const CryptoMoneyFlowIntegration = ({
     <Card className="p-6">
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <GitMerge className="text-primary-400" />
-        เชื่อมโยงกับ Money Flow
+        Link to Money Flow
       </h3>
 
       {/* Wallet Summary */}
@@ -229,7 +229,7 @@ export const CryptoMoneyFlowIntegration = ({
 
       {/* Case Selection */}
       <div className="mb-4">
-        <label className="text-sm text-dark-400 mb-2 block">เลือกคดีที่จะนำเข้า:</label>
+        <label className="text-sm text-dark-400 mb-2 block">Select Case to Import:</label>
         <select
           className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white"
           value={selectedCaseId || ''}
@@ -245,7 +245,7 @@ export const CryptoMoneyFlowIntegration = ({
 
       {/* Import Options */}
       <div className="space-y-3 mb-4">
-        <p className="text-sm font-medium text-dark-300">ตัวเลือกการนำเข้า:</p>
+        <p className="text-sm font-medium text-dark-300">Import Options:</p>
         
         <label className="flex items-center gap-3 p-3 bg-dark-800 rounded-lg cursor-pointer">
           <input
@@ -255,7 +255,7 @@ export const CryptoMoneyFlowIntegration = ({
             className="w-4 h-4 rounded"
           />
           <Wallet size={16} className="text-primary-400" />
-          <span className="text-sm">นำเข้า Wallet หลัก</span>
+          <span className="text-sm">Import Main Wallet</span>
         </label>
 
         <label className="flex items-center gap-3 p-3 bg-dark-800 rounded-lg cursor-pointer">
@@ -266,7 +266,7 @@ export const CryptoMoneyFlowIntegration = ({
             className="w-4 h-4 rounded"
           />
           <Link2 size={16} className="text-green-400" />
-          <span className="text-sm">นำเข้า Counterparties (Wallet ที่เกี่ยวข้อง)</span>
+          <span className="text-sm">Import Counterparties (Related Wallets)</span>
         </label>
 
         <label className="flex items-center gap-3 p-3 bg-dark-800 rounded-lg cursor-pointer">
@@ -277,13 +277,13 @@ export const CryptoMoneyFlowIntegration = ({
             className="w-4 h-4 rounded"
           />
           <ArrowRight size={16} className="text-blue-400" />
-          <span className="text-sm">นำเข้าธุรกรรม (Edges)</span>
+          <span className="text-sm">Import Transactions (Edges)</span>
         </label>
 
         {importOptions.importTransactions && (
           <div className="pl-8 space-y-3">
             <div className="flex items-center gap-4">
-              <label className="text-sm text-dark-400">จำนวนสูงสุด:</label>
+              <label className="text-sm text-dark-400">Maximum:</label>
               <input
                 type="number"
                 value={importOptions.maxTransactions}
@@ -292,10 +292,10 @@ export const CryptoMoneyFlowIntegration = ({
                 min={1}
                 max={200}
               />
-              <span className="text-xs text-dark-500">รายการ</span>
+              <span className="text-xs text-dark-500">List</span>
             </div>
             <div className="flex items-center gap-4">
-              <label className="text-sm text-dark-400">มูลค่าขั้นต่ำ:</label>
+              <label className="text-sm text-dark-400">Minimum Value:</label>
               <input
                 type="number"
                 value={importOptions.minValueUSD}
@@ -311,7 +311,7 @@ export const CryptoMoneyFlowIntegration = ({
 
       {/* Stats Preview */}
       <div className="p-4 bg-dark-800 rounded-lg mb-4">
-        <p className="text-sm text-dark-400 mb-2">จะนำเข้า:</p>
+        <p className="text-sm text-dark-400 mb-2">Will Import:</p>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Database className="text-primary-400" size={16} />
@@ -349,7 +349,7 @@ export const CryptoMoneyFlowIntegration = ({
                 href="/money-flow"
                 className="text-primary-400 hover:underline flex items-center gap-1"
               >
-                ไปดูที่ Money Flow →
+                Go to Money Flow →
               </a>
             </div>
           )}
@@ -360,19 +360,19 @@ export const CryptoMoneyFlowIntegration = ({
       <div className="flex items-center justify-end gap-3">
         {onClose && (
           <Button variant="ghost" onClick={onClose}>
-            ยกเลิก
+            Cancel
           </Button>
         )}
         <Button onClick={importToMoneyFlow} disabled={isImporting || !selectedCaseId}>
           {isImporting ? (
             <>
               <Loader2 size={18} className="mr-2 animate-spin" />
-              กำลังนำเข้า...
+              LoadingImport...
             </>
           ) : (
             <>
               <Plus size={18} className="mr-2" />
-              นำเข้า Money Flow
+              Import Money Flow
             </>
           )}
         </Button>

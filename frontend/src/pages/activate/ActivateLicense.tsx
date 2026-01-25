@@ -111,7 +111,7 @@ export const ActivateLicense = () => {
   // Validate key before activation
   const handleValidate = async () => {
     if (licenseKey.length !== 19) {
-      setError('กรุณากรอก License Key ให้ครบ (INVG-XXXX-XXXX-XXXX)');
+      setError('Please enter complete License Key (INVG-XXXX-XXXX-XXXX)');
       return;
     }
     
@@ -130,7 +130,7 @@ export const ActivateLicense = () => {
         setError(data.message);
       }
     } catch (error) {
-      setError('ไม่สามารถตรวจสอบ License Key ได้');
+      setError('Cannot verify License Key');
     } finally {
       setIsValidating(false);
     }
@@ -161,17 +161,17 @@ export const ActivateLicense = () => {
         checkAuth();
       } else {
         const errorData = await response.json();
-        setError(errorData.detail || 'ไม่สามารถเปิดใช้งาน License ได้');
+        setError(errorData.detail || 'Cannot activate License');
       }
     } catch (error) {
-      setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      setError('An error occurred. Please try again');
     } finally {
       setIsActivating(false);
     }
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('th-TH', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -187,7 +187,7 @@ export const ActivateLicense = () => {
         bg: 'bg-red-500/10', 
         border: 'border-red-500/20',
         icon: XCircle, 
-        text: 'หมดอายุแล้ว' 
+        text: 'Expired' 
       };
     }
     
@@ -197,7 +197,7 @@ export const ActivateLicense = () => {
         bg: 'bg-yellow-500/10', 
         border: 'border-yellow-500/20',
         icon: AlertTriangle, 
-        text: `เหลือ ${subscription.days_remaining} วัน` 
+        text: `remaining ${subscription.days_remaining} days` 
       };
     }
     
@@ -206,7 +206,7 @@ export const ActivateLicense = () => {
       bg: 'bg-green-500/10', 
       border: 'border-green-500/20',
       icon: CheckCircle, 
-      text: `เหลือ ${subscription.days_remaining} วัน` 
+      text: `remaining ${subscription.days_remaining} days` 
     };
   };
 
@@ -218,9 +218,9 @@ export const ActivateLicense = () => {
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           <Key size={24} />
-          เปิดใช้งาน License
+          Activate License
         </h1>
-        <p className="text-dark-400 mt-1">กรอก License Key เพื่อต่ออายุการใช้งาน</p>
+        <p className="text-dark-400 mt-1">Enter License Key to renew subscription</p>
       </div>
 
       {/* Current Subscription Status */}
@@ -228,7 +228,7 @@ export const ActivateLicense = () => {
         <Card className="p-6">
           <div className="flex items-center justify-center gap-2 text-dark-400">
             <RefreshCw className="animate-spin" size={20} />
-            กำลังโหลด...
+            Loading...
           </div>
         </Card>
       ) : subscription?.has_subscription ? (
@@ -249,13 +249,13 @@ export const ActivateLicense = () => {
               
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <p className="text-xs text-dark-400">เริ่มต้น</p>
+                  <p className="text-xs text-dark-400">Start</p>
                   <p className="text-white">
                     {subscription.subscription_start ? formatDate(subscription.subscription_start) : '-'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-dark-400">หมดอายุ</p>
+                  <p className="text-xs text-dark-400">Expiry</p>
                   <p className="text-white">
                     {subscription.subscription_end ? formatDate(subscription.subscription_end) : '-'}
                   </p>
@@ -284,8 +284,8 @@ export const ActivateLicense = () => {
               <CreditCard size={24} className="text-dark-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">ยังไม่มี Subscription</h3>
-              <p className="text-dark-400 text-sm">กรอก License Key ด้านล่างเพื่อเปิดใช้งาน</p>
+              <h3 className="text-lg font-semibold text-white">No Subscription Yet</h3>
+              <p className="text-dark-400 text-sm">Enter License Key below to activate</p>
             </div>
           </div>
         </Card>
@@ -299,21 +299,21 @@ export const ActivateLicense = () => {
               <Sparkles size={24} className="text-green-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-green-400">เปิดใช้งานสำเร็จ!</h3>
+              <h3 className="text-lg font-semibold text-green-400">ActivateSuccess!</h3>
               <p className="text-dark-300 mt-1">{activationResult.message}</p>
               
               <div className="mt-4 p-3 bg-dark-800/50 rounded-lg">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-dark-400">แพ็คเกจ</p>
+                    <p className="text-xs text-dark-400">Package</p>
                     <p className="text-white font-medium">{activationResult.plan_name}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-dark-400">เพิ่มระยะเวลา</p>
-                    <p className="text-white font-medium">{activationResult.days_added} วัน</p>
+                    <p className="text-xs text-dark-400">Added Duration</p>
+                    <p className="text-white font-medium">{activationResult.days_added} days</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs text-dark-400">ใช้งานได้ถึง</p>
+                    <p className="text-xs text-dark-400">Valid until</p>
                     <p className="text-white font-medium">{formatDate(activationResult.subscription_end)}</p>
                   </div>
                 </div>
@@ -324,7 +324,7 @@ export const ActivateLicense = () => {
                 className="mt-4"
                 onClick={() => setActivationResult(null)}
               >
-                ปิด
+                Close
               </Button>
             </div>
           </div>
@@ -335,7 +335,7 @@ export const ActivateLicense = () => {
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Key size={20} />
-          กรอก License Key
+          Enter License Key
         </h3>
         
         {error && (
@@ -355,7 +355,7 @@ export const ActivateLicense = () => {
               className="font-mono text-lg tracking-wider text-center"
               maxLength={19}
             />
-            <p className="text-xs text-dark-500 mt-1">รูปแบบ: INVG-XXXX-XXXX-XXXX</p>
+            <p className="text-xs text-dark-500 mt-1">Format: INVG-XXXX-XXXX-XXXX</p>
           </div>
           
           {/* Validation Result */}
@@ -363,16 +363,16 @@ export const ActivateLicense = () => {
             <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
               <div className="flex items-center gap-2 text-green-400 mb-2">
                 <CheckCircle size={18} />
-                <span className="font-medium">License Key ถูกต้อง</span>
+                <span className="font-medium">License Key is valid</span>
               </div>
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
-                  <p className="text-xs text-dark-400">แพ็คเกจ</p>
+                  <p className="text-xs text-dark-400">Package</p>
                   <p className="text-white">{validation.plan_name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-dark-400">ระยะเวลา</p>
-                  <p className="text-white">{validation.days_valid} วัน</p>
+                  <p className="text-xs text-dark-400">Duration</p>
+                  <p className="text-white">{validation.days_valid} days</p>
                 </div>
               </div>
             </div>
@@ -388,12 +388,12 @@ export const ActivateLicense = () => {
               {isValidating ? (
                 <>
                   <RefreshCw className="animate-spin mr-2" size={16} />
-                  กำลังตรวจสอบ...
+                  Verifying...
                 </>
               ) : (
                 <>
                   <Shield size={16} className="mr-2" />
-                  ตรวจสอบ Key
+                  Verify Key
                 </>
               )}
             </Button>
@@ -406,12 +406,12 @@ export const ActivateLicense = () => {
               {isActivating ? (
                 <>
                   <RefreshCw className="animate-spin mr-2" size={16} />
-                  กำลังเปิดใช้งาน...
+                  LoadingActivate...
                 </>
               ) : (
                 <>
                   <Key size={16} className="mr-2" />
-                  เปิดใช้งาน
+                  Activate
                 </>
               )}
             </Button>
@@ -421,18 +421,18 @@ export const ActivateLicense = () => {
 
       {/* Help */}
       <Card className="p-6 bg-dark-800/30">
-        <h4 className="font-medium text-white mb-3">วิธีการขอ License Key</h4>
+        <h4 className="font-medium text-white mb-3">How to Get License Key</h4>
         <ol className="text-sm text-dark-400 space-y-2 list-decimal list-inside">
-          <li>ติดต่อทีมขายผ่าน LINE หรือช่องทางที่กำหนด</li>
-          <li>เลือกแพ็คเกจที่ต้องการ (Basic / Professional / Enterprise)</li>
-          <li>ชำระเงินตามช่องทางที่แจ้ง</li>
-          <li>รับ License Key ทาง LINE หรืออีเมล</li>
-          <li>นำ Key มากรอกในหน้านี้เพื่อเปิดใช้งาน</li>
+          <li>Contact sales team via LINE or designated channels</li>
+          <li>Select desired package (Basic / Professional / Enterprise)</li>
+          <li>Make payment via specified channels</li>
+          <li>Receive License Key via LINE or email</li>
+          <li>Enter Key on this page to activate</li>
         </ol>
         
         <div className="mt-4 p-3 bg-primary-500/10 border border-primary-500/20 rounded-lg">
           <p className="text-sm text-primary-400">
-            <strong>ติดต่อ:</strong> LINE: @investigateplatform
+            <strong>Contact:</strong> LINE: @investigateplatform
           </p>
         </div>
       </Card>

@@ -59,11 +59,11 @@ export const Profile = () => {
     try {
       await authAPI.updateProfile(formData);
       await checkAuth(); // Refresh user data
-      setSuccess('บันทึกข้อมูลสำเร็จ');
+      setSuccess('Data saved successfully');
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'เกิดข้อผิดพลาด');
+      setError(err.response?.data?.detail || 'Error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -113,11 +113,11 @@ export const Profile = () => {
     const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysLeft < 0) {
-      return { status: 'expired', color: 'text-red-400', bg: 'bg-red-500/10', text: 'หมดอายุแล้ว' };
+      return { status: 'expired', color: 'text-red-400', bg: 'bg-red-500/10', text: 'Expired' };
     } else if (daysLeft <= 7) {
-      return { status: 'expiring', color: 'text-yellow-400', bg: 'bg-yellow-500/10', text: `เหลือ ${daysLeft} วัน` };
+      return { status: 'expiring', color: 'text-yellow-400', bg: 'bg-yellow-500/10', text: `remaining ${daysLeft} days` };
     }
-    return { status: 'active', color: 'text-green-400', bg: 'bg-green-500/10', text: `เหลือ ${daysLeft} วัน` };
+    return { status: 'active', color: 'text-green-400', bg: 'bg-green-500/10', text: `remaining ${daysLeft} days` };
   };
 
   const subscriptionStatus = getSubscriptionStatus();
@@ -125,8 +125,8 @@ export const Profile = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">โปรไฟล์ของฉัน</h1>
-        <p className="text-dark-400 mt-1">จัดการข้อมูลส่วนตัวของคุณ</p>
+        <h1 className="text-2xl font-bold text-white">My Profile</h1>
+        <p className="text-dark-400 mt-1">Manage your personal information</p>
       </div>
 
       {error && (
@@ -149,7 +149,7 @@ export const Profile = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <User size={20} />
-              ข้อมูลส่วนตัว
+              Personal Information
             </h2>
             {!isEditing ? (
               <Button
@@ -159,7 +159,7 @@ export const Profile = () => {
                 className="text-primary-400"
               >
                 <Edit2 size={16} className="mr-1" />
-                แก้ไข
+                Edit
               </Button>
             ) : (
               <div className="flex gap-2">
@@ -170,7 +170,7 @@ export const Profile = () => {
                   className="text-dark-400"
                 >
                   <X size={16} className="mr-1" />
-                  ยกเลิก
+                  Cancel
                 </Button>
                 <Button
                   size="sm"
@@ -178,7 +178,7 @@ export const Profile = () => {
                   disabled={isLoading}
                 >
                   <Save size={16} className="mr-1" />
-                  {isLoading ? 'กำลังบันทึก...' : 'บันทึก'}
+                  {isLoading ? 'Saving...' : 'Save'}
                 </Button>
               </div>
             )}
@@ -189,7 +189,7 @@ export const Profile = () => {
             <div>
               <label className="block text-sm text-dark-400 mb-1">
                 <Mail size={14} className="inline mr-1" />
-                อีเมล
+                Email
               </label>
               <div className="px-3 py-2 bg-dark-700/50 rounded-lg text-dark-300">
                 {user?.email}
@@ -201,13 +201,13 @@ export const Profile = () => {
               <div>
                 <label className="block text-sm text-dark-400 mb-1">
                   <User size={14} className="inline mr-1" />
-                  ชื่อ
+                  Name
                 </label>
                 {isEditing ? (
                   <Input
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    placeholder="กรอกชื่อ"
+                    placeholder="Enter name"
                   />
                 ) : (
                   <div className="px-3 py-2 bg-dark-700/50 rounded-lg text-white">
@@ -219,13 +219,13 @@ export const Profile = () => {
               {/* Last Name */}
               <div>
                 <label className="block text-sm text-dark-400 mb-1">
-                  นามสกุล
+                  Last Name
                 </label>
                 {isEditing ? (
                   <Input
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    placeholder="กรอกนามสกุล"
+                    placeholder="Enter last name"
                   />
                 ) : (
                   <div className="px-3 py-2 bg-dark-700/50 rounded-lg text-white">
@@ -239,13 +239,13 @@ export const Profile = () => {
             <div>
               <label className="block text-sm text-dark-400 mb-1">
                 <Phone size={14} className="inline mr-1" />
-                เบอร์โทรศัพท์
+                Phone
               </label>
               {isEditing ? (
                 <Input
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="กรอกเบอร์โทรศัพท์"
+                  placeholder="Enter phone"
                 />
               ) : (
                 <div className="px-3 py-2 bg-dark-700/50 rounded-lg text-white">
@@ -258,13 +258,13 @@ export const Profile = () => {
             <div>
               <label className="block text-sm text-dark-400 mb-1">
                 <MapPin size={14} className="inline mr-1" />
-                แผนก/หน่วยงาน
+                Department/Unit
               </label>
               {isEditing ? (
                 <Input
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="กรอกแผนก"
+                  placeholder="Enter department"
                 />
               ) : (
                 <div className="px-3 py-2 bg-dark-700/50 rounded-lg text-white">
@@ -277,13 +277,13 @@ export const Profile = () => {
             <div>
               <label className="block text-sm text-dark-400 mb-1">
                 <Briefcase size={14} className="inline mr-1" />
-                ตำแหน่ง
+                Position
               </label>
               {isEditing ? (
                 <Input
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="กรอกตำแหน่ง"
+                  placeholder="Enter position"
                 />
               ) : (
                 <div className="px-3 py-2 bg-dark-700/50 rounded-lg text-white">
@@ -300,19 +300,19 @@ export const Profile = () => {
           <Card className="p-6">
             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
               <Shield size={16} />
-              บทบาทและองค์กร
+              Role and Organization
             </h3>
             
             <div className="space-y-3">
               <div>
-                <span className="text-xs text-dark-400">บทบาท</span>
+                <span className="text-xs text-dark-400">Role</span>
                 <div className={`mt-1 inline-block px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(user?.role || '')}`}>
                   {getRoleDisplay(user?.role || '')}
                 </div>
               </div>
               
               <div>
-                <span className="text-xs text-dark-400">องค์กร</span>
+                <span className="text-xs text-dark-400">Organization</span>
                 <div className="mt-1 text-white flex items-center gap-2">
                   <Building size={14} className="text-dark-400" />
                   {user?.organization_name || '-'}
@@ -326,7 +326,7 @@ export const Profile = () => {
             <Card className="p-6">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                 <CreditCard size={16} />
-                การสมัครสมาชิก
+                Subscription
               </h3>
               
               <div className={`p-3 rounded-lg ${subscriptionStatus.bg}`}>
@@ -341,7 +341,7 @@ export const Profile = () => {
                   </span>
                 </div>
                 <div className="text-xs text-dark-400 mt-2">
-                  หมดอายุ: {new Date(user?.subscription_end || '').toLocaleDateString('th-TH', {
+                  Expires: {new Date(user?.subscription_end || '').toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -354,18 +354,18 @@ export const Profile = () => {
                 className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-colors text-sm font-medium"
               >
                 <Key size={16} />
-                ต่ออายุด้วย License Key
+                Renew with License Key
               </Link>
             </Card>
           ) : (
             <Card className="p-6">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                 <CreditCard size={16} />
-                การสมัครสมาชิก
+                Subscription
               </h3>
               
               <div className="p-3 rounded-lg bg-dark-700/50">
-                <p className="text-sm text-dark-400">ยังไม่มี Subscription</p>
+                <p className="text-sm text-dark-400">No subscription yet</p>
               </div>
               
               <Link
@@ -373,7 +373,7 @@ export const Profile = () => {
                 className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors text-sm font-medium"
               >
                 <Key size={16} />
-                เปิดใช้งาน License Key
+                Activate License Key
               </Link>
             </Card>
           )}
@@ -382,14 +382,14 @@ export const Profile = () => {
           <Card className="p-6">
             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
               <Clock size={16} />
-              ข้อมูลบัญชี
+              Account Info
             </h3>
             
             <div className="space-y-3 text-sm">
               <div>
-                <span className="text-dark-400">สร้างบัญชีเมื่อ</span>
+                <span className="text-dark-400">Account Created</span>
                 <div className="text-white">
-                  {user?.created_at ? new Date(user.created_at).toLocaleDateString('th-TH', {
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -398,9 +398,9 @@ export const Profile = () => {
               </div>
               
               <div>
-                <span className="text-dark-400">เข้าสู่ระบบล่าสุด</span>
+                <span className="text-dark-400">Last Login</span>
                 <div className="text-white">
-                  {user?.last_login_at ? new Date(user.last_login_at).toLocaleString('th-TH') : '-'}
+                  {user?.last_login_at ? new Date(user.last_login_at).toLocaleString('en-US') : '-'}
                 </div>
               </div>
             </div>

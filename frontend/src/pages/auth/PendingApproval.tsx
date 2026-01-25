@@ -23,7 +23,7 @@ export default function PendingApproval() {
   const checkStatus = async () => {
     if (!email) {
       setStatus('error');
-      setError('ไม่พบอีเมลที่ต้องการตรวจสอบ');
+      setError('Email not found');
       return;
     }
 
@@ -34,7 +34,7 @@ export default function PendingApproval() {
       setStatus(data.status);
       setError(null);
     } catch (err: any) {
-      const message = err.response?.data?.detail || 'ไม่สามารถตรวจสอบสถานะได้';
+      const message = err.response?.data?.detail || 'Cannot check status';
       setError(message);
       setStatus('error');
     } finally {
@@ -58,43 +58,43 @@ export default function PendingApproval() {
       case 'loading':
         return {
           icon: <RefreshCw className="w-16 h-16 text-blue-400 animate-spin" />,
-          title: 'กำลังตรวจสอบ...',
-          description: 'กรุณารอสักครู่',
+          title: 'Checking...',
+          description: 'Please wait',
           color: 'blue',
         };
       case 'pending':
         return {
           icon: <Clock className="w-16 h-16 text-yellow-400" />,
-          title: 'รอการอนุมัติ',
-          description: 'คำขอลงทะเบียนของคุณกำลังรอการตรวจสอบจากผู้ดูแลระบบ',
+          title: 'Pending Approval',
+          description: 'Your registration is pending admin review',
           color: 'yellow',
         };
       case 'approved':
         return {
           icon: <CheckCircle className="w-16 h-16 text-green-400" />,
-          title: 'อนุมัติแล้ว!',
-          description: 'บัญชีของคุณพร้อมใช้งานแล้ว คุณสามารถเข้าสู่ระบบได้เลย',
+          title: 'Approved!',
+          description: 'Your account is ready. You can login now',
           color: 'green',
         };
       case 'rejected':
         return {
           icon: <XCircle className="w-16 h-16 text-red-400" />,
-          title: 'ไม่อนุมัติ',
-          description: statusData?.rejection_reason || 'คำขอลงทะเบียนของคุณถูกปฏิเสธ',
+          title: 'Not Approved',
+          description: statusData?.rejection_reason || 'Your registration was rejected',
           color: 'red',
         };
       case 'error':
         return {
           icon: <XCircle className="w-16 h-16 text-red-400" />,
-          title: 'เกิดข้อผิดพลาด',
-          description: error || 'ไม่สามารถตรวจสอบสถานะได้',
+          title: 'Error',
+          description: error || 'Cannot check status',
           color: 'red',
         };
       default:
         return {
           icon: <Clock className="w-16 h-16 text-gray-400" />,
-          title: 'ไม่ทราบสถานะ',
-          description: 'กรุณาลองใหม่อีกครั้ง',
+          title: 'Unknown Status',
+          description: 'Please try again',
           color: 'gray',
         };
     }
@@ -134,7 +134,7 @@ export default function PendingApproval() {
           {/* Timestamp */}
           {statusData?.created_at && (
             <p className="text-sm text-gray-500 mb-6">
-              ส่งคำขอเมื่อ: {new Date(statusData.created_at).toLocaleString('th-TH')}
+              Submitted: {new Date(statusData.created_at).toLocaleString('en-US')}
             </p>
           )}
 
@@ -150,12 +150,12 @@ export default function PendingApproval() {
                 {isRefreshing ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    กำลังตรวจสอบ...
+                    Checking...
                   </>
                 ) : (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2" />
-                    ตรวจสอบสถานะ
+                    Check Status
                   </>
                 )}
               </Button>
@@ -164,7 +164,7 @@ export default function PendingApproval() {
             {status === 'approved' && (
               <Link to="/login">
                 <Button className="w-full">
-                  เข้าสู่ระบบ
+                  Login
                 </Button>
               </Link>
             )}
@@ -172,7 +172,7 @@ export default function PendingApproval() {
             {status === 'rejected' && (
               <Link to="/register">
                 <Button variant="secondary" className="w-full">
-                  สมัครใหม่
+                  Register Again
                 </Button>
               </Link>
             )}
@@ -180,7 +180,7 @@ export default function PendingApproval() {
             <Link to="/">
               <Button variant="ghost" className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                กลับหน้าแรก
+                Back to Home
               </Button>
             </Link>
           </div>
@@ -189,11 +189,11 @@ export default function PendingApproval() {
         {/* Tips for pending */}
         {status === 'pending' && (
           <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-            <h3 className="text-yellow-400 font-medium mb-2">💡 ขณะรอการอนุมัติ</h3>
+            <h3 className="text-yellow-400 font-medium mb-2">💡 While Pending Approval</h3>
             <ul className="text-sm text-gray-400 space-y-1">
-              <li>• ผู้ดูแลระบบจะตรวจสอบข้อมูลของคุณ</li>
-              <li>• คุณจะได้รับการแจ้งเตือนทางอีเมลเมื่อมีการอนุมัติ</li>
-              <li>• ระยะเวลาอนุมัติโดยทั่วไป 1-2 วันทำการ</li>
+              <li>• Admin will review your information</li>
+              <li>• You will receive email notification upon approval</li>
+              <li>• Typical approval time is 1-2 business days</li>
             </ul>
           </div>
         )}

@@ -43,14 +43,14 @@ type LayoutType = 'cose' | 'circle' | 'grid' | 'breadthfirst' | 'concentric';
 
 // Node type configuration
 const NODE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
-  bank_account: { emoji: '🏦', color: '#3B82F6', label: 'บัญชีธนาคาร' },
+  bank_account: { emoji: '🏦', color: '#3B82F6', label: 'Bank Account' },
   crypto_wallet: { emoji: '💰', color: '#F59E0B', label: 'Crypto Wallet' },
-  person: { emoji: '👤', color: '#10B981', label: 'บุคคล' },
-  company: { emoji: '🏢', color: '#8B5CF6', label: 'บริษัท' },
+  person: { emoji: '👤', color: '#10B981', label: 'Person' },
+  company: { emoji: '🏢', color: '#8B5CF6', label: 'Company' },
   exchange: { emoji: '🔄', color: '#EC4899', label: 'Exchange' },
-  suspect: { emoji: '⚠️', color: '#EF4444', label: 'ผู้ต้องสงสัย' },
-  victim: { emoji: '🛡️', color: '#06B6D4', label: 'ผู้เสียหาย' },
-  unknown: { emoji: '❓', color: '#6B7280', label: 'ไม่ระบุ' },
+  suspect: { emoji: '⚠️', color: '#EF4444', label: 'Suspect' },
+  victim: { emoji: '🛡️', color: '#06B6D4', label: 'Victim' },
+  unknown: { emoji: '❓', color: '#6B7280', label: 'Unknown' },
 };
 
 // Edge type colors
@@ -407,19 +407,19 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
               {summary.nodeCount} Nodes
             </span>
             <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-dark-700 text-dark-300' : 'bg-gray-200 text-gray-600'}`}>
-              {summary.edgeCount} ธุรกรรม
+              {summary.edgeCount} transactions
             </span>
             <span className={`px-2 py-1 rounded text-xs bg-amber-500/20 text-amber-400`}>
               {formatCurrency(summary.totalFlow)}
             </span>
             {summary.suspectCount > 0 && (
               <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">
-                ⚠️ {summary.suspectCount} ผู้ต้องสงสัย
+                ⚠️ {summary.suspectCount} Suspect
               </span>
             )}
             {summary.highRiskCount > 0 && (
               <span className="px-2 py-1 rounded text-xs bg-orange-500/20 text-orange-400">
-                🔥 {summary.highRiskCount} เสี่ยงสูง
+                🔥 {summary.highRiskCount} High Risk
               </span>
             )}
           </div>
@@ -468,9 +468,9 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
 
         {/* Instructions */}
         <div className={`absolute bottom-3 left-3 flex items-center gap-3 text-xs px-3 py-2 rounded-lg ${darkMode ? 'bg-dark-900/90 text-dark-400' : 'bg-white/90 text-gray-500'}`}>
-          <span>🖱️ ลาก Node</span>
-          <span>🔍 Scroll ซูม</span>
-          <span>👆 คลิกดู Connections</span>
+          <span>🖱️ Drag Node</span>
+          <span>🔍 Scroll to Zoom</span>
+          <span>👆 Click to view Connections</span>
         </div>
 
         {/* Selected Node Info */}
@@ -535,7 +535,7 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
         <div className={`flex items-center gap-4 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>โอนธนาคาร</span>
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Bank Transfer</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
@@ -543,7 +543,7 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
           </div>
           <div className="flex items-center gap-2 text-xs">
             <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.cash }} />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>เงินสด</span>
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Cash</span>
           </div>
         </div>
       </div>

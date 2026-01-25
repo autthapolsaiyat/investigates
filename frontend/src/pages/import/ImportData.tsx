@@ -1,6 +1,6 @@
 /**
- * Import Data Page - นำเข้าข้อมูลสำหรับวิเคราะห์
- * รองรับ CSV, Excel พร้อม Auto-Link Detection
+ * Import Data Page - Import data for analysis
+ * Supports CSV, Excel with Auto-Link Detection
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
@@ -48,33 +48,33 @@ const importTemplates: ImportTemplate[] = [
   {
     id: 'bank_transactions',
     name: 'Bank Transactions',
-    nameTh: 'ธุรกรรมธนาคาร',
+    nameTh: 'Bank Transaction',
     icon: CreditCard,
-    description: 'นำเข้าข้อมูลการโอนเงินจาก Bank Statement',
+    description: 'Import bank transfer data from statements',
     requiredFields: ['date', 'from_account', 'to_account', 'amount'],
     optionalFields: ['time', 'bank', 'from_name', 'to_name', 'note', 'ref'],
     sampleData: [
-      { date: '2026-01-09', time: '14:30:00', from_account: '123-4-56789-0', to_account: '987-6-54321-0', amount: '50000', bank: 'KBANK', from_name: 'นาย ก', to_name: 'นาย ข', note: 'โอนเงิน' }
+      { date: '2026-01-09', time: '14:30:00', from_account: '123-4-56789-0', to_account: '987-6-54321-0', amount: '50000', bank: 'KBANK', from_name: 'Mr. A', to_name: 'Mr. B', note: 'Transfer' }
     ]
   },
   {
     id: 'persons',
     name: 'Persons (Suspects/Victims)',
-    nameTh: 'บุคคล (ผู้ต้องสงสัย/ผู้เสียหาย)',
+    nameTh: 'Person (Suspect/Victim)',
     icon: Users,
-    description: 'นำเข้ารายชื่อผู้ต้องสงสัยหรือผู้เสียหาย',
+    description: 'Import suspect or victim list',
     requiredFields: ['name', 'id_card', 'type'],
     optionalFields: ['phone', 'province', 'bank_account', 'bank_name', 'role', 'notes'],
     sampleData: [
-      { name: 'นาย ก ข', id_card: '1-1234-56789-01-0', phone: '081-234-5678', type: 'suspect', province: 'กรุงเทพฯ', bank_account: '123-4-56789-0', bank_name: 'KBANK', role: 'หัวหน้า' }
+      { name: 'Mr. A B', id_card: '1-1234-56789-01-0', phone: '081-234-5678', type: 'suspect', province: 'Bangkok', bank_account: '123-4-56789-0', bank_name: 'KBANK', role: 'Leader' }
     ]
   },
   {
     id: 'call_logs',
     name: 'Call Logs / SMS',
-    nameTh: 'ข้อมูลโทรศัพท์',
+    nameTh: 'Phone Data',
     icon: Phone,
-    description: 'นำเข้า Call Log จาก Digital Forensic Tools',
+    description: 'Import Call Log from Digital Forensic Tools',
     requiredFields: ['datetime', 'from_number', 'to_number', 'type'],
     optionalFields: ['duration', 'message', 'device_id'],
     sampleData: [
@@ -84,9 +84,9 @@ const importTemplates: ImportTemplate[] = [
   {
     id: 'crypto',
     name: 'Crypto Wallets',
-    nameTh: 'กระเป๋าคริปโต',
+    nameTh: 'Crypto Wallet',
     icon: Wallet,
-    description: 'นำเข้าข้อมูล Blockchain Transactions',
+    description: 'Import Data Blockchain Transactions',
     requiredFields: ['wallet_address', 'blockchain', 'date', 'amount', 'direction'],
     optionalFields: ['counterparty', 'tx_hash', 'usd_value'],
     sampleData: [
@@ -97,19 +97,19 @@ const importTemplates: ImportTemplate[] = [
 
 // Field name mappings (Thai to English)
 const fieldAliases: Record<string, string[]> = {
-  date: ['วันที่', 'date', 'transaction_date', 'trans_date'],
-  time: ['เวลา', 'time', 'transaction_time'],
-  from_account: ['บัญชีต้นทาง', 'from_account', 'source_account', 'debit_account', 'บัญชีผู้โอน'],
-  to_account: ['บัญชีปลายทาง', 'to_account', 'dest_account', 'credit_account', 'บัญชีผู้รับ'],
-  amount: ['จำนวนเงิน', 'amount', 'value', 'sum', 'ยอดเงิน'],
-  bank: ['ธนาคาร', 'bank', 'bank_name'],
-  from_name: ['ชื่อผู้โอน', 'from_name', 'sender_name', 'ชื่อต้นทาง'],
-  to_name: ['ชื่อผู้รับ', 'to_name', 'receiver_name', 'ชื่อปลายทาง'],
-  name: ['ชื่อ', 'name', 'full_name', 'ชื่อ-นามสกุล'],
-  id_card: ['เลขบัตรประชาชน', 'id_card', 'citizen_id', 'national_id', 'บัตรประชาชน'],
-  phone: ['เบอร์โทร', 'phone', 'mobile', 'tel', 'โทรศัพท์'],
-  type: ['ประเภท', 'type', 'category', 'สถานะ'],
-  province: ['จังหวัด', 'province', 'city', 'location'],
+  date: ['Date', 'date', 'transaction_date', 'trans_date'],
+  time: ['Time', 'time', 'transaction_time'],
+  from_account: ['Source Account', 'from_account', 'source_account', 'debit_account', 'Sender Account'],
+  to_account: ['Destination Account', 'to_account', 'dest_account', 'credit_account', 'Receiver Account'],
+  amount: ['Amount', 'amount', 'value', 'sum', 'Sum'],
+  bank: ['Bank', 'bank', 'bank_name'],
+  from_name: ['Sender Name', 'from_name', 'sender_name', 'Source Name'],
+  to_name: ['Receiver Name', 'to_name', 'receiver_name', 'Destination Name'],
+  name: ['Name', 'name', 'full_name', 'Full Name'],
+  id_card: ['ID Card Number', 'id_card', 'citizen_id', 'national_id', 'ID Card'],
+  phone: ['Phone', 'phone', 'mobile', 'tel', 'Phone'],
+  type: ['Type', 'type', 'category', 'Status'],
+  province: ['Province', 'province', 'city', 'location'],
 };
 
 export const ImportData = () => {
@@ -198,7 +198,7 @@ export const ImportData = () => {
       } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
         // For Excel files, we'd need a library like xlsx
         // For now, show a message
-        setImportErrors(['รองรับไฟล์ Excel เร็วๆ นี้ - กรุณาใช้ CSV ก่อน']);
+        setImportErrors(['Excel support coming soon - Please use CSV for now']);
         setIsProcessing(false);
         return;
       }
@@ -223,7 +223,7 @@ export const ImportData = () => {
       setStep(3);
     } catch (error) {
       console.error('File parsing error:', error);
-      setImportErrors(['ไม่สามารถอ่านไฟล์ได้ - กรุณาตรวจสอบรูปแบบไฟล์']);
+      setImportErrors(['Cannot read file - Please check file format']);
     } finally {
       setIsProcessing(false);
     }
@@ -265,7 +265,7 @@ export const ImportData = () => {
     // Check required field mappings
     requiredMappings.forEach(m => {
       if (!m.sourceField) {
-        errors.push(`ฟิลด์ "${m.targetField}" จำเป็นต้องระบุ`);
+        errors.push(`Field "${m.targetField}" is required`);
       }
     });
     
@@ -280,7 +280,7 @@ export const ImportData = () => {
     });
     
     if (invalidRows > 0) {
-      errors.push(`พบ ${invalidRows} แถวที่ข้อมูลไม่ครบ`);
+      errors.push(`Found ${invalidRows} rows with incomplete data`);
     }
     
     return { valid: errors.length === 0, errors };
@@ -348,7 +348,7 @@ export const ImportData = () => {
               to_node_id: toNode.id,
               edge_type: 'transfer',
               amount: parseFloat(String(tx.amount)) || 0,
-              label: String(tx.note || 'โอนเงิน'),
+              label: String(tx.note || 'Transfer'),
               transaction_date: String(tx.date),
               transaction_ref: String(tx.ref || '')
             });
@@ -374,7 +374,7 @@ export const ImportData = () => {
       setStep(4);
     } catch (error) {
       console.error('Import error:', error);
-      setImportErrors(['เกิดข้อผิดพลาดในการนำเข้าข้อมูล']);
+      setImportErrors(['Error importing data']);
     } finally {
       setIsProcessing(false);
     }
@@ -418,14 +418,14 @@ export const ImportData = () => {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-3">
             <Database className="text-primary-500" />
-            นำเข้าข้อมูล
+            Import Data
           </h1>
-          <p className="text-dark-400 mt-1">Import Wizard - นำเข้าข้อมูลสำหรับวิเคราะห์เครือข่าย</p>
+          <p className="text-dark-400 mt-1">Import Wizard - Import data for analysisNetwork</p>
         </div>
         {step > 1 && (
           <Button variant="ghost" onClick={resetWizard}>
             <RefreshCw size={18} className="mr-2" />
-            เริ่มใหม่
+            Start Over
           </Button>
         )}
       </div>
@@ -433,10 +433,10 @@ export const ImportData = () => {
       {/* Progress Steps */}
       <div className="flex items-center justify-center gap-2">
         {[
-          { num: 1, label: 'เลือกประเภท' },
-          { num: 2, label: 'อัปโหลดไฟล์' },
-          { num: 3, label: 'ตรวจสอบข้อมูล' },
-          { num: 4, label: 'เสร็จสิ้น' }
+          { num: 1, label: 'SelectType' },
+          { num: 2, label: 'Upload File' },
+          { num: 3, label: 'Review Data' },
+          { num: 4, label: 'Complete' }
         ].map((s, idx) => (
           <div key={s.num} className="flex items-center">
             <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
@@ -463,7 +463,7 @@ export const ImportData = () => {
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <FileSpreadsheet className="text-primary-400" />
-              เลือกประเภทข้อมูลที่ต้องการนำเข้า
+              Select Data Type to Import
             </h3>
             <div className="grid grid-cols-2 gap-4">
               {importTemplates.map(template => (
@@ -486,7 +486,7 @@ export const ImportData = () => {
                       <p className="text-sm text-dark-400 mt-1">{template.description}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="info" className="text-xs">
-                          {template.requiredFields.length} ฟิลด์จำเป็น
+                          {template.requiredFields.length} Required Fields
                         </Badge>
                         <Button 
                           variant="ghost" 
@@ -516,17 +516,17 @@ export const ImportData = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Upload className="text-primary-400" />
-                อัปโหลดไฟล์ {selectedTemplate.nameTh}
+                Upload File {selectedTemplate.nameTh}
               </h3>
               <Button variant="ghost" size="sm" onClick={() => downloadTemplate(selectedTemplate)}>
                 <Download size={14} className="mr-1" />
-                ดาวน์โหลด Template
+                Download Template
               </Button>
             </div>
 
             {/* Case Selector */}
             <div className="mb-4">
-              <label className="text-sm font-medium text-dark-300 mb-2 block">เลือกคดีที่จะนำเข้า:</label>
+              <label className="text-sm font-medium text-dark-300 mb-2 block">Select Case to Import:</label>
               <select
                 className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white w-full max-w-md"
                 value={selectedCaseId || ''}
@@ -563,7 +563,7 @@ export const ImportData = () => {
               {isProcessing ? (
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="w-12 h-12 text-primary-500 animate-spin" />
-                  <p className="text-lg font-medium">กำลังประมวลผลไฟล์...</p>
+                  <p className="text-lg font-medium">Processing file...</p>
                 </div>
               ) : uploadedFile ? (
                 <div className="flex flex-col items-center gap-3">
@@ -576,9 +576,9 @@ export const ImportData = () => {
               ) : (
                 <div className="flex flex-col items-center gap-3">
                   <Upload className="w-12 h-12 text-dark-400" />
-                  <p className="text-lg font-medium">ลากไฟล์มาวางที่นี่</p>
-                  <p className="text-sm text-dark-400">หรือคลิกเพื่อเลือกไฟล์</p>
-                  <p className="text-xs text-dark-500 mt-2">รองรับ .csv, .xlsx, .xls</p>
+                  <p className="text-lg font-medium">Drag and drop files here</p>
+                  <p className="text-sm text-dark-400">or click to select file</p>
+                  <p className="text-xs text-dark-500 mt-2">Supports .csv, .xlsx, .xls</p>
                 </div>
               )}
             </div>
@@ -587,7 +587,7 @@ export const ImportData = () => {
             <div className="mt-4 p-4 bg-dark-800 rounded-lg">
               <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                 <HelpCircle size={14} className="text-primary-400" />
-                ฟิลด์ที่ต้องมี
+                Required Fields
               </h4>
               <div className="flex flex-wrap gap-2">
                 {selectedTemplate.requiredFields.map(field => (
@@ -608,7 +608,7 @@ export const ImportData = () => {
               <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <h4 className="text-sm font-medium text-red-400 flex items-center gap-2 mb-2">
                   <AlertCircle size={14} />
-                  พบข้อผิดพลาด
+                  Errors Found
                 </h4>
                 <ul className="text-sm text-red-300 space-y-1">
                   {importErrors.map((err, idx) => (
@@ -629,19 +629,19 @@ export const ImportData = () => {
             <div className="grid grid-cols-5 gap-4">
               <Card className="p-4 text-center">
                 <p className="text-2xl font-bold text-primary-400">{importStats.totalRows}</p>
-                <p className="text-sm text-dark-400">แถวทั้งหมด</p>
+                <p className="text-sm text-dark-400">All rows</p>
               </Card>
               <Card className="p-4 text-center">
                 <p className="text-2xl font-bold text-green-400">{importStats.validRows}</p>
-                <p className="text-sm text-dark-400">ถูกต้อง</p>
+                <p className="text-sm text-dark-400">Valid</p>
               </Card>
               <Card className="p-4 text-center">
                 <p className="text-2xl font-bold text-red-400">{importStats.errorRows}</p>
-                <p className="text-sm text-dark-400">ผิดพลาด</p>
+                <p className="text-sm text-dark-400">Invalid</p>
               </Card>
               <Card className="p-4 text-center">
                 <p className="text-2xl font-bold text-yellow-400">{importStats.duplicates}</p>
-                <p className="text-sm text-dark-400">ซ้ำ</p>
+                <p className="text-sm text-dark-400">Duplicate</p>
               </Card>
               <Card className="p-4 text-center">
                 <p className="text-2xl font-bold text-blue-400">{importStats.autoLinked}</p>
@@ -654,7 +654,7 @@ export const ImportData = () => {
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Link2 className="text-primary-400" />
-              จับคู่ฟิลด์ (Field Mapping)
+              Field Mapping
             </h3>
             <div className="grid grid-cols-2 gap-4">
               {fieldMappings.map(mapping => (
@@ -673,7 +673,7 @@ export const ImportData = () => {
                       value={mapping.sourceField}
                       onChange={(e) => updateFieldMapping(mapping.targetField, e.target.value)}
                     >
-                      <option value="">-- ไม่เลือก --</option>
+                      <option value="">-- Not Selected --</option>
                       {detectedHeaders.map(header => (
                         <option key={header} value={header}>{header}</option>
                       ))}
@@ -695,7 +695,7 @@ export const ImportData = () => {
             >
               <h3 className="font-semibold flex items-center gap-2">
                 <Eye className="text-primary-400" />
-                ตัวอย่างข้อมูล ({parsedData.length} แถว)
+                Sample Data ({parsedData.length} rows)
               </h3>
               {previewExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </div>
@@ -726,7 +726,7 @@ export const ImportData = () => {
                 </table>
                 {parsedData.length > 5 && (
                   <p className="text-center text-dark-400 text-sm mt-2">
-                    ... และอีก {parsedData.length - 5} แถว
+                    ... and {parsedData.length - 5} rows
                   </p>
                 )}
               </div>
@@ -738,7 +738,7 @@ export const ImportData = () => {
             <Card className="p-4 bg-red-500/10 border-red-500/30">
               <h4 className="font-medium text-red-400 flex items-center gap-2 mb-2">
                 <AlertCircle size={16} />
-                ข้อผิดพลาด
+                Errors
               </h4>
               <ul className="text-sm text-red-300 space-y-1">
                 {importErrors.map((err, idx) => (
@@ -751,23 +751,23 @@ export const ImportData = () => {
           {/* Action Buttons */}
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => setStep(2)}>
-              ย้อนกลับ
+              Back
             </Button>
             <div className="flex items-center gap-3">
               <Button variant="secondary" onClick={resetWizard}>
                 <X size={18} className="mr-2" />
-                ยกเลิก
+                Cancel
               </Button>
               <Button onClick={processImport} disabled={isProcessing}>
                 {isProcessing ? (
                   <>
                     <Loader2 size={18} className="mr-2 animate-spin" />
-                    กำลังนำเข้า...
+                    LoadingImport...
                   </>
                 ) : (
                   <>
                     <Save size={18} className="mr-2" />
-                    นำเข้าข้อมูล
+                    Import Data
                   </>
                 )}
               </Button>
@@ -783,16 +783,16 @@ export const ImportData = () => {
             <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold">นำเข้าข้อมูลสำเร็จ!</h2>
+            <h2 className="text-2xl font-bold">Import DataSuccess!</h2>
             <p className="text-dark-400">
-              นำเข้าข้อมูลเรียบร้อยแล้ว {importStats?.validRows || 0} รายการ
+              Data imported successfully {importStats?.validRows || 0} items
             </p>
             
             {importStats && (
               <div className="grid grid-cols-3 gap-6 my-6">
                 <div className="text-center">
                   <p className="text-3xl font-bold text-green-400">{importStats.validRows}</p>
-                  <p className="text-sm text-dark-400">นำเข้าสำเร็จ</p>
+                  <p className="text-sm text-dark-400">ImportSuccess</p>
                 </div>
                 <div className="text-center">
                   <p className="text-3xl font-bold text-blue-400">{importStats.autoLinked}</p>
@@ -800,7 +800,7 @@ export const ImportData = () => {
                 </div>
                 <div className="text-center">
                   <p className="text-3xl font-bold text-red-400">{importStats.errorRows}</p>
-                  <p className="text-sm text-dark-400">ผิดพลาด</p>
+                  <p className="text-sm text-dark-400">Invalid</p>
                 </div>
               </div>
             )}
@@ -808,11 +808,11 @@ export const ImportData = () => {
             <div className="flex items-center gap-4">
               <Button variant="secondary" onClick={resetWizard}>
                 <Upload size={18} className="mr-2" />
-                นำเข้าเพิ่มเติม
+                Import More
               </Button>
               <Button onClick={() => window.location.href = '/forensic-report'}>
                 <Eye size={18} className="mr-2" />
-                ดูผลลัพธ์
+                View Results
               </Button>
             </div>
           </div>

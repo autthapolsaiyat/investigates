@@ -60,18 +60,18 @@ const SubscriptionBadge = ({ subscriptionEnd }: { subscriptionEnd: string }) => 
       <div className="flex items-center gap-2 mb-1">
         <CreditCard size={12} className={textColor} />
         <span className={`text-xs font-medium ${textColor}`}>
-          {status === 'expired' ? 'หมดอายุแล้ว' : status === 'expiring' ? 'ใกล้หมดอายุ' : 'Subscription'}
+          {status === 'expired' ? 'Expired' : status === 'expiring' ? 'Expiring Soon' : 'Subscription'}
         </span>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-xs text-dark-400">
           {status === 'expired' 
-            ? `หมด ${Math.abs(daysLeft)} วันที่แล้ว`
-            : `เหลือ ${daysLeft} วัน`
+            ? `Expired ${Math.abs(daysLeft)} days ago`
+            : `${daysLeft} days left`
           }
         </span>
         <span className="text-xs text-dark-500">
-          {endDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
+          {endDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: '2-digit' })}
         </span>
       </div>
     </div>
@@ -141,7 +141,7 @@ const NotificationBell = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-lg hover:bg-dark-700 transition-colors relative"
-        title="การแจ้งเตือน"
+        title="Notifications"
       >
         <Bell size={18} className="text-dark-400" />
         {unreadCount > 0 && (
@@ -154,14 +154,14 @@ const NotificationBell = () => {
       {isOpen && (
         <div className="absolute bottom-full left-0 mb-2 w-80 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50">
           <div className="p-3 border-b border-dark-700 flex items-center justify-between">
-            <h3 className="text-sm font-medium text-white">การแจ้งเตือน</h3>
+            <h3 className="text-sm font-medium text-white">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="text-xs text-primary-400">{unreadCount} ยังไม่อ่าน</span>
+              <span className="text-xs text-primary-400">{unreadCount} unread</span>
             )}
           </div>
           <div className="max-h-64 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-4 text-center text-dark-400 text-sm">ไม่มีการแจ้งเตือน</div>
+              <div className="p-4 text-center text-dark-400 text-sm">No notifications</div>
             ) : (
               notifications.map(n => (
                 <div
@@ -326,7 +326,7 @@ export const Sidebar = () => {
 
       {/* Case Selector */}
       <div className="p-3 border-b border-dark-700">
-        <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-1">เลือกคดี</p>
+        <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 px-1">Select Case</p>
         <div className="relative">
           <button
             onClick={() => setIsCaseDropdownOpen(!isCaseDropdownOpen)}
@@ -336,7 +336,7 @@ export const Sidebar = () => {
             {isLoadingCases ? (
               <div className="flex items-center gap-2 text-dark-400">
                 <Loader2 size={14} className="animate-spin" />
-                <span className="text-sm">กำลังโหลด...</span>
+                <span className="text-sm">Loading...</span>
               </div>
             ) : selectedCase ? (
               <div className="flex-1 min-w-0">
@@ -344,7 +344,7 @@ export const Sidebar = () => {
                 <p className="text-xs text-dark-400 truncate">{selectedCase.title}</p>
               </div>
             ) : (
-              <span className="text-sm text-dark-400">-- เลือกคดี --</span>
+              <span className="text-sm text-dark-400">-- Select Case --</span>
             )}
             <ChevronDown size={14} className={`text-dark-400 transition-transform flex-shrink-0 ${isCaseDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -364,7 +364,7 @@ export const Sidebar = () => {
                 </button>
               )) : (
                 <div className="p-3 text-center text-dark-400 text-sm">
-                  ไม่มีคดีในระบบ
+                  No cases found
                 </div>
               )}
             </div>
@@ -378,7 +378,7 @@ export const Sidebar = () => {
             className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-white hover:bg-dark-700 rounded transition-colors"
           >
             <RefreshCw size={12} className={isLoadingCounts ? 'animate-spin' : ''} />
-            {isLoadingCounts ? 'กำลังโหลด...' : 'รีเฟรชข้อมูล'}
+            {isLoadingCounts ? 'Loading...' : 'Refresh'}
           </button>
         )}
       </div>
@@ -422,7 +422,7 @@ export const Sidebar = () => {
                     </span>
                   )}
                   {noData && routeCountMap[item.to] && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-dark-600" title="ไม่มีข้อมูล" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-dark-600" title="No data" />
                   )}
                 </NavLink>
               );
@@ -466,7 +466,7 @@ export const Sidebar = () => {
           }
         >
           <BookOpen size={18} />
-          <span className="text-sm">วิธีการใช้งาน</span>
+          <span className="text-sm">User Guide</span>
         </NavLink>
       </div>
 
@@ -477,7 +477,7 @@ export const Sidebar = () => {
           className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-dark-300 hover:bg-dark-700 hover:text-white transition-colors relative"
         >
           <Bug size={18} />
-          <span className="text-sm">แจ้งปัญหา</span>
+          <span className="text-sm">Report Issue</span>
           {unreadTickets > 0 && (
             <span className="ml-auto px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full min-w-[20px] text-center">
               {unreadTickets}
@@ -494,7 +494,7 @@ export const Sidebar = () => {
             }`
           }
         >
-          <span className="text-sm ml-7">ดู Tickets ทั้งหมด</span>
+          <span className="text-sm ml-7">View All Tickets</span>
         </NavLink>
       </div>
 
@@ -511,7 +511,7 @@ export const Sidebar = () => {
           }
         >
           <Settings size={18} />
-          <span className="text-sm">ตั้งค่า</span>
+          <span className="text-sm">Settings</span>
         </NavLink>
       </div>
 

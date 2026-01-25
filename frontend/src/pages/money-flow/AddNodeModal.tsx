@@ -15,12 +15,12 @@ interface AddNodeModalProps {
 const API_BASE = 'https://investigates-api.azurewebsites.net/api/v1';
 
 const NODE_TYPES = [
-  { value: 'bank_account', label: 'บัญชีธนาคาร' },
+  { value: 'bank_account', label: 'Bank Account' },
   { value: 'crypto_wallet', label: 'Crypto Wallet' },
-  { value: 'person', label: 'บุคคล' },
-  { value: 'company', label: 'บริษัท' },
+  { value: 'person', label: 'Person' },
+  { value: 'company', label: 'Company' },
   { value: 'exchange', label: 'Exchange' },
-  { value: 'unknown', label: 'อื่นๆ' },
+  { value: 'unknown', label: 'Other' },
 ];
 
 export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModalProps) => {
@@ -42,7 +42,7 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
     e.preventDefault();
     
     if (!formData.label) {
-      setError('กรุณากรอกชื่อ Node');
+      setError('Please enter node name');
       return;
     }
 
@@ -76,10 +76,10 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
         });
       } else {
         const data = await response.json();
-        setError(data.detail || 'เกิดข้อผิดพลาดในการสร้าง Node');
+        setError(data.detail || 'Error creating node');
       }
     } catch (err) {
-      setError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      setError('Unable to connect to server');
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +98,7 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
         <div className="flex items-center justify-between p-4 border-b border-dark-700 sticky top-0 bg-dark-800">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <Plus className="text-primary-400" />
-            เพิ่ม Node ใหม่
+            Add New Node
           </h2>
           <button onClick={onClose} className="p-1 hover:bg-dark-700 rounded">
             <X size={20} className="text-dark-400" />
@@ -109,19 +109,19 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Label */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">ชื่อ Node *</label>
+            <label className="block text-sm text-dark-400 mb-1">Name Node *</label>
             <input
               type="text"
               value={formData.label}
               onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
-              placeholder="เช่น บัญชี A, Wallet X"
+              placeholder="e.g. Account A, Wallet X"
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none"
             />
           </div>
 
           {/* Node Type */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">ประเภท</label>
+            <label className="block text-sm text-dark-400 mb-1">Type</label>
             <select
               value={formData.node_type}
               onChange={(e) => setFormData(prev => ({ ...prev, node_type: e.target.value }))}
@@ -136,7 +136,7 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
           {/* Identifier */}
           <div>
             <label className="block text-sm text-dark-400 mb-1">
-              {formData.node_type === 'bank_account' ? 'เลขบัญชี' : 
+              {formData.node_type === 'bank_account' ? 'Account Number' : 
                formData.node_type === 'crypto_wallet' ? 'Wallet Address' :
                'Identifier'}
             </label>
@@ -152,27 +152,27 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
           {/* Bank Name / Institution */}
           <div>
             <label className="block text-sm text-dark-400 mb-1">
-              {formData.node_type === 'bank_account' ? 'ธนาคาร' : 
+              {formData.node_type === 'bank_account' ? 'Bank' : 
                formData.node_type === 'crypto_wallet' ? 'Blockchain' :
-               'สถาบัน/องค์กร'}
+               'Institution/Organization'}
             </label>
             <input
               type="text"
               value={formData.bank_name}
               onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
-              placeholder={formData.node_type === 'crypto_wallet' ? 'Ethereum, Bitcoin' : 'ธนาคารกสิกรไทย'}
+              placeholder={formData.node_type === 'crypto_wallet' ? 'Ethereum, Bitcoin' : 'Kasikorn Bank'}
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none"
             />
           </div>
 
           {/* Account Name */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">ชื่อบัญชี/เจ้าของ</label>
+            <label className="block text-sm text-dark-400 mb-1">Account Name/Owner</label>
             <input
               type="text"
               value={formData.account_name}
               onChange={(e) => setFormData(prev => ({ ...prev, account_name: e.target.value }))}
-              placeholder="ชื่อเจ้าของบัญชี"
+              placeholder="Account Owner Name"
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none"
             />
           </div>
@@ -186,7 +186,7 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
                 onChange={(e) => setFormData(prev => ({ ...prev, is_suspect: e.target.checked }))}
                 className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-red-500 focus:ring-red-500"
               />
-              <span className="text-sm text-red-400">ผู้ต้องสงสัย</span>
+              <span className="text-sm text-red-400">Suspect</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -195,14 +195,14 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
                 onChange={(e) => setFormData(prev => ({ ...prev, is_victim: e.target.checked }))}
                 className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-cyan-500 focus:ring-cyan-500"
               />
-              <span className="text-sm text-cyan-400">ผู้เสียหาย</span>
+              <span className="text-sm text-cyan-400">Victim</span>
             </label>
           </div>
 
           {/* Risk Score */}
           <div>
             <label className="block text-sm text-dark-400 mb-1">
-              ระดับความเสี่ยง: {formData.risk_score}
+              Risk Level: {formData.risk_score}
             </label>
             <input
               type="range"
@@ -213,20 +213,20 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
               className="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-dark-500 mt-1">
-              <span>ปลอดภัย</span>
-              <span>ต่ำ</span>
-              <span>ปานกลาง</span>
-              <span>สูง</span>
+              <span>Safe</span>
+              <span>Low</span>
+              <span>Medium</span>
+              <span>High</span>
             </div>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm text-dark-400 mb-1">หมายเหตุ</label>
+            <label className="block text-sm text-dark-400 mb-1">Notes</label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="รายละเอียดเพิ่มเติม..."
+              placeholder="Additional details..."
               rows={3}
               className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-500 focus:border-primary-500 focus:outline-none resize-none"
             />
@@ -242,18 +242,18 @@ export const AddNodeModal = ({ isOpen, onClose, caseId, onSuccess }: AddNodeModa
           {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>
-              ยกเลิก
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="mr-2 animate-spin" />
-                  กำลังสร้าง...
+                  Creating...
                 </>
               ) : (
                 <>
                   <Plus size={18} className="mr-2" />
-                  สร้าง Node
+                  Create Node
                 </>
               )}
             </Button>

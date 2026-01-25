@@ -51,31 +51,31 @@ const activityColors: Record<string, string> = {
 };
 
 const activityTypeLabels: Record<string, string> = {
-  auth_login: 'เข้าสู่ระบบ',
-  auth_logout: 'ออกจากระบบ',
-  auth_failed_login: 'เข้าสู่ระบบล้มเหลว',
-  auth_password_change: 'เปลี่ยนรหัสผ่าน',
-  auth_password_reset: 'รีเซ็ตรหัสผ่าน',
-  user_create: 'สร้างผู้ใช้',
-  user_update: 'แก้ไขผู้ใช้',
-  user_delete: 'ลบผู้ใช้',
-  registration_submit: 'ส่งคำขอสมัคร',
-  registration_approve: 'อนุมัติการสมัคร',
-  registration_reject: 'ปฏิเสธการสมัคร',
-  subscription_renew: 'ต่ออายุ Subscription',
-  subscription_cancel: 'ยกเลิก Subscription',
-  license_activate: 'เปิดใช้งาน License',
-  case_create: 'สร้างคดี',
-  case_update: 'แก้ไขคดี',
-  case_delete: 'ลบคดี',
-  case_restore: 'กู้คืนคดี',
-  evidence_upload: 'อัพโหลดหลักฐาน',
-  evidence_delete: 'ลบหลักฐาน',
-  ticket_create: 'สร้าง Ticket',
-  ticket_update: 'แก้ไข Ticket',
-  ticket_resolve: 'ปิด Ticket',
-  org_create: 'สร้างองค์กร',
-  org_update: 'แก้ไของค์กร',
+  auth_login: 'Login',
+  auth_logout: 'Logout',
+  auth_failed_login: 'LoginFailed',
+  auth_password_change: 'Password Change',
+  auth_password_reset: 'Password Reset',
+  user_create: 'CreateUser',
+  user_update: 'EditUser',
+  user_delete: 'DeleteUser',
+  registration_submit: 'Registration Submit',
+  registration_approve: 'Registration Approved',
+  registration_reject: 'Registration Rejected',
+  subscription_renew: 'Subscription Renewal',
+  subscription_cancel: 'Cancel Subscription',
+  license_activate: 'License Activated',
+  case_create: 'CreateCase',
+  case_update: 'EditCase',
+  case_delete: 'DeleteCase',
+  case_restore: 'Case Restored',
+  evidence_upload: 'Evidence Upload',
+  evidence_delete: 'DeleteEvidence',
+  ticket_create: 'Create Ticket',
+  ticket_update: 'Edit Ticket',
+  ticket_resolve: 'Close Ticket',
+  org_create: 'Organization Created',
+  org_update: 'EditOrganization',
 };
 
 export const ActivityLog = () => {
@@ -113,7 +113,7 @@ export const ActivityLog = () => {
       setTotal(response.total);
     } catch (err) {
       console.error('Failed to load activities:', err);
-      setError('ไม่สามารถโหลดข้อมูลได้');
+      setError('Cannot load data');
     } finally {
       setLoading(false);
     }
@@ -162,11 +162,11 @@ export const ActivityLog = () => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
     
-    if (minutes < 1) return 'เมื่อสักครู่';
-    if (minutes < 60) return `${minutes} นาทีที่แล้ว`;
-    if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`;
-    if (days < 7) return `${days} วันที่แล้ว`;
-    return date.toLocaleDateString('th-TH');
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minutes ago`;
+    if (hours < 24) return `${hours} hours ago`;
+    if (days < 7) return `${days} days ago`;
+    return date.toLocaleDateString('en-US');
   };
 
   return (
@@ -178,11 +178,11 @@ export const ActivityLog = () => {
             <Activity className="w-7 h-7 text-primary-400" />
             Activity Log
           </h1>
-          <p className="text-gray-400 mt-1">บันทึกกิจกรรมในระบบ</p>
+          <p className="text-gray-400 mt-1">Save system activity</p>
         </div>
         <Button variant="secondary" onClick={handleRefresh} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          รีเฟรช
+          Refresh
         </Button>
       </div>
 
@@ -196,7 +196,7 @@ export const ActivityLog = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_today}</p>
-                <p className="text-sm text-gray-400">วันนี้</p>
+                <p className="text-sm text-gray-400">Today</p>
               </div>
             </div>
           </Card>
@@ -208,7 +208,7 @@ export const ActivityLog = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_week}</p>
-                <p className="text-sm text-gray-400">สัปดาห์นี้</p>
+                <p className="text-sm text-gray-400">This week</p>
               </div>
             </div>
           </Card>
@@ -220,7 +220,7 @@ export const ActivityLog = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.total_month}</p>
-                <p className="text-sm text-gray-400">เดือนนี้</p>
+                <p className="text-sm text-gray-400">This month</p>
               </div>
             </div>
           </Card>
@@ -232,7 +232,7 @@ export const ActivityLog = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">{stats.top_users.length}</p>
-                <p className="text-sm text-gray-400">ผู้ใช้งานหลัก</p>
+                <p className="text-sm text-gray-400">Main users</p>
               </div>
             </div>
           </Card>
@@ -246,7 +246,7 @@ export const ActivityLog = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input
               type="text"
-              placeholder="ค้นหากิจกรรม..."
+              placeholder="SearchActivity..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
@@ -260,17 +260,17 @@ export const ActivityLog = () => {
               value={activityType}
               onChange={(e) => { setActivityType(e.target.value); setPage(1); }}
             >
-              <option value="">ทุกประเภท</option>
-              <option value="auth_login">เข้าสู่ระบบ</option>
-              <option value="auth_failed_login">เข้าสู่ระบบล้มเหลว</option>
-              <option value="case_create">สร้างคดี</option>
-              <option value="case_update">แก้ไขคดี</option>
-              <option value="case_delete">ลบคดี</option>
-              <option value="registration_approve">อนุมัติการสมัคร</option>
-              <option value="registration_reject">ปฏิเสธการสมัคร</option>
-              <option value="ticket_create">สร้าง Ticket</option>
-              <option value="subscription_renew">ต่ออายุ Subscription</option>
-              <option value="license_activate">เปิดใช้งาน License</option>
+              <option value="">All Types</option>
+              <option value="auth_login">Login</option>
+              <option value="auth_failed_login">LoginFailed</option>
+              <option value="case_create">CreateCase</option>
+              <option value="case_update">EditCase</option>
+              <option value="case_delete">DeleteCase</option>
+              <option value="registration_approve">Registration Approved</option>
+              <option value="registration_reject">Registration Rejected</option>
+              <option value="ticket_create">Create Ticket</option>
+              <option value="subscription_renew">Subscription Renewal</option>
+              <option value="license_activate">License Activated</option>
             </select>
           </div>
           
@@ -281,14 +281,14 @@ export const ActivityLog = () => {
               value={days}
               onChange={(e) => { setDays(Number(e.target.value)); setPage(1); }}
             >
-              <option value={1}>วันนี้</option>
-              <option value={7}>7 วัน</option>
-              <option value={30}>30 วัน</option>
-              <option value={90}>90 วัน</option>
+              <option value={1}>Today</option>
+              <option value={7}>7 days</option>
+              <option value={30}>30 days</option>
+              <option value={90}>90 days</option>
             </select>
           </div>
           
-          <Button type="submit" variant="primary">ค้นหา</Button>
+          <Button type="submit" variant="primary">Search</Button>
         </form>
       </Card>
 
@@ -297,7 +297,7 @@ export const ActivityLog = () => {
         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
           <p className="text-red-400">{error}</p>
           <Button variant="secondary" size="sm" className="mt-2" onClick={handleRefresh}>
-            ลองใหม่
+            Try Again
           </Button>
         </div>
       )}
@@ -307,12 +307,12 @@ export const ActivityLog = () => {
         {loading ? (
           <div className="p-8 text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-primary-400" />
-            <p className="text-gray-400 mt-2">กำลังโหลด...</p>
+            <p className="text-gray-400 mt-2">Loading...</p>
           </div>
         ) : activities.length === 0 ? (
           <div className="p-8 text-center">
             <Activity className="w-12 h-12 mx-auto text-gray-600" />
-            <p className="text-gray-400 mt-2">ไม่พบกิจกรรม</p>
+            <p className="text-gray-400 mt-2">Not foundActivity</p>
           </div>
         ) : (
           <div className="divide-y divide-dark-700">
@@ -329,7 +329,7 @@ export const ActivityLog = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-white font-medium">
-                          {activity.user_name || activity.user_email || 'ระบบ'}
+                          {activity.user_name || activity.user_email || 'System'}
                         </span>
                         <span className="text-gray-500">•</span>
                         <span className="text-primary-400">
@@ -366,7 +366,7 @@ export const ActivityLog = () => {
         {totalPages > 1 && (
           <div className="p-4 border-t border-dark-700 flex items-center justify-between">
             <p className="text-sm text-gray-400">
-              แสดง {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} จาก {total} รายการ
+              Show {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} from {total} List
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -378,7 +378,7 @@ export const ActivityLog = () => {
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-gray-400 text-sm">
-                หน้า {page} / {totalPages}
+                Page {page} / {totalPages}
               </span>
               <Button
                 variant="secondary"
@@ -400,7 +400,7 @@ export const ActivityLog = () => {
           <Card className="p-4">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Users className="w-5 h-5 text-primary-400" />
-              ผู้ใช้งานมากที่สุด (7 วัน)
+              Most Active Users (7 days)
             </h3>
             <div className="space-y-3">
               {stats.top_users.map((user, i) => (
@@ -421,7 +421,7 @@ export const ActivityLog = () => {
           <Card className="p-4">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary-400" />
-              กิจกรรมยอดนิยม (7 วัน)
+              Popular Activities (7 days)
             </h3>
             <div className="space-y-3">
               {stats.recent_actions.map((action, i) => (

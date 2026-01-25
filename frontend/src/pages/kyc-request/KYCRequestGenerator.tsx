@@ -1,6 +1,6 @@
 /**
  * KYC Request Generator
- * สร้างหนังสือขอข้อมูล KYC จาก Cryptocurrency Exchange
+ * Generate KYC Request Document for Cryptocurrency Exchange
  */
 import { useState } from 'react';
 import {
@@ -25,7 +25,7 @@ const EXCHANGES = [
     email: 'law@binance.com',
     country: 'Cayman Islands',
     logo: '🟡',
-    responseTime: '7-14 วัน'
+    responseTime: '7-14 days'
   },
   { 
     id: 'bitkub', 
@@ -33,7 +33,7 @@ const EXCHANGES = [
     email: 'compliance@bitkub.com',
     country: 'Thailand',
     logo: '🟢',
-    responseTime: '3-7 วัน'
+    responseTime: '3-7 days'
   },
   { 
     id: 'coinbase', 
@@ -41,7 +41,7 @@ const EXCHANGES = [
     email: 'law-enforcement@coinbase.com',
     country: 'USA',
     logo: '🔵',
-    responseTime: '14-21 วัน'
+    responseTime: '14-21 days'
   },
   { 
     id: 'kraken', 
@@ -49,7 +49,7 @@ const EXCHANGES = [
     email: 'compliance@kraken.com',
     country: 'USA',
     logo: '🟣',
-    responseTime: '7-14 วัน'
+    responseTime: '7-14 days'
   },
   { 
     id: 'okx', 
@@ -57,11 +57,11 @@ const EXCHANGES = [
     email: 'lawenforcement@okx.com',
     country: 'Seychelles',
     logo: '⚪',
-    responseTime: '7-14 วัน'
+    responseTime: '7-14 days'
   },
   { 
     id: 'other', 
-    name: 'อื่นๆ (กรอกเอง)', 
+    name: 'Other (Custom)', 
     email: '',
     country: '',
     logo: '📧',
@@ -99,8 +99,8 @@ const DEFAULT_DATA: KYCRequestData = {
   caseNumber: '',
   caseTitle: '',
   investigator: '',
-  investigatorRank: 'พ.ต.ท.',
-  investigatorUnit: 'กองบัญชาการตำรวจสืบสวนสอบสวนอาชญากรรมทางเทคโนโลยี',
+  investigatorRank: 'Pol. Lt. Col.',
+  investigatorUnit: 'Cyber Crime Investigation Bureau',
   investigatorPhone: '',
   investigatorEmail: '',
   exchangeId: 'binance',
@@ -115,14 +115,14 @@ const DEFAULT_DATA: KYCRequestData = {
 };
 
 const REQUESTED_INFO_OPTIONS = [
-  { id: 'account_info', label: 'ข้อมูลบัญชีผู้ใช้ (User Account Information)' },
-  { id: 'kyc_docs', label: 'เอกสาร KYC (บัตรประชาชน, Passport, ที่อยู่)' },
-  { id: 'transaction_history', label: 'ประวัติธุรกรรม (Transaction History)' },
-  { id: 'deposit_withdrawal', label: 'ประวัติการฝาก-ถอน (Deposit/Withdrawal History)' },
-  { id: 'ip_logs', label: 'บันทึก IP Address และ Login History' },
-  { id: 'linked_accounts', label: 'บัญชีที่เชื่อมโยง (Linked Accounts)' },
-  { id: 'bank_info', label: 'ข้อมูลบัญชีธนาคารที่ผูกไว้' },
-  { id: 'api_keys', label: 'ข้อมูล API Keys ที่สร้าง' },
+  { id: 'account_info', label: 'User Account Information (User Account Information)' },
+  { id: 'kyc_docs', label: 'KYC Documents (ID Card, Passport, Address)' },
+  { id: 'transaction_history', label: 'Transaction History (Transaction History)' },
+  { id: 'deposit_withdrawal', label: 'Deposit-Withdrawal History (Deposit/Withdrawal History)' },
+  { id: 'ip_logs', label: 'IP Address and Login History Records' },
+  { id: 'linked_accounts', label: 'Linked Accounts (Linked Accounts)' },
+  { id: 'bank_info', label: 'Linked Bank Account Information' },
+  { id: 'api_keys', label: 'Created API Keys Information' },
 ];
 
 export const KYCRequestGenerator = () => {
@@ -183,80 +183,80 @@ export const KYCRequestGenerator = () => {
       .join('\n');
 
     const urgencyText = {
-      normal: 'ปกติ (Normal)',
-      urgent: 'เร่งด่วน (Urgent)',
-      emergency: 'ฉุกเฉิน (Emergency)'
+      normal: 'Normal',
+      urgent: 'Urgent',
+      emergency: 'Emergency'
     }[formData.urgencyLevel];
 
     return `
 ═══════════════════════════════════════════════════════════════════════
-                    หนังสือขอความร่วมมือในการให้ข้อมูล
+                    Request for Information Cooperation Letter
                  REQUEST FOR USER INFORMATION DISCLOSURE
 ═══════════════════════════════════════════════════════════════════════
 
-                                                วันที่: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                                เลขที่: ${formData.caseNumber || '[รอกรอก]'}
+                                                Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                Ref No: ${formData.caseNumber || '[To be filled]'}
 
-เรียน   ${exchange?.name} Compliance Team
+To   ${exchange?.name} Compliance Team
         ${exchange?.email}
 
-เรื่อง   ขอความร่วมมือในการให้ข้อมูลผู้ใช้บริการเพื่อประกอบการสอบสวนคดีอาญา
+Subject: Request for User Information for Criminal Investigation
         Request for User Information for Criminal Investigation
 
-อ้างถึง  คดีหมายเลข: ${formData.caseNumber || '[รอกรอก]'}
-        ชื่อคดี: ${formData.caseTitle || '[รอกรอก]'}
+Reference: Case No: ${formData.caseNumber || '[To be filled]'}
+        Case Name: ${formData.caseTitle || '[To be filled]'}
 
 ───────────────────────────────────────────────────────────────────────
 
-ด้วยข้าพเจ้า ${formData.investigatorRank} ${formData.investigator}
-ตำแหน่ง พนักงานสอบสวน ${formData.investigatorUnit}
-ได้รับมอบหมายให้ทำการสอบสวนคดีอาญาตามอ้างอิงข้างต้น
+I, ${formData.investigatorRank} ${formData.investigator}
+Position: Investigator ${formData.investigatorUnit}
+have been assigned to investigate the criminal case referenced above.
 
-จากการสอบสวนพบว่า มีการใช้บริการแลกเปลี่ยน Cryptocurrency ของ ${exchange?.name}
-ในการกระทำความผิด จึงขอความร่วมมือในการให้ข้อมูลดังต่อไปนี้
-
-───────────────────────────────────────────────────────────────────────
-                        WALLET ADDRESSES / ที่อยู่กระเป๋า
-───────────────────────────────────────────────────────────────────────
-
-${walletList || '[รอกรอก Wallet Address]'}
+The investigation found that cryptocurrency exchange services of ${exchange?.name}
+were used in criminal activities. We request cooperation in providing the following information.
 
 ───────────────────────────────────────────────────────────────────────
-                        ช่วงเวลาที่ต้องการข้อมูล
+                        WALLET ADDRESSES
 ───────────────────────────────────────────────────────────────────────
 
-ตั้งแต่วันที่: ${formData.dateRangeStart || '[รอกรอก]'}
-ถึงวันที่: ${formData.dateRangeEnd || '[รอกรอก]'}
+${walletList || '[Wallet Address to be filled]'}
 
 ───────────────────────────────────────────────────────────────────────
-                        ข้อมูลที่ต้องการ
+                        Required Data Period
 ───────────────────────────────────────────────────────────────────────
 
-${requestedInfoText || '[รอเลือก]'}
+From Date: ${formData.dateRangeStart || '[To be filled]'}
+To Date: ${formData.dateRangeEnd || '[To be filled]'}
 
 ───────────────────────────────────────────────────────────────────────
-                        ระดับความเร่งด่วน: ${urgencyText}
+                        Required Information
 ───────────────────────────────────────────────────────────────────────
 
-${formData.additionalNotes ? `หมายเหตุเพิ่มเติม:\n${formData.additionalNotes}\n\n` : ''}
-จึงเรียนมาเพื่อขอความร่วมมือ และขอขอบคุณมา ณ โอกาสนี้
+${requestedInfoText || '[To be selected]'}
 
-                                                ขอแสดงความนับถือ
+───────────────────────────────────────────────────────────────────────
+                        Urgency Level: ${urgencyText}
+───────────────────────────────────────────────────────────────────────
+
+${formData.additionalNotes ? `Additional Notes:\n${formData.additionalNotes}\n\n` : ''}
+Therefore, we request your cooperation and thank you in advance
+
+                                                Sincerely yours
 
                                         ____________________________
-                                        (${formData.investigatorRank} ${formData.investigator || '[ชื่อ-สกุล]'})
-                                        พนักงานสอบสวน
+                                        (${formData.investigatorRank} ${formData.investigator || '[Name-Surname]'})
+                                        Investigator
                                         ${formData.investigatorUnit}
 
 ───────────────────────────────────────────────────────────────────────
-                            ข้อมูลติดต่อ
+                            DataContact
 ───────────────────────────────────────────────────────────────────────
 
-โทรศัพท์: ${formData.investigatorPhone || '[รอกรอก]'}
-อีเมล: ${formData.investigatorEmail || '[รอกรอก]'}
+Phone: ${formData.investigatorPhone || '[To be filled]'}
+Email: ${formData.investigatorEmail || '[To be filled]'}
 
 ═══════════════════════════════════════════════════════════════════════
-         เอกสารนี้เป็นความลับ ห้ามเผยแพร่โดยไม่ได้รับอนุญาต
+         This document is confidential. Do not distribute without permission
                      CONFIDENTIAL DOCUMENT
 ═══════════════════════════════════════════════════════════════════════
 `;
@@ -276,7 +276,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
       printWindow.document.write(`
         <html>
           <head>
-            <title>หนังสือขอข้อมูล KYC - ${formData.caseNumber}</title>
+            <title>KYC Data Request Letter - ${formData.caseNumber}</title>
             <style>
               body { font-family: 'Sarabun', sans-serif; padding: 40px; white-space: pre-wrap; line-height: 1.6; }
               @media print { body { padding: 20px; } }
@@ -313,19 +313,19 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
             <FileText className="text-primary-500" />
             KYC Request Generator
           </h1>
-          <p className="text-dark-400 mt-1">สร้างหนังสือขอข้อมูล KYC จาก Cryptocurrency Exchange</p>
+          <p className="text-dark-400 mt-1">Generate KYC Request Document for Cryptocurrency Exchange</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={() => setShowPreview(!showPreview)}>
-            {showPreview ? 'แก้ไข' : 'ดูตัวอย่าง'}
+            {showPreview ? 'Edit' : 'ViewExample'}
           </Button>
           <Button variant="secondary" onClick={printDocument}>
             <Printer size={18} className="mr-2" />
-            พิมพ์
+            Print
           </Button>
           <Button variant="primary" onClick={downloadDocument}>
             <Download size={18} className="mr-2" />
-            ดาวน์โหลด
+            Download
           </Button>
         </div>
       </div>
@@ -337,28 +337,28 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <AlertTriangle size={18} className="text-amber-400" />
-              ข้อมูลคดี
+              DataCase
             </h3>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">เลขคดี</label>
+                  <label className="text-sm text-dark-400 block mb-1">Case Number</label>
                   <input
                     type="text"
                     value={formData.caseNumber}
                     onChange={(e) => updateField('caseNumber', e.target.value)}
                     className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2"
-                    placeholder="ตช.xxx/2567"
+                    placeholder="POL.xxx/2024"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">ชื่อคดี</label>
+                  <label className="text-sm text-dark-400 block mb-1">NameCase</label>
                   <input
                     type="text"
                     value={formData.caseTitle}
                     onChange={(e) => updateField('caseTitle', e.target.value)}
                     className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2"
-                    placeholder="คดีฉ้อโกง Crypto"
+                    placeholder="Crypto Fraud Case"
                   />
                 </div>
               </div>
@@ -369,41 +369,41 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <User size={18} className="text-blue-400" />
-              ข้อมูลพนักงานสอบสวน
+              DataInvestigator
             </h3>
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">ยศ</label>
+                  <label className="text-sm text-dark-400 block mb-1">Rank</label>
                   <select
                     value={formData.investigatorRank}
                     onChange={(e) => updateField('investigatorRank', e.target.value)}
                     className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2"
                   >
-                    <option>ร.ต.อ.</option>
-                    <option>ร.ต.ท.</option>
-                    <option>ร.ต.ต.</option>
-                    <option>พ.ต.อ.</option>
-                    <option>พ.ต.ท.</option>
-                    <option>พ.ต.ต.</option>
-                    <option>ส.ต.อ.</option>
-                    <option>ส.ต.ท.</option>
-                    <option>ส.ต.ต.</option>
+                    <option>Pol. Capt.</option>
+                    <option>Pol. Lt.</option>
+                    <option>Pol. Sub-Lt.</option>
+                    <option>Pol. Col.</option>
+                    <option>Pol. Lt. Col.</option>
+                    <option>Pol. Maj.</option>
+                    <option>Pol. Sen. Sgt. Maj.</option>
+                    <option>Pol. Sgt. Maj.</option>
+                    <option>Pol. Sgt.</option>
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="text-sm text-dark-400 block mb-1">ชื่อ-สกุล</label>
+                  <label className="text-sm text-dark-400 block mb-1">Name-Surname</label>
                   <input
                     type="text"
                     value={formData.investigator}
                     onChange={(e) => updateField('investigator', e.target.value)}
                     className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2"
-                    placeholder="ชื่อ นามสกุล"
+                    placeholder="Name Surname"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm text-dark-400 block mb-1">สังกัด</label>
+                <label className="text-sm text-dark-400 block mb-1">Unit</label>
                 <input
                   type="text"
                   value={formData.investigatorUnit}
@@ -413,7 +413,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">โทรศัพท์</label>
+                  <label className="text-sm text-dark-400 block mb-1">Phone</label>
                   <input
                     type="tel"
                     value={formData.investigatorPhone}
@@ -423,7 +423,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">อีเมล</label>
+                  <label className="text-sm text-dark-400 block mb-1">Email</label>
                   <input
                     type="email"
                     value={formData.investigatorEmail}
@@ -440,7 +440,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Building2 size={18} className="text-purple-400" />
-              Exchange ที่ต้องการขอข้อมูล
+              Exchange to Request Data From
             </h3>
             <div className="grid grid-cols-3 gap-2 mb-4">
               {EXCHANGES.map(exchange => (
@@ -464,7 +464,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
             {formData.exchangeId === 'other' && (
               <div className="space-y-3 p-3 bg-dark-800 rounded-lg">
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">ชื่อ Exchange</label>
+                  <label className="text-sm text-dark-400 block mb-1">Name Exchange</label>
                   <input
                     type="text"
                     value={formData.customExchangeName}
@@ -474,7 +474,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-dark-400 block mb-1">อีเมล Compliance</label>
+                  <label className="text-sm text-dark-400 block mb-1">Email Compliance</label>
                   <input
                     type="email"
                     value={formData.customExchangeEmail}
@@ -491,7 +491,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Wallet size={18} className="text-amber-400" />
-              Wallet Address ที่ต้องการสอบถาม
+              Wallet Address to Query
             </h3>
             <div className="space-y-2">
               {formData.walletAddresses.map((wallet, index) => (
@@ -501,7 +501,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
                     value={wallet}
                     onChange={(e) => updateWallet(index, e.target.value)}
                     className="flex-1 bg-dark-700 border border-dark-600 rounded-lg p-2 font-mono text-sm"
-                    placeholder="0x... หรือ 1... หรือ bc1..."
+                    placeholder="0x... or 1... or bc1..."
                   />
                   {formData.walletAddresses.length > 1 && (
                     <Button variant="ghost" size="sm" onClick={() => removeWallet(index)}>
@@ -511,7 +511,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
                 </div>
               ))}
               <Button variant="ghost" size="sm" onClick={addWallet} className="w-full mt-2">
-                + เพิ่ม Wallet
+                + Add Wallet
               </Button>
             </div>
           </Card>
@@ -520,11 +520,11 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
           <Card className="p-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Calendar size={18} className="text-green-400" />
-              ช่วงเวลาที่ต้องการข้อมูล
+              Required Data Period
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-dark-400 block mb-1">ตั้งแต่วันที่</label>
+                <label className="text-sm text-dark-400 block mb-1">From Date</label>
                 <input
                   type="date"
                   value={formData.dateRangeStart}
@@ -533,7 +533,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
                 />
               </div>
               <div>
-                <label className="text-sm text-dark-400 block mb-1">ถึงวันที่</label>
+                <label className="text-sm text-dark-400 block mb-1">toDate</label>
                 <input
                   type="date"
                   value={formData.dateRangeEnd}
@@ -546,7 +546,7 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
 
           {/* Requested Info */}
           <Card className="p-4">
-            <h3 className="font-semibold mb-4">ข้อมูลที่ต้องการ</h3>
+            <h3 className="font-semibold mb-4">Required Information</h3>
             <div className="space-y-2">
               {REQUESTED_INFO_OPTIONS.map(option => (
                 <label key={option.id} className="flex items-center gap-3 p-2 hover:bg-dark-800 rounded cursor-pointer">
@@ -564,12 +564,12 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
 
           {/* Urgency */}
           <Card className="p-4">
-            <h3 className="font-semibold mb-4">ระดับความเร่งด่วน</h3>
+            <h3 className="font-semibold mb-4">Urgency Level</h3>
             <div className="flex gap-2">
               {[
-                { value: 'normal', label: 'ปกติ', color: 'bg-green-500' },
-                { value: 'urgent', label: 'เร่งด่วน', color: 'bg-amber-500' },
-                { value: 'emergency', label: 'ฉุกเฉิน', color: 'bg-red-500' },
+                { value: 'normal', label: 'Normal', color: 'bg-green-500' },
+                { value: 'urgent', label: 'Urgent', color: 'bg-amber-500' },
+                { value: 'emergency', label: 'Emergency', color: 'bg-red-500' },
               ].map(level => (
                 <button
                   key={level.value}
@@ -589,13 +589,13 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
 
           {/* Additional Notes */}
           <Card className="p-4">
-            <h3 className="font-semibold mb-4">หมายเหตุเพิ่มเติม</h3>
+            <h3 className="font-semibold mb-4">Additional Notes</h3>
             <textarea
               value={formData.additionalNotes}
               onChange={(e) => updateField('additionalNotes', e.target.value)}
               rows={3}
               className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2 resize-none"
-              placeholder="รายละเอียดเพิ่มเติม..."
+              placeholder="Additional details..."
             />
           </Card>
         </div>
@@ -604,10 +604,10 @@ ${formData.additionalNotes ? `หมายเหตุเพิ่มเติ�
         <div className="sticky top-6">
           <Card className="p-4 h-[calc(100vh-160px)] flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">ตัวอย่างเอกสาร</h3>
+              <h3 className="font-semibold">Document Example</h3>
               <Button variant="ghost" size="sm" onClick={copyToClipboard}>
                 {copied ? <CheckCircle size={16} className="text-green-400" /> : <Copy size={16} />}
-                <span className="ml-2">{copied ? 'คัดลอกแล้ว!' : 'คัดลอก'}</span>
+                <span className="ml-2">{copied ? 'Copied!' : 'Copy'}</span>
               </Button>
             </div>
             <div className="flex-1 overflow-auto bg-dark-800 rounded-lg p-4">

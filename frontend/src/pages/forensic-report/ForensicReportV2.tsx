@@ -1,6 +1,6 @@
 /**
- * Forensic Report V2 - รายงานวิเคราะห์เครือข่ายอาชญากรรม
- * มาตรฐาน Digital Forensic สำหรับส่งศาล
+ * Forensic Report V2 - Criminal Network Analysis Report
+ * Digital Forensic Standard for Court
  * Features: Risk Score Analysis, PDF Export, Auto Summary, Network Graph, QR Code Chain of Custody
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -70,8 +70,8 @@ const formatCurrency = (amount: number): string => {
 };
 
 const formatDate = (date: string | null | undefined): string => {
-  if (!date) return 'ไม่ระบุ';
-  return new Date(date).toLocaleDateString('th-TH', {
+  if (!date) return 'Not specified';
+  return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric'
   });
 };
@@ -219,27 +219,27 @@ export const ForensicReportV2 = () => {
         const amount = edge.amount || 0;
         
         let importance: 'critical' | 'high' | 'medium' = 'medium';
-        let reason = 'ธุรกรรมปกติ';
+        let reason = 'Normal transaction';
         
         if (amount >= 500000) {
           importance = 'critical';
-          reason = 'ยอดสูงผิดปกติ';
+          reason = 'Abnormally high amount';
         } else if (amount >= 200000) {
           importance = 'high';
-          reason = 'ยอดสูง';
+          reason = 'High amount';
         }
         
         if (toNode?.label?.includes('Mixer') || toNode?.label?.includes('mixer')) {
           importance = 'critical';
-          reason = 'โอนเข้า Mixer (ปกปิดร่องรอย)';
+          reason = 'Transfer to Mixer (hiding trail)';
         }
         if (toNode?.label?.includes('Cambodia') || toNode?.label?.includes('Myanmar') || toNode?.label?.includes('Laos')) {
           importance = 'critical';
-          reason = 'โอนออกต่างประเทศ';
+          reason = 'Transfer overseas';
         }
         if (toNode?.node_type === 'crypto_wallet' && fromNode?.node_type === 'bank_account') {
           importance = 'high';
-          reason = 'แลกเป็น Crypto';
+          reason = 'Exchange to Crypto';
         }
 
         return { edge, fromNode, toNode, importance, reason };
@@ -255,29 +255,29 @@ export const ForensicReportV2 = () => {
     const hasNetworkMembers = highRiskPersons.length > 1;
     const hasCrypto = stats.cryptoWallets > 0;
     const hasMixer = keyTransactions.some(t => t.reason.includes('Mixer'));
-    const hasForeign = keyTransactions.some(t => t.reason.includes('ต่างประเทศ'));
+    const hasForeign = keyTransactions.some(t => t.reason.includes('overseas'));
     
-    let summary = `จากการวิเคราะห์รูปแบบธุรกรรมเบื้องต้น พบข้อสังเกตที่น่าสนใจว่า "${mainSuspect.node.label}" (Risk Score: ${mainSuspect.riskScore}) อาจมีบทบาทสำคัญในเครือข่ายนี้`;
+    let summary = `From preliminary transaction pattern analysis, interesting observations show that "${mainSuspect.node.label}" (Risk Score: ${mainSuspect.riskScore}) may have a key role in this network`;
     
     if (hasNetworkMembers) {
-      summary += ` โดยมีบุคคลที่อาจเกี่ยวข้องอีก ${highRiskPersons.length - 1} คน`;
+      summary += ` with potentially related persons: ${highRiskPersons.length - 1} person(s)`;
     }
     
-    summary += ` มูลค่าธุรกรรมรวมประมาณ ${formatCurrency(stats.totalAmount)}`;
+    summary += ` Total transaction value approximately ${formatCurrency(stats.totalAmount)}`;
     
     if (hasCrypto) {
-      summary += ` สังเกตพบการใช้ Cryptocurrency ในการโอนเงิน`;
+      summary += ` Cryptocurrency usage observed in transfers`;
     }
     
     if (hasMixer) {
-      summary += ` และพบรูปแบบที่อาจเป็นการใช้ Mixer`;
+      summary += ` and patterns suggesting Mixer usage`;
     }
     
     if (hasForeign) {
-      summary += ` รวมถึงมีธุรกรรมที่อาจเกี่ยวข้องกับต่างประเทศ`;
+      summary += ` including Transactions possibly involving overseas`;
     }
     
-    summary += ` ทั้งนี้ ข้อมูลดังกล่าวเป็นเพียงการวิเคราะห์จากรูปแบบธุรกรรม ควรมีการตรวจสอบและรวบรวมพยานหลักฐานเพิ่มเติมเพื่อยืนยันข้อเท็จจริง`;
+    summary += ` However, this data is only an analysis from transaction patterns. Further investigation and evidence collection is recommended to confirm the facts`;
     
     return summary;
   };
@@ -289,7 +289,7 @@ export const ForensicReportV2 = () => {
       // Use browser print functionality
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        alert('กรุณาอนุญาตให้เปิด popup');
+        alert('Please allow popup');
         return;
       }
       
@@ -298,7 +298,7 @@ export const ForensicReportV2 = () => {
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>รายงานวิเคราะห์เครือข่าย - ${selectedCase?.case_number}</title>
+  <title>Network Analysis Report - ${selectedCase?.case_number}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
     * { font-family: 'Sarabun', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
@@ -336,45 +336,45 @@ export const ForensicReportV2 = () => {
 </head>
 <body>
   <div class="header">
-    <h1>🔍 รายงานการวิเคราะห์เครือข่ายการเงิน</h1>
-    <p>สำนักงานตำรวจแห่งชาติ - มาตรฐาน Digital Forensic</p>
+    <h1>🔍 Financial Network Analysis Report</h1>
+    <p>Royal Thai Police - Digital Forensic Standard</p>
   </div>
 
   <div class="meta">
-    <div class="meta-item"><span class="meta-label">เลขคดี:</span> ${selectedCase?.case_number || '-'}</div>
-    <div class="meta-item"><span class="meta-label">ชื่อคดี:</span> ${selectedCase?.title || '-'}</div>
-    <div class="meta-item"><span class="meta-label">วันที่วิเคราะห์:</span> ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-    <div class="meta-item"><span class="meta-label">ผู้วิเคราะห์:</span> ${localStorage.getItem('user_email') || 'ไม่ระบุ'}</div>
+    <div class="meta-item"><span class="meta-label">Case Number:</span> ${selectedCase?.case_number || '-'}</div>
+    <div class="meta-item"><span class="meta-label">Case Title:</span> ${selectedCase?.title || '-'}</div>
+    <div class="meta-item"><span class="meta-label">Analysis Date:</span> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    <div class="meta-item"><span class="meta-label">Analyst:</span> ${localStorage.getItem('user_email') || 'Not specified'}</div>
   </div>
 
-  <h2>📊 สรุปผลการวิเคราะห์</h2>
+  <h2>📊 Analysis Summary</h2>
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-value">${stats?.persons || 0}</div>
-      <div class="stat-label">บุคคลที่เกี่ยวข้อง</div>
+      <div class="stat-label">Related Persons</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">${stats?.bankAccounts || 0}</div>
-      <div class="stat-label">บัญชีธนาคาร</div>
+      <div class="stat-label">Bank Accounts</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">${stats?.totalTransactions || 0}</div>
-      <div class="stat-label">ธุรกรรมทั้งหมด</div>
+      <div class="stat-label">Total Transactions</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">${formatCurrency(stats?.totalAmount || 0)}</div>
-      <div class="stat-label">มูลค่ารวม</div>
+      <div class="stat-label">Total Value</div>
     </div>
   </div>
 
-  <h2>🔴 บุคคลเสี่ยงสูง</h2>
+  <h2>🔴 High Risk Persons</h2>
   <table>
     <thead>
       <tr>
         <th style="width: 5%">#</th>
-        <th style="width: 25%">ชื่อ-สกุล</th>
+        <th style="width: 25%">Name</th>
         <th style="width: 12%">Risk Score</th>
-        <th>ปัจจัยเสี่ยง</th>
+        <th>Risk Factors</th>
       </tr>
     </thead>
     <tbody>
@@ -389,16 +389,16 @@ export const ForensicReportV2 = () => {
     </tbody>
   </table>
 
-  <h2>💰 ธุรกรรมสำคัญ</h2>
+  <h2>💰 Key Transactions</h2>
   <table>
     <thead>
       <tr>
         <th style="width: 5%">#</th>
-        <th style="width: 20%">จาก</th>
-        <th style="width: 20%">ถึง</th>
-        <th style="width: 15%">จำนวนเงิน</th>
-        <th style="width: 15%">วันที่</th>
-        <th>หมายเหตุ</th>
+        <th style="width: 20%">From</th>
+        <th style="width: 20%">To</th>
+        <th style="width: 15%">Amount</th>
+        <th style="width: 15%">Date</th>
+        <th>Notes</th>
       </tr>
     </thead>
     <tbody>
@@ -415,27 +415,27 @@ export const ForensicReportV2 = () => {
     </tbody>
   </table>
 
-  <h2>📝 ข้อสังเกตจากการวิเคราะห์ (ต้องตรวจสอบเพิ่มเติม)</h2>
+  <h2>📝 Observations from Analysis (Requires Further Investigation)</h2>
   <div class="summary">
     <p>${generateSummary()}</p>
-    <p style="font-size: 11px; color: #6b7280; margin-top: 15px; font-style: italic;">* ข้อมูลนี้เป็นเพียงการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรม ไม่ใช่ข้อสรุปทางคดี ควรตรวจสอบและรวบรวมพยานหลักฐานเพิ่มเติม</p>
+    <p style="font-size: 11px; color: #6b7280; margin-top: 15px; font-style: italic;">* This is a preliminary analysis from transaction patterns only. This is not a case conclusion. Further investigation and evidence collection should be conducted</p>
   </div>
 
-  <h2>🔐 Chain of Custody - หลักฐานดิจิทัล</h2>
+  <h2>🔐 Chain of Custody - Digital Evidence</h2>
   <div style="display: grid; grid-template-columns: 180px 1fr; gap: 20px; margin-bottom: 20px;">
     <div style="text-align: center; padding: 15px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px;">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase?.case_number}`)}" alt="QR Code" style="width: 140px; height: 140px;" />
-      <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Scan เพื่อตรวจสอบหลักฐาน</p>
+      <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Scan to verify evidence</p>
     </div>
     <div>
-      <h3 style="margin-bottom: 10px;">หลักฐานที่บันทึก (${evidences.length} รายการ)</h3>
+      <h3 style="margin-bottom: 10px;">Recorded Evidence (${evidences.length} items)</h3>
       <table style="font-size: 11px;">
         <thead>
           <tr>
             <th style="width: 5%">#</th>
-            <th style="width: 35%">ชื่อไฟล์</th>
+            <th style="width: 35%">Filename</th>
             <th style="width: 45%">SHA-256 Hash</th>
-            <th style="width: 15%">วันที่บันทึก</th>
+            <th style="width: 15%">Date Recorded</th>
           </tr>
         </thead>
         <tbody>
@@ -444,33 +444,33 @@ export const ForensicReportV2 = () => {
               <td>${i + 1}</td>
               <td>${ev.file_name}</td>
               <td style="font-family: monospace; font-size: 9px;">${ev.sha256_hash}</td>
-              <td>${new Date(ev.collected_at).toLocaleDateString('th-TH')}</td>
+              <td>${new Date(ev.collected_at).toLocaleDateString('en-US')}</td>
             </tr>
-          `).join('') : '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">ยังไม่มีหลักฐานที่บันทึก</td></tr>'}
+          `).join('') : '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">No evidence recorded yet</td></tr>'}
         </tbody>
       </table>
       ${evidences.length > 0 ? `
         <div style="margin-top: 10px; padding: 10px; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; font-size: 11px; color: #047857;">
-          ✅ หลักฐานทั้งหมดถูกบันทึก SHA-256 Hash สำหรับยืนยันความถูกต้องในชั้นศาล
+          ✅ All evidence recorded with SHA-256 Hash for court verification
         </div>
       ` : ''}
     </div>
   </div>
 
   <div class="footer">
-    <p>รายงานนี้สร้างโดยระบบ InvestiGate - วันที่ ${new Date().toLocaleString('th-TH')}</p>
+    <p>Report generated by InvestiGate - Date ${new Date().toLocaleString('en-US')}</p>
   </div>
 
   <div class="signature">
     <div class="signature-box">
-      <p>ลงชื่อ ........................................</p>
+      <p>Signature ........................................</p>
       <p>( ......................................... )</p>
-      <p>พนักงานสอบสวน</p>
+      <p>Investigator</p>
     </div>
     <div class="signature-box">
-      <p>ลงชื่อ ........................................</p>
+      <p>Signature ........................................</p>
       <p>( ......................................... )</p>
-      <p>ผู้บังคับบัญชา</p>
+      <p>Supervisor</p>
     </div>
   </div>
 
@@ -485,7 +485,7 @@ export const ForensicReportV2 = () => {
       printWindow.document.close();
     } catch (err) {
       console.error('Export failed:', err);
-      alert('เกิดข้อผิดพลาดในการสร้าง PDF');
+      alert('Error generating PDF');
     } finally {
       setExporting(false);
     }
@@ -509,16 +509,16 @@ export const ForensicReportV2 = () => {
             Forensic Report
             <span className="px-2 py-0.5 bg-primary-500/20 text-primary-400 text-xs rounded">v2</span>
           </h1>
-          <p className="text-dark-400 mt-1">รายงานวิเคราะห์เครือข่าย - มาตรฐาน Digital Forensic</p>
+          <p className="text-dark-400 mt-1">Network Analysis Report - Digital Forensic Standard</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={fetchData} disabled={loading}>
             <RefreshCw size={18} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            รีเฟรช
+            Refresh
           </Button>
           <Button variant="secondary" onClick={exportToPDF} disabled={exporting || !stats}>
             <Printer size={18} className="mr-2" />
-            พิมพ์
+            Print
           </Button>
           <Button onClick={exportToPDF} disabled={exporting || !stats}>
             {exporting ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Download size={18} className="mr-2" />}
@@ -531,13 +531,13 @@ export const ForensicReportV2 = () => {
       <Card className="p-4 mb-6">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-dark-400">เลือกคดี:</label>
+            <label className="text-sm text-dark-400">Select Case:</label>
             <select
               className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 min-w-[300px]"
               value={selectedCaseId || ''}
               onChange={(e) => setSelectedCaseId(Number(e.target.value))}
             >
-              <option value="">-- เลือกคดี --</option>
+              <option value="">-- Select Case --</option>
               {cases.map(c => (
                 <option key={c.id} value={c.id}>{c.case_number} - {c.title}</option>
               ))}
@@ -547,7 +547,7 @@ export const ForensicReportV2 = () => {
             <>
               <Badge variant="info">{selectedCase.status}</Badge>
               <span className="text-sm text-dark-400">
-                สร้างเมื่อ: {formatDate(selectedCase.created_at)}
+                Created: {formatDate(selectedCase.created_at)}
               </span>
             </>
           )}
@@ -559,14 +559,14 @@ export const ForensicReportV2 = () => {
           {/* Statistics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
             {[
-              { label: 'บุคคล', value: stats.persons, icon: Users, color: 'text-blue-400' },
-              { label: 'บัญชี', value: stats.bankAccounts, icon: Building2, color: 'text-green-400' },
-              { label: 'เบอร์โทร', value: stats.phones, icon: Phone, color: 'text-yellow-400' },
+              { label: 'Person', value: stats.persons, icon: Users, color: 'text-blue-400' },
+              { label: 'Accounts', value: stats.bankAccounts, icon: Building2, color: 'text-green-400' },
+              { label: 'Phone', value: stats.phones, icon: Phone, color: 'text-yellow-400' },
               { label: 'Crypto', value: stats.cryptoWallets, icon: Wallet, color: 'text-purple-400' },
-              { label: 'ผู้ต้องสงสัย', value: stats.suspects, icon: Target, color: 'text-red-400' },
-              { label: 'ผู้เสียหาย', value: stats.victims, icon: Shield, color: 'text-cyan-400' },
-              { label: 'ธุรกรรม', value: stats.totalTransactions, icon: ArrowRightLeft, color: 'text-amber-400' },
-              { label: 'เสี่ยงสูง', value: stats.highRiskCount, icon: AlertTriangle, color: 'text-red-400' },
+              { label: 'Suspect', value: stats.suspects, icon: Target, color: 'text-red-400' },
+              { label: 'Victim', value: stats.victims, icon: Shield, color: 'text-cyan-400' },
+              { label: 'Transactions', value: stats.totalTransactions, icon: ArrowRightLeft, color: 'text-amber-400' },
+              { label: 'High Risk', value: stats.highRiskCount, icon: AlertTriangle, color: 'text-red-400' },
             ].map((stat, i) => (
               <Card key={i} className="p-3 text-center">
                 <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
@@ -582,7 +582,7 @@ export const ForensicReportV2 = () => {
               <div className="flex items-center gap-3">
                 <TrendingUp className="w-8 h-8 text-amber-400" />
                 <div>
-                  <p className="text-sm text-dark-400">มูลค่าธุรกรรมรวม</p>
+                  <p className="text-sm text-dark-400">Total Transaction Value</p>
                   <p className="text-3xl font-bold text-amber-400">{formatCurrency(stats.totalAmount)}</p>
                 </div>
               </div>
@@ -594,14 +594,14 @@ export const ForensicReportV2 = () => {
             <div className="flex items-center justify-between p-4 border-b border-dark-700">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Network className="text-primary-400" />
-                แผนผังเครือข่าย (Network Diagram)
+                Network Diagram (Network Diagram)
               </h3>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => setShowGraph(!showGraph)}
               >
-                {showGraph ? 'ซ่อน' : 'แสดง'}
+                {showGraph ? 'Hide' : 'Show'}
               </Button>
             </div>
             {showGraph && nodes.length > 0 && (
@@ -615,7 +615,7 @@ export const ForensicReportV2 = () => {
             )}
             {showGraph && nodes.length === 0 && (
               <div className="p-8 text-center text-dark-400">
-                ไม่มีข้อมูลเครือข่าย
+                No network data
               </div>
             )}
           </Card>
@@ -625,14 +625,14 @@ export const ForensicReportV2 = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Lock className="text-green-400" />
-                Chain of Custody - หลักฐานดิจิทัล
+                Chain of Custody - Digital Evidence
               </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowChainOfCustody(!showChainOfCustody)}
               >
-                {showChainOfCustody ? 'ซ่อน' : 'แสดง'}
+                {showChainOfCustody ? 'Hide' : 'Show'}
               </Button>
             </div>
             
@@ -648,7 +648,7 @@ export const ForensicReportV2 = () => {
                         className="w-44 h-44 mb-3"
                       />
                       <p className="text-xs text-gray-600 text-center">
-                        Scan เพื่อตรวจสอบหลักฐาน
+                        Scan to verify evidence
                       </p>
                     </>
                   )}
@@ -658,7 +658,7 @@ export const ForensicReportV2 = () => {
                 <div className="lg:col-span-2">
                   <div className="flex items-center gap-2 mb-3">
                     <QrCode className="text-primary-400" size={18} />
-                    <span className="font-medium">หลักฐานที่บันทึก ({evidences.length} รายการ)</span>
+                    <span className="font-medium">Recorded Evidence ({evidences.length} items)</span>
                   </div>
                   
                   {evidences.length > 0 ? (
@@ -676,7 +676,7 @@ export const ForensicReportV2 = () => {
                           </div>
                           <div className="text-right text-xs text-dark-400">
                             <p>{ev.records_count} records</p>
-                            <p>{new Date(ev.collected_at).toLocaleDateString('th-TH')}</p>
+                            <p>{new Date(ev.collected_at).toLocaleDateString('en-US')}</p>
                           </div>
                         </div>
                       ))}
@@ -684,8 +684,8 @@ export const ForensicReportV2 = () => {
                   ) : (
                     <div className="p-4 text-center text-dark-400 bg-dark-900/30 rounded-lg">
                       <Shield size={24} className="mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">ยังไม่มีหลักฐานที่บันทึก</p>
-                      <p className="text-xs mt-1">Import ข้อมูลผ่าน Smart Import เพื่อบันทึก Chain of Custody</p>
+                      <p className="text-sm">No evidence recorded yet</p>
+                      <p className="text-xs mt-1">Import data via Smart Import to record Chain of Custody</p>
                     </div>
                   )}
                   
@@ -693,7 +693,7 @@ export const ForensicReportV2 = () => {
                     <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                       <div className="flex items-center gap-2 text-green-400 text-sm">
                         <CheckCircle size={16} />
-                        <span>หลักฐานทั้งหมดถูกบันทึก SHA-256 Hash สำหรับยืนยันความถูกต้อง</span>
+                        <span>All evidence recorded with SHA-256 Hash for verification</span>
                       </div>
                     </div>
                   )}
@@ -708,7 +708,7 @@ export const ForensicReportV2 = () => {
             <Card className="p-4">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <AlertTriangle className="text-red-400" />
-                บุคคลเสี่ยงสูง
+                High Risk Persons
               </h3>
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {highRiskPersons.length > 0 ? highRiskPersons.map((person, idx) => (
@@ -736,7 +736,7 @@ export const ForensicReportV2 = () => {
                     )}
                   </div>
                 )) : (
-                  <p className="text-dark-400 text-center py-4">ไม่พบบุคคลเสี่ยงสูง</p>
+                  <p className="text-dark-400 text-center py-4">No high-risk persons found</p>
                 )}
               </div>
             </Card>
@@ -745,7 +745,7 @@ export const ForensicReportV2 = () => {
             <Card className="p-4">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <TrendingUp className="text-amber-400" />
-                ธุรกรรมสำคัญ
+                Key Transactions
               </h3>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {keyTransactions.length > 0 ? keyTransactions.map((tx, idx) => (
@@ -771,7 +771,7 @@ export const ForensicReportV2 = () => {
                     </div>
                   </div>
                 )) : (
-                  <p className="text-dark-400 text-center py-4">ไม่พบธุรกรรมสำคัญ</p>
+                  <p className="text-dark-400 text-center py-4">No significant transactions found</p>
                 )}
               </div>
             </Card>
@@ -781,26 +781,26 @@ export const ForensicReportV2 = () => {
           <Card className="p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30">
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <CheckCircle className="text-blue-400" />
-              ข้อสังเกตจากการวิเคราะห์ (Auto Generated)
+              Observations from Analysis (Auto Generated)
             </h3>
-            <p className="text-dark-300 leading-relaxed">{generateSummary() || 'กรุณาเลือกคดีที่มีข้อมูลเพื่อสร้างสรุป'}</p>
-            <p className="text-xs text-dark-500 mt-3 italic">* ข้อมูลนี้เป็นเพียงการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรม ไม่ใช่ข้อสรุปทางคดี ควรตรวจสอบและรวบรวมพยานหลักฐานเพิ่มเติม</p>
+            <p className="text-dark-300 leading-relaxed">{generateSummary() || 'Please select a case with data to generate summary'}</p>
+            <p className="text-xs text-dark-500 mt-3 italic">* This is a preliminary analysis from transaction patterns only. This is not a case conclusion. Further investigation and evidence collection should be conducted</p>
           </Card>
 
           {/* Risk Indicators Legend */}
           <Card className="p-4 mt-6">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <Shield className="text-primary-400 w-4 h-4" />
-              ตัวบ่งชี้ความเสี่ยง (Risk Indicators)
+              Risk Indicators (Risk Indicators)
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
               {[
-                { icon: Target, label: 'ผู้ต้องสงสัยหลัก', score: '+30' },
-                { icon: TrendingUp, label: 'รับเงิน >฿500K', score: '+25' },
-                { icon: Shuffle, label: 'ใช้ Crypto Mixer', score: '+20' },
-                { icon: Globe, label: 'โอนต่างประเทศ', score: '+15' },
-                { icon: ArrowRightLeft, label: 'ธุรกรรมบ่อย (>10)', score: '+10' },
-                { icon: Phone, label: 'โทรบ่อย (>20)', score: '+10' },
+                { icon: Target, label: 'Main Suspect', score: '+30' },
+                { icon: TrendingUp, label: 'Received money >฿500K', score: '+25' },
+                { icon: Shuffle, label: 'Uses Crypto Mixer', score: '+20' },
+                { icon: Globe, label: 'Transfer overseas', score: '+15' },
+                { icon: ArrowRightLeft, label: 'Frequent transactions (>10)', score: '+10' },
+                { icon: Phone, label: 'Frequent calls (>20)', score: '+10' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 bg-dark-800 rounded-lg p-2">
                   <item.icon className="w-4 h-4 text-primary-400" />
@@ -814,7 +814,7 @@ export const ForensicReportV2 = () => {
       ) : (
         <Card className="p-8 text-center">
           <FileText className="w-12 h-12 text-dark-600 mx-auto mb-4" />
-          <p className="text-dark-400">เลือกคดีเพื่อดูรายงาน</p>
+          <p className="text-dark-400">Select a case to view report</p>
         </Card>
       )}
     </div>

@@ -14,9 +14,9 @@ interface CreateTicketModalProps {
 
 const categories: { value: TicketCategory; label: string; icon: React.ReactNode; color: string }[] = [
   { value: 'bug', label: 'Bug / Error', icon: <Bug size={16} />, color: 'text-red-400 bg-red-500/20 border-red-500/30' },
-  { value: 'feature', label: 'ขอ Feature', icon: <Lightbulb size={16} />, color: 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30' },
-  { value: 'question', label: 'คำถาม', icon: <HelpCircle size={16} />, color: 'text-blue-400 bg-blue-500/20 border-blue-500/30' },
-  { value: 'other', label: 'อื่นๆ', icon: <FileText size={16} />, color: 'text-gray-400 bg-gray-500/20 border-gray-500/30' },
+  { value: 'feature', label: 'Feature Request', icon: <Lightbulb size={16} />, color: 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30' },
+  { value: 'question', label: 'Question', icon: <HelpCircle size={16} />, color: 'text-blue-400 bg-blue-500/20 border-blue-500/30' },
+  { value: 'other', label: 'Other', icon: <FileText size={16} />, color: 'text-gray-400 bg-gray-500/20 border-gray-500/30' },
 ];
 
 export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketModalProps) => {
@@ -34,12 +34,12 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
   // Handle file selection
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setError('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+      setError('Please select image files only');
       return;
     }
     
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      setError('ไฟล์ใหญ่เกิน 5MB');
+      setError('File size exceeds 5MB');
       return;
     }
 
@@ -98,12 +98,12 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
   const handleSubmit = async () => {
     // Validation
     if (subject.trim().length < 5) {
-      setError('หัวข้อต้องมีอย่างน้อย 5 ตัวอักษร');
+      setError('Subject must be at least 5 characters');
       return;
     }
     
     if (description.trim().length < 10) {
-      setError('รายละเอียดต้องมีอย่างน้อย 10 ตัวอักษร');
+      setError('Description must be at least 10 characters');
       return;
     }
 
@@ -129,7 +129,7 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      setError(err.response?.data?.detail || 'An error occurred. Please try again');
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +167,7 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
             <div className="w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center">
               <Bug className="text-primary-400" size={18} />
             </div>
-            <h2 className="text-lg font-semibold text-white">แจ้งปัญหา</h2>
+            <h2 className="text-lg font-semibold text-white">Report Issue</h2>
           </div>
           <button 
             onClick={handleClose}
@@ -189,13 +189,13 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
           {/* Subject */}
           <div>
             <label className="block text-sm text-dark-300 mb-1.5">
-              หัวข้อ <span className="text-red-400">*</span>
+              Subject <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="อธิบายปัญหาสั้นๆ..."
+              placeholder="Briefly describe the issue..."
               className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-dark-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-colors"
               maxLength={255}
             />
@@ -203,7 +203,7 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
 
           {/* Category */}
           <div>
-            <label className="block text-sm text-dark-300 mb-1.5">ประเภท</label>
+            <label className="block text-sm text-dark-300 mb-1.5">Type</label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => (
                 <button
@@ -226,12 +226,12 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
           {/* Description */}
           <div>
             <label className="block text-sm text-dark-300 mb-1.5">
-              รายละเอียด <span className="text-red-400">*</span>
+              Description <span className="text-red-400">*</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="อธิบายปัญหาที่พบ ขั้นตอนที่ทำให้เกิดปัญหา..."
+              placeholder="Describe the issue and steps to reproduce..."
               rows={4}
               className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-dark-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-colors resize-none"
             />
@@ -240,7 +240,7 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
           {/* Screenshot Upload */}
           <div>
             <label className="block text-sm text-dark-300 mb-1.5">
-              แนบภาพ Screenshot (ไม่บังคับ)
+              Attach Screenshot (Optional)
             </label>
             
             {screenshot ? (
@@ -280,12 +280,12 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
                     <Image className="text-dark-400" size={20} />
                   </div>
                   <div className="text-sm text-dark-400">
-                    <span className="text-primary-400">คลิกเลือกไฟล์</span> หรือลากไฟล์มาวาง
+                    <span className="text-primary-400">Click to select file</span> or drag and drop
                   </div>
                   <div className="text-xs text-dark-500">
-                    หรือ Paste รูปจาก Clipboard (Ctrl+V)
+                    or Paste from Clipboard (Ctrl+V)
                   </div>
-                  <div className="text-xs text-dark-600">PNG, JPG ขนาดไม่เกิน 5MB</div>
+                  <div className="text-xs text-dark-600">PNG, JPG max 5MB</div>
                 </div>
               </div>
             )}
@@ -299,7 +299,7 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
             className="px-4 py-2 text-dark-300 hover:text-white transition-colors"
             disabled={isSubmitting}
           >
-            ยกเลิก
+            Cancel
           </button>
           <button
             onClick={handleSubmit}
@@ -311,7 +311,7 @@ export const CreateTicketModal = ({ isOpen, onClose, onSuccess }: CreateTicketMo
             ) : (
               <Send size={16} />
             )}
-            <span>ส่งแจ้งปัญหา</span>
+            <span>SubmitReport Issue</span>
           </button>
         </div>
       </div>

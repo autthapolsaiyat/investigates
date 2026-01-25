@@ -1,11 +1,11 @@
 /**
  * Blockchain API Service - Forensic Grade
- * เชื่อมต่อ API จริงจาก Blockchair (Multi-chain) และ CoinGecko
+ * Connect to real API from Blockchair (Multi-chain) and CoinGecko
  * 
- * ✅ ใช้ Blockchair เป็นหลัก - ไม่ต้อง API Key
+ * ✅ Uses Blockchair primarily - No API Key needed
  * ✅ CORS-friendly
- * ✅ Court-ready data (ข้อมูลตรงกับ Blockchain 100%)
- * ✅ ใช้โดย Law Enforcement หลายประเทศ
+ * ✅ Court-ready data (100% matches Blockchain)
+ * ✅ Used by Law Enforcement in multiple countries
  * 
  * Supported Chains:
  * - Bitcoin (BTC)
@@ -201,15 +201,15 @@ export function getKnownEntity(address: string): KnownEntity | null {
 // ============================================
 
 const riskPatterns = {
-  mixerInteraction: { score: 40, severity: 'critical' as const, description: 'มีการติดต่อกับ Mixer/Tumbler (Tornado Cash) - OFAC Sanctioned' },
-  scamInteraction: { score: 35, severity: 'critical' as const, description: 'มีการติดต่อกับ address ที่เกี่ยวข้องกับ scam/hack' },
-  highFrequency: { score: 15, severity: 'medium' as const, description: 'ความถี่ธุรกรรมสูงผิดปกติ (>50 tx/วัน)' },
-  peelChain: { score: 25, severity: 'high' as const, description: 'ตรวจพบรูปแบบ Peel Chain (แบ่งเงินซ้ำๆ)' },
-  newWallet: { score: 10, severity: 'low' as const, description: 'Wallet ใหม่ (สร้างไม่เกิน 30 วัน)' },
-  largeAmount: { score: 15, severity: 'medium' as const, description: 'ยอดธุรกรรมสูง (>$100,000)' },
-  crossChain: { score: 15, severity: 'medium' as const, description: 'มีการโอนข้าม Chain (Bridge)' },
-  rapidSplit: { score: 20, severity: 'high' as const, description: 'แบ่งเงินออกหลายทางอย่างรวดเร็ว (>10 tx/24hr)' },
-  gamblingInteraction: { score: 20, severity: 'medium' as const, description: 'มีการติดต่อกับ Gambling platforms' },
+  mixerInteraction: { score: 40, severity: 'critical' as const, description: 'Interaction with Mixer/Tumbler (Tornado Cash) - OFAC Sanctioned' },
+  scamInteraction: { score: 35, severity: 'critical' as const, description: 'Interaction with addresses associated with scam/hack' },
+  highFrequency: { score: 15, severity: 'medium' as const, description: 'Abnormally high transaction frequency (>50 tx/day)' },
+  peelChain: { score: 25, severity: 'high' as const, description: 'Peel Chain pattern detected (repeated splitting)' },
+  newWallet: { score: 10, severity: 'low' as const, description: 'New Wallet (created within 30 days)' },
+  largeAmount: { score: 15, severity: 'medium' as const, description: 'High transaction amount (>$100,000)' },
+  crossChain: { score: 15, severity: 'medium' as const, description: 'Cross-chain transfer (Bridge)' },
+  rapidSplit: { score: 20, severity: 'high' as const, description: 'Rapid money splitting (>10 tx/24hr)' },
+  gamblingInteraction: { score: 20, severity: 'medium' as const, description: 'Interaction with Gambling platforms' },
 };
 
 export function calculateRiskScore(

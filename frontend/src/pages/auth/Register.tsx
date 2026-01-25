@@ -38,15 +38,15 @@ export default function Register() {
 
   const validateForm = (): boolean => {
     if (!formData.email || !formData.password || !formData.first_name || !formData.last_name) {
-      setError('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+      setError('Please fill in all required fields');
       return false;
     }
     if (formData.password.length < 8) {
-      setError('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+      setError('Password must be at least 8 characters');
       return false;
     }
     if (formData.password !== confirmPassword) {
-      setError('รหัสผ่านไม่ตรงกัน');
+      setError('Passwords do not match');
       return false;
     }
     return true;
@@ -65,7 +65,7 @@ export default function Register() {
       // Redirect to pending approval page with email
       navigate(`/pending-approval?email=${encodeURIComponent(formData.email)}`);
     } catch (err: any) {
-      const message = err.response?.data?.detail || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+      const message = err.response?.data?.detail || 'An error occurred. Please try again';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -78,7 +78,7 @@ export default function Register() {
         {/* Logo */}
         <div className="text-center mb-6">
           <img src="/images/logo.png" alt="InvestiGate" className="h-32 mx-auto mb-2" />
-          <p className="text-gray-400">สมัครใช้งานระบบ</p>
+          <p className="text-gray-400">Register for the system</p>
         </div>
 
         {/* Register Card */}
@@ -88,8 +88,8 @@ export default function Register() {
               <UserPlus className="w-5 h-5 text-primary-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white">ลงทะเบียน</h2>
-              <p className="text-sm text-gray-400">สร้างบัญชีใหม่เพื่อใช้งานระบบ</p>
+              <h2 className="text-xl font-semibold text-white">Register</h2>
+              <p className="text-sm text-gray-400">Create new account to use the system</p>
             </div>
           </div>
 
@@ -105,7 +105,7 @@ export default function Register() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="first_name" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  ชื่อ <span className="text-red-400">*</span>
+                  Name <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -113,7 +113,7 @@ export default function Register() {
                     id="first_name"
                     name="first_name"
                     type="text"
-                    placeholder="ชื่อ"
+                    placeholder="Name"
                     value={formData.first_name}
                     onChange={handleChange}
                     required
@@ -124,13 +124,13 @@ export default function Register() {
               </div>
               <div>
                 <label htmlFor="last_name" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  นามสกุล <span className="text-red-400">*</span>
+                  Last Name <span className="text-red-400">*</span>
                 </label>
                 <Input
                   id="last_name"
                   name="last_name"
                   type="text"
-                  placeholder="นามสกุล"
+                  placeholder="Last Name"
                   value={formData.last_name}
                   onChange={handleChange}
                   required
@@ -142,7 +142,7 @@ export default function Register() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
-                อีเมล <span className="text-red-400">*</span>
+                Email <span className="text-red-400">*</span>
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -164,7 +164,7 @@ export default function Register() {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-1.5">
-                เบอร์โทรศัพท์
+                Phone
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -185,7 +185,7 @@ export default function Register() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="organization_name" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  หน่วยงาน/สังกัด
+                  Organization
                 </label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -193,7 +193,7 @@ export default function Register() {
                     id="organization_name"
                     name="organization_name"
                     type="text"
-                    placeholder="ชื่อหน่วยงาน"
+                    placeholder="Organization name"
                     value={formData.organization_name}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -203,7 +203,7 @@ export default function Register() {
               </div>
               <div>
                 <label htmlFor="position" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  ตำแหน่ง
+                  Position
                 </label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -211,7 +211,7 @@ export default function Register() {
                     id="position"
                     name="position"
                     type="text"
-                    placeholder="ตำแหน่งงาน"
+                    placeholder="Job title"
                     value={formData.position}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -224,14 +224,14 @@ export default function Register() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1.5">
-                รหัสผ่าน <span className="text-red-400">*</span>
+                Password <span className="text-red-400">*</span>
               </label>
               <div className="relative">
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="อย่างน้อย 8 ตัวอักษร"
+                  placeholder="At least 8 characters"
                   value={formData.password}
                   onChange={handleChange}
                   required
@@ -253,13 +253,13 @@ export default function Register() {
             {/* Confirm Password */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1.5">
-                ยืนยันรหัสผ่าน <span className="text-red-400">*</span>
+                ConfirmPassword <span className="text-red-400">*</span>
               </label>
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="ยืนยันรหัสผ่านอีกครั้ง"
+                placeholder="Confirm password again"
                 value={confirmPassword}
                 onChange={handleChange}
                 required
@@ -273,12 +273,12 @@ export default function Register() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  กำลังส่งคำขอ...
+                  Submitting...
                 </>
               ) : (
                 <>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  ส่งคำขอลงทะเบียน
+                  Submit Registration
                 </>
               )}
             </Button>
@@ -287,15 +287,15 @@ export default function Register() {
           {/* Notice */}
           <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <p className="text-blue-400 text-sm">
-              📋 หลังจากส่งคำขอแล้ว ผู้ดูแลระบบจะตรวจสอบและอนุมัติการลงทะเบียนของคุณ
+              📋 After submission, admin will review and approve your registration
             </p>
           </div>
 
           {/* Login Link */}
           <p className="mt-6 text-center text-gray-400">
-            มีบัญชีอยู่แล้ว?{' '}
+            Already have an account?{' '}
             <Link to="/login" className="text-primary-400 hover:text-primary-300">
-              เข้าสู่ระบบ
+              Sign In
             </Link>
           </p>
         </Card>
