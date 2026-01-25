@@ -25,7 +25,6 @@ import {
   Bug,
   CreditCard,
   Bell,
-  MoreHorizontal,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCaseStore } from '../../store/caseStore';
