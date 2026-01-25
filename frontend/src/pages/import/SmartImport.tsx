@@ -839,6 +839,23 @@ const SmartImport: React.FC = () => {
           }
         }
         log(`  📊 Total: ${callSuccess} call records saved`);
+        
+        // Generate network from call records
+        if (callSuccess > 0) {
+          log(`\n🔗 Generating Call Network...`);
+          try {
+            const genResponse = await fetch(`${baseUrl}/call-analysis/case/${selectedCase}/generate-network`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+            });
+            if (genResponse.ok) {
+              const genResult = await genResponse.json();
+              log(`  ✅ Network: ${genResult.entities} entities, ${genResult.links} links`);
+            }
+          } catch (err) {
+            log(`  ⚠️ Failed to generate network`);
+          }
+        }
       }
       
       // Save Location Points (location type files or files with lat/lng columns)
