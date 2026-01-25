@@ -797,6 +797,136 @@ const SmartImport: React.FC = () => {
       }
       
       log(`  ✅ Save ${evidenceSuccess}/${files.length} Evidence`);
+      
+      // ============================================
+      // SAVE RAW RECORDS TO SPECIFIC ENDPOINTS
+      // ============================================
+      
+      // Save Call Records (phone type files)
+      const phoneFiles = files.filter(f => f.type === 'phone');
+      if (phoneFiles.length > 0) {
+        log(`\n📞 Save Call Records...`);
+        let callSuccess = 0;
+        
+        for (const file of phoneFiles) {
+          try {
+            const callRecords = file.records.map(r => ({
+              device_owner: r.from_name || r.caller_name || null,
+              device_number: r.from_number || r.caller || null,
+              partner_number: r.to_number || r.called || 'Unknown',
+              partner_name: r.to_name || r.called_name || null,
+              call_type: r.call_type?.toLowerCase() || 'unknown',
+              start_time: r.date && r.time ? `${r.date}T${r.time}` : r.date || null,
+              duration_seconds: parseInt(r.duration_sec || r.duration || '0') || 0,
+              cell_id: r.cell_tower || r.cell_id || null,
+              notes: r.note || r.notes || null,
+              raw_data: JSON.stringify(r)
+            }));
+            
+            const response = await fetch(`${baseUrl}/call-analysis/case/${selectedCase}/records/bulk`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ records: callRecords })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              callSuccess += result.count || 0;
+              log(`  ✅ ${file.name}: ${result.count} records`);
+            }
+          } catch (err) {
+            log(`  ⚠️ ${file.name}: failed to save`);
+          }
+        }
+        log(`  📊 Total: ${callSuccess} call records saved`);
+      }
+      
+      // Save Location Points (location type files or files with lat/lng columns)
+      const locationFiles = files.filter(f => 
+        f.type === 'location' || 
+        f.columns.some(c => c.toLowerCase().includes('lat') || c.toLowerCase().includes('longitude'))
+      );
+      if (locationFiles.length > 0) {
+        log(`\n📍 Save Location Points...`);
+        let locSuccess = 0;
+        
+        for (const file of locationFiles) {
+          try {
+            const locationPoints = file.records.map(r => ({
+              suspect_id: r.suspect_id || r.person_id || null,
+              suspect_name: r.suspect_name || r.person_name || r.name || null,
+              latitude: parseFloat(r.latitude || r.lat || '0'),
+              longitude: parseFloat(r.longitude || r.lng || r.lon || '0'),
+              source: r.source?.toLowerCase() || 'manual',
+              location_name: r.location_name || r.place || r.label || null,
+              location_type: r.location_type || r.type || null,
+              address: r.address || null,
+              timestamp: r.datetime || r.timestamp || (r.date && r.time ? `${r.date}T${r.time}` : r.date) || null,
+              notes: r.note || r.notes || null,
+              raw_data: JSON.stringify(r)
+            })).filter(p => p.latitude !== 0 && p.longitude !== 0);
+            
+            if (locationPoints.length > 0) {
+              const response = await fetch(`${baseUrl}/locations/case/${selectedCase}/points/bulk`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ points: locationPoints })
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                locSuccess += result.count || 0;
+                log(`  ✅ ${file.name}: ${result.count} points`);
+              }
+            }
+          } catch (err) {
+            log(`  ⚠️ ${file.name}: failed to save`);
+          }
+        }
+        log(`  📊 Total: ${locSuccess} location points saved`);
+      }
+      
+      // Save Crypto Transactions
+      const cryptoFiles = files.filter(f => f.type === 'crypto');
+      if (cryptoFiles.length > 0) {
+        log(`\n💰 Save Crypto Transactions...`);
+        let cryptoSuccess = 0;
+        
+        for (const file of cryptoFiles) {
+          try {
+            const cryptoTxs = file.records.map(r => ({
+              blockchain: r.currency?.toLowerCase() || r.coin?.toLowerCase() || 'other',
+              tx_hash: r.tx_hash || r.hash || null,
+              from_address: r.from_wallet || r.from_address || 'Unknown',
+              from_label: r.from_label || null,
+              to_address: r.to_wallet || r.to_address || 'Unknown',
+              to_label: r.to_label || null,
+              amount: parseFloat(r.amount || '0'),
+              amount_usd: parseFloat(r.amount_usd || r.amount_thb || '0'),
+              timestamp: r.datetime || r.timestamp || (r.date && r.time ? `${r.date}T${r.time}` : r.date) || null,
+              risk_flag: r.risk_flag || (r.note?.toLowerCase().includes('mixer') ? 'mixer_detected' : 'none'),
+              notes: r.note || r.notes || null,
+              raw_data: JSON.stringify(r)
+            }));
+            
+            const response = await fetch(`${baseUrl}/crypto/case/${selectedCase}/transactions/bulk`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ transactions: cryptoTxs })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              cryptoSuccess += result.count || 0;
+              log(`  ✅ ${file.name}: ${result.count} transactions`);
+            }
+          } catch (err) {
+            log(`  ⚠️ ${file.name}: failed to save`);
+          }
+        }
+        log(`  📊 Total: ${cryptoSuccess} crypto transactions saved`);
+      }
+      
       log(`\n🎉 Done!`);
       
       // Refresh sidebar badge counts

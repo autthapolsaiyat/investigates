@@ -21,7 +21,9 @@ import {
   Navigation
 } from 'lucide-react';
 import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
+import { useCaseStore } from '../../store/caseStore';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
 // Location point interface
 interface LocationPoint {
@@ -38,65 +40,6 @@ interface LocationPoint {
   personName?: string;
 }
 
-// Demo data - Silk Road case locations
-const DEMO_LOCATIONS: LocationPoint[] = [
-  {
-    id: '1',
-    lat: 37.7749,
-    lng: -122.4194,
-    timestamp: new Date('2013-10-01T14:30:00'),
-    label: 'Glen Park Library',
-    source: 'gps',
-    address: '2825 Diamond St, San Francisco, CA',
-    notes: 'Ross Ulbricht arrest location',
-    personName: 'Ross Ulbricht',
-  },
-  {
-    id: '2',
-    lat: 37.7849,
-    lng: -122.4094,
-    timestamp: new Date('2013-10-01T12:00:00'),
-    label: 'Bernal Heights Coffee',
-    source: 'wifi',
-    address: 'Bernal Heights, San Francisco, CA',
-    notes: 'Using public WiFi',
-    personName: 'Ross Ulbricht',
-  },
-  {
-    id: '3',
-    lat: 37.7649,
-    lng: -122.4294,
-    timestamp: new Date('2013-10-01T10:00:00'),
-    label: 'Residence',
-    source: 'gps',
-    address: '15th Street, San Francisco, CA',
-    notes: 'Left residence',
-    personName: 'Ross Ulbricht',
-  },
-  {
-    id: '4',
-    lat: 34.0522,
-    lng: -83.9886,
-    timestamp: new Date('2022-11-06T09:00:00'),
-    label: 'James Zhong residence',
-    source: 'gps',
-    address: 'Gainesville, Georgia, USA',
-    notes: 'House search location - found 50,676 BTC',
-    personName: 'James Zhong',
-  },
-  {
-    id: '5',
-    lat: 34.0622,
-    lng: -83.9786,
-    timestamp: new Date('2022-11-06T14:00:00'),
-    label: 'FBI Atlanta Office',
-    source: 'manual',
-    address: 'Atlanta, Georgia, USA',
-    notes: 'Interrogation',
-    personName: 'James Zhong',
-  },
-];
-
 // Source icons and colors
 const SOURCE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
   gps: { color: '#22c55e', icon: '📍', label: 'GPS' },
@@ -107,7 +50,11 @@ const SOURCE_CONFIG: Record<string, { color: string; icon: string; label: string
 };
 
 export const LocationTimeline = () => {
-  const [locations] = useState<LocationPoint[]>(DEMO_LOCATIONS);
+  // Data state - fetched from API
+  const [locations, setLocations] = useState<LocationPoint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -117,7 +64,69 @@ export const LocationTimeline = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   
   // Use global case store
+  const { selectedCaseId } = useCaseStore();
   
+  // Fetch location data from API
+  useEffect(() => {
+    const fetchLocationData = async () => {
+      if (!selectedCaseId) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('access_token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      try {
+        const response = await fetch(
+          `${API_BASE}/locations/case/${selectedCaseId}/timeline`,
+          { headers }
+        );
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setLocations([]);
+            setIsLoading(false);
+            return;
+          }
+          throw new Error('Failed to fetch location data');
+        }
+        
+        const data = await response.json();
+        
+        // Transform API data to component format
+        const transformedLocations: LocationPoint[] = data.points.map((p: any) => ({
+          id: p.id,
+          lat: p.lat,
+          lng: p.lng,
+          timestamp: p.timestamp ? new Date(p.timestamp) : new Date(),
+          label: p.label,
+          source: p.source || 'manual',
+          accuracy: p.accuracy,
+          address: p.address,
+          notes: p.notes,
+          personId: p.personId,
+          personName: p.personName
+        }));
+        
+        setLocations(transformedLocations);
+        
+      } catch (err) {
+        console.error('Error fetching location data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchLocationData();
+  }, [selectedCaseId]);
   
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -170,8 +179,12 @@ export const LocationTimeline = () => {
     const L = (window as any).L;
     if (!L) return;
 
+    // Default center: Bangkok, Thailand. Will pan to data if available.
+    const defaultCenter: [number, number] = [13.7563, 100.5018];
+    const defaultZoom = 10;
+
     // Create map
-    const map = L.map(mapRef.current).setView([37.7749, -122.4194], 12);
+    const map = L.map(mapRef.current).setView(defaultCenter, defaultZoom);
     mapInstanceRef.current = map;
 
     // Add tile layer
@@ -403,7 +416,32 @@ export const LocationTimeline = () => {
       <div className="grid grid-cols-3 gap-4" style={{ height: 'calc(100vh - 280px)' }}>
         {/* Map */}
         <div className="col-span-2">
-          <Card className="h-full overflow-hidden">
+          <Card className="h-full overflow-hidden relative">
+            {/* Data Loading State */}
+            {isLoading && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-dark-800/80">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary-500 mx-auto mb-2" />
+                  <span className="text-dark-300">Loading location data...</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Empty Data State */}
+            {!isLoading && locations.length === 0 && mapLoaded && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-dark-800/90">
+                <div className="text-center">
+                  <MapPin className="w-16 h-16 text-dark-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-white mb-2">No Location Data</h3>
+                  <p className="text-dark-400 max-w-md">
+                    Import location data via Smart Import to visualize movement patterns.
+                    Supported formats: GPS logs, Cell Tower data, WiFi locations.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {/* Map Loading State */}
             {!mapLoaded ? (
               <div className="h-full flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary-500" />

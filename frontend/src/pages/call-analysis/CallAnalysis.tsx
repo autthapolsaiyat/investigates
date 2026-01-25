@@ -22,7 +22,7 @@ import {
   Zap,
   Eye,
   EyeOff,
-
+  Loader2,
 
   Search,
 
@@ -42,11 +42,14 @@ import {
   Workflow
 } from 'lucide-react';
 import { Button, CaseInfoBar } from '../../components/ui';
+import { useCaseStore } from '../../store/caseStore';
 
 import cytoscape from "cytoscape";
 // @ts-ignore
 import cytoscapeSvg from "cytoscape-svg";
 cytoscape.use(cytoscapeSvg);
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
 // ============================================
 // TYPES
@@ -97,103 +100,16 @@ interface SuspiciousPattern {
 }
 
 // ============================================
-// SAMPLE DATA
+// DATA - Fetched from API
 // ============================================
 
-const SAMPLE_ENTITIES: Entity[] = [
-  // CLUSTER 1: Network Boss
-  { id: 'P001', type: 'person', label: 'Mr. A (Big Boss)', subLabel: 'Network Boss', risk: 'critical', clusterId: 1, metadata: { age: 45, priors: 3 } },
-  { id: 'PH001', type: 'phone', label: '081-XXX-1111', subLabel: 'Primary Phone', risk: 'critical', clusterId: 1, metadata: {} },
-  { id: 'PH002', type: 'phone', label: '082-XXX-2222', subLabel: 'Backup Phone', risk: 'high', clusterId: 1, metadata: {} },
-  { id: 'ACC001', type: 'account', label: 'xxx-x-x1234-x', subLabel: 'KBank', risk: 'critical', clusterId: 1, metadata: { balance: 15000000 } },
-  { id: 'ADDR001', type: 'address', label: 'ABC Tower Condo', subLabel: 'Rama 9', risk: 'high', clusterId: 1, metadata: {} },
-  { id: 'CRYPTO001', type: 'crypto', label: '0x7a2B...9c3D', subLabel: 'ETH Wallet', risk: 'critical', clusterId: 1, metadata: {} },
-  
-  // CLUSTER 2: Coordinator
-  { id: 'P002', type: 'person', label: 'Mr. B (Coordinator)', subLabel: 'Coordinator', risk: 'high', clusterId: 2, metadata: { age: 38 } },
-  { id: 'P003', type: 'person', label: 'Ms. C (Money)', subLabel: 'Finance Manager', risk: 'high', clusterId: 2, metadata: { age: 35 } },
-  { id: 'PH003', type: 'phone', label: '083-XXX-3333', subLabel: 'Phone B', risk: 'high', clusterId: 2, metadata: {} },
-  { id: 'PH004', type: 'phone', label: '084-XXX-4444', subLabel: 'Phone C', risk: 'high', clusterId: 2, metadata: {} },
-  { id: 'ACC002', type: 'account', label: 'xxx-x-x5678-x', subLabel: 'SCB', risk: 'high', clusterId: 2, metadata: {} },
-  { id: 'ORG001', type: 'organization', label: 'XYZ Co.', subLabel: 'Shell Company', risk: 'high', clusterId: 2, metadata: {} },
-  
-  // CLUSTER 3: Small Dealers
-  { id: 'P004', type: 'person', label: 'Mr. D (Dealer 1)', subLabel: 'Klong Toey', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'P005', type: 'person', label: 'Mr. E (Dealer 2)', subLabel: 'Nong Chok', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'P006', type: 'person', label: 'Ms. F (Dealer 3)', subLabel: 'Bang Kapi', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'PH005', type: 'phone', label: '085-XXX-5555', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'PH006', type: 'phone', label: '086-XXX-6666', risk: 'medium', clusterId: 3, metadata: {} },
-  { id: 'PH007', type: 'phone', label: '087-XXX-7777', risk: 'medium', clusterId: 3, metadata: {} },
-  
-  // CLUSTER 4: Myanmar Connection
-  { id: 'P007', type: 'person', label: 'Mr. Z (Supplier)', subLabel: 'Myanmar', risk: 'critical', clusterId: 4, metadata: {} },
-  { id: 'PH008', type: 'phone', label: '+95-XXX-8888', subLabel: 'Myanmar', risk: 'critical', clusterId: 4, metadata: {} },
-  { id: 'CRYPTO002', type: 'crypto', label: 'TRX...abc123', subLabel: 'USDT', risk: 'critical', clusterId: 4, metadata: {} },
-  { id: 'ADDR002', type: 'address', label: 'Warehouse Tachileik', subLabel: 'Border', risk: 'critical', clusterId: 4, metadata: {} },
-  
-  // CLUSTER 5: Logistics
-  { id: 'P008', type: 'person', label: 'Mr. G (Driver)', subLabel: 'Transporter', risk: 'medium', clusterId: 5, metadata: {} },
-  { id: 'VEH001', type: 'vehicle', label: 'AB 1234', subLabel: 'Truck', risk: 'high', clusterId: 5, metadata: {} },
-  { id: 'PH009', type: 'phone', label: '089-XXX-9999', risk: 'medium', clusterId: 5, metadata: {} },
-  { id: 'ADDR003', type: 'address', label: 'Chiang Rai Warehouse', subLabel: 'Rest Stop', risk: 'high', clusterId: 5, metadata: {} },
-  
-  // Unknown
-  { id: 'P009', type: 'person', label: 'Unknown Male', subLabel: 'Unidentified', risk: 'unknown', metadata: {} },
-  { id: 'PH010', type: 'phone', label: '090-XXX-0000', subLabel: 'Burner', risk: 'high', metadata: {} },
-];
-
-const SAMPLE_LINKS: Link[] = [
-  { id: 'L001', source: 'P001', target: 'PH001', type: 'call', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L002', source: 'P001', target: 'PH002', type: 'call', weight: 45, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L003', source: 'P001', target: 'ACC001', type: 'transfer', weight: 89, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: {} },
-  { id: 'L004', source: 'P001', target: 'ADDR001', type: 'meeting', weight: 30, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L005', source: 'P001', target: 'CRYPTO001', type: 'transfer', weight: 35, firstSeen: '2025-09-01', lastSeen: '2026-01-12', metadata: {} },
-  { id: 'L006', source: 'PH001', target: 'PH003', type: 'call', weight: 85, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L007', source: 'PH001', target: 'PH004', type: 'call', weight: 42, firstSeen: '2025-07-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L008', source: 'PH002', target: 'PH003', type: 'sms', weight: 120, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L009', source: 'ACC001', target: 'ACC002', type: 'transfer', weight: 56, firstSeen: '2025-06-15', lastSeen: '2026-01-08', metadata: {} },
-  { id: 'L010', source: 'P002', target: 'PH003', type: 'call', weight: 200, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L011', source: 'P003', target: 'PH004', type: 'call', weight: 180, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L012', source: 'P002', target: 'P003', type: 'meeting', weight: 45, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L013', source: 'P003', target: 'ACC002', type: 'transfer', weight: 150, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L014', source: 'P002', target: 'ORG001', type: 'business', weight: 1, firstSeen: '2020-01-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L015', source: 'P003', target: 'ORG001', type: 'business', weight: 1, firstSeen: '2020-01-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L016', source: 'PH003', target: 'PH005', type: 'call', weight: 65, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L017', source: 'PH003', target: 'PH006', type: 'call', weight: 58, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L018', source: 'PH004', target: 'PH007', type: 'call', weight: 72, firstSeen: '2025-09-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L019', source: 'PH003', target: 'PH007', type: 'sms', weight: 45, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L020', source: 'P004', target: 'PH005', type: 'call', weight: 300, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L021', source: 'P005', target: 'PH006', type: 'call', weight: 280, firstSeen: '2025-08-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L022', source: 'P006', target: 'PH007', type: 'call', weight: 250, firstSeen: '2025-09-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L023', source: 'PH005', target: 'PH006', type: 'call', weight: 35, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L024', source: 'PH001', target: 'PH008', type: 'call', weight: 25, firstSeen: '2025-06-01', lastSeen: '2026-01-10', metadata: {} },
-  { id: 'L025', source: 'CRYPTO001', target: 'CRYPTO002', type: 'transfer', weight: 18, firstSeen: '2025-09-01', lastSeen: '2026-01-05', metadata: {} },
-  { id: 'L026', source: 'P007', target: 'PH008', type: 'call', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L027', source: 'P007', target: 'CRYPTO002', type: 'transfer', weight: 50, firstSeen: '2025-06-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L028', source: 'P007', target: 'ADDR002', type: 'meeting', weight: 100, firstSeen: '2025-01-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L029', source: 'PH003', target: 'PH009', type: 'call', weight: 40, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L030', source: 'P008', target: 'PH009', type: 'call', weight: 150, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L031', source: 'P008', target: 'VEH001', type: 'meeting', weight: 80, firstSeen: '2025-10-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L032', source: 'VEH001', target: 'ADDR003', type: 'meeting', weight: 25, firstSeen: '2025-11-01', lastSeen: '2026-01-14', metadata: {} },
-  { id: 'L033', source: 'ADDR003', target: 'ADDR002', type: 'transfer', weight: 12, firstSeen: '2025-11-01', lastSeen: '2026-01-08', metadata: {} },
-  { id: 'L034', source: 'PH002', target: 'PH010', type: 'call', weight: 8, firstSeen: '2026-01-10', lastSeen: '2026-01-12', metadata: {} },
-  { id: 'L035', source: 'PH010', target: 'P009', type: 'call', weight: 15, firstSeen: '2026-01-10', lastSeen: '2026-01-14', metadata: {} },
-];
-
-const SAMPLE_CLUSTERS: Cluster[] = [
+// Empty default data - will be populated from API
+const DEFAULT_CLUSTERS: Cluster[] = [
   { id: 1, name: 'Network Boss', color: '#ef4444', entities: [], risk: 'critical', description: 'Main command group' },
   { id: 2, name: 'Coordinator', color: '#f97316', entities: [], risk: 'high', description: 'Coordination group' },
   { id: 3, name: 'Small Dealers', color: '#22c55e', entities: [], risk: 'medium', description: 'Retail group' },
   { id: 4, name: 'Myanmar Production', color: '#8b5cf6', entities: [], risk: 'critical', description: 'Supplier group' },
   { id: 5, name: 'Transport/Logistics', color: '#3b82f6', entities: [], risk: 'high', description: 'Transport group' },
-];
-
-const SAMPLE_PATTERNS: SuspiciousPattern[] = [
-  { id: 'SP001', type: 'Burner Phone Pattern', severity: 'critical', description: 'Found disposable phone usage pattern', entities: ['PH002', 'PH010', 'P009'], evidence: ['Used for only 3 days', 'Calls only at night'] },
-  { id: 'SP002', type: 'Layered Communication', severity: 'high', description: 'Multi-layered communication', entities: ['P001', 'P002', 'P003'], evidence: ['No direct calls Boss-Dealers'] },
-  { id: 'SP003', type: 'Crypto Money Flow', severity: 'critical', description: 'Cross-border crypto money transfer', entities: ['CRYPTO001', 'CRYPTO002'], evidence: ['ETH → USDT conversion'] },
-  { id: 'SP004', type: 'Timing Pattern', severity: 'medium', description: 'Calls only during 22:00-04:00', entities: ['PH003', 'PH009'], evidence: ['95% calls after midnight'] },
-  { id: 'SP005', type: 'Shell Company', severity: 'high', description: 'Shell company', entities: ['ORG001', 'P002', 'P003'], evidence: ['Only 2 actual employees'] },
 ];
 
 // ============================================
@@ -512,10 +428,13 @@ const SuspiciousPatternCard = ({ pattern }: { pattern: SuspiciousPattern }) => (
 // ============================================
 
 export const CallAnalysis = () => {
-  const [entities] = useState<Entity[]>(SAMPLE_ENTITIES);
-  const [links] = useState<Link[]>(SAMPLE_LINKS);
-  const [clusters] = useState<Cluster[]>(SAMPLE_CLUSTERS);
-  const [patterns] = useState<SuspiciousPattern[]>(SAMPLE_PATTERNS);
+  // Data state - fetched from API
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [links, setLinks] = useState<Link[]>([]);
+  const [clusters, setClusters] = useState<Cluster[]>(DEFAULT_CLUSTERS);
+  const [patterns, setPatterns] = useState<SuspiciousPattern[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
@@ -536,7 +455,94 @@ export const CallAnalysis = () => {
   const [typeFilter, setTypeFilter] = useState<EntityType[]>(['person', 'phone', 'account', 'address', 'organization', 'crypto', 'vehicle']);
   
   // Use global case store
+  const { selectedCaseId } = useCaseStore();
   
+  // Fetch network data from API
+  useEffect(() => {
+    const fetchNetworkData = async () => {
+      if (!selectedCaseId) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('access_token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      try {
+        const response = await fetch(
+          `${API_BASE}/call-analysis/case/${selectedCaseId}/network`,
+          { headers }
+        );
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            // No data yet - this is okay
+            setEntities([]);
+            setLinks([]);
+            setClusters(DEFAULT_CLUSTERS);
+            setPatterns([]);
+            setIsLoading(false);
+            return;
+          }
+          throw new Error('Failed to fetch network data');
+        }
+        
+        const data = await response.json();
+        
+        // Transform API data to component format
+        const transformedEntities: Entity[] = data.entities.map((e: any) => ({
+          id: e.id,
+          type: e.type as EntityType,
+          label: e.label,
+          subLabel: e.subLabel,
+          risk: e.risk as RiskLevel,
+          clusterId: e.clusterId,
+          metadata: e.metadata || {}
+        }));
+        
+        const transformedLinks: Link[] = data.links.map((l: any) => ({
+          id: l.id,
+          source: l.source,
+          target: l.target,
+          type: l.type as LinkType,
+          weight: l.weight || 1,
+          firstSeen: l.firstSeen,
+          lastSeen: l.lastSeen,
+          metadata: l.metadata || {}
+        }));
+        
+        const transformedClusters: Cluster[] = data.clusters.length > 0 
+          ? data.clusters.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              color: c.color,
+              entities: c.entities || [],
+              risk: c.risk as RiskLevel,
+              description: c.description || ''
+            }))
+          : DEFAULT_CLUSTERS;
+        
+        setEntities(transformedEntities);
+        setLinks(transformedLinks);
+        setClusters(transformedClusters);
+        setPatterns([]); // TODO: fetch patterns from API
+        
+      } catch (err) {
+        console.error('Error fetching network data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchNetworkData();
+  }, [selectedCaseId]);
 
   // Memoized filtered data
   const filteredEntities = useMemo(() => 
@@ -728,14 +734,14 @@ export const CallAnalysis = () => {
               Intelligence Network Analysis
               <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded ml-2">react-cytoscapejs</span>
             </h1>
-            <p className="text-sm text-dark-400">Link Analysis - Drug Network Case</p>
+            <p className="text-sm text-dark-400">Link Analysis - Call Records Network</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleExportPNG}>
+            <Button variant="ghost" size="sm" onClick={handleExportPNG} disabled={entities.length === 0}>
               <Image size={16} className="mr-1" />
               Export PNG
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleExportSVG}>
+            <Button variant="ghost" size="sm" onClick={handleExportSVG} disabled={entities.length === 0}>
               <Image size={16} className="mr-1" />
               Export SVG
             </Button>
@@ -861,27 +867,56 @@ export const CallAnalysis = () => {
               
               {/* Cytoscape Graph */}
               <div className={`flex-1 relative min-h-0 ${darkMode ? "bg-dark-950 border-dark-700" : "bg-white border-gray-300"} rounded-xl border`}>
-                <CytoscapeComponent
-                  elements={elements}
-                  stylesheet={cytoscapeStylesheet}
-                  layout={layoutConfig}
-                  cy={handleCyReady}
-                  style={{ width: '100%', height: '100%' }}
-                  minZoom={0.2}
-                  maxZoom={3}
-                  boxSelectionEnabled={true}
-                  autounselectify={false}
-                  userZoomingEnabled={true}
-                  userPanningEnabled={true}
-                />
+                {/* Loading State */}
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-dark-950/80 z-10">
+                    <div className="text-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary-400 mx-auto mb-2" />
+                      <p className="text-dark-400">Loading network data...</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Empty State */}
+                {!isLoading && entities.length === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <Network className="w-16 h-16 text-dark-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-white mb-2">No Network Data</h3>
+                      <p className="text-dark-400 max-w-md">
+                        Import call logs via Smart Import to visualize communication networks.
+                        The system will automatically analyze and create network connections.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Graph - only render if we have data */}
+                {!isLoading && entities.length > 0 && (
+                  <CytoscapeComponent
+                    elements={elements}
+                    stylesheet={cytoscapeStylesheet}
+                    layout={layoutConfig}
+                    cy={handleCyReady}
+                    style={{ width: '100%', height: '100%' }}
+                    minZoom={0.2}
+                    maxZoom={3}
+                    boxSelectionEnabled={true}
+                    autounselectify={false}
+                    userZoomingEnabled={true}
+                    userPanningEnabled={true}
+                  />
+                )}
                 
                 {/* Instructions */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-4 text-xs text-dark-500 bg-dark-900/80 px-3 py-2 rounded-lg">
-                  <span>🖱️ Drag Node</span>
-                  <span>📍 Pan Background</span>
-                  <span>🔍 Scroll Zoom</span>
-                  <span>👆 Click Select</span>
-                </div>
+                {!isLoading && entities.length > 0 && (
+                  <div className="absolute bottom-4 left-4 flex items-center gap-4 text-xs text-dark-500 bg-dark-900/80 px-3 py-2 rounded-lg">
+                    <span>🖱️ Drag Node</span>
+                    <span>📍 Pan Background</span>
+                    <span>🔍 Scroll Zoom</span>
+                    <span>👆 Click Select</span>
+                  </div>
+                )}
               </div>
               
               {/* Legend */}
