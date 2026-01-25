@@ -708,66 +708,74 @@ const SmartImport: React.FC = () => {
     const log = (msg: string) => { setCreationLog(prev => [...prev, msg]); };
     
     try {
-      const nodeIdMap = new Map<string, number>();
       const token = localStorage.getItem('access_token');
       const baseUrl = 'https://investigates-api.azurewebsites.net/api/v1';
       
-      log(`📍 Create ${analysisResult.entities.length} Nodes...`);
+      // Separate files by type
+      const bankFiles = files.filter(f => f.type === 'bank');
+      const phoneFiles = files.filter(f => f.type === 'phone');
+      const cryptoFiles = files.filter(f => f.type === 'crypto');
       
-      for (const entity of analysisResult.entities) {
-        try {
-          const response = await fetch(`${baseUrl}/cases/${selectedCase}/money-flow/nodes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              label: entity.label,
-              node_type: entity.type === 'account' ? 'bank_account' : entity.type,
-              risk_score: entity.riskScore,
-              amount: entity.metadata.totalReceived || entity.metadata.totalSent || 0,
-              metadata: JSON.stringify({ riskFactors: entity.riskFactors, sources: entity.sources, ...entity.metadata })
-            })
-          });
-          if (response.ok) {
-            const data = await response.json();
-            nodeIdMap.set(entity.id, data.id);
-            log(`  ✅ ${entity.label}`);
-          }
-        } catch { log(`  ❌ ${entity.label}`); }
-      }
-      
-      log(`\n🔗 Create ${analysisResult.edges.length} Edges...`);
-      let edgeSuccess = 0;
-      
-      const edgeTypeMap: Record<string, string> = {
-        'money_transfer': 'bank_transfer',
-        'phone_call': 'other',
-        'crypto_transfer': 'crypto_transfer',
-        'ownership': 'other'
-      };
-      
-      for (const edge of analysisResult.edges) {
-        const sourceId = nodeIdMap.get(edge.source);
-        const targetId = nodeIdMap.get(edge.target);
-        if (sourceId && targetId) {
+      // ============================================
+      // BANK FILES → MONEY FLOW
+      // ============================================
+      if (bankFiles.length > 0) {
+        log(`\n💰 Processing Bank Transactions → Money Flow...`);
+        const nodeIdMap = new Map<string, number>();
+        
+        // Get bank-related entities only
+        const bankEntities = analysisResult.entities.filter(e => 
+          e.type === 'account' || e.sources.some(s => s.includes('bank'))
+        );
+        const bankEdges = analysisResult.edges.filter(e => e.edgeType === 'money_transfer');
+        
+        log(`  📍 Creating ${bankEntities.length} nodes...`);
+        for (const entity of bankEntities) {
           try {
-            const response = await fetch(`${baseUrl}/cases/${selectedCase}/money-flow/edges`, {
+            const response = await fetch(`${baseUrl}/cases/${selectedCase}/money-flow/nodes`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify({
-                from_node_id: sourceId,
-                to_node_id: targetId,
-                edge_type: edgeTypeMap[edge.edgeType] || 'other',
-                label: edge.label,
-                amount: edge.amount || 0,
-                transaction_date: edge.date
+                label: entity.label,
+                node_type: entity.type === 'account' ? 'bank_account' : entity.type,
+                risk_score: entity.riskScore,
+                amount: entity.metadata.totalReceived || entity.metadata.totalSent || 0,
+                metadata: JSON.stringify({ riskFactors: entity.riskFactors, sources: entity.sources, ...entity.metadata })
               })
             });
-            if (response.ok) edgeSuccess++;
-          } catch {}
+            if (response.ok) {
+              const data = await response.json();
+              nodeIdMap.set(entity.id, data.id);
+              log(`    ✅ ${entity.label}`);
+            }
+          } catch { log(`    ❌ ${entity.label}`); }
         }
+        
+        log(`  🔗 Creating ${bankEdges.length} edges...`);
+        let edgeSuccess = 0;
+        for (const edge of bankEdges) {
+          const sourceId = nodeIdMap.get(edge.source);
+          const targetId = nodeIdMap.get(edge.target);
+          if (sourceId && targetId) {
+            try {
+              const response = await fetch(`${baseUrl}/cases/${selectedCase}/money-flow/edges`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                  from_node_id: sourceId,
+                  to_node_id: targetId,
+                  edge_type: 'bank_transfer',
+                  label: edge.label,
+                  amount: edge.amount || 0,
+                  transaction_date: edge.date
+                })
+              });
+              if (response.ok) edgeSuccess++;
+            } catch {}
+          }
+        }
+        log(`  ✅ Money Flow: ${bankEntities.length} nodes, ${edgeSuccess} edges`);
       }
-      
-      log(`  ✅ Create ${edgeSuccess}/${analysisResult.edges.length} edges`);
       
       // Save Evidence (Chain of Custody)
       log(`\n🔐 Save Chain of Custody...`);
