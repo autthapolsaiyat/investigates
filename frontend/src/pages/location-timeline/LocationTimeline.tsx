@@ -53,7 +53,7 @@ export const LocationTimeline = () => {
   // Data state - fetched from API
   const [locations, setLocations] = useState<LocationPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);

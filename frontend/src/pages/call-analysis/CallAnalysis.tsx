@@ -434,7 +434,7 @@ export const CallAnalysis = () => {
   const [clusters, setClusters] = useState<Cluster[]>(DEFAULT_CLUSTERS);
   const [patterns, setPatterns] = useState<SuspiciousPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);

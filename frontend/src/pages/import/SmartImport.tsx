@@ -843,7 +843,7 @@ const SmartImport: React.FC = () => {
       
       // Save Location Points (location type files or files with lat/lng columns)
       const locationFiles = files.filter(f => 
-        f.type === 'location' || 
+        f.columns.some(c => c.toLowerCase().includes('lat')) || 
         f.columns.some(c => c.toLowerCase().includes('lat') || c.toLowerCase().includes('longitude'))
       );
       if (locationFiles.length > 0) {
