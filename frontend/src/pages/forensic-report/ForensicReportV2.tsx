@@ -895,7 +895,7 @@ export const ForensicReportV2 = () => {
                 </option>
               ))}
             </select>
-            <Badge variant={selectedCase?.status === 'active' ? 'primary' : 'secondary'}>
+            <Badge variant={selectedCase?.status === 'active' ? 'success' : 'default'}>
               {selectedCase?.status || 'draft'}
             </Badge>
           </div>
