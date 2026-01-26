@@ -14,15 +14,17 @@
  * 
  * @version 2.0 - Real API Integration
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Wallet, Search, Loader2, ExternalLink, Copy, CheckCircle2,
   AlertTriangle, ArrowUpRight, ArrowDownLeft,
   Shield, ShieldAlert, ShieldCheck, Eye, FileText, Download, Link2,
   Clock, Hash, Activity, AlertCircle, Info,
-  Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge
+  Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge,
+  Save, Trash2, FolderOpen
 } from 'lucide-react';
 import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
+import { useCaseStore } from '../../store/caseStore';
 
 import blockchainApi, {
   getKnownEntity,
@@ -34,6 +36,27 @@ import blockchainApi, {
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
 import { CryptoImportModal } from './CryptoImportModal';
 import { CryptoGraph } from './CryptoGraph';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
+
+// Saved wallet type from backend
+interface SavedWallet {
+  id: number;
+  address: string;
+  blockchain: string;
+  label: string | null;
+  owner_name: string | null;
+  owner_type: string | null;
+  total_received: number;
+  total_sent: number;
+  total_received_usd: number;
+  total_sent_usd: number;
+  transaction_count: number;
+  risk_score: number;
+  is_suspect: boolean;
+  is_exchange: boolean;
+  is_mixer: boolean;
+}
 
 // Blockchain configurations
 interface BlockchainConfig {
@@ -184,11 +207,134 @@ export const CryptoTracker = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   
   // Use global case store
+  const { selectedCase } = useCaseStore();
   
-  
+  // Saved wallets state
+  const [savedWallets, setSavedWallets] = useState<SavedWallet[]>([]);
+  const [savingWallet, setSavingWallet] = useState(false);
+  const [loadingSavedWallets, setLoadingSavedWallets] = useState(false);
 
   // Get current blockchain config
   const currentChain = blockchains.find(b => b.id === selectedChain)!;
+  
+  // Fetch saved wallets for current case
+  const fetchSavedWallets = useCallback(async () => {
+    if (!selectedCase?.id) return;
+    
+    setLoadingSavedWallets(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE}/crypto/case/${selectedCase.id}/wallets`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSavedWallets(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch saved wallets:', err);
+    } finally {
+      setLoadingSavedWallets(false);
+    }
+  }, [selectedCase?.id]);
+  
+  // Save wallet to case
+  const saveWalletToCase = async () => {
+    if (!selectedCase?.id || !walletInfo) return;
+    
+    setSavingWallet(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const walletData = {
+        address: walletInfo.address,
+        blockchain: walletInfo.blockchain,
+        label: walletInfo.labels[0] || null,
+        owner_name: getKnownEntity(walletInfo.address)?.name || null,
+        owner_type: walletInfo.isContract ? 'contract' : (getKnownEntity(walletInfo.address)?.type || 'unknown'),
+        total_received: walletInfo.totalReceived,
+        total_sent: walletInfo.totalSent,
+        total_received_usd: walletInfo.totalReceived,
+        total_sent_usd: walletInfo.totalSent,
+        transaction_count: walletInfo.txCount,
+        risk_score: walletInfo.riskScore,
+        is_suspect: walletInfo.riskScore >= 70,
+        is_exchange: walletInfo.labels.some(l => l.toLowerCase().includes('exchange')),
+        is_mixer: walletInfo.labels.some(l => l.toLowerCase().includes('mixer') || l.toLowerCase().includes('tornado')),
+        first_tx_date: walletInfo.firstTxDate,
+        last_tx_date: walletInfo.lastTxDate
+      };
+      
+      const response = await fetch(`${API_BASE}/crypto/case/${selectedCase.id}/wallets`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(walletData)
+      });
+      
+      if (response.ok) {
+        await fetchSavedWallets();
+        alert('Wallet saved to case successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to save wallet: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Failed to save wallet:', err);
+      alert('Failed to save wallet to case');
+    } finally {
+      setSavingWallet(false);
+    }
+  };
+  
+  // Delete wallet from case
+  const deleteWalletFromCase = async (walletId: number) => {
+    if (!selectedCase?.id) return;
+    
+    if (!confirm('Are you sure you want to delete this wallet?')) return;
+    
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE}/crypto/case/${selectedCase.id}/wallets/${walletId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        await fetchSavedWallets();
+      } else {
+        alert('Failed to delete wallet');
+      }
+    } catch (err) {
+      console.error('Failed to delete wallet:', err);
+      alert('Failed to delete wallet');
+    }
+  };
+  
+  // Load saved wallet for viewing
+  const loadSavedWallet = (wallet: SavedWallet) => {
+    setSearchAddress(wallet.address);
+    // Detect and set chain
+    const chain = detectBlockchain(wallet.address);
+    setSelectedChain(chain);
+    // Trigger search
+    setTimeout(() => {
+      const searchBtn = document.querySelector('[data-search-btn]') as HTMLButtonElement;
+      if (searchBtn) searchBtn.click();
+    }, 100);
+  };
+  
+  // Fetch saved wallets on case change
+  useEffect(() => {
+    fetchSavedWallets();
+  }, [fetchSavedWallets]);;
 
   // Check API status on mount
   useEffect(() => {
@@ -402,6 +548,62 @@ export const CryptoTracker = () => {
       {/* Case Info */}
       <CaseInfoBar />
 
+      {/* Saved Wallets Section */}
+      {selectedCase && savedWallets.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary-400" />
+              Saved Wallets ({savedWallets.length})
+            </h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={fetchSavedWallets}
+              disabled={loadingSavedWallets}
+            >
+              {loadingSavedWallets ? <Loader2 size={16} className="animate-spin" /> : 'Refresh'}
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {savedWallets.map(wallet => (
+              <div 
+                key={wallet.id} 
+                className={`p-3 rounded-lg border cursor-pointer transition-colors hover:border-primary-500 ${
+                  searchAddress.toLowerCase() === wallet.address.toLowerCase() 
+                    ? 'bg-primary-500/10 border-primary-500' 
+                    : 'bg-dark-800 border-dark-700'
+                }`}
+                onClick={() => loadSavedWallet(wallet)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant={wallet.risk_score >= 70 ? 'danger' : wallet.risk_score >= 40 ? 'warning' : 'success'}>
+                    Risk: {wallet.risk_score}
+                  </Badge>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); deleteWalletFromCase(wallet.id); }}
+                    className="p-1 text-dark-400 hover:text-red-400 transition-colors"
+                    title="Delete wallet"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <p className="font-mono text-sm text-dark-300 truncate" title={wallet.address}>
+                  {wallet.address.substring(0, 10)}...{wallet.address.substring(wallet.address.length - 8)}
+                </p>
+                <div className="flex items-center justify-between mt-2 text-xs text-dark-400">
+                  <span className="uppercase">{wallet.blockchain}</span>
+                  <span>{wallet.transaction_count} txs</span>
+                </div>
+                {wallet.label && (
+                  <Badge variant="default" className="mt-2 text-xs">{wallet.label}</Badge>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Search Section */}
       <Card className="p-4">
         <div className="flex items-center gap-4">
@@ -440,7 +642,7 @@ export const CryptoTracker = () => {
             />
           </div>
 
-          <Button onClick={searchWallet} disabled={isLoading}>
+          <Button onClick={searchWallet} disabled={isLoading} data-search-btn>
             {isLoading ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
@@ -641,6 +843,38 @@ export const CryptoTracker = () => {
                 Blockchair
               </a>
             </div>
+            
+            {/* Save to Case Action */}
+            {selectedCase && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-700">
+                <div className="flex items-center gap-2 text-sm text-dark-400">
+                  <FolderOpen size={16} />
+                  <span>Case: {selectedCase.case_number}</span>
+                </div>
+                <Button 
+                  variant="primary" 
+                  onClick={saveWalletToCase}
+                  disabled={savingWallet || savedWallets.some(w => w.address.toLowerCase() === walletInfo.address.toLowerCase())}
+                >
+                  {savingWallet ? (
+                    <>
+                      <Loader2 size={18} className="mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : savedWallets.some(w => w.address.toLowerCase() === walletInfo.address.toLowerCase()) ? (
+                    <>
+                      <CheckCircle2 size={18} className="mr-2" />
+                      Already Saved
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} className="mr-2" />
+                      Save to Case
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </Card>
 
           {/* Tabs */}

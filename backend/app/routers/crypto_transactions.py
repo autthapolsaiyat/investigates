@@ -447,6 +447,27 @@ async def delete_all_crypto_wallets(
     return {"message": f"Deleted {deleted} crypto wallets"}
 
 
+@router.delete("/case/{case_id}/wallets/{wallet_id}")
+async def delete_crypto_wallet(
+    case_id: int,
+    wallet_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a single crypto wallet"""
+    wallet = db.query(CryptoWallet).filter(
+        CryptoWallet.id == wallet_id,
+        CryptoWallet.case_id == case_id
+    ).first()
+    
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    
+    db.delete(wallet)
+    db.commit()
+    return {"message": "Wallet deleted successfully"}
+
+
 # ==================== CRYPTO DATA ENDPOINT ====================
 
 @router.get("/case/{case_id}/data", response_model=CryptoDataResponse)
