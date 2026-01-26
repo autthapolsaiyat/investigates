@@ -1,8 +1,15 @@
 /**
- * LocationTimeline - Location Tracking & Timeline Visualization
- * Display target movement on map with timeline
+ * LocationTimeline V2 - Enhanced Playback with FBI CAST Style Features
+ * Features:
+ * - Auto Pan & Zoom to each point
+ * - Animated Trail Line (shows path as it progresses)
+ * - Current Point Highlight with pulsing animation
+ * - Info Popup for current point
+ * - Speed Control (0.5x, 1x, 2x, 4x)
+ * - Progress Bar
+ * - Follow Mode Toggle
  */
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   MapPin,
   Clock,
@@ -16,7 +23,11 @@ import {
   Plus,
   Filter,
   User,
-  Navigation
+  Navigation,
+  Crosshair,
+  Gauge,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
 import { useCaseStore } from '../../store/caseStore';
@@ -47,6 +58,14 @@ const SOURCE_CONFIG: Record<string, { color: string; icon: string; label: string
   manual: { color: '#6b7280', icon: '✏️', label: 'Manual' },
 };
 
+// Speed options
+const SPEED_OPTIONS = [
+  { value: 0.5, label: '0.5x' },
+  { value: 1, label: '1x' },
+  { value: 2, label: '2x' },
+  { value: 4, label: '4x' },
+];
+
 export const LocationTimeline = () => {
   // Data state - fetched from API
   const [locations, setLocations] = useState<LocationPoint[]>([]);
@@ -60,6 +79,10 @@ export const LocationTimeline = () => {
   const [filterSource, setFilterSource] = useState<string>('all');
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  
+  // New playback states
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [followMode, setFollowMode] = useState(true);
   
   // Use global case store
   const { selectedCaseId } = useCaseStore();
@@ -129,7 +152,9 @@ export const LocationTimeline = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
-  const polylineRef = useRef<any>(null);
+  const trailPolylineRef = useRef<any>(null);
+  const fullPolylineRef = useRef<any>(null);
+  const pulseMarkerRef = useRef<any>(null);
 
   // Get unique persons
   const persons = useMemo(() => {
@@ -154,6 +179,43 @@ export const LocationTimeline = () => {
     link.rel = 'stylesheet';
     link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
     document.head.appendChild(link);
+    
+    // Add custom CSS for pulsing animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse-ring {
+        0% { transform: scale(0.5); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
+      }
+      .pulse-marker {
+        position: relative;
+      }
+      .pulse-marker::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 60px;
+        height: 60px;
+        margin: -30px 0 0 -30px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.4);
+        animation: pulse-ring 1.5s ease-out infinite;
+      }
+      .pulse-marker::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        margin: -20px 0 0 -20px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.3);
+        animation: pulse-ring 1.5s ease-out infinite 0.3s;
+      }
+    `;
+    document.head.appendChild(style);
 
     // Load Leaflet JS
     const script = document.createElement('script');
@@ -194,64 +256,141 @@ export const LocationTimeline = () => {
     updateMarkers();
   }, [mapLoaded]);
 
-  // Update markers when locations change
-  useEffect(() => {
-    if (!mapInstanceRef.current) return;
-    updateMarkers();
-  }, [filteredLocations, selectedLocation]);
+  // Update trail line (animated path)
+  const updateTrailLine = useCallback((upToIndex: number) => {
+    const L = (window as any).L;
+    if (!L || !mapInstanceRef.current) return;
+    
+    // Remove old trail
+    if (trailPolylineRef.current) {
+      trailPolylineRef.current.remove();
+    }
+    
+    // Draw trail up to current point (solid line)
+    const trailCoords = filteredLocations.slice(0, upToIndex + 1).map(loc => [loc.lat, loc.lng] as [number, number]);
+    if (trailCoords.length > 1) {
+      trailPolylineRef.current = L.polyline(trailCoords, {
+        color: '#3b82f6',
+        weight: 4,
+        opacity: 1,
+      }).addTo(mapInstanceRef.current);
+    }
+  }, [filteredLocations]);
 
-  const updateMarkers = () => {
+  // Update pulse marker for current location
+  const updatePulseMarker = useCallback((loc: LocationPoint) => {
+    const L = (window as any).L;
+    if (!L || !mapInstanceRef.current) return;
+    
+    // Remove old pulse marker
+    if (pulseMarkerRef.current) {
+      pulseMarkerRef.current.remove();
+    }
+    
+    const config = SOURCE_CONFIG[loc.source];
+    
+    // Create pulsing marker
+    const pulseIcon = L.divIcon({
+      className: 'pulse-marker',
+      html: `
+        <div style="
+          width: 50px;
+          height: 50px;
+          background: ${config.color};
+          border-radius: 50%;
+          border: 4px solid #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+          position: relative;
+          z-index: 1000;
+        ">
+          ${config.icon}
+        </div>
+      `,
+      iconSize: [50, 50],
+      iconAnchor: [25, 25],
+    });
+    
+    pulseMarkerRef.current = L.marker([loc.lat, loc.lng], { icon: pulseIcon, zIndexOffset: 1000 })
+      .addTo(mapInstanceRef.current)
+      .bindPopup(`
+        <div style="min-width: 250px; font-family: system-ui;">
+          <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #1e3a5f;">
+            📍 ${loc.label}
+          </div>
+          <div style="color: #666; font-size: 12px; margin-bottom: 4px;">
+            ${loc.address || 'No address specified'}
+          </div>
+          <div style="color: #666; font-size: 12px; margin-bottom: 4px;">
+            🕐 ${loc.timestamp.toLocaleString('en-US')}
+          </div>
+          ${loc.personName ? `<div style="color: #3b82f6; font-size: 12px;">👤 ${loc.personName}</div>` : ''}
+          ${loc.notes ? `<div style="margin-top: 8px; padding: 8px; background: #f5f5f5; border-radius: 4px; font-size: 11px;">📝 ${loc.notes}</div>` : ''}
+        </div>
+      `)
+      .openPopup();
+  }, []);
+
+  // Update markers when locations change
+  const updateMarkers = useCallback(() => {
     const L = (window as any).L;
     if (!L || !mapInstanceRef.current) return;
 
     // Clear existing markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
-    if (polylineRef.current) {
-      polylineRef.current.remove();
+    if (fullPolylineRef.current) {
+      fullPolylineRef.current.remove();
+    }
+    if (trailPolylineRef.current) {
+      trailPolylineRef.current.remove();
+    }
+    if (pulseMarkerRef.current) {
+      pulseMarkerRef.current.remove();
     }
 
     // Add new markers
     const coords: [number, number][] = [];
     filteredLocations.forEach((loc, index) => {
-      const isSelected = selectedLocation?.id === loc.id;
-      const isCurrent = index === currentIndex;
       const config = SOURCE_CONFIG[loc.source];
 
-      // Create custom icon
+      // Create custom icon (smaller for non-current points)
       const icon = L.divIcon({
         className: 'custom-marker',
         html: `
           <div style="
-            width: ${isSelected || isCurrent ? '40px' : '30px'};
-            height: ${isSelected || isCurrent ? '40px' : '30px'};
+            width: 28px;
+            height: 28px;
             background: ${config.color};
             border-radius: 50%;
-            border: 3px solid ${isSelected ? '#fff' : isCurrent ? '#fbbf24' : 'rgba(255,255,255,0.5)'};
+            border: 2px solid rgba(255,255,255,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: ${isSelected || isCurrent ? '18px' : '14px'};
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            transition: all 0.3s;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            opacity: 0.8;
           ">
             ${config.icon}
           </div>
           <div style="
             position: absolute;
-            top: -25px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.75);
             color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
             white-space: nowrap;
           ">${index + 1}</div>
         `,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       });
 
       const marker = L.marker([loc.lat, loc.lng], { icon })
@@ -259,89 +398,136 @@ export const LocationTimeline = () => {
         .on('click', () => {
           setSelectedLocation(loc);
           setCurrentIndex(index);
+          setIsPlaying(false);
+          updatePulseMarker(loc);
+          updateTrailLine(index);
+          if (followMode) {
+            mapInstanceRef.current.flyTo([loc.lat, loc.lng], 15, { duration: 0.5 });
+          }
         });
-
-      if (isSelected || isCurrent) {
-        marker.bindPopup(`
-          <div style="min-width: 200px;">
-            <strong>${loc.label}</strong><br/>
-            <small>${loc.address || 'No address specified'}</small><br/>
-            <small>${loc.timestamp.toLocaleString('en-US')}</small>
-          </div>
-        `).openPopup();
-      }
 
       markersRef.current.push(marker);
       coords.push([loc.lat, loc.lng]);
     });
 
-    // Draw polyline connecting points
+    // Draw full polyline (faded, showing entire route)
     if (coords.length > 1) {
-      polylineRef.current = L.polyline(coords, {
-        color: '#3b82f6',
-        weight: 3,
-        opacity: 0.7,
-        dashArray: '10, 10',
+      fullPolylineRef.current = L.polyline(coords, {
+        color: '#6b7280',
+        weight: 2,
+        opacity: 0.4,
+        dashArray: '8, 8',
       }).addTo(mapInstanceRef.current);
     }
 
-    // Fit bounds
+    // Fit bounds initially
     if (coords.length > 0) {
       const bounds = L.latLngBounds(coords);
       mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  };
+    
+    // Initialize with first point
+    if (filteredLocations.length > 0) {
+      setSelectedLocation(filteredLocations[0]);
+      updatePulseMarker(filteredLocations[0]);
+      updateTrailLine(0);
+    }
+  }, [filteredLocations, followMode, updatePulseMarker, updateTrailLine]);
 
-  // Auto-play animation
+  // Update markers when locations change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    updateMarkers();
+  }, [filteredLocations, updateMarkers]);
+
+  // Pan to current location when index changes (during playback)
+  const panToCurrentLocation = useCallback(() => {
+    if (!mapInstanceRef.current || !followMode) return;
+    
+    const currentLoc = filteredLocations[currentIndex];
+    if (!currentLoc) return;
+    
+    // Smooth fly to current location
+    mapInstanceRef.current.flyTo([currentLoc.lat, currentLoc.lng], 15, {
+      duration: 1,
+      easeLinearity: 0.5
+    });
+    
+    // Update trail line to show path up to current point
+    updateTrailLine(currentIndex);
+    
+    // Update pulse marker
+    updatePulseMarker(currentLoc);
+    
+  }, [currentIndex, followMode, filteredLocations, updateTrailLine, updatePulseMarker]);
+
+  // Update when current index changes
+  useEffect(() => {
+    if (filteredLocations.length > 0) {
+      setSelectedLocation(filteredLocations[currentIndex]);
+      panToCurrentLocation();
+    }
+  }, [currentIndex, filteredLocations, panToCurrentLocation]);
+
+  // Auto-play animation with speed control
   useEffect(() => {
     if (!isPlaying) return;
 
+    const baseInterval = 2000; // Base 2 seconds
     const interval = setInterval(() => {
       setCurrentIndex(prev => {
         if (prev >= filteredLocations.length - 1) {
           setIsPlaying(false);
           return prev;
         }
-        const next = prev + 1;
-        setSelectedLocation(filteredLocations[next]);
-        return next;
+        return prev + 1;
       });
-    }, 2000);
+    }, baseInterval / playbackSpeed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, filteredLocations]);
+  }, [isPlaying, filteredLocations, playbackSpeed]);
 
   const handlePlay = () => {
     if (currentIndex >= filteredLocations.length - 1) {
       setCurrentIndex(0);
-      setSelectedLocation(filteredLocations[0]);
     }
     setIsPlaying(true);
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      const newIndex = currentIndex - 1;
-      setCurrentIndex(newIndex);
-      setSelectedLocation(filteredLocations[newIndex]);
+      setCurrentIndex(currentIndex - 1);
     }
   };
 
   const handleNext = () => {
     if (currentIndex < filteredLocations.length - 1) {
-      const newIndex = currentIndex + 1;
-      setCurrentIndex(newIndex);
-      setSelectedLocation(filteredLocations[newIndex]);
+      setCurrentIndex(currentIndex + 1);
     }
+  };
+
+  const handleReset = () => {
+    setCurrentIndex(0);
+    setIsPlaying(false);
+  };
+
+  const handleEnd = () => {
+    setCurrentIndex(filteredLocations.length - 1);
+    setIsPlaying(false);
   };
 
   const formatDuration = (start: Date, end: Date) => {
     const diff = end.getTime() - start.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    if (hours > 0) return `${hours}hrs  ${minutes}min`;
-    return `${minutes} minutes`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
   };
+
+  // Calculate progress percentage
+  const progressPercent = filteredLocations.length > 1 
+    ? (currentIndex / (filteredLocations.length - 1)) * 100 
+    : 0;
 
   return (
     <div className="flex-1 p-6 bg-dark-900 space-y-4">
@@ -391,7 +577,7 @@ export const LocationTimeline = () => {
           <div className="flex-1" />
           <div className="flex items-center gap-2 text-sm text-dark-400">
             <Navigation size={16} />
-            <span>{filteredLocations.length} Location</span>
+            <span>{filteredLocations.length} Locations</span>
           </div>
         </div>
       </Card>
@@ -434,84 +620,125 @@ export const LocationTimeline = () => {
             ) : (
               <div ref={mapRef} className="h-full w-full" />
             )}
+            
+            {/* Map Overlay Controls */}
+            {mapLoaded && filteredLocations.length > 0 && (
+              <div className="absolute bottom-4 left-4 right-4 z-[1000]">
+                {/* Progress Bar */}
+                <div className="bg-dark-800/90 backdrop-blur rounded-lg p-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-xs text-dark-400 w-8">{currentIndex + 1}</span>
+                    <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary-500 transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-dark-400 w-8 text-right">{filteredLocations.length}</span>
+                  </div>
+                  
+                  {/* Playback Controls */}
+                  <div className="flex items-center justify-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={handleReset} disabled={filteredLocations.length === 0}>
+                      <SkipBack size={16} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handlePrevious} disabled={currentIndex === 0}>
+                      <ChevronLeft size={16} />
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={isPlaying ? () => setIsPlaying(false) : handlePlay}
+                      disabled={filteredLocations.length === 0}
+                      className="px-4"
+                    >
+                      {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleNext} disabled={currentIndex >= filteredLocations.length - 1}>
+                      <ChevronRight size={16} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleEnd} disabled={filteredLocations.length === 0}>
+                      <SkipForward size={16} />
+                    </Button>
+                    
+                    <div className="w-px h-6 bg-dark-600 mx-2" />
+                    
+                    {/* Speed Control */}
+                    <div className="flex items-center gap-1">
+                      <Gauge size={14} className="text-dark-400" />
+                      <select
+                        value={playbackSpeed}
+                        onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+                        className="bg-dark-700 border border-dark-600 rounded px-2 py-1 text-xs"
+                      >
+                        {SPEED_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="w-px h-6 bg-dark-600 mx-2" />
+                    
+                    {/* Follow Mode Toggle */}
+                    <Button
+                      variant={followMode ? 'primary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setFollowMode(!followMode)}
+                      title={followMode ? 'Follow Mode: ON' : 'Follow Mode: OFF'}
+                    >
+                      {followMode ? <Eye size={16} /> : <EyeOff size={16} />}
+                    </Button>
+                    
+                    {/* Center on Current */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const loc = filteredLocations[currentIndex];
+                        if (loc && mapInstanceRef.current) {
+                          mapInstanceRef.current.flyTo([loc.lat, loc.lng], 15, { duration: 0.5 });
+                        }
+                      }}
+                      title="Center on Current Point"
+                    >
+                      <Crosshair size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
         {/* Timeline Panel */}
         <div className="col-span-1 flex flex-col gap-4">
-          {/* Playback Controls */}
-          <Card className="p-4">
-            <div className="flex items-center justify-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setCurrentIndex(0); setSelectedLocation(filteredLocations[0]); }}
-                disabled={filteredLocations.length === 0}
-              >
-                <SkipBack size={18} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handlePrevious}
-                disabled={currentIndex === 0}
-              >
-                <ChevronLeft size={18} />
-              </Button>
-              <Button
-                variant="primary"
-                onClick={isPlaying ? () => setIsPlaying(false) : handlePlay}
-                disabled={filteredLocations.length === 0}
-                className="px-6"
-              >
-                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleNext}
-                disabled={currentIndex >= filteredLocations.length - 1}
-              >
-                <ChevronRight size={18} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { 
-                  const last = filteredLocations.length - 1;
-                  setCurrentIndex(last); 
-                  setSelectedLocation(filteredLocations[last]); 
-                }}
-                disabled={filteredLocations.length === 0}
-              >
-                <SkipForward size={18} />
-              </Button>
-            </div>
-            <div className="text-center text-sm text-dark-400 mt-2">
-              {currentIndex + 1} / {filteredLocations.length}
-            </div>
-          </Card>
-
-          {/* Selected Location Details */}
+          {/* Current Location Info */}
           {selectedLocation && (
             <Card className="p-4 bg-primary-500/10 border-primary-500/30">
               <div className="flex items-start gap-3">
                 <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl animate-pulse"
                   style={{ background: SOURCE_CONFIG[selectedLocation.source].color }}
                 >
                   {SOURCE_CONFIG[selectedLocation.source].icon}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold">{selectedLocation.label}</h3>
-                  <p className="text-sm text-dark-400">{selectedLocation.address}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-dark-700 px-2 py-0.5 rounded">
+                      #{currentIndex + 1}
+                    </span>
+                    <Badge variant="info" className="text-xs">
+                      {SOURCE_CONFIG[selectedLocation.source].label}
+                    </Badge>
+                  </div>
+                  <h3 className="font-semibold mt-1">{selectedLocation.label}</h3>
+                  <p className="text-sm text-dark-400">{selectedLocation.address || 'No address'}</p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-dark-400">
                     <Clock size={12} />
                     {selectedLocation.timestamp.toLocaleString('en-US')}
                   </div>
                   {selectedLocation.personName && (
-                    <Badge variant="info" className="mt-2">
-                      {selectedLocation.personName}
+                    <Badge variant="warning" className="mt-2">
+                      👤 {selectedLocation.personName}
                     </Badge>
                   )}
                   {selectedLocation.notes && (
@@ -533,9 +760,10 @@ export const LocationTimeline = () => {
               </h3>
             </div>
             <div className="flex-1 overflow-y-auto p-2">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {filteredLocations.map((loc, index) => {
                   const isActive = index === currentIndex;
+                  const isPast = index < currentIndex;
                   const config = SOURCE_CONFIG[loc.source];
                   const prevLoc = index > 0 ? filteredLocations[index - 1] : null;
                   
@@ -552,27 +780,40 @@ export const LocationTimeline = () => {
                         onClick={() => {
                           setCurrentIndex(index);
                           setSelectedLocation(loc);
+                          setIsPlaying(false);
                         }}
                         className={`w-full text-left p-3 rounded-lg transition-all ${
                           isActive 
-                            ? 'bg-primary-500/20 border border-primary-500/50' 
-                            : 'bg-dark-800 hover:bg-dark-700 border border-transparent'
+                            ? 'bg-primary-500/20 border-2 border-primary-500' 
+                            : isPast
+                              ? 'bg-dark-700/50 border border-dark-600'
+                              : 'bg-dark-800 hover:bg-dark-700 border border-transparent'
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <div 
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
-                            style={{ background: config.color }}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
+                              isActive ? 'ring-2 ring-primary-400 ring-offset-2 ring-offset-dark-900' : ''
+                            }`}
+                            style={{ 
+                              background: config.color,
+                              opacity: isPast || isActive ? 1 : 0.5
+                            }}
                           >
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">{loc.label}</div>
+                            <div className={`font-medium text-sm truncate ${isPast || isActive ? 'text-white' : 'text-dark-400'}`}>
+                              {loc.label}
+                            </div>
                             <div className="text-xs text-dark-400 truncate">{loc.address}</div>
                             <div className="text-xs text-dark-500 mt-1">
                               {loc.timestamp.toLocaleString('en-US')}
                             </div>
                           </div>
+                          {isActive && (
+                            <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
+                          )}
                         </div>
                       </button>
                     </div>
@@ -586,7 +827,7 @@ export const LocationTimeline = () => {
 
       {/* Legend */}
       <Card className="p-3">
-        <div className="flex items-center gap-6 justify-center">
+        <div className="flex items-center gap-6 justify-center flex-wrap">
           {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <div 
@@ -598,6 +839,15 @@ export const LocationTimeline = () => {
               <span className="text-dark-400">{config.label}</span>
             </div>
           ))}
+          <div className="w-px h-4 bg-dark-600" />
+          <div className="flex items-center gap-2 text-sm text-dark-400">
+            <div className="w-8 h-0.5 bg-dark-500" style={{ borderBottom: '2px dashed #6b7280' }} />
+            <span>Full Route</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-dark-400">
+            <div className="w-8 h-1 bg-primary-500 rounded" />
+            <span>Traveled Path</span>
+          </div>
         </div>
       </Card>
 
