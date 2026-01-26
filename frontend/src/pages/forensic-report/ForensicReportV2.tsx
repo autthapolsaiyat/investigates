@@ -83,14 +83,6 @@ interface CallEntity {
   risk_score: number;
 }
 
-interface CallLink {
-  id: number;
-  source_entity_id: number;
-  target_entity_id: number;
-  call_count: number;
-  total_duration: number;
-}
-
 // Location Types
 interface LocationPoint {
   id: number;
@@ -251,7 +243,6 @@ export const ForensicReportV2 = () => {
   
   // Call Analysis states
   const [callEntities, setCallEntities] = useState<CallEntity[]>([]);
-  const [callLinks, setCallLinks] = useState<CallLink[]>([]);
   
   // Location states
   const [locationPoints, setLocationPoints] = useState<LocationPoint[]>([]);
@@ -323,11 +314,9 @@ export const ForensicReportV2 = () => {
         if (callRes.ok) {
           const callData = await callRes.json();
           setCallEntities(callData.entities || []);
-          setCallLinks(callData.links || []);
         }
       } catch {
         setCallEntities([]);
-        setCallLinks([]);
       }
       
       // 4. Fetch Location data
