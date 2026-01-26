@@ -724,7 +724,6 @@ export const CallAnalysis = () => {
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               <Shield className="text-primary-400" size={24} />
               Intelligence Network Analysis
-              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded ml-2">react-cytoscapejs</span>
             </h1>
             <p className="text-sm text-dark-400">Link Analysis - Call Records Network</p>
           </div>

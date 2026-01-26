@@ -534,14 +534,6 @@ export const CryptoTracker = () => {
               Import to Money Flow
             </Button>
           )}
-          <Button variant="secondary">
-            <FileText size={18} className="mr-2" />
-            Report
-          </Button>
-          <Button variant="secondary">
-            <Download size={18} className="mr-2" />
-            Export
-          </Button>
         </div>
       </div>
 

@@ -13,9 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Upload,
   Plus,
-  Download,
   Filter,
   User,
   Navigation
@@ -355,20 +353,6 @@ export const LocationTimeline = () => {
             Location Timeline
           </h1>
           <p className="text-dark-400 mt-1">Track target movement on map</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => setShowAddModal(true)}>
-            <Plus size={18} className="mr-2" />
-            Add Location
-          </Button>
-          <Button variant="ghost">
-            <Upload size={18} className="mr-2" />
-            Import GPS
-          </Button>
-          <Button variant="secondary">
-            <Download size={18} className="mr-2" />
-            Export KML
-          </Button>
         </div>
       </div>
 
