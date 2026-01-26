@@ -1,18 +1,27 @@
 /**
- * Forensic Report V2 - Criminal Network Analysis Report
+ * Forensic Report V2 - Comprehensive Criminal Network Analysis Report
  * Digital Forensic Standard for Court
- * Features: Risk Score Analysis, PDF Export, Auto Summary, Network Graph, QR Code Chain of Custody
+ * Features:
+ * - 4 Modules: Money Flow, Call Analysis, Crypto, Location Timeline
+ * - Bilingual Support (EN/TH)
+ * - Risk Score Analysis
+ * - PDF Export
+ * - Auto Summary
+ * - Network Graph
+ * - QR Code Chain of Custody
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   FileText, Download, Printer, Users, TrendingUp, RefreshCw, Loader2, 
   AlertTriangle, Phone, Wallet, Building2, Shield, ChevronRight,
-  Target, ArrowRightLeft, Globe, Shuffle, CheckCircle, Network, QrCode, Lock, Fingerprint
+  Target, ArrowRightLeft, CheckCircle, Network, Lock, Fingerprint, MapPin
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI, evidenceAPI } from '../../services/api';
 import type { Case, MoneyFlowNode, MoneyFlowEdge, Evidence } from '../../services/api';
 import { ForensicReportGraph } from './ForensicReportGraph';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
 // ==================== TYPES ====================
 interface RiskFactor {
@@ -62,6 +71,117 @@ interface Statistics {
   highRiskCount: number;
 }
 
+// Call Analysis Types
+interface CallEntity {
+  id: number;
+  label: string;
+  phone_number?: string;
+  person_name?: string;
+  total_calls: number;
+  total_duration: number;
+  risk_level: string;
+  risk_score: number;
+}
+
+interface CallLink {
+  id: number;
+  source_entity_id: number;
+  target_entity_id: number;
+  call_count: number;
+  total_duration: number;
+}
+
+// Location Types
+interface LocationPoint {
+  id: number;
+  suspect_name?: string;
+  latitude: number;
+  longitude: number;
+  source: string;
+  location_name?: string;
+  location_type?: string;
+  timestamp?: string;
+}
+
+// Crypto Types
+interface CryptoTransaction {
+  id: number;
+  blockchain: string;
+  from_wallet: string;
+  to_wallet: string;
+  amount: number;
+  amount_usd?: number;
+  risk_flag?: string;
+  tx_date?: string;
+}
+
+// Language Type
+type Language = 'en' | 'th';
+
+// Bilingual Labels
+const labels: Record<string, Record<Language, string>> = {
+  reportTitle: { en: 'Criminal Network Analysis Report', th: 'รายงานวิเคราะห์เครือข่ายอาชญากรรม' },
+  subtitle: { en: 'Royal Thai Police - Digital Forensic Standard', th: 'สำนักงานตำรวจแห่งชาติ - มาตรฐานนิติวิทยาศาสตร์ดิจิทัล' },
+  caseNumber: { en: 'Case Number', th: 'หมายเลขคดี' },
+  caseTitle: { en: 'Case Title', th: 'ชื่อคดี' },
+  analysisDate: { en: 'Analysis Date', th: 'วันที่วิเคราะห์' },
+  analyst: { en: 'Analyst', th: 'ผู้วิเคราะห์' },
+  analysisSummary: { en: 'Analysis Summary', th: 'สรุปผลการวิเคราะห์' },
+  relatedPersons: { en: 'Related Persons', th: 'บุคคลที่เกี่ยวข้อง' },
+  bankAccounts: { en: 'Bank Accounts', th: 'บัญชีธนาคาร' },
+  totalTransactions: { en: 'Total Transactions', th: 'ธุรกรรมทั้งหมด' },
+  totalValue: { en: 'Total Value', th: 'มูลค่ารวม' },
+  moneyFlowAnalysis: { en: 'Money Flow Analysis', th: 'การวิเคราะห์กระแสเงิน' },
+  highRiskPersons: { en: 'High Risk Persons', th: 'บุคคลความเสี่ยงสูง' },
+  keyTransactions: { en: 'Key Transactions', th: 'ธุรกรรมสำคัญ' },
+  callAnalysis: { en: 'Call Analysis', th: 'การวิเคราะห์การโทร' },
+  topCallers: { en: 'Top Callers', th: 'ผู้โทรสูงสุด' },
+  totalCalls: { en: 'Total Calls', th: 'จำนวนการโทร' },
+  totalDuration: { en: 'Total Duration', th: 'ระยะเวลารวม' },
+  uniqueNumbers: { en: 'Unique Numbers', th: 'หมายเลขไม่ซ้ำ' },
+  cryptoAnalysis: { en: 'Crypto Analysis', th: 'การวิเคราะห์คริปโต' },
+  cryptoTransactions: { en: 'Crypto Transactions', th: 'ธุรกรรมคริปโต' },
+  riskFlags: { en: 'Risk Flags', th: 'สัญญาณเตือนภัย' },
+  locationAnalysis: { en: 'Location Analysis', th: 'การวิเคราะห์ตำแหน่ง' },
+  locationPoints: { en: 'Location Points', th: 'จุดตำแหน่ง' },
+  keyLocations: { en: 'Key Locations', th: 'สถานที่สำคัญ' },
+  observations: { en: 'Observations from Analysis', th: 'ข้อสังเกตจากการวิเคราะห์' },
+  requiresInvestigation: { en: '(Requires Further Investigation)', th: '(ต้องสอบสวนเพิ่มเติม)' },
+  chainOfCustody: { en: 'Chain of Custody - Digital Evidence', th: 'ห่วงโซ่การครอบครอง - หลักฐานดิจิทัล' },
+  recordedEvidence: { en: 'Recorded Evidence', th: 'หลักฐานที่บันทึก' },
+  items: { en: 'items', th: 'รายการ' },
+  filename: { en: 'Filename', th: 'ชื่อไฟล์' },
+  sha256Hash: { en: 'SHA-256 Hash', th: 'SHA-256 แฮช' },
+  dateRecorded: { en: 'Date Recorded', th: 'วันที่บันทึก' },
+  allEvidenceVerified: { en: 'All evidence recorded with SHA-256 Hash for court verification', th: 'หลักฐานทั้งหมดบันทึกด้วย SHA-256 Hash สำหรับการยืนยันในศาล' },
+  scanToVerify: { en: 'Scan to verify evidence', th: 'สแกนเพื่อยืนยันหลักฐาน' },
+  signature: { en: 'Signature', th: 'ลายมือชื่อ' },
+  investigator: { en: 'Investigator', th: 'พนักงานสอบสวน' },
+  supervisor: { en: 'Supervisor', th: 'ผู้บังคับบัญชา' },
+  reportGenerated: { en: 'Report generated by InvestiGate', th: 'รายงานสร้างโดย InvestiGate' },
+  name: { en: 'Name', th: 'ชื่อ' },
+  riskScore: { en: 'Risk Score', th: 'คะแนนความเสี่ยง' },
+  riskFactors: { en: 'Risk Factors', th: 'ปัจจัยเสี่ยง' },
+  from: { en: 'From', th: 'จาก' },
+  to: { en: 'To', th: 'ถึง' },
+  amount: { en: 'Amount', th: 'จำนวนเงิน' },
+  date: { en: 'Date', th: 'วันที่' },
+  notes: { en: 'Notes', th: 'หมายเหตุ' },
+  phoneNumber: { en: 'Phone Number', th: 'หมายเลขโทรศัพท์' },
+  calls: { en: 'Calls', th: 'สาย' },
+  duration: { en: 'Duration', th: 'ระยะเวลา' },
+  blockchain: { en: 'Blockchain', th: 'บล็อกเชน' },
+  location: { en: 'Location', th: 'ตำแหน่ง' },
+  time: { en: 'Time', th: 'เวลา' },
+  source: { en: 'Source', th: 'แหล่งที่มา' },
+  notSpecified: { en: 'Not specified', th: 'ไม่ระบุ' },
+  noData: { en: 'No data found', th: 'ไม่พบข้อมูล' },
+  disclaimer: { 
+    en: 'This is a preliminary analysis from transaction patterns only. This is not a case conclusion. Further investigation and evidence collection should be conducted.',
+    th: 'นี่เป็นการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรมเท่านั้น ไม่ใช่ข้อสรุปของคดี ควรดำเนินการสอบสวนและรวบรวมหลักฐานเพิ่มเติม'
+  }
+};
+
 // ==================== HELPERS ====================
 const formatCurrency = (amount: number): string => {
   if (amount >= 1000000) return `฿${(amount / 1000000).toFixed(2)}M`;
@@ -69,11 +189,21 @@ const formatCurrency = (amount: number): string => {
   return `฿${amount.toLocaleString()}`;
 };
 
-const formatDate = (date: string | null | undefined): string => {
-  if (!date) return 'Not specified';
-  return new Date(date).toLocaleDateString('en-US', {
+const formatDate = (date: string | null | undefined, lang: Language = 'en'): string => {
+  if (!date) return lang === 'en' ? 'Not specified' : 'ไม่ระบุ';
+  return new Date(date).toLocaleDateString(lang === 'en' ? 'en-US' : 'th-TH', {
     year: 'numeric', month: 'short', day: 'numeric'
   });
+};
+
+const formatDuration = (seconds: number, lang: Language = 'en'): string => {
+  const mins = Math.floor(seconds / 60);
+  if (mins >= 60) {
+    const hrs = Math.floor(mins / 60);
+    const remainMins = mins % 60;
+    return lang === 'en' ? `${hrs}h ${remainMins}m` : `${hrs}ชม. ${remainMins}น.`;
+  }
+  return lang === 'en' ? `${mins} min` : `${mins} นาที`;
 };
 
 const parseMetadata = (metadataStr: string | undefined): ParsedMetadata => {
@@ -103,20 +233,41 @@ const getRiskColor = (score: number): string => {
 
 // ==================== COMPONENT ====================
 export const ForensicReportV2 = () => {
+  // Base states
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
-  const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
-  const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
-  const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [language, setLanguage] = useState<Language>('en');
+  const reportRef = useRef<HTMLDivElement>(null);
+  
+  // Money Flow states
+  const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
+  const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
   const [stats, setStats] = useState<Statistics | null>(null);
   const [highRiskPersons, setHighRiskPersons] = useState<HighRiskPerson[]>([]);
   const [keyTransactions, setKeyTransactions] = useState<KeyTransaction[]>([]);
+  
+  // Call Analysis states
+  const [callEntities, setCallEntities] = useState<CallEntity[]>([]);
+  const [callLinks, setCallLinks] = useState<CallLink[]>([]);
+  
+  // Location states
+  const [locationPoints, setLocationPoints] = useState<LocationPoint[]>([]);
+  
+  // Crypto states
+  const [cryptoTransactions, setCryptoTransactions] = useState<CryptoTransaction[]>([]);
+  
+  // Evidence states
+  const [evidences, setEvidences] = useState<Evidence[]>([]);
+  
+  // UI states
   const [showGraph, setShowGraph] = useState(true);
   const [showChainOfCustody, setShowChainOfCustody] = useState(true);
-  const reportRef = useRef<HTMLDivElement>(null);
+
+  // Helper to get label
+  const t = (key: string): string => labels[key]?.[language] || key;
 
   // Fetch cases
   useEffect(() => {
@@ -138,11 +289,18 @@ export const ForensicReportV2 = () => {
     fetchCases();
   }, []);
 
-  // Fetch money flow data and evidences
+  // Fetch all data for the case
   const fetchData = useCallback(async () => {
     if (!selectedCaseId || !selectedCase) return;
     try {
       setLoading(true);
+      const token = localStorage.getItem('access_token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      // 1. Fetch Money Flow data
       const [nodesRes, edgesRes] = await Promise.all([
         moneyFlowAPI.listNodes(selectedCaseId),
         moneyFlowAPI.listEdges(selectedCaseId)
@@ -151,14 +309,49 @@ export const ForensicReportV2 = () => {
       setEdges(edgesRes);
       analyzeData(nodesRes, edgesRes);
       
-      // Fetch evidences for Chain of Custody
+      // 2. Fetch Evidence for Chain of Custody
       try {
         const evidencesRes = await evidenceAPI.listByCase(selectedCaseId);
         setEvidences(evidencesRes);
       } catch {
-        // If evidences fetch fails, just set empty array
         setEvidences([]);
       }
+      
+      // 3. Fetch Call Analysis data
+      try {
+        const callRes = await fetch(`${API_BASE}/call-analysis/case/${selectedCaseId}/network`, { headers });
+        if (callRes.ok) {
+          const callData = await callRes.json();
+          setCallEntities(callData.entities || []);
+          setCallLinks(callData.links || []);
+        }
+      } catch {
+        setCallEntities([]);
+        setCallLinks([]);
+      }
+      
+      // 4. Fetch Location data
+      try {
+        const locRes = await fetch(`${API_BASE}/locations/case/${selectedCaseId}/timeline`, { headers });
+        if (locRes.ok) {
+          const locData = await locRes.json();
+          setLocationPoints(locData.points || []);
+        }
+      } catch {
+        setLocationPoints([]);
+      }
+      
+      // 5. Fetch Crypto data (if endpoint exists)
+      try {
+        const cryptoRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
+        if (cryptoRes.ok) {
+          const cryptoData = await cryptoRes.json();
+          setCryptoTransactions(cryptoData || []);
+        }
+      } catch {
+        setCryptoTransactions([]);
+      }
+      
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -174,9 +367,8 @@ export const ForensicReportV2 = () => {
     }
   }, [selectedCaseId, cases, fetchData]);
 
-  // Analyze data
+  // Analyze Money Flow data
   const analyzeData = (nodeList: MoneyFlowNode[], edgeList: MoneyFlowEdge[]) => {
-    // Calculate statistics
     const totalAmount = edgeList.reduce((sum, e) => sum + (e.amount || 0), 0);
     const newStats: Statistics = {
       totalNodes: nodeList.length,
@@ -209,96 +401,91 @@ export const ForensicReportV2 = () => {
     setHighRiskPersons(highRisk);
 
     // Find key transactions
-    const keyTx: KeyTransaction[] = edgeList
-      .filter(e => (e.amount || 0) > 50000)
+    const keyTxs: KeyTransaction[] = edgeList
+      .filter(e => (e.amount || 0) > 0)
       .sort((a, b) => (b.amount || 0) - (a.amount || 0))
-      .slice(0, 15)
+      .slice(0, 10)
       .map(edge => {
         const fromNode = nodeList.find(n => n.id === edge.from_node_id);
         const toNode = nodeList.find(n => n.id === edge.to_node_id);
         const amount = edge.amount || 0;
-        
         let importance: 'critical' | 'high' | 'medium' = 'medium';
-        let reason = 'Normal transaction';
+        let reason = language === 'en' ? 'Normal transaction' : 'ธุรกรรมปกติ';
         
         if (amount >= 500000) {
           importance = 'critical';
-          reason = 'Abnormally high amount';
-        } else if (amount >= 200000) {
+          reason = language === 'en' ? 'Abnormally high amount' : 'จำนวนเงินสูงผิดปกติ';
+        } else if (amount >= 100000) {
           importance = 'high';
-          reason = 'High amount';
+          reason = language === 'en' ? 'High amount' : 'จำนวนเงินสูง';
         }
         
-        if (toNode?.label?.includes('Mixer') || toNode?.label?.includes('mixer')) {
-          importance = 'critical';
-          reason = 'Transfer to Mixer (hiding trail)';
-        }
-        if (toNode?.label?.includes('Cambodia') || toNode?.label?.includes('Myanmar') || toNode?.label?.includes('Laos')) {
-          importance = 'critical';
-          reason = 'Transfer overseas';
-        }
-        if (toNode?.node_type === 'crypto_wallet' && fromNode?.node_type === 'bank_account') {
-          importance = 'high';
-          reason = 'Exchange to Crypto';
-        }
-
         return { edge, fromNode, toNode, importance, reason };
       });
-    setKeyTransactions(keyTx);
+    setKeyTransactions(keyTxs);
   };
 
-  // Generate auto summary
+  // Generate summary
   const generateSummary = (): string => {
-    if (!stats || highRiskPersons.length === 0) return '';
-    
-    const mainSuspect = highRiskPersons[0];
-    const hasNetworkMembers = highRiskPersons.length > 1;
-    const hasCrypto = stats.cryptoWallets > 0;
-    const hasMixer = keyTransactions.some(t => t.reason.includes('Mixer'));
-    const hasForeign = keyTransactions.some(t => t.reason.includes('overseas'));
-    
-    let summary = `From preliminary transaction pattern analysis, interesting observations show that "${mainSuspect.node.label}" (Risk Score: ${mainSuspect.riskScore}) may have a key role in this network`;
-    
-    if (hasNetworkMembers) {
-      summary += ` with potentially related persons: ${highRiskPersons.length - 1} person(s)`;
+    if (!stats || !highRiskPersons.length) {
+      return language === 'en' 
+        ? 'Insufficient data for analysis. Please import more data.'
+        : 'ข้อมูลไม่เพียงพอสำหรับการวิเคราะห์ กรุณานำเข้าข้อมูลเพิ่มเติม';
     }
     
-    summary += ` Total transaction value approximately ${formatCurrency(stats.totalAmount)}`;
+    const topPerson = highRiskPersons[0];
     
-    if (hasCrypto) {
-      summary += ` Cryptocurrency usage observed in transfers`;
+    if (language === 'en') {
+      let summary = `From preliminary transaction pattern analysis, interesting observations show that "${topPerson.node.label}" (Risk Score: ${topPerson.riskScore}) may have a key role in this network. `;
+      summary += `Total transaction value approximately ${formatCurrency(stats.totalAmount)}. `;
+      if (callEntities.length > 0) {
+        const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
+        summary += `Call analysis shows ${callEntities.length} unique phone numbers with ${totalCalls} total calls. `;
+      }
+      if (locationPoints.length > 0) {
+        const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
+        summary += `Location tracking identified ${uniqueLocations} unique locations visited. `;
+      }
+      summary += `However, this data is only an analysis from transaction patterns. Further investigation and evidence collection is recommended to confirm the facts.`;
+      return summary;
+    } else {
+      let summary = `จากการวิเคราะห์รูปแบบธุรกรรมเบื้องต้น พบข้อสังเกตที่น่าสนใจว่า "${topPerson.node.label}" (คะแนนความเสี่ยง: ${topPerson.riskScore}) อาจมีบทบาทสำคัญในเครือข่ายนี้ `;
+      summary += `มูลค่าธุรกรรมรวมประมาณ ${formatCurrency(stats.totalAmount)} `;
+      if (callEntities.length > 0) {
+        const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
+        summary += `การวิเคราะห์การโทรพบหมายเลขโทรศัพท์ ${callEntities.length} หมายเลข รวม ${totalCalls} สาย `;
+      }
+      if (locationPoints.length > 0) {
+        const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
+        summary += `การติดตามตำแหน่งพบสถานที่ ${uniqueLocations} แห่ง `;
+      }
+      summary += `อย่างไรก็ตาม ข้อมูลนี้เป็นการวิเคราะห์จากรูปแบบธุรกรรมเท่านั้น แนะนำให้ดำเนินการสอบสวนและรวบรวมหลักฐานเพิ่มเติมเพื่อยืนยันข้อเท็จจริง`;
+      return summary;
     }
-    
-    if (hasMixer) {
-      summary += ` and patterns suggesting Mixer usage`;
-    }
-    
-    if (hasForeign) {
-      summary += ` including Transactions possibly involving overseas`;
-    }
-    
-    summary += ` However, this data is only an analysis from transaction patterns. Further investigation and evidence collection is recommended to confirm the facts`;
-    
-    return summary;
   };
 
-  // Export to PDF
+  // Export to PDF with all modules
   const exportToPDF = async () => {
     setExporting(true);
     try {
-      // Use browser print functionality
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         alert('Please allow popup');
         return;
       }
       
+      // Calculate stats for each module
+      const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
+      const totalCallDuration = callEntities.reduce((sum, e) => sum + e.total_duration, 0);
+      const topCallers = [...callEntities].sort((a, b) => b.total_calls - a.total_calls).slice(0, 5);
+      const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
+      
       const content = `
 <!DOCTYPE html>
-<html lang="th">
+<html lang="${language}">
 <head>
   <meta charset="UTF-8">
-  <title>Network Analysis Report - ${selectedCase?.case_number}</title>
+  <title>${t('reportTitle')} - ${selectedCase?.case_number}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
     * { font-family: 'Sarabun', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
@@ -312,6 +499,7 @@ export const ForensicReportV2 = () => {
     .meta-item { padding: 8px 12px; background: #f3f4f6; border-radius: 4px; }
     .meta-label { color: #6b7280; }
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+    .stats-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
     .stat-card { text-align: center; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
     .stat-value { font-size: 28px; font-weight: 700; color: #1e40af; }
     .stat-label { font-size: 12px; color: #6b7280; margin-top: 5px; }
@@ -325,117 +513,273 @@ export const ForensicReportV2 = () => {
     .critical { background: #fef2f2; border-left: 4px solid #dc2626; }
     .high { background: #fffbeb; border-left: 4px solid #f59e0b; }
     .summary { padding: 20px; background: #eff6ff; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6; }
+    .section { margin-bottom: 30px; page-break-inside: avoid; }
+    .section-header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 12px 15px; border-radius: 6px 6px 0 0; }
+    .section-header h2 { color: white; border: none; margin: 0; padding: 0; }
+    .section-content { background: #f8fafc; padding: 15px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 6px 6px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .badge-red { background: #fef2f2; color: #dc2626; }
+    .badge-yellow { background: #fffbeb; color: #d97706; }
+    .badge-green { background: #ecfdf5; color: #059669; }
+    .badge-blue { background: #eff6ff; color: #2563eb; }
     .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #6b7280; }
     .signature { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-top: 40px; }
     .signature-box { text-align: center; padding-top: 60px; border-top: 1px solid #374151; }
     @media print {
       body { padding: 20px; }
       .no-print { display: none; }
+      .section { page-break-inside: avoid; }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🔍 Financial Network Analysis Report</h1>
-    <p>Royal Thai Police - Digital Forensic Standard</p>
+    <h1>🔍 ${t('reportTitle')}</h1>
+    <p>${t('subtitle')}</p>
   </div>
 
   <div class="meta">
-    <div class="meta-item"><span class="meta-label">Case Number:</span> ${selectedCase?.case_number || '-'}</div>
-    <div class="meta-item"><span class="meta-label">Case Title:</span> ${selectedCase?.title || '-'}</div>
-    <div class="meta-item"><span class="meta-label">Analysis Date:</span> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-    <div class="meta-item"><span class="meta-label">Analyst:</span> ${localStorage.getItem('user_email') || 'Not specified'}</div>
+    <div class="meta-item"><span class="meta-label">${t('caseNumber')}:</span> ${selectedCase?.case_number || '-'}</div>
+    <div class="meta-item"><span class="meta-label">${t('caseTitle')}:</span> ${selectedCase?.title || '-'}</div>
+    <div class="meta-item"><span class="meta-label">${t('analysisDate')}:</span> ${formatDate(new Date().toISOString(), language)}</div>
+    <div class="meta-item"><span class="meta-label">${t('analyst')}:</span> ${localStorage.getItem('user_email') || t('notSpecified')}</div>
   </div>
 
-  <h2>📊 Analysis Summary</h2>
+  <h2>📊 ${t('analysisSummary')}</h2>
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-value">${stats?.persons || 0}</div>
-      <div class="stat-label">Related Persons</div>
+      <div class="stat-label">${t('relatedPersons')}</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">${stats?.bankAccounts || 0}</div>
-      <div class="stat-label">Bank Accounts</div>
+      <div class="stat-label">${t('bankAccounts')}</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">${stats?.totalTransactions || 0}</div>
-      <div class="stat-label">Total Transactions</div>
+      <div class="stat-label">${t('totalTransactions')}</div>
     </div>
     <div class="stat-card">
       <div class="stat-value">${formatCurrency(stats?.totalAmount || 0)}</div>
-      <div class="stat-label">Total Value</div>
+      <div class="stat-label">${t('totalValue')}</div>
     </div>
   </div>
 
-  <h2>🔴 High Risk Persons</h2>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 5%">#</th>
-        <th style="width: 25%">Name</th>
-        <th style="width: 12%">Risk Score</th>
-        <th>Risk Factors</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${highRiskPersons.map((p, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td><strong>${p.node.label}</strong></td>
-          <td class="${p.riskScore >= 70 ? 'risk-high' : p.riskScore >= 40 ? 'risk-medium' : 'risk-low'}">${p.riskScore}</td>
-          <td>${p.riskFactors.map(f => `• ${f.factor}`).join('<br>') || '-'}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
+  <!-- MONEY FLOW SECTION -->
+  <div class="section">
+    <div class="section-header">
+      <h2>💰 ${t('moneyFlowAnalysis')}</h2>
+    </div>
+    <div class="section-content">
+      <h3>🔴 ${t('highRiskPersons')}</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 25%">${t('name')}</th>
+            <th style="width: 12%">${t('riskScore')}</th>
+            <th>${t('riskFactors')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${highRiskPersons.length > 0 ? highRiskPersons.map((p, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${p.node.label}</strong></td>
+              <td class="${p.riskScore >= 70 ? 'risk-high' : p.riskScore >= 40 ? 'risk-medium' : 'risk-low'}">${p.riskScore}</td>
+              <td>${p.riskFactors.map(f => `• ${f.factor}`).join('<br>') || '-'}</td>
+            </tr>
+          `).join('') : `<tr><td colspan="4" style="text-align: center; color: #9ca3af;">${t('noData')}</td></tr>`}
+        </tbody>
+      </table>
 
-  <h2>💰 Key Transactions</h2>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 5%">#</th>
-        <th style="width: 20%">From</th>
-        <th style="width: 20%">To</th>
-        <th style="width: 15%">Amount</th>
-        <th style="width: 15%">Date</th>
-        <th>Notes</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${keyTransactions.slice(0, 10).map((t, i) => `
-        <tr class="${t.importance}">
-          <td>${i + 1}</td>
-          <td>${t.fromNode?.label || '-'}</td>
-          <td>${t.toNode?.label || '-'}</td>
-          <td><strong>${formatCurrency(t.edge.amount || 0)}</strong></td>
-          <td>${formatDate(t.edge.transaction_date)}</td>
-          <td>${t.reason}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>📝 Observations from Analysis (Requires Further Investigation)</h2>
-  <div class="summary">
-    <p>${generateSummary()}</p>
-    <p style="font-size: 11px; color: #6b7280; margin-top: 15px; font-style: italic;">* This is a preliminary analysis from transaction patterns only. This is not a case conclusion. Further investigation and evidence collection should be conducted</p>
+      <h3>💵 ${t('keyTransactions')}</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 20%">${t('from')}</th>
+            <th style="width: 20%">${t('to')}</th>
+            <th style="width: 15%">${t('amount')}</th>
+            <th style="width: 15%">${t('date')}</th>
+            <th>${t('notes')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${keyTransactions.length > 0 ? keyTransactions.slice(0, 10).map((tx, i) => `
+            <tr class="${tx.importance}">
+              <td>${i + 1}</td>
+              <td>${tx.fromNode?.label || '-'}</td>
+              <td>${tx.toNode?.label || '-'}</td>
+              <td><strong>${formatCurrency(tx.edge.amount || 0)}</strong></td>
+              <td>${formatDate(tx.edge.transaction_date, language)}</td>
+              <td>${tx.reason}</td>
+            </tr>
+          `).join('') : `<tr><td colspan="6" style="text-align: center; color: #9ca3af;">${t('noData')}</td></tr>`}
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <h2>🔐 Chain of Custody - Digital Evidence</h2>
+  <!-- CALL ANALYSIS SECTION -->
+  ${callEntities.length > 0 ? `
+  <div class="section">
+    <div class="section-header">
+      <h2>📞 ${t('callAnalysis')}</h2>
+    </div>
+    <div class="section-content">
+      <div class="stats-grid-3">
+        <div class="stat-card">
+          <div class="stat-value">${totalCalls}</div>
+          <div class="stat-label">${t('totalCalls')}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${formatDuration(totalCallDuration, language)}</div>
+          <div class="stat-label">${t('totalDuration')}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${callEntities.length}</div>
+          <div class="stat-label">${t('uniqueNumbers')}</div>
+        </div>
+      </div>
+
+      <h3>📱 ${t('topCallers')}</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 30%">${t('name')}</th>
+            <th style="width: 25%">${t('phoneNumber')}</th>
+            <th style="width: 15%">${t('calls')}</th>
+            <th style="width: 15%">${t('duration')}</th>
+            <th>${t('riskScore')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${topCallers.map((caller, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${caller.label || caller.person_name || '-'}</strong></td>
+              <td>${caller.phone_number || '-'}</td>
+              <td>${caller.total_calls}</td>
+              <td>${formatDuration(caller.total_duration, language)}</td>
+              <td class="${caller.risk_score >= 70 ? 'risk-high' : caller.risk_score >= 40 ? 'risk-medium' : 'risk-low'}">${caller.risk_score}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  ` : ''}
+
+  <!-- CRYPTO ANALYSIS SECTION -->
+  ${cryptoTransactions.length > 0 ? `
+  <div class="section">
+    <div class="section-header">
+      <h2>🪙 ${t('cryptoAnalysis')}</h2>
+    </div>
+    <div class="section-content">
+      <h3>💳 ${t('cryptoTransactions')}</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 12%">${t('blockchain')}</th>
+            <th style="width: 25%">${t('from')}</th>
+            <th style="width: 25%">${t('to')}</th>
+            <th style="width: 15%">${t('amount')}</th>
+            <th>${t('riskFlags')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cryptoTransactions.slice(0, 10).map((tx, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><span class="badge badge-blue">${tx.blockchain}</span></td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.from_wallet.substring(0, 16)}...</td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.to_wallet.substring(0, 16)}...</td>
+              <td><strong>$${(tx.amount_usd || tx.amount).toLocaleString()}</strong></td>
+              <td>${tx.risk_flag ? `<span class="badge ${tx.risk_flag.includes('MIXER') || tx.risk_flag.includes('TORNADO') ? 'badge-red' : 'badge-yellow'}">${tx.risk_flag}</span>` : '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  ` : ''}
+
+  <!-- LOCATION ANALYSIS SECTION -->
+  ${locationPoints.length > 0 ? `
+  <div class="section">
+    <div class="section-header">
+      <h2>📍 ${t('locationAnalysis')}</h2>
+    </div>
+    <div class="section-content">
+      <div class="stats-grid-3">
+        <div class="stat-card">
+          <div class="stat-value">${locationPoints.length}</div>
+          <div class="stat-label">${t('locationPoints')}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${uniqueLocations}</div>
+          <div class="stat-label">${t('keyLocations')}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${new Set(locationPoints.map(p => p.suspect_name)).size}</div>
+          <div class="stat-label">${t('relatedPersons')}</div>
+        </div>
+      </div>
+
+      <h3>🗺️ ${t('keyLocations')}</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 30%">${t('location')}</th>
+            <th style="width: 15%">${language === 'en' ? 'Type' : 'ประเภท'}</th>
+            <th style="width: 25%">${language === 'en' ? 'Visitor' : 'ผู้เยี่ยมชม'}</th>
+            <th>${t('time')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${locationPoints.slice(0, 10).map((loc, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${loc.location_name || `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`}</strong></td>
+              <td><span class="badge badge-green">${loc.location_type || loc.source}</span></td>
+              <td>${loc.suspect_name || '-'}</td>
+              <td>${loc.timestamp ? formatDate(loc.timestamp, language) : '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  ` : ''}
+
+  <!-- OBSERVATIONS -->
+  <h2>📝 ${t('observations')} ${t('requiresInvestigation')}</h2>
+  <div class="summary">
+    <p>${generateSummary()}</p>
+    <p style="font-size: 11px; color: #6b7280; margin-top: 15px; font-style: italic;">* ${t('disclaimer')}</p>
+  </div>
+
+  <!-- CHAIN OF CUSTODY -->
+  <h2>🔐 ${t('chainOfCustody')}</h2>
   <div style="display: grid; grid-template-columns: 180px 1fr; gap: 20px; margin-bottom: 20px;">
     <div style="text-align: center; padding: 15px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px;">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase?.case_number}`)}" alt="QR Code" style="width: 140px; height: 140px;" />
-      <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Scan to verify evidence</p>
+      <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">${t('scanToVerify')}</p>
     </div>
     <div>
-      <h3 style="margin-bottom: 10px;">Recorded Evidence (${evidences.length} items)</h3>
+      <h3 style="margin-bottom: 10px;">${t('recordedEvidence')} (${evidences.length} ${t('items')})</h3>
       <table style="font-size: 11px;">
         <thead>
           <tr>
             <th style="width: 5%">#</th>
-            <th style="width: 35%">Filename</th>
-            <th style="width: 45%">SHA-256 Hash</th>
-            <th style="width: 15%">Date Recorded</th>
+            <th style="width: 35%">${t('filename')}</th>
+            <th style="width: 45%">${t('sha256Hash')}</th>
+            <th style="width: 15%">${t('dateRecorded')}</th>
           </tr>
         </thead>
         <tbody>
@@ -444,33 +788,33 @@ export const ForensicReportV2 = () => {
               <td>${i + 1}</td>
               <td>${ev.file_name}</td>
               <td style="font-family: monospace; font-size: 9px;">${ev.sha256_hash}</td>
-              <td>${new Date(ev.collected_at).toLocaleDateString('en-US')}</td>
+              <td>${formatDate(ev.collected_at, language)}</td>
             </tr>
-          `).join('') : '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">No evidence recorded yet</td></tr>'}
+          `).join('') : `<tr><td colspan="4" style="text-align: center; color: #9ca3af;">${t('noData')}</td></tr>`}
         </tbody>
       </table>
       ${evidences.length > 0 ? `
         <div style="margin-top: 10px; padding: 10px; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; font-size: 11px; color: #047857;">
-          ✅ All evidence recorded with SHA-256 Hash for court verification
+          ✅ ${t('allEvidenceVerified')}
         </div>
       ` : ''}
     </div>
   </div>
 
   <div class="footer">
-    <p>Report generated by InvestiGate - Date ${new Date().toLocaleString('en-US')}</p>
+    <p>${t('reportGenerated')} - ${formatDate(new Date().toISOString(), language)}</p>
   </div>
 
   <div class="signature">
     <div class="signature-box">
-      <p>Signature ........................................</p>
+      <p>${t('signature')} ........................................</p>
       <p>( ......................................... )</p>
-      <p>Investigator</p>
+      <p>${t('investigator')}</p>
     </div>
     <div class="signature-box">
-      <p>Signature ........................................</p>
+      <p>${t('signature')} ........................................</p>
       <p>( ......................................... )</p>
-      <p>Supervisor</p>
+      <p>${t('supervisor')}</p>
     </div>
   </div>
 
@@ -512,6 +856,25 @@ export const ForensicReportV2 = () => {
           <p className="text-dark-400 mt-1">Network Analysis Report - Digital Forensic Standard</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Language Toggle */}
+          <div className="flex items-center gap-1 bg-dark-800 rounded-lg p-1">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                language === 'en' ? 'bg-primary-500 text-white' : 'text-dark-400 hover:text-white'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLanguage('th')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                language === 'th' ? 'bg-primary-500 text-white' : 'text-dark-400 hover:text-white'
+              }`}
+            >
+              TH
+            </button>
+          </div>
           <Button variant="ghost" onClick={fetchData} disabled={loading}>
             <RefreshCw size={18} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -520,303 +883,317 @@ export const ForensicReportV2 = () => {
             <Printer size={18} className="mr-2" />
             Print
           </Button>
-          <Button onClick={exportToPDF} disabled={exporting || !stats}>
-            {exporting ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Download size={18} className="mr-2" />}
+          <Button variant="primary" onClick={exportToPDF} disabled={exporting || !stats}>
+            <Download size={18} className="mr-2" />
             Export PDF
           </Button>
         </div>
       </div>
 
-      {/* Case Selector */}
-      <Card className="p-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-dark-400">Select Case:</label>
+      {/* Case Selection */}
+      <Card className="mb-6 p-4">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-3">
+            <span className="text-dark-400">Select Case:</span>
             <select
-              className="bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 min-w-[300px]"
               value={selectedCaseId || ''}
               onChange={(e) => setSelectedCaseId(Number(e.target.value))}
+              className="bg-dark-700 border border-dark-600 rounded-lg px-4 py-2 text-white min-w-[300px]"
             >
-              <option value="">-- Select Case --</option>
-              {cases.map(c => (
-                <option key={c.id} value={c.id}>{c.case_number} - {c.title}</option>
+              {cases.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.case_number} - {c.title}
+                </option>
               ))}
             </select>
+            <Badge variant={selectedCase?.status === 'active' ? 'primary' : 'secondary'}>
+              {selectedCase?.status || 'draft'}
+            </Badge>
           </div>
-          {selectedCase && (
-            <>
-              <Badge variant="info">{selectedCase.status}</Badge>
-              <span className="text-sm text-dark-400">
-                Created: {formatDate(selectedCase.created_at)}
-              </span>
-            </>
+          <div className="text-dark-400 text-sm">
+            Created: {formatDate(selectedCase?.created_at, language)}
+          </div>
+        </div>
+      </Card>
+
+      {/* Statistics Overview */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+          <Card className="p-4 text-center">
+            <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{stats.persons}</div>
+            <div className="text-xs text-dark-400">Person</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <Building2 className="w-6 h-6 text-green-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{stats.bankAccounts}</div>
+            <div className="text-xs text-dark-400">Accounts</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <Phone className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{callEntities.length}</div>
+            <div className="text-xs text-dark-400">Phone</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <Wallet className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{cryptoTransactions.length}</div>
+            <div className="text-xs text-dark-400">Crypto</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{stats.suspects}</div>
+            <div className="text-xs text-dark-400">Suspect</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <Shield className="w-6 h-6 text-pink-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{stats.victims}</div>
+            <div className="text-xs text-dark-400">Victim</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <ArrowRightLeft className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{stats.totalTransactions}</div>
+            <div className="text-xs text-dark-400">Transactions</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <AlertTriangle className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+            <div className="text-2xl font-bold">{stats.highRiskCount}</div>
+            <div className="text-xs text-dark-400">High Risk</div>
+          </Card>
+        </div>
+      )}
+
+      {/* Total Value */}
+      {stats && (
+        <Card className="mb-6 p-4 bg-gradient-to-r from-primary-900/50 to-primary-800/30 border-primary-500/30">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="w-8 h-8 text-primary-400" />
+            <div>
+              <div className="text-dark-400 text-sm">Total Transaction Value</div>
+              <div className="text-3xl font-bold text-primary-400">{formatCurrency(stats.totalAmount)}</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Network Graph */}
+      <Card className="mb-6">
+        <div className="flex items-center justify-between p-4 border-b border-dark-700">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Network className="w-5 h-5 text-primary-400" />
+            Network Diagram (Network Diagram)
+          </h3>
+          <Button variant="ghost" size="sm" onClick={() => setShowGraph(!showGraph)}>
+            {showGraph ? 'Hide' : 'Show'}
+          </Button>
+        </div>
+        {showGraph && nodes.length > 0 && (
+          <div className="p-4">
+            <ForensicReportGraph nodes={nodes} edges={edges} />
+          </div>
+        )}
+      </Card>
+
+      {/* Chain of Custody */}
+      <Card className="mb-6">
+        <div className="flex items-center justify-between p-4 border-b border-dark-700">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Lock className="w-5 h-5 text-green-400" />
+            {t('chainOfCustody')}
+          </h3>
+          <Button variant="ghost" size="sm" onClick={() => setShowChainOfCustody(!showChainOfCustody)}>
+            {showChainOfCustody ? 'Hide' : 'Show'}
+          </Button>
+        </div>
+        {showChainOfCustody && (
+          <div className="p-4 grid md:grid-cols-3 gap-6">
+            {/* QR Code */}
+            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase?.case_number}`)}`}
+                alt="QR Code"
+                className="w-36 h-36"
+              />
+              <p className="text-dark-900 text-sm mt-3">{t('scanToVerify')}</p>
+            </div>
+            
+            {/* Evidence List */}
+            <div className="md:col-span-2">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Fingerprint className="w-4 h-4 text-primary-400" />
+                {t('recordedEvidence')} ({evidences.length} {t('items')})
+              </h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {evidences.length > 0 ? evidences.map((ev, i) => (
+                  <div key={ev.id} className="flex items-center gap-3 p-3 bg-dark-800 rounded-lg text-sm">
+                    <span className="text-dark-500 w-6">{i + 1}.</span>
+                    <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{ev.file_name}</div>
+                      <div className="text-xs text-dark-500 font-mono truncate">🔒 {ev.sha256_hash}</div>
+                    </div>
+                    <div className="text-xs text-dark-400 flex-shrink-0">
+                      {ev.records_count} records<br />
+                      {formatDate(ev.collected_at, language)}
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center text-dark-500 py-8">{t('noData')}</div>
+                )}
+              </div>
+              {evidences.length > 0 && (
+                <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center gap-2 text-green-400 text-sm">
+                  <CheckCircle className="w-4 h-4" />
+                  {t('allEvidenceVerified')}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* High Risk Persons */}
+      <Card className="mb-6">
+        <div className="p-4 border-b border-dark-700">
+          <h3 className="font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            {t('highRiskPersons')}
+          </h3>
+        </div>
+        <div className="p-4">
+          {highRiskPersons.length > 0 ? (
+            <div className="space-y-3">
+              {highRiskPersons.slice(0, 5).map((p, i) => (
+                <div 
+                  key={p.node.id} 
+                  className={`flex items-center gap-4 p-4 rounded-lg border ${getRiskColor(p.riskScore)}`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center font-bold">
+                    #{i + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {getNodeTypeIcon(p.node.node_type)}
+                      <span className="font-semibold">{p.node.label}</span>
+                    </div>
+                    <div className="text-sm text-dark-400 mt-1">
+                      {p.riskFactors.map(f => f.factor).join(' • ') || 'High transaction volume'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold">Risk: {p.riskScore}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-dark-500 py-8">{t('noData')}</div>
           )}
         </div>
       </Card>
 
-      {stats ? (
-        <>
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-            {[
-              { label: 'Person', value: stats.persons, icon: Users, color: 'text-blue-400' },
-              { label: 'Accounts', value: stats.bankAccounts, icon: Building2, color: 'text-green-400' },
-              { label: 'Phone', value: stats.phones, icon: Phone, color: 'text-yellow-400' },
-              { label: 'Crypto', value: stats.cryptoWallets, icon: Wallet, color: 'text-purple-400' },
-              { label: 'Suspect', value: stats.suspects, icon: Target, color: 'text-red-400' },
-              { label: 'Victim', value: stats.victims, icon: Shield, color: 'text-cyan-400' },
-              { label: 'Transactions', value: stats.totalTransactions, icon: ArrowRightLeft, color: 'text-amber-400' },
-              { label: 'High Risk', value: stats.highRiskCount, icon: AlertTriangle, color: 'text-red-400' },
-            ].map((stat, i) => (
-              <Card key={i} className="p-3 text-center">
-                <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
-                <div className="text-xl font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-dark-400">{stat.label}</div>
-              </Card>
-            ))}
-          </div>
-
-          {/* Total Amount */}
-          <Card className="p-4 mb-6 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-8 h-8 text-amber-400" />
-                <div>
-                  <p className="text-sm text-dark-400">Total Transaction Value</p>
-                  <p className="text-3xl font-bold text-amber-400">{formatCurrency(stats.totalAmount)}</p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Network Graph Section */}
-          <Card className="mb-6">
-            <div className="flex items-center justify-between p-4 border-b border-dark-700">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Network className="text-primary-400" />
-                Network Diagram (Network Diagram)
-              </h3>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setShowGraph(!showGraph)}
-              >
-                {showGraph ? 'Hide' : 'Show'}
-              </Button>
-            </div>
-            {showGraph && nodes.length > 0 && (
-              <div style={{ height: '500px' }}>
-                <ForensicReportGraph
-                  nodes={nodes}
-                  edges={edges}
-                  onNodeClick={() => {}}
-                />
-              </div>
-            )}
-            {showGraph && nodes.length === 0 && (
-              <div className="p-8 text-center text-dark-400">
-                No network data
-              </div>
-            )}
-          </Card>
-
-          {/* Chain of Custody - QR Code Section */}
-          <Card className="p-4 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Lock className="text-green-400" />
-                Chain of Custody - Digital Evidence
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowChainOfCustody(!showChainOfCustody)}
-              >
-                {showChainOfCustody ? 'Hide' : 'Show'}
-              </Button>
-            </div>
-            
-            {showChainOfCustody && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* QR Code */}
-                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl">
-                  {selectedCase && (
-                    <>
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase.case_number}`)}`}
-                        alt="QR Code"
-                        className="w-44 h-44 mb-3"
-                      />
-                      <p className="text-xs text-gray-600 text-center">
-                        Scan to verify evidence
-                      </p>
-                    </>
-                  )}
-                </div>
-                
-                {/* Evidence List */}
-                <div className="lg:col-span-2">
-                  <div className="flex items-center gap-2 mb-3">
-                    <QrCode className="text-primary-400" size={18} />
-                    <span className="font-medium">Recorded Evidence ({evidences.length} items)</span>
-                  </div>
-                  
-                  {evidences.length > 0 ? (
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                      {evidences.map((ev, idx) => (
-                        <div key={ev.id} className="flex items-center gap-3 p-2 bg-dark-900/50 rounded-lg border border-dark-700">
-                          <span className="text-xs text-dark-500 w-5">{idx + 1}.</span>
-                          <FileText size={16} className="text-primary-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{ev.file_name}</p>
-                            <div className="flex items-center gap-2 text-xs text-dark-400">
-                              <Fingerprint size={10} />
-                              <code className="truncate">{ev.sha256_hash.substring(0, 24)}...</code>
-                            </div>
-                          </div>
-                          <div className="text-right text-xs text-dark-400">
-                            <p>{ev.records_count} records</p>
-                            <p>{new Date(ev.collected_at).toLocaleDateString('en-US')}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center text-dark-400 bg-dark-900/30 rounded-lg">
-                      <Shield size={24} className="mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No evidence recorded yet</p>
-                      <p className="text-xs mt-1">Import data via Smart Import to record Chain of Custody</p>
-                    </div>
-                  )}
-                  
-                  {evidences.length > 0 && (
-                    <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                      <div className="flex items-center gap-2 text-green-400 text-sm">
-                        <CheckCircle size={16} />
-                        <span>All evidence recorded with SHA-256 Hash for verification</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </Card>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* High Risk Persons */}
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <AlertTriangle className="text-red-400" />
-                High Risk Persons
-              </h3>
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                {highRiskPersons.length > 0 ? highRiskPersons.map((person, idx) => (
-                  <div key={person.node.id} className={`p-3 rounded-lg border ${getRiskColor(person.riskScore)}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-dark-400">#{idx + 1}</span>
-                        {getNodeTypeIcon(person.node.node_type)}
-                        <span className="font-semibold">{person.node.label}</span>
-                      </div>
-                      <Badge variant={person.riskScore >= 70 ? 'danger' : 'warning'}>
-                        Risk: {person.riskScore}
-                      </Badge>
-                    </div>
-                    {person.riskFactors.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {person.riskFactors.map((f, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            <ChevronRight className="w-3 h-3" />
-                            <span>{f.factor}</span>
-                            <span className="text-dark-500">({f.description})</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )) : (
-                  <p className="text-dark-400 text-center py-4">No high-risk persons found</p>
-                )}
-              </div>
-            </Card>
-
-            {/* Key Transactions */}
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="text-amber-400" />
-                Key Transactions
-              </h3>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {keyTransactions.length > 0 ? keyTransactions.map((tx, idx) => (
-                  <div key={tx.edge.id} className={`p-3 rounded-lg border ${
+      {/* Key Transactions */}
+      <Card className="mb-6">
+        <div className="p-4 border-b border-dark-700">
+          <h3 className="font-semibold flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-yellow-400" />
+            {t('keyTransactions')}
+          </h3>
+        </div>
+        <div className="p-4">
+          {keyTransactions.length > 0 ? (
+            <div className="space-y-2">
+              {keyTransactions.slice(0, 5).map((tx, i) => (
+                <div 
+                  key={tx.edge.id} 
+                  className={`flex items-center gap-4 p-4 rounded-lg border ${
                     tx.importance === 'critical' ? 'bg-red-500/10 border-red-500/30' :
                     tx.importance === 'high' ? 'bg-yellow-500/10 border-yellow-500/30' :
                     'bg-dark-800 border-dark-700'
-                  }`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-dark-400">#{idx + 1}</span>
-                      <span className="font-bold text-amber-400">{formatCurrency(tx.edge.amount || 0)}</span>
-                    </div>
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center font-bold text-sm">
+                    #{i + 1}
+                  </div>
+                  <div className="flex-1">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="truncate max-w-[120px]">{tx.fromNode?.label || '-'}</span>
-                      <ChevronRight className="w-4 h-4 text-dark-500 flex-shrink-0" />
-                      <span className="truncate max-w-[120px]">{tx.toNode?.label || '-'}</span>
+                      <span className="font-medium">{tx.fromNode?.label || '-'}</span>
+                      <ChevronRight className="w-4 h-4 text-dark-500" />
+                      <span className="font-medium">{tx.toNode?.label || '-'}</span>
                     </div>
-                    <div className="flex items-center justify-between mt-1 text-xs">
-                      <span className="text-dark-400">{formatDate(tx.edge.transaction_date)}</span>
-                      <span className={tx.importance === 'critical' ? 'text-red-400' : tx.importance === 'high' ? 'text-yellow-400' : 'text-dark-400'}>
-                        {tx.reason}
-                      </span>
+                    <div className="text-xs text-dark-400 mt-1">
+                      {formatDate(tx.edge.transaction_date, language)} • {tx.reason}
                     </div>
                   </div>
-                )) : (
-                  <p className="text-dark-400 text-center py-4">No significant transactions found</p>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          {/* Auto Summary */}
-          <Card className="p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <CheckCircle className="text-blue-400" />
-              Observations from Analysis (Auto Generated)
-            </h3>
-            <p className="text-dark-300 leading-relaxed">{generateSummary() || 'Please select a case with data to generate summary'}</p>
-            <p className="text-xs text-dark-500 mt-3 italic">* This is a preliminary analysis from transaction patterns only. This is not a case conclusion. Further investigation and evidence collection should be conducted</p>
-          </Card>
-
-          {/* Risk Indicators Legend */}
-          <Card className="p-4 mt-6">
-            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <Shield className="text-primary-400 w-4 h-4" />
-              Risk Indicators (Risk Indicators)
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
-              {[
-                { icon: Target, label: 'Main Suspect', score: '+30' },
-                { icon: TrendingUp, label: 'Received money >฿500K', score: '+25' },
-                { icon: Shuffle, label: 'Uses Crypto Mixer', score: '+20' },
-                { icon: Globe, label: 'Transfer overseas', score: '+15' },
-                { icon: ArrowRightLeft, label: 'Frequent transactions (>10)', score: '+10' },
-                { icon: Phone, label: 'Frequent calls (>20)', score: '+10' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 bg-dark-800 rounded-lg p-2">
-                  <item.icon className="w-4 h-4 text-primary-400" />
-                  <span className="text-dark-300">{item.label}</span>
-                  <span className="text-amber-400 ml-auto">{item.score}</span>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-primary-400">{formatCurrency(tx.edge.amount || 0)}</div>
+                  </div>
                 </div>
               ))}
             </div>
-          </Card>
-        </>
-      ) : (
-        <Card className="p-8 text-center">
-          <FileText className="w-12 h-12 text-dark-600 mx-auto mb-4" />
-          <p className="text-dark-400">Select a case to view report</p>
+          ) : (
+            <div className="text-center text-dark-500 py-8">{t('noData')}</div>
+          )}
+        </div>
+      </Card>
+
+      {/* Module Stats Summary */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        {/* Call Analysis Summary */}
+        <Card className="p-4">
+          <h4 className="font-semibold flex items-center gap-2 mb-3">
+            <Phone className="w-5 h-5 text-yellow-400" />
+            {t('callAnalysis')}
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <div className="text-dark-400">{t('totalCalls')}</div>
+              <div className="text-xl font-bold">{callEntities.reduce((sum, e) => sum + e.total_calls, 0)}</div>
+            </div>
+            <div>
+              <div className="text-dark-400">{t('uniqueNumbers')}</div>
+              <div className="text-xl font-bold">{callEntities.length}</div>
+            </div>
+          </div>
         </Card>
-      )}
+
+        {/* Crypto Summary */}
+        <Card className="p-4">
+          <h4 className="font-semibold flex items-center gap-2 mb-3">
+            <Wallet className="w-5 h-5 text-purple-400" />
+            {t('cryptoAnalysis')}
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <div className="text-dark-400">{t('cryptoTransactions')}</div>
+              <div className="text-xl font-bold">{cryptoTransactions.length}</div>
+            </div>
+            <div>
+              <div className="text-dark-400">High Risk</div>
+              <div className="text-xl font-bold text-red-400">
+                {cryptoTransactions.filter(t => t.risk_flag?.includes('MIXER') || t.risk_flag?.includes('TORNADO')).length}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Location Summary */}
+        <Card className="p-4">
+          <h4 className="font-semibold flex items-center gap-2 mb-3">
+            <MapPin className="w-5 h-5 text-green-400" />
+            {t('locationAnalysis')}
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <div className="text-dark-400">{t('locationPoints')}</div>
+              <div className="text-xl font-bold">{locationPoints.length}</div>
+            </div>
+            <div>
+              <div className="text-dark-400">{t('keyLocations')}</div>
+              <div className="text-xl font-bold">{new Set(locationPoints.map(p => p.location_name)).size}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
