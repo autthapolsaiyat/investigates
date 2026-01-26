@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvestiGate - Investor Pitch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --accent: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark-900: #0f0f1a;
+      --dark-800: #1a1a2e;
+      --dark-700: #2d2d44;
+      --dark-600: #3d3d5c;
+      --dark-400: #9ca3af;
+      --dark-300: #d1d5db;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--dark-900);
+      color: white;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow-1 {
+      top: -200px;
+      left: -200px;
+      background: var(--primary);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .bg-glow-2 {
+      bottom: -200px;
+      right: -200px;
+      background: var(--accent);
+      animation: float 25s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 24px;
+      background: rgba(15, 15, 26, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+      z-index: 100;
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--dark-400);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 160px 0 100px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 100px;
+      font-size: 14px;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+
+    .badge::before {
+      content: "🔒";
+    }
+
+    h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, white 0%, var(--dark-400) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--dark-400);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-top: 80px;
+    }
+
+    .stat-card {
+      background: rgba(26, 26, 46, 0.8);
+      border: 1px solid var(--dark-700);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      transition: transform 0.3s, border-color 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--dark-400);
+    }
+
+    /* Section Styles */
+    section {
+      padding: 100px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-header h2 {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      color: var(--dark-400);
+      font-size: 18px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Current Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(26, 26, 46, 0.5));
+      border: 1px solid var(--dark-700);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--primary);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: var(--dark-400);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .feature-tag {
+      padding: 4px 12px;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--primary);
+    }
+
+    .status-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .status-live::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Tech Stack */
+    .tech-section {
+      background: rgba(26, 26, 46, 0.5);
+      border-radius: 24px;
+      padding: 60px;
+      border: 1px solid var(--dark-700);
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+    }
+
+    .tech-category h4 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .tech-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .tech-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--dark-800);
+      border: 1px solid var(--dark-700);
+      border-radius: 12px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .tech-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .tech-item img {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Roadmap */
+    .roadmap-timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .roadmap-timeline::before {
+      content: "";
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--primary), var(--accent));
+    }
+
+    .roadmap-phase {
+      position: relative;
+      margin-bottom: 60px;
+    }
+
+    .roadmap-phase::before {
+      content: "";
+      position: absolute;
+      left: -33px;
+      top: 8px;
+      width: 16px;
+      height: 16px;
+      background: var(--dark-900);
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+    }
+
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .phase-badge {
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .phase-badge.current {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--accent);
+    }
+
+    .phase-badge.next {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--primary);
+    }
+
+    .phase-badge.future {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+
+    .phase-title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .phase-features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .phase-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--dark-800);
+      border: 1px solid var(--dark-700);
+      border-radius: 12px;
+    }
+
+    .phase-feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .phase-feature h5 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .phase-feature p {
+      font-size: 12px;
+      color: var(--dark-400);
+    }
+
+    /* Case Studies */
+    .case-studies {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .case-card {
+      background: var(--dark-800);
+      border: 1px solid var(--dark-700);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s;
+    }
+
+    .case-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+    }
+
+    .case-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .case-card h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .case-card .amount {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .case-card p {
+      font-size: 13px;
+      color: var(--dark-400);
+    }
+
+    .case-source {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--dark-400);
+      background: var(--dark-700);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      text-align: center;
+      padding: 100px 0;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 197, 94, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 24px;
+      padding: 60px;
+    }
+
+    .cta-box h2 {
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+
+    .cta-box p {
+      color: var(--dark-400);
+      font-size: 18px;
+      margin-bottom: 32px;
+    }
+
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--dark-600);
+      color: white;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--dark-700);
+      text-align: center;
+      color: var(--dark-400);
+      font-size: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-stats,
+      .features-grid,
+      .tech-grid,
+      .phase-features,
+      .case-studies {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+    }
+
+    /* Screenshots Gallery */
+    .screenshots {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .screenshot-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--dark-700);
+      transition: all 0.3s;
+    }
+
+    .screenshot-card:hover {
+      border-color: var(--primary);
+      transform: scale(1.02);
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    .screenshot-info {
+      padding: 16px;
+      background: var(--dark-800);
+    }
+
+    .screenshot-info h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .screenshot-info p {
+      font-size: 12px;
+      color: var(--dark-400);
+    }
+
+    /* Comparison Table */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 40px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--dark-700);
+    }
+
+    .comparison-table th {
+      background: var(--dark-800);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .comparison-table td {
+      font-size: 14px;
+    }
+
+    .comparison-table tr:hover td {
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .check {
+      color: var(--accent);
+    }
+
+    .cross {
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <div class="logo">
+        <div class="logo-icon">🔍</div>
+        InvestiGate
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#tech">Tech Stack</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#cases">Case Studies</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge">Digital Forensics Platform</div>
+      <h1>
+        Enterprise-Grade<br>
+        <span>Digital Investigation</span>
+      </h1>
+      <p>
+        FBI-standard forensic analysis tools for law enforcement agencies.
+        Track money flows, analyze crypto transactions, map criminal networks.
+      </p>
+
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Core Modules</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">15+</div>
+          <div class="stat-label">Analysis Tools</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">$5B+</div>
+          <div class="stat-label">Global TAM</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">99.9%</div>
+          <div class="stat-label">Uptime SLA</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Current Features -->
+  <section id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Current Platform Capabilities</h2>
+        <p>Production-ready forensic analysis modules powering real investigations</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="status-live">Live</div>
+          <div class="feature-icon" style="background: rgba(34, 197, 94, 0.2);">💰</div>
+          <h3>Money Flow Analysis</h3>
+          <p>Network graph visualization of financial transactions. Trace money trails across bank accounts with Cytoscape.js-powered interactive graphs.</p>
+          <div class="feature-tags">
+            <span class="feature-tag">Network Graph</span>
+            <span class="feature-tag">Multi-hop Tracing</span>
+            <span class="feature-tag">Risk Scoring</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="status-live">Live</div>
+          <div class="feature-icon" style="background: rgba(249, 115, 22, 0.2);">🪙</div>
+          <h3>Crypto Tracker</h3>
+          <p>Blockchain transaction analysis with real-time API integration. Connect to Binance, Tornado Cash, Uniswap for wallet intelligence.</p>
+          <div class="feature-tags">
+            <span class="feature-tag">Multi-Chain</span>
+            <span class="feature-tag">Risk Scoring</span>
+            <span class="feature-tag">Entity Attribution</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="status-live">Live</div>
+          <div class="feature-icon" style="background: rgba(168, 85, 247, 0.2);">📞</div>
+          <h3>Call Analysis</h3>
+          <p>Communication network analysis from CDR data. Auto-generate network graphs showing call patterns and relationships.</p>
+          <div class="feature-tags">
+            <span class="feature-tag">Network Clustering</span>
+            <span class="feature-tag">Pattern Detection</span>
+            <span class="feature-tag">Timeline View</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="status-live">Live</div>
+          <div class="feature-icon" style="background: rgba(239, 68, 68, 0.2);">📍</div>
+          <h3>Location Timeline</h3>
+          <p>FBI CAST-style location tracking with animated playback. Map GPS data with time-based filtering and trail visualization.</p>
+          <div class="feature-tags">
+            <span class="feature-tag">Animated Playback</span>
+            <span class="feature-tag">Trail Lines</span>
+            <span class="feature-tag">Fullscreen Mode</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="status-live">Live</div>
+          <div class="feature-icon" style="background: rgba(234, 179, 8, 0.2);">✨</div>
+          <h3>Smart Import</h3>
+          <p>Auto-detect and import forensic data from Cellebrite UFED, MSAB XRY, Oxygen Forensic. Supports CSV/Excel formats.</p>
+          <div class="feature-tags">
+            <span class="feature-tag">Auto-Detection</span>
+            <span class="feature-tag">Cellebrite</span>
+            <span class="feature-tag">UFED/XRY</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="status-live">Live</div>
+          <div class="feature-icon" style="background: rgba(6, 182, 212, 0.2);">📄</div>
+          <h3>Forensic Report</h3>
+          <p>Court-standard reports with Chain of Custody, SHA-256 hash verification, and QR code evidence authentication.</p>
+          <div class="feature-tags">
+            <span class="feature-tag">Court-Ready</span>
+            <span class="feature-tag">QR Verification</span>
+            <span class="feature-tag">PDF Export</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screenshots -->
+      <div class="screenshots">
+        <div class="screenshot-card">
+          <img src="/images/screenshots/money-flow.png" alt="Money Flow">
+          <div class="screenshot-info">
+            <h4>Money Flow Network</h4>
+            <p>17 nodes, 50 transactions, ฿6.3M total flow</p>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="/images/screenshots/call-analysis.png" alt="Call Analysis">
+          <div class="screenshot-info">
+            <h4>Call Analysis Network</h4>
+            <p>25 entities, 26 links, 4 criminal clusters</p>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="/images/screenshots/crypto-tracker.png" alt="Crypto Tracker">
+          <div class="screenshot-info">
+            <h4>Crypto Transaction Tracker</h4>
+            <p>4 wallets, 100 transactions, multi-exchange flow</p>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="/images/screenshots/location-timeline.png" alt="Location Timeline">
+          <div class="screenshot-info">
+            <h4>Location Timeline Playback</h4>
+            <p>86 points, animated trail, FBI CAST-style</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section id="tech">
+    <div class="container">
+      <div class="section-header">
+        <h2>Technology Stack</h2>
+        <p>Modern, scalable architecture built for enterprise deployment</p>
+      </div>
+
+      <div class="tech-section">
+        <div class="tech-grid">
+          <div class="tech-category">
+            <h4>Frontend</h4>
+            <div class="tech-items">
+              <div class="tech-item">⚛️ React 18</div>
+              <div class="tech-item">📘 TypeScript</div>
+              <div class="tech-item">⚡ Vite</div>
+              <div class="tech-item">🎨 Tailwind CSS</div>
+              <div class="tech-item">📊 Cytoscape.js</div>
+              <div class="tech-item">🗺️ Leaflet</div>
+              <div class="tech-item">📈 Recharts</div>
+            </div>
+          </div>
+          <div class="tech-category">
+            <h4>Backend</h4>
+            <div class="tech-items">
+              <div class="tech-item">🐍 Python FastAPI</div>
+              <div class="tech-item">🗄️ SQLAlchemy</div>
+              <div class="tech-item">🔐 JWT Auth</div>
+              <div class="tech-item">📧 2FA TOTP</div>
+              <div class="tech-item">🔒 bcrypt</div>
+            </div>
+          </div>
+          <div class="tech-category">
+            <h4>Cloud Infrastructure</h4>
+            <div class="tech-items">
+              <div class="tech-item">☁️ Microsoft Azure</div>
+              <div class="tech-item">🌐 Static Web Apps</div>
+              <div class="tech-item">🖥️ App Service</div>
+              <div class="tech-item">🗃️ Azure SQL</div>
+              <div class="tech-item">📦 Blob Storage</div>
+            </div>
+          </div>
+          <div class="tech-category">
+            <h4>DevOps & Security</h4>
+            <div class="tech-items">
+              <div class="tech-item">🔄 GitHub Actions</div>
+              <div class="tech-item">🧪 Playwright Testing</div>
+              <div class="tech-item">🔒 ISO 27001</div>
+              <div class="tech-item">🛡️ SSL/TLS</div>
+              <div class="tech-item">#️⃣ SHA-256</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section id="roadmap">
+    <div class="container">
+      <div class="section-header">
+        <h2>Development Roadmap</h2>
+        <p>FBI-standard investigation techniques planned for implementation</p>
+      </div>
+
+      <div class="roadmap-timeline">
+        <!-- Phase 1 -->
+        <div class="roadmap-phase">
+          <div class="phase-header">
+            <span class="phase-badge current">Q1 2026</span>
+            <span class="phase-title">Quick Wins</span>
+          </div>
+          <div class="phase-features">
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(239, 68, 68, 0.2);">📍</div>
+              <div>
+                <h5>Reverse Geocoding</h5>
+                <p>Convert GPS coordinates to addresses (Nominatim API)</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(239, 68, 68, 0.2);">🏠</div>
+              <div>
+                <h5>Frequent Locations</h5>
+                <p>Auto-cluster locations (Home, Work, Meeting Spots)</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(34, 197, 94, 0.2);">🎯</div>
+              <div>
+                <h5>Common Counterparty</h5>
+                <p>Find shared accounts receiving from multiple victims</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(34, 197, 94, 0.2);">💵</div>
+              <div>
+                <h5>Structuring Detection</h5>
+                <p>Detect split transactions avoiding thresholds</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="roadmap-phase">
+          <div class="phase-header">
+            <span class="phase-badge next">Q2 2026</span>
+            <span class="phase-title">Core FBI Features</span>
+          </div>
+          <div class="phase-features">
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(168, 85, 247, 0.2);">📊</div>
+              <div>
+                <h5>Centrality Metrics</h5>
+                <p>Degree, Betweenness, Closeness analysis</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(168, 85, 247, 0.2);">📞</div>
+              <div>
+                <h5>Co-Communication Detection</h5>
+                <p>Find suspects contacting same person at similar times</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(239, 68, 68, 0.2);">👥</div>
+              <div>
+                <h5>Co-Location Detection</h5>
+                <p>Detect 2+ suspects at same place same time</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(249, 115, 22, 0.2);">⚠️</div>
+              <div>
+                <h5>Advanced Risk Scoring</h5>
+                <p>ML-based anomaly detection for crypto wallets</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="roadmap-phase">
+          <div class="phase-header">
+            <span class="phase-badge future">Q3-Q4 2026</span>
+            <span class="phase-title">Advanced Intelligence</span>
+          </div>
+          <div class="phase-features">
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(168, 85, 247, 0.2);">🔗</div>
+              <div>
+                <h5>Community Detection</h5>
+                <p>Graph clustering to identify criminal cells</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(239, 68, 68, 0.2);">🗓️</div>
+              <div>
+                <h5>Pattern of Life</h5>
+                <p>60+ day movement analysis (FBI CAST standard)</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(249, 115, 22, 0.2);">🔍</div>
+              <div>
+                <h5>Peeling Chain Detection</h5>
+                <p>Track incremental crypto splitting patterns</p>
+              </div>
+            </div>
+            <div class="phase-feature">
+              <div class="phase-feature-icon" style="background: rgba(34, 197, 94, 0.2);">📈</div>
+              <div>
+                <h5>Time-Series Anomaly</h5>
+                <p>Detect unusual transaction volume changes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Case Studies -->
+  <section id="cases">
+    <div class="container">
+      <div class="section-header">
+        <h2>Reference Case Studies</h2>
+        <p>Real-world cases solved using these investigation techniques</p>
+      </div>
+
+      <div class="case-studies">
+        <div class="case-card">
+          <div class="case-icon">🌐</div>
+          <h4>Silk Road Seizure</h4>
+          <div class="amount">$3.36B</div>
+          <p>IRS-CI traced 50,676 BTC stolen in 2012 through 9 years of blockchain analysis. Largest crypto seizure in history.</p>
+          <span class="case-source">FBI + Chainalysis</span>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">🏦</div>
+          <h4>FinCEN Files</h4>
+          <div class="amount">$2T</div>
+          <p>2,100+ SAR reports exposed money laundering through major banks including HSBC, Deutsche Bank, JPMorgan.</p>
+          <span class="case-source">FinCEN + ICIJ</span>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">🏛️</div>
+          <h4>Capitol Riot</h4>
+          <div class="amount">100K+ Evidence</div>
+          <p>FBI used cell location data to identify suspects within 1 week. Demonstrates power of location forensics.</p>
+          <span class="case-source">FBI CAST</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Competitive Advantage -->
+  <section>
+    <div class="container">
+      <div class="section-header">
+        <h2>Competitive Landscape</h2>
+        <p>How InvestiGate compares to enterprise solutions</p>
+      </div>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>InvestiGate</th>
+            <th>Cellebrite Pathfinder</th>
+            <th>Chainalysis Reactor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Money Flow Analysis</td>
+            <td class="check">✓</td>
+            <td class="check">✓</td>
+            <td class="cross">✗</td>
+          </tr>
+          <tr>
+            <td>Crypto Tracking</td>
+            <td class="check">✓</td>
+            <td class="cross">✗</td>
+            <td class="check">✓</td>
+          </tr>
+          <tr>
+            <td>Call/CDR Analysis</td>
+            <td class="check">✓</td>
+            <td class="check">✓</td>
+            <td class="cross">✗</td>
+          </tr>
+          <tr>
+            <td>Location Timeline</td>
+            <td class="check">✓</td>
+            <td class="check">✓</td>
+            <td class="cross">✗</td>
+          </tr>
+          <tr>
+            <td>Thai Language Support</td>
+            <td class="check">✓</td>
+            <td class="cross">✗</td>
+            <td class="cross">✗</td>
+          </tr>
+          <tr>
+            <td>Local Data Residency</td>
+            <td class="check">✓ (Azure TH)</td>
+            <td class="cross">✗ (US/EU)</td>
+            <td class="cross">✗ (US)</td>
+          </tr>
+          <tr>
+            <td>Starting Price</td>
+            <td><strong>Contact Us</strong></td>
+            <td>$50,000+/yr</td>
+            <td>$100,000+/yr</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="cta-section">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Ready to Transform Your Investigations?</h2>
+        <p>Contact us to discuss partnership opportunities and pilot programs</p>
+        <div class="cta-buttons">
+          <a href="mailto:sales@investigates.in.th" class="btn btn-primary">
+            📧 Contact Sales
+          </a>
+          <a href="/" class="btn btn-outline">
+            🔍 View Live Demo
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>© 2026 InvestiGate. Enterprise Digital Forensics Platform.</p>
+      <p style="margin-top: 8px; font-size: 12px;">Confidential - For Investor Review Only</p>
+    </div>
+  </footer>
+
+</body>
+</html>

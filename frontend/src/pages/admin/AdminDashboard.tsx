@@ -18,7 +18,8 @@ import {
   XCircle,
   Activity,
   Calendar,
-  Shield
+  Shield,
+  Presentation
 } from 'lucide-react';
 import { Card, Button } from '../../components/ui';
 import { registrationAPI, usersAPI, organizationsAPI, casesAPI } from '../../services/api';
@@ -105,6 +106,14 @@ export const AdminDashboard = () => {
       icon: Shield,
       to: '/admin/settings',
       color: 'from-gray-500 to-gray-600',
+    },
+    {
+      label: 'Investor Pitch',
+      description: 'View pitch deck',
+      icon: Presentation,
+      to: '/investor-pitch.html',
+      color: 'from-indigo-500 to-purple-500',
+      external: true,
     },
   ];
 
@@ -261,7 +270,7 @@ export const AdminDashboard = () => {
           {quickActions.map((action) => (
             <button
               key={action.to}
-              onClick={() => navigate(action.to)}
+              onClick={() => action.external ? window.open(action.to, '_blank') : navigate(action.to)}
               className={`p-5 rounded-xl text-left transition-all hover:scale-[1.02] ${
                 action.highlight
                   ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 hover:border-yellow-400/50'
