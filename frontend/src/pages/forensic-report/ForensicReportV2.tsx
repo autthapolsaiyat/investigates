@@ -7,19 +7,17 @@
  * - Risk Score Analysis
  * - PDF Export
  * - Auto Summary
- * - Network Graph
  * - QR Code Chain of Custody
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   FileText, Download, Printer, Users, TrendingUp, RefreshCw, Loader2, 
   AlertTriangle, Phone, Wallet, Building2, Shield, ChevronRight,
-  Target, ArrowRightLeft, CheckCircle, Network, Lock, Fingerprint, MapPin
+  Target, ArrowRightLeft, CheckCircle, Lock, Fingerprint, MapPin
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI, evidenceAPI } from '../../services/api';
 import type { Case, MoneyFlowNode, MoneyFlowEdge, Evidence } from '../../services/api';
-import { ForensicReportGraph } from './ForensicReportGraph';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
@@ -286,8 +284,6 @@ export const ForensicReportV2 = () => {
   const reportRef = useRef<HTMLDivElement>(null);
   
   // Money Flow states
-  const [nodes, setNodes] = useState<MoneyFlowNode[]>([]);
-  const [edges, setEdges] = useState<MoneyFlowEdge[]>([]);
   const [stats, setStats] = useState<Statistics | null>(null);
   const [highRiskPersons, setHighRiskPersons] = useState<HighRiskPerson[]>([]);
   const [keyTransactions, setKeyTransactions] = useState<KeyTransaction[]>([]);
@@ -305,7 +301,6 @@ export const ForensicReportV2 = () => {
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   
   // UI states
-  const [showGraph, setShowGraph] = useState(true);
   const [showChainOfCustody, setShowChainOfCustody] = useState(true);
 
   // Helper to get label
@@ -347,8 +342,6 @@ export const ForensicReportV2 = () => {
         moneyFlowAPI.listNodes(selectedCaseId),
         moneyFlowAPI.listEdges(selectedCaseId)
       ]);
-      setNodes(nodesRes);
-      setEdges(edgesRes);
       analyzeData(nodesRes, edgesRes);
       
       // 2. Fetch Evidence for Chain of Custody
@@ -1058,24 +1051,6 @@ export const ForensicReportV2 = () => {
           </div>
         </Card>
       )}
-
-      {/* Network Graph */}
-      <Card className="mb-6">
-        <div className="flex items-center justify-between p-4 border-b border-dark-700">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Network className="w-5 h-5 text-primary-400" />
-            Network Diagram (Network Diagram)
-          </h3>
-          <Button variant="ghost" size="sm" onClick={() => setShowGraph(!showGraph)}>
-            {showGraph ? 'Hide' : 'Show'}
-          </Button>
-        </div>
-        {showGraph && nodes.length > 0 && (
-          <div className="p-4">
-            <ForensicReportGraph nodes={nodes} edges={edges} />
-          </div>
-        )}
-      </Card>
 
       {/* Chain of Custody */}
       <Card className="mb-6">
