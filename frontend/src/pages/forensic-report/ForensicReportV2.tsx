@@ -71,40 +71,72 @@ interface Statistics {
   highRiskCount: number;
 }
 
-// Call Analysis Types
-interface CallEntity {
-  id: number;
+// Call Analysis Types - matches API response from /call-analysis/case/{id}/network
+interface CallEntityAPI {
+  id: string;
+  type: string;
   label: string;
-  phone_number?: string;
-  person_name?: string;
+  subLabel?: string;
+  risk: string;
+  clusterId?: number;
+  metadata: {
+    phone?: string;
+    calls?: number;
+    duration?: number;
+  };
+}
+
+// Parsed Call Entity for display
+interface CallEntity {
+  id: string;
+  label: string;
+  phone_number: string;
   total_calls: number;
   total_duration: number;
   risk_level: string;
-  risk_score: number;
 }
 
-// Location Types
+// Location Types - matches API response from /locations/case/{id}/timeline
+interface LocationPointAPI {
+  id: string;
+  lat: number;
+  lng: number;
+  timestamp?: string;
+  label?: string;
+  source: string;
+  accuracy?: number;
+  address?: string;
+  notes?: string;
+  personId?: number;
+  personName?: string;
+  locationType?: string;
+}
+
+// Parsed Location Point for display
 interface LocationPoint {
-  id: number;
-  suspect_name?: string;
+  id: string;
   latitude: number;
   longitude: number;
+  location_name: string;
+  location_type: string;
   source: string;
-  location_name?: string;
-  location_type?: string;
+  suspect_name: string;
   timestamp?: string;
 }
 
-// Crypto Types
+// Crypto Types - matches API response from /crypto/case/{id}/transactions
 interface CryptoTransaction {
   id: number;
   blockchain: string;
-  from_wallet: string;
-  to_wallet: string;
-  amount: number;
+  from_address: string;
+  from_label?: string;
+  to_address: string;
+  to_label?: string;
+  amount?: number;
   amount_usd?: number;
-  risk_flag?: string;
-  tx_date?: string;
+  risk_flag: string;
+  risk_score: number;
+  timestamp?: string;
 }
 
 // Language Type
@@ -313,7 +345,16 @@ export const ForensicReportV2 = () => {
         const callRes = await fetch(`${API_BASE}/call-analysis/case/${selectedCaseId}/network`, { headers });
         if (callRes.ok) {
           const callData = await callRes.json();
-          setCallEntities(callData.entities || []);
+          // Transform API response to our interface
+          const parsedEntities: CallEntity[] = (callData.entities || []).map((e: CallEntityAPI) => ({
+            id: e.id,
+            label: e.label || 'Unknown',
+            phone_number: e.metadata?.phone || '-',
+            total_calls: e.metadata?.calls || 0,
+            total_duration: e.metadata?.duration || 0,
+            risk_level: e.risk || 'low'
+          }));
+          setCallEntities(parsedEntities);
         }
       } catch {
         setCallEntities([]);
@@ -324,7 +365,18 @@ export const ForensicReportV2 = () => {
         const locRes = await fetch(`${API_BASE}/locations/case/${selectedCaseId}/timeline`, { headers });
         if (locRes.ok) {
           const locData = await locRes.json();
-          setLocationPoints(locData.points || []);
+          // Transform API response to our interface
+          const parsedPoints: LocationPoint[] = (locData.points || []).map((p: LocationPointAPI) => ({
+            id: p.id,
+            latitude: p.lat,
+            longitude: p.lng,
+            location_name: p.label || p.address || '',
+            location_type: p.locationType || p.source || 'unknown',
+            source: p.source || 'unknown',
+            suspect_name: p.personName || '',
+            timestamp: p.timestamp
+          }));
+          setLocationPoints(parsedPoints);
         }
       } catch {
         setLocationPoints([]);
@@ -648,11 +700,11 @@ export const ForensicReportV2 = () => {
           ${topCallers.map((caller, i) => `
             <tr>
               <td>${i + 1}</td>
-              <td><strong>${caller.label || caller.person_name || '-'}</strong></td>
+              <td><strong>${caller.label || '-'}</strong></td>
               <td>${caller.phone_number || '-'}</td>
               <td>${caller.total_calls}</td>
               <td>${formatDuration(caller.total_duration, language)}</td>
-              <td class="${caller.risk_score >= 70 ? 'risk-high' : caller.risk_score >= 40 ? 'risk-medium' : 'risk-low'}">${caller.risk_score}</td>
+              <td class="${caller.risk_level === 'critical' || caller.risk_level === 'high' ? 'risk-high' : caller.risk_level === 'medium' ? 'risk-medium' : 'risk-low'}">${caller.risk_level}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -685,10 +737,10 @@ export const ForensicReportV2 = () => {
             <tr>
               <td>${i + 1}</td>
               <td><span class="badge badge-blue">${tx.blockchain || '-'}</span></td>
-              <td style="font-family: monospace; font-size: 10px;">${tx.from_wallet ? tx.from_wallet.substring(0, 16) + '...' : '-'}</td>
-              <td style="font-family: monospace; font-size: 10px;">${tx.to_wallet ? tx.to_wallet.substring(0, 16) + '...' : '-'}</td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.from_address ? tx.from_address.substring(0, 16) + '...' : '-'}</td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.to_address ? tx.to_address.substring(0, 16) + '...' : '-'}</td>
               <td><strong>$${(tx.amount_usd || tx.amount || 0).toLocaleString()}</strong></td>
-              <td>${tx.risk_flag ? `<span class="badge ${tx.risk_flag.includes('MIXER') || tx.risk_flag.includes('TORNADO') ? 'badge-red' : 'badge-yellow'}">${tx.risk_flag}</span>` : '-'}</td>
+              <td>${tx.risk_flag && tx.risk_flag !== 'none' ? `<span class="badge ${tx.risk_flag.includes('mixer') || tx.risk_flag.includes('tornado') ? 'badge-red' : 'badge-yellow'}">${tx.risk_flag}</span>` : '-'}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1159,7 +1211,7 @@ export const ForensicReportV2 = () => {
             <div>
               <div className="text-dark-400">High Risk</div>
               <div className="text-xl font-bold text-red-400">
-                {cryptoTransactions.filter(t => t.risk_flag?.includes('MIXER') || t.risk_flag?.includes('TORNADO')).length}
+                {cryptoTransactions.filter(t => t.risk_flag?.toLowerCase().includes('mixer') || t.risk_flag?.toLowerCase().includes('tornado')).length}
               </div>
             </div>
           </div>
