@@ -684,10 +684,10 @@ export const ForensicReportV2 = () => {
           ${cryptoTransactions.slice(0, 10).map((tx, i) => `
             <tr>
               <td>${i + 1}</td>
-              <td><span class="badge badge-blue">${tx.blockchain}</span></td>
-              <td style="font-family: monospace; font-size: 10px;">${tx.from_wallet.substring(0, 16)}...</td>
-              <td style="font-family: monospace; font-size: 10px;">${tx.to_wallet.substring(0, 16)}...</td>
-              <td><strong>$${(tx.amount_usd || tx.amount).toLocaleString()}</strong></td>
+              <td><span class="badge badge-blue">${tx.blockchain || '-'}</span></td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.from_wallet ? tx.from_wallet.substring(0, 16) + '...' : '-'}</td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.to_wallet ? tx.to_wallet.substring(0, 16) + '...' : '-'}</td>
+              <td><strong>$${(tx.amount_usd || tx.amount || 0).toLocaleString()}</strong></td>
               <td>${tx.risk_flag ? `<span class="badge ${tx.risk_flag.includes('MIXER') || tx.risk_flag.includes('TORNADO') ? 'badge-red' : 'badge-yellow'}">${tx.risk_flag}</span>` : '-'}</td>
             </tr>
           `).join('')}
@@ -734,8 +734,8 @@ export const ForensicReportV2 = () => {
           ${locationPoints.slice(0, 10).map((loc, i) => `
             <tr>
               <td>${i + 1}</td>
-              <td><strong>${loc.location_name || `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`}</strong></td>
-              <td><span class="badge badge-green">${loc.location_type || loc.source}</span></td>
+              <td><strong>${loc.location_name || (loc.latitude && loc.longitude ? `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}` : '-')}</strong></td>
+              <td><span class="badge badge-green">${loc.location_type || loc.source || '-'}</span></td>
               <td>${loc.suspect_name || '-'}</td>
               <td>${loc.timestamp ? formatDate(loc.timestamp, language) : '-'}</td>
             </tr>
