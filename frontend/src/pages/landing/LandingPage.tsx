@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Shield, Network, Wallet, Phone, MapPin, FileText,
-  CheckCircle, ArrowRight, Play,
+  CheckCircle, ArrowRight,
   ChevronDown, ChevronUp, Users, Lock, Globe,
   Sparkles, QrCode
 } from 'lucide-react';
@@ -60,8 +60,8 @@ const LandingPage = () => {
   const pricing = [
     {
       name: 'Starter',
-      price: 'Free',
-      period: ' 30 days',
+      price: 'Free Trial',
+      period: '30 days',
       desc: 'Try before you decide',
       features: [
         '1 User License',
@@ -74,13 +74,13 @@ const LandingPage = () => {
         'Email Support'
       ],
       highlight: false,
-      cta: 'Sign up Free',
+      cta: 'Start Free Trial',
       isFree: true
     },
     {
       name: 'Professional',
-      price: '150,000',
-      period: '/user/year',
+      price: 'Contact Us',
+      period: 'for pricing',
       desc: 'For advanced investigation',
       features: [
         '1 User License',
@@ -93,13 +93,13 @@ const LandingPage = () => {
         'Online Training'
       ],
       highlight: true,
-      cta: 'Recommended',
+      cta: 'Contact Sales',
       isFree: false
     },
     {
       name: 'Enterprise',
-      price: '250,000',
-      period: '/user/year',
+      price: 'Contact Us',
+      period: 'for pricing',
       desc: 'For large organizations',
       features: [
         '1 User License',
@@ -112,35 +112,58 @@ const LandingPage = () => {
         'SLA 99.9%'
       ],
       highlight: false,
-      cta: 'Contact Us',
+      cta: 'Contact Sales',
       isFree: false
+    }
+  ];
+
+  const screenshots = [
+    {
+      title: 'Money Flow Analysis',
+      desc: 'Visualize complex financial networks and trace money trails',
+      image: '/images/screenshots/money-flow.png'
+    },
+    {
+      title: 'Call Analysis Network',
+      desc: 'Analyze call patterns and identify communication clusters',
+      image: '/images/screenshots/call-analysis.png'
+    },
+    {
+      title: 'Crypto Transaction Tracker',
+      desc: 'Track cryptocurrency flows across wallets and exchanges',
+      image: '/images/screenshots/crypto-tracker.png'
+    },
+    {
+      title: 'Location Timeline',
+      desc: 'Map suspect movements with GPS data playback',
+      image: '/images/screenshots/location-timeline.png'
     }
   ];
 
   const faqs = [
     {
-      q: 'Who is InvestiGate for??',
+      q: 'Who is InvestiGate for?',
       a: 'InvestiGate is designed for investigators, police and agencies that need digital data analysis in financial crime, drug and other cases'
     },
     {
-      q: 'What file formats are supported??',
+      q: 'What file formats are supported?',
       a: 'Supports files from Cellebrite UFED, MSAB XRY, Oxygen Forensic and general CSV/Excel files like Bank Statements, Call Records, Crypto Transactions'
     },
     {
-      q: 'Is data secure??',
+      q: 'Is data secure?',
       a: 'Data is encrypted at rest and in transit, stored on ISO 27001 Azure Cloud with Chain of Custody system and SHA-256 Hash verification'
     },
     {
-      q: 'Can it be used in court??',
+      q: 'Can it be used in court?',
       a: 'Yes. System creates reports per Digital Forensic standards with Chain of Custody, QR Code for evidence verification and SHA-256 Hash confirming data integrity'
     },
     {
-      q: 'Is training available??',
-      a: '2-day training available (charged separately) by expert trainers, On-site or Online'
+      q: 'Is training available?',
+      a: 'Training available (charged separately) by expert trainers, On-site or Online'
     },
     {
-      q: 'Can I cancel??',
-      a: 'You can cancel anytime but no refund for remaining period. Data kept for 30 days after expiry'
+      q: 'Can I cancel?',
+      a: 'You can cancel anytime. Data kept for 30 days after expiry'
     }
   ];
 
@@ -211,38 +234,40 @@ const LandingPage = () => {
                 <span className="text-primary-400">Court Standard</span>
               </h1>
               <p className="text-xl text-dark-400 mb-8 max-w-lg">
-                Import data from Cellebrite, UFED, XRY. Analyze crypto money trail 
-                Create court-ready reports instantly
+                Import data from Cellebrite, UFED, XRY. Analyze crypto money trail. 
+                Create court-ready reports instantly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => navigate('/login')}
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors"
                 >
-                  Start Free 14-day trial
+                  Start Free Trial
                   <ArrowRight size={20} />
                 </button>
-                <button className="flex items-center justify-center gap-2 px-6 py-3 border border-dark-600 hover:border-dark-500 rounded-lg font-medium transition-colors">
-                  <Play size={20} />
-                  Watch Demo Video
+                <button 
+                  onClick={() => window.location.href = 'mailto:sales@investigates.in.th'}
+                  className="flex items-center justify-center gap-2 px-6 py-3 border border-dark-600 hover:border-dark-500 rounded-lg font-medium transition-colors"
+                >
+                  Contact Sales
                 </button>
               </div>
               <div className="flex items-center gap-6 mt-8 text-sm text-dark-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-green-400" />
-                  <span>No credit card required</span>
+                  <span>30-day free trial</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-green-400" />
-                  <span>Cancel anytime</span>
+                  <span>No credit card required</span>
                 </div>
               </div>
             </div>
             <div className="relative">
-              <div className="rounded-2xl overflow-hidden shadow-2xl">
+              <div className="rounded-2xl overflow-hidden shadow-2xl border border-dark-700">
                 <img
-                  src="/images/hero-features.png"
-                  alt="InvestiGate Features - Money Flow, Crypto Tracker, Call Analysis, Location Timeline"
+                  src="/images/screenshots/money-flow.png"
+                  alt="InvestiGate Money Flow Analysis - Network visualization"
                   className="w-full"
                 />
               </div>
@@ -346,13 +371,40 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Screenshots Gallery */}
+      <section className="py-20 px-6 bg-dark-800/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
+            <p className="text-dark-400 max-w-2xl mx-auto">
+              Professional-grade visualization tools for digital forensic investigations
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            {screenshots.map((item, i) => (
+              <div key={i} className="group">
+                <div className="rounded-2xl overflow-hidden border border-dark-700 bg-dark-900 hover:border-primary-500/50 transition-colors">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-64 object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold mt-4 mb-1">{item.title}</h3>
+                <p className="text-dark-400 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Value Pricing</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Flexible Plans</h2>
             <p className="text-dark-400 max-w-2xl mx-auto">
-              Select package that fits your needs (Prices exclude 7% VAT)
+              Start with a free trial, then contact us for customized pricing
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -373,11 +425,11 @@ const LandingPage = () => {
                 <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                 <p className="text-dark-400 text-sm mb-4">{plan.desc}</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">{plan.isFree ? plan.price : `฿${plan.price}`}</span>
-                  <span className="text-dark-400">{plan.period}</span>
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-dark-400 ml-1">{plan.period}</span>
                 </div>
                 <button
-                  onClick={() => navigate('/login')}
+                  onClick={() => plan.isFree ? navigate('/login') : window.location.href = 'mailto:sales@investigates.in.th'}
                   className={`w-full py-3 rounded-lg font-medium transition-colors mb-6 ${
                     plan.highlight
                       ? 'bg-primary-500 hover:bg-primary-600'
@@ -442,18 +494,26 @@ const LandingPage = () => {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to start analyzing cases??
+            Ready to start analyzing cases?
           </h2>
           <p className="text-xl text-dark-400 mb-8">
-            Try for Free 30 days No credit card required
+            Try free for 30 days. No credit card required.
           </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium text-lg transition-colors"
-          >
-            Start Free
-            <ArrowRight size={24} />
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate('/login')}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium text-lg transition-colors"
+            >
+              Start Free Trial
+              <ArrowRight size={24} />
+            </button>
+            <button
+              onClick={() => window.location.href = 'mailto:sales@investigates.in.th'}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-dark-600 hover:border-dark-500 rounded-lg font-medium text-lg transition-colors"
+            >
+              Contact Sales
+            </button>
+          </div>
         </div>
       </section>
 
@@ -467,7 +527,8 @@ const LandingPage = () => {
               </div>
               <p className="text-dark-400 text-sm">
                 Digital Forensic Investigation Platform
-                Digital Investigation Standard
+                <br />
+                Enterprise-grade Digital Investigation
               </p>
             </div>
             <div>
@@ -481,16 +542,15 @@ const LandingPage = () => {
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-dark-400 text-sm">
-                <li><a href="#" className="hover:text-white">About Us</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
-                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
+                <li><a href="mailto:sales@investigates.in.th" className="hover:text-white">Contact Sales</a></li>
+                <li><a href="mailto:support@investigates.in.th" className="hover:text-white">Support</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-dark-400 text-sm">
-                <li>support@investigates.com</li>
-                <li>02-xxx-xxxx</li>
+                <li>sales@investigates.in.th</li>
+                <li>support@investigates.in.th</li>
               </ul>
             </div>
           </div>
