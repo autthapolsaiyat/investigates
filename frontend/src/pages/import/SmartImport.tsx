@@ -817,18 +817,58 @@ const SmartImport: React.FC = () => {
         
         for (const file of phoneFiles) {
           try {
-            const callRecords = file.records.map(r => ({
-              device_owner: r.from_name || r.caller_name || null,
-              device_number: r.from_number || r.caller || null,
-              partner_number: r.to_number || r.called || 'Unknown',
-              partner_name: r.to_name || r.called_name || null,
-              call_type: r.call_type?.toLowerCase() || 'unknown',
-              start_time: r.date && r.time ? `${r.date}T${r.time}` : r.date || null,
-              duration_seconds: parseInt(r.duration_sec || r.duration || '0') || 0,
-              cell_id: r.cell_tower || r.cell_id || null,
-              notes: r.note || r.notes || null,
-              raw_data: JSON.stringify(r)
-            }));
+            const callRecords = file.records.map(r => {
+              // Flexible field mapping for various CSV formats
+              const deviceOwner = r.device_owner || r.owner_name || r.from_name || r.caller_name || r.Owner_Name || null;
+              const deviceNumber = r.device_number || r.from_number || r.caller || r.phone || null;
+              // For Cellebrite format: if Direction is OUTGOING, Phone_Number is partner; if INCOMING, Phone_Number is caller
+              const direction = (r.direction || r.Direction || r.call_direction || '').toUpperCase();
+              const phoneNumber = r.phone_number || r.Phone_Number || r.number || null;
+              const contactName = r.contact_name || r.Contact_Name || r.partner_name || r.to_name || r.called_name || null;
+              
+              // Determine device vs partner based on direction
+              let finalDeviceNumber = deviceNumber;
+              let finalPartnerNumber = phoneNumber;
+              let finalDeviceOwner = deviceOwner;
+              let finalPartnerName = contactName;
+              
+              if (direction === 'INCOMING' && phoneNumber) {
+                // Incoming: Phone_Number is the caller (partner), device is the receiver
+                finalPartnerNumber = phoneNumber;
+                finalPartnerName = contactName;
+              } else if (direction === 'OUTGOING' && phoneNumber) {
+                // Outgoing: device called Phone_Number (partner)
+                finalPartnerNumber = phoneNumber;
+                finalPartnerName = contactName;
+              }
+              
+              // Parse datetime
+              let startTime = null;
+              if (r.start_time || r.Start_Time) {
+                startTime = r.start_time || r.Start_Time;
+              } else if (r.date || r.Date) {
+                const date = r.date || r.Date;
+                const time = r.time || r.Time || '00:00:00';
+                startTime = date.includes('T') ? date : `${date}T${time}`;
+              }
+              
+              return {
+                device_id: r.device_id || r.Device_ID || r.DEVICE_ID || null,
+                device_imei: r.imei || r.IMEI || r.device_imei || null,
+                device_owner: finalDeviceOwner,
+                device_number: finalDeviceNumber || `DEVICE_${r.device_id || r.Device_ID || 'UNKNOWN'}`,
+                partner_number: finalPartnerNumber || 'Unknown',
+                partner_name: finalPartnerName,
+                call_type: (r.call_type || r.Call_Type || r.type || 'voice').toLowerCase(),
+                start_time: startTime,
+                duration_seconds: parseInt(r.duration_sec || r.Duration_Sec || r.duration || r.Duration || '0') || 0,
+                cell_id: r.cell_id || r.Cell_ID || r.cell_tower || null,
+                gps_lat: parseFloat(r.latitude || r.Latitude || r.lat || '0') || null,
+                gps_lon: parseFloat(r.longitude || r.Longitude || r.lon || r.lng || '0') || null,
+                notes: r.notes || r.Notes || r.note || null,
+                raw_data: JSON.stringify(r)
+              };
+            });
             
             const response = await fetch(`${baseUrl}/call-analysis/case/${selectedCase}/records/bulk`, {
               method: 'POST',
@@ -876,19 +916,36 @@ const SmartImport: React.FC = () => {
         
         for (const file of locationFiles) {
           try {
-            const locationPoints = file.records.map(r => ({
-              suspect_id: r.suspect_id || r.person_id || null,
-              suspect_name: r.suspect_name || r.person_name || r.name || null,
-              latitude: parseFloat(r.latitude || r.lat || '0'),
-              longitude: parseFloat(r.longitude || r.lng || r.lon || '0'),
-              source: r.source?.toLowerCase() || 'manual',
-              location_name: r.location_name || r.place || r.label || null,
-              location_type: r.location_type || r.type || null,
-              address: r.address || null,
-              timestamp: r.datetime || r.timestamp || (r.date && r.time ? `${r.date}T${r.time}` : r.date) || null,
-              notes: r.note || r.notes || null,
-              raw_data: JSON.stringify(r)
-            })).filter(p => p.latitude !== 0 && p.longitude !== 0);
+            const locationPoints = file.records.map(r => {
+              // Flexible field mapping for various CSV formats
+              const lat = parseFloat(r.latitude || r.Latitude || r.lat || r.LAT || r.gps_lat || '0');
+              const lon = parseFloat(r.longitude || r.Longitude || r.lon || r.lng || r.LON || r.LNG || r.gps_lon || '0');
+              
+              // Parse timestamp
+              let timestamp = null;
+              if (r.datetime || r.Datetime || r.timestamp || r.Timestamp) {
+                timestamp = r.datetime || r.Datetime || r.timestamp || r.Timestamp;
+              } else if (r.date || r.Date) {
+                const date = r.date || r.Date;
+                const time = r.time || r.Time || '00:00:00';
+                timestamp = date.includes('T') ? date : `${date}T${time}`;
+              }
+              
+              return {
+                suspect_id: r.suspect_id || r.person_id || r.device_id || r.Device_ID || r.Record_ID || null,
+                suspect_name: r.suspect_name || r.person_name || r.name || r.owner_name || r.Owner_Name || null,
+                latitude: lat,
+                longitude: lon,
+                source: (r.source || r.Source || r.data_source || 'manual').toLowerCase(),
+                location_name: r.location_name || r.Location_Name || r.place || r.label || r.poi_name || null,
+                location_type: r.location_type || r.Location_Type || r.poi_type || r.POI_Type || r.type || null,
+                accuracy: parseFloat(r.accuracy || r.Accuracy || r.accuracy_meters || r.Accuracy_Meters || '0') || null,
+                address: r.address || r.Address || null,
+                timestamp: timestamp,
+                notes: r.notes || r.Notes || r.note || r.Note || null,
+                raw_data: JSON.stringify(r)
+              };
+            }).filter(p => p.latitude !== 0 && p.longitude !== 0);
             
             if (locationPoints.length > 0) {
               const response = await fetch(`${baseUrl}/locations/case/${selectedCase}/points/bulk`, {
