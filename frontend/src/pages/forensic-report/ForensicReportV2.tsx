@@ -139,6 +139,25 @@ interface CryptoTransaction {
   timestamp?: string;
 }
 
+// Saved Wallet from /crypto/case/{id}/wallets
+interface SavedWallet {
+  id: number;
+  address: string;
+  blockchain: string;
+  label: string | null;
+  owner_name: string | null;
+  owner_type: string | null;
+  total_received: number;
+  total_sent: number;
+  total_received_usd: number;
+  total_sent_usd: number;
+  transaction_count: number;
+  risk_score: number;
+  is_suspect: boolean;
+  is_exchange: boolean;
+  is_mixer: boolean;
+}
+
 // Language Type
 type Language = 'en' | 'th';
 
@@ -366,11 +385,12 @@ export const ForensicReportV2 = () => {
         if (locRes.ok) {
           const locData = await locRes.json();
           // Transform API response to our interface
+          // Priority: address > label (which might be "Point X") > coordinates
           const parsedPoints: LocationPoint[] = (locData.points || []).map((p: LocationPointAPI) => ({
             id: p.id,
             latitude: p.lat,
             longitude: p.lng,
-            location_name: p.label || p.address || '',
+            location_name: p.address || (p.label && !p.label.startsWith('Point ') ? p.label : '') || `${p.lat?.toFixed(4)}, ${p.lng?.toFixed(4)}`,
             location_type: p.locationType || p.source || 'unknown',
             source: p.source || 'unknown',
             suspect_name: p.personName || '',
@@ -382,15 +402,38 @@ export const ForensicReportV2 = () => {
         setLocationPoints([]);
       }
       
-      // 5. Fetch Crypto data (if endpoint exists)
+      // 5. Fetch Crypto data - from saved wallets (not imported transactions)
       try {
-        const cryptoRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
-        if (cryptoRes.ok) {
-          const cryptoData = await cryptoRes.json();
-          setCryptoTransactions(cryptoData || []);
+        const walletsRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/wallets`, { headers });
+        if (walletsRes.ok) {
+          const walletsData = await walletsRes.json();
+          // Transform wallets to transaction-like format for display
+          const walletTransactions: CryptoTransaction[] = (walletsData || []).map((w: SavedWallet, idx: number) => ({
+            id: w.id || idx,
+            blockchain: w.blockchain || 'unknown',
+            from_address: w.address,
+            from_label: w.label || w.owner_name,
+            to_address: '-',
+            to_label: null,
+            amount: w.total_received + w.total_sent,
+            amount_usd: w.total_received_usd + w.total_sent_usd,
+            risk_flag: w.is_mixer ? 'mixer_detected' : w.is_suspect ? 'high_risk' : 'none',
+            risk_score: w.risk_score,
+            timestamp: undefined
+          }));
+          setCryptoTransactions(walletTransactions);
         }
       } catch {
-        setCryptoTransactions([]);
+        // Fallback to transactions if wallets endpoint fails
+        try {
+          const cryptoRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
+          if (cryptoRes.ok) {
+            const cryptoData = await cryptoRes.json();
+            setCryptoTransactions(cryptoData || []);
+          }
+        } catch {
+          setCryptoTransactions([]);
+        }
       }
       
     } catch (err) {
@@ -720,27 +763,27 @@ export const ForensicReportV2 = () => {
       <h2>🪙 ${t('cryptoAnalysis')}</h2>
     </div>
     <div class="section-content">
-      <h3>💳 ${t('cryptoTransactions')}</h3>
+      <h3>💳 ${language === 'th' ? 'กระเป๋าเงินที่ติดตาม' : 'Tracked Wallets'}</h3>
       <table>
         <thead>
           <tr>
             <th style="width: 5%">#</th>
             <th style="width: 12%">${t('blockchain')}</th>
-            <th style="width: 25%">${t('from')}</th>
-            <th style="width: 25%">${t('to')}</th>
-            <th style="width: 15%">${t('amount')}</th>
-            <th>${t('riskFlags')}</th>
+            <th style="width: 30%">${language === 'th' ? 'ที่อยู่กระเป๋า' : 'Wallet Address'}</th>
+            <th style="width: 15%">${language === 'th' ? 'ชื่อ/ป้ายกำกับ' : 'Label'}</th>
+            <th style="width: 15%">${language === 'th' ? 'มูลค่ารวม' : 'Total Volume'}</th>
+            <th style="width: 10%">${language === 'th' ? 'ความเสี่ยง' : 'Risk'}</th>
           </tr>
         </thead>
         <tbody>
           ${cryptoTransactions.slice(0, 10).map((tx, i) => `
             <tr>
               <td>${i + 1}</td>
-              <td><span class="badge badge-blue">${tx.blockchain || '-'}</span></td>
-              <td style="font-family: monospace; font-size: 10px;">${tx.from_address ? tx.from_address.substring(0, 16) + '...' : '-'}</td>
-              <td style="font-family: monospace; font-size: 10px;">${tx.to_address ? tx.to_address.substring(0, 16) + '...' : '-'}</td>
+              <td><span class="badge badge-blue">${(tx.blockchain || 'unknown').toUpperCase()}</span></td>
+              <td style="font-family: monospace; font-size: 10px;">${tx.from_address ? tx.from_address.substring(0, 20) + '...' : '-'}</td>
+              <td>${tx.from_label || '-'}</td>
               <td><strong>$${(tx.amount_usd || tx.amount || 0).toLocaleString()}</strong></td>
-              <td>${tx.risk_flag && tx.risk_flag !== 'none' ? `<span class="badge ${tx.risk_flag.includes('mixer') || tx.risk_flag.includes('tornado') ? 'badge-red' : 'badge-yellow'}">${tx.risk_flag}</span>` : '-'}</td>
+              <td>${tx.risk_flag && tx.risk_flag !== 'none' ? `<span class="badge ${tx.risk_flag.includes('mixer') || tx.risk_flag.includes('high') ? 'badge-red' : 'badge-yellow'}">${tx.risk_score || tx.risk_flag}</span>` : `<span class="badge badge-green">${tx.risk_score || 0}</span>`}</td>
             </tr>
           `).join('')}
         </tbody>
