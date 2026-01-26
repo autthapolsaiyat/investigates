@@ -27,7 +27,9 @@ import {
   Crosshair,
   Gauge,
   Eye,
-  EyeOff
+  EyeOff,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
 import { useCaseStore } from '../../store/caseStore';
@@ -83,6 +85,10 @@ export const LocationTimeline = () => {
   // New playback states
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [followMode, setFollowMode] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Ref for fullscreen container
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   
   // Use global case store
   const { selectedCaseId } = useCaseStore();
@@ -516,6 +522,38 @@ export const LocationTimeline = () => {
     setIsPlaying(false);
   };
 
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (mapContainerRef.current?.requestFullscreen) {
+        mapContainerRef.current.requestFullscreen();
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // Listen for fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+      // Invalidate map size after fullscreen change
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 100);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const formatDuration = (start: Date, end: Date) => {
     const diff = end.getTime() - start.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -583,10 +621,21 @@ export const LocationTimeline = () => {
       </Card>
 
       {/* Main Content */}
-      <div className="grid grid-cols-3 gap-4" style={{ height: 'calc(100vh - 280px)' }}>
+      <div className={`grid gap-4 ${isFullscreen ? '' : 'grid-cols-3'}`} style={{ height: isFullscreen ? '100vh' : 'calc(100vh - 280px)' }}>
         {/* Map */}
-        <div className="col-span-2">
-          <Card className="h-full overflow-hidden relative">
+        <div className={isFullscreen ? 'col-span-1' : 'col-span-2'} ref={mapContainerRef}>
+          <Card className={`h-full overflow-hidden relative ${isFullscreen ? 'rounded-none' : ''}`}>
+            {/* Fullscreen Button - Top Right */}
+            {mapLoaded && (
+              <button
+                onClick={toggleFullscreen}
+                className="absolute top-3 right-3 z-[10000] bg-dark-800/90 hover:bg-dark-700 backdrop-blur p-2 rounded-lg transition-colors"
+                title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+              >
+                {isFullscreen ? <Minimize size={20} className="text-white" /> : <Maximize size={20} className="text-white" />}
+              </button>
+            )}
+            
             {/* Data Loading State */}
             {isLoading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-dark-800/80">
@@ -623,9 +672,9 @@ export const LocationTimeline = () => {
             
             {/* Map Overlay Controls */}
             {mapLoaded && filteredLocations.length > 0 && (
-              <div className="absolute bottom-4 left-4 right-4 z-[1000]">
+              <div className="absolute bottom-4 left-4 right-4" style={{ zIndex: 10000 }}>
                 {/* Progress Bar */}
-                <div className="bg-dark-800/90 backdrop-blur rounded-lg p-3 mb-2">
+                <div className="bg-dark-800/95 backdrop-blur-md rounded-lg p-3 shadow-xl border border-dark-600">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-xs text-dark-400 w-8">{currentIndex + 1}</span>
                     <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
@@ -702,6 +751,18 @@ export const LocationTimeline = () => {
                     >
                       <Crosshair size={16} />
                     </Button>
+                    
+                    <div className="w-px h-6 bg-dark-600 mx-2" />
+                    
+                    {/* Fullscreen Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleFullscreen}
+                      title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                    >
+                      {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -709,7 +770,8 @@ export const LocationTimeline = () => {
           </Card>
         </div>
 
-        {/* Timeline Panel */}
+        {/* Timeline Panel - Hidden in fullscreen */}
+        {!isFullscreen && (
         <div className="col-span-1 flex flex-col gap-4">
           {/* Current Location Info */}
           {selectedLocation && (
@@ -823,9 +885,11 @@ export const LocationTimeline = () => {
             </div>
           </Card>
         </div>
+        )}
       </div>
 
-      {/* Legend */}
+      {/* Legend - Hidden in fullscreen */}
+      {!isFullscreen && (
       <Card className="p-3">
         <div className="flex items-center gap-6 justify-center flex-wrap">
           {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
@@ -850,6 +914,7 @@ export const LocationTimeline = () => {
           </div>
         </div>
       </Card>
+      )}
 
       {/* Add Location Modal */}
       {showAddModal && (
