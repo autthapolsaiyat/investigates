@@ -821,17 +821,9 @@ const SmartImport: React.FC = () => {
               // Flexible field mapping for various CSV formats
               const deviceOwner = r.device_owner || r.owner_name || r.from_name || r.caller_name || r.Owner_Name || null;
               const deviceNumber = r.device_number || r.from_number || r.caller || r.phone || null;
-              // For Cellebrite format: if Direction is OUTGOING, Phone_Number is partner; if INCOMING, Phone_Number is caller
-              const direction = (r.direction || r.Direction || r.call_direction || '').toUpperCase();
               // Partner number - check multiple field names
               const partnerNumber = r.partner_number || r.phone_number || r.Phone_Number || r.to_number || r.called || r.number || null;
               const contactName = r.contact_name || r.Contact_Name || r.partner_name || r.to_name || r.called_name || null;
-              
-              // Final values
-              let finalDeviceNumber = deviceNumber;
-              let finalPartnerNumber = partnerNumber;
-              let finalDeviceOwner = deviceOwner;
-              let finalPartnerName = contactName;
               
               // Parse datetime
               let startTime = null;
@@ -846,10 +838,10 @@ const SmartImport: React.FC = () => {
               return {
                 device_id: r.device_id || r.Device_ID || r.DEVICE_ID || null,
                 device_imei: r.imei || r.IMEI || r.device_imei || null,
-                device_owner: finalDeviceOwner,
-                device_number: finalDeviceNumber || `DEVICE_${r.device_id || r.Device_ID || 'UNKNOWN'}`,
-                partner_number: finalPartnerNumber || 'Unknown',
-                partner_name: finalPartnerName,
+                device_owner: deviceOwner,
+                device_number: deviceNumber || `DEVICE_${r.device_id || r.Device_ID || 'UNKNOWN'}`,
+                partner_number: partnerNumber || 'Unknown',
+                partner_name: contactName,
                 call_type: (r.call_type || r.Call_Type || r.type || 'voice').toLowerCase(),
                 start_time: startTime,
                 duration_seconds: parseInt(r.duration_sec || r.Duration_Sec || r.duration || r.Duration || '0') || 0,
