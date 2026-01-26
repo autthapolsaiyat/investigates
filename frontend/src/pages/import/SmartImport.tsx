@@ -128,13 +128,13 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   bank: ['Bank', 'bank_name'],
   
   // Phone record fields (Cellebrite, UFED specific)
-  from_number: ['caller', 'calling_number', 'source_number', 'originating_number', 'a_number', 'msisdn_a', 'msisdn', 'Source Phone', 'Calling Phone'],
-  to_number: ['called', 'called_number', 'target_number', 'destination_number', 'b_number', 'msisdn_b', 'Destination Phone', 'Called Phone'],
+  from_number: ['caller', 'calling_number', 'source_number', 'originating_number', 'a_number', 'msisdn_a', 'msisdn', 'Source Phone', 'Calling Phone', 'device_number', 'owner_phone', 'device_phone'],
+  to_number: ['called', 'called_number', 'target_number', 'destination_number', 'b_number', 'msisdn_b', 'Destination Phone', 'Called Phone', 'partner_number', 'phone_number', 'contact_number'],
   duration_sec: ['duration', 'call_duration', 'length', 'seconds', 'duration_seconds', 'Duration'],
   call_type: ['direction', 'call_direction', 'Call Type'],
   cell_tower: ['cell_id', 'tower_id', 'lac', 'cgi', 'Cell Tower'],
   location: ['loc', 'place', 'Location'],
-  contact_name: ['called_name', 'caller_name'],  // Phone contact names
+  contact_name: ['called_name', 'caller_name', 'partner_name', 'owner_name'],  // Phone contact names
   
   // Crypto fields (XRY, Chainalysis specific)
   from_wallet: ['source_wallet', 'sender_wallet', 'from_address', 'source_address'],
@@ -823,24 +823,15 @@ const SmartImport: React.FC = () => {
               const deviceNumber = r.device_number || r.from_number || r.caller || r.phone || null;
               // For Cellebrite format: if Direction is OUTGOING, Phone_Number is partner; if INCOMING, Phone_Number is caller
               const direction = (r.direction || r.Direction || r.call_direction || '').toUpperCase();
-              const phoneNumber = r.phone_number || r.Phone_Number || r.number || null;
+              // Partner number - check multiple field names
+              const partnerNumber = r.partner_number || r.phone_number || r.Phone_Number || r.to_number || r.called || r.number || null;
               const contactName = r.contact_name || r.Contact_Name || r.partner_name || r.to_name || r.called_name || null;
               
-              // Determine device vs partner based on direction
+              // Final values
               let finalDeviceNumber = deviceNumber;
-              let finalPartnerNumber = phoneNumber;
+              let finalPartnerNumber = partnerNumber;
               let finalDeviceOwner = deviceOwner;
               let finalPartnerName = contactName;
-              
-              if (direction === 'INCOMING' && phoneNumber) {
-                // Incoming: Phone_Number is the caller (partner), device is the receiver
-                finalPartnerNumber = phoneNumber;
-                finalPartnerName = contactName;
-              } else if (direction === 'OUTGOING' && phoneNumber) {
-                // Outgoing: device called Phone_Number (partner)
-                finalPartnerNumber = phoneNumber;
-                finalPartnerName = contactName;
-              }
               
               // Parse datetime
               let startTime = null;
