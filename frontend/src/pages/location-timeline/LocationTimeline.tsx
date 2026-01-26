@@ -295,29 +295,58 @@ export const LocationTimeline = () => {
     
     const config = SOURCE_CONFIG[loc.source];
     
-    // Create pulsing marker
+    // Create pulsing marker with inline animation (pseudo-elements don't work well with Leaflet)
     const pulseIcon = L.divIcon({
-      className: 'pulse-marker',
+      className: 'custom-pulse-marker',
       html: `
-        <div style="
-          width: 50px;
-          height: 50px;
-          background: ${config.color};
-          border-radius: 50%;
-          border: 4px solid #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-          position: relative;
-          z-index: 1000;
-        ">
-          ${config.icon}
+        <div style="position: relative; width: 50px; height: 50px;">
+          <!-- Pulse rings -->
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            margin: -40px 0 0 -40px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.3);
+            animation: pulse-ring 1.5s ease-out infinite;
+          "></div>
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            margin: -30px 0 0 -30px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.4);
+            animation: pulse-ring 1.5s ease-out infinite 0.3s;
+          "></div>
+          <!-- Main marker -->
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            margin: -25px 0 0 -25px;
+            background: ${config.color};
+            border-radius: 50%;
+            border: 4px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            z-index: 10;
+          ">
+            ${config.icon}
+          </div>
         </div>
       `,
-      iconSize: [50, 50],
-      iconAnchor: [25, 25],
+      iconSize: [80, 80],
+      iconAnchor: [40, 40],
     });
     
     pulseMarkerRef.current = L.marker([loc.lat, loc.lng], { icon: pulseIcon, zIndexOffset: 1000 })
@@ -345,18 +374,13 @@ export const LocationTimeline = () => {
     const L = (window as any).L;
     if (!L || !mapInstanceRef.current) return;
 
-    // Clear existing markers
+    // Clear existing point markers only (NOT trail or pulse)
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
     if (fullPolylineRef.current) {
       fullPolylineRef.current.remove();
     }
-    if (trailPolylineRef.current) {
-      trailPolylineRef.current.remove();
-    }
-    if (pulseMarkerRef.current) {
-      pulseMarkerRef.current.remove();
-    }
+    // Don't clear trailPolylineRef and pulseMarkerRef here - they are managed separately
 
     // Add new markers
     const coords: [number, number][] = [];
@@ -448,22 +472,24 @@ export const LocationTimeline = () => {
 
   // Pan to current location when index changes (during playback)
   const panToCurrentLocation = useCallback(() => {
-    if (!mapInstanceRef.current || !followMode) return;
+    if (!mapInstanceRef.current) return;
     
     const currentLoc = filteredLocations[currentIndex];
     if (!currentLoc) return;
     
-    // Smooth fly to current location
-    mapInstanceRef.current.flyTo([currentLoc.lat, currentLoc.lng], 15, {
-      duration: 1,
-      easeLinearity: 0.5
-    });
-    
-    // Update trail line to show path up to current point
+    // Update trail line to show path up to current point (always)
     updateTrailLine(currentIndex);
     
-    // Update pulse marker
+    // Update pulse marker (always)
     updatePulseMarker(currentLoc);
+    
+    // Only fly to location if follow mode is on
+    if (followMode) {
+      mapInstanceRef.current.flyTo([currentLoc.lat, currentLoc.lng], 15, {
+        duration: 1,
+        easeLinearity: 0.5
+      });
+    }
     
   }, [currentIndex, followMode, filteredLocations, updateTrailLine, updatePulseMarker]);
 
