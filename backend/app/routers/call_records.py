@@ -438,18 +438,221 @@ async def list_call_links(
     return links
 
 
+# ==================== NETWORK GENERATION ENDPOINT ====================
+
+@router.post("/case/{case_id}/generate-network")
+async def generate_network_from_records(
+    case_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate network entities and links from call records.
+    This processes raw call records into a network graph.
+    """
+    # Check case exists
+    case = db.query(Case).filter(Case.id == case_id, Case.is_active == True).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    
+    # Get all call records for this case
+    records = db.query(CallRecord).filter(CallRecord.case_id == case_id).all()
+    
+    if not records:
+        return {"message": "No call records found", "entities_created": 0, "links_created": 0}
+    
+    # Delete existing entities and links for this case (regenerate fresh)
+    db.query(CallLink).filter(CallLink.case_id == case_id).delete()
+    db.query(CallEntity).filter(CallEntity.case_id == case_id).delete()
+    db.commit()
+    
+    # Build phone number statistics
+    phone_stats = {}  # phone -> {calls, duration, first_seen, last_seen, is_device, contacts}
+    
+    for record in records:
+        # Device phone
+        device_phone = record.device_number or record.device_owner or "Unknown Device"
+        partner_phone = record.partner_number
+        
+        # Initialize device phone stats
+        if device_phone not in phone_stats:
+            phone_stats[device_phone] = {
+                'calls': 0, 'duration': 0, 'first_seen': None, 'last_seen': None,
+                'is_device': True, 'contacts': set(), 'name': record.device_owner,
+                'is_suspect': False
+            }
+        
+        # Initialize partner phone stats
+        if partner_phone not in phone_stats:
+            phone_stats[partner_phone] = {
+                'calls': 0, 'duration': 0, 'first_seen': None, 'last_seen': None,
+                'is_device': False, 'contacts': set(), 'name': record.partner_name,
+                'is_suspect': False
+            }
+        
+        # Update stats
+        phone_stats[device_phone]['calls'] += 1
+        phone_stats[device_phone]['duration'] += record.duration_seconds or 0
+        phone_stats[partner_phone]['calls'] += 1
+        phone_stats[partner_phone]['duration'] += record.duration_seconds or 0
+        
+        # Track contacts
+        phone_stats[device_phone]['contacts'].add(partner_phone)
+        phone_stats[partner_phone]['contacts'].add(device_phone)
+        
+        # Track first/last seen
+        if record.start_time:
+            for phone in [device_phone, partner_phone]:
+                if not phone_stats[phone]['first_seen'] or record.start_time < phone_stats[phone]['first_seen']:
+                    phone_stats[phone]['first_seen'] = record.start_time
+                if not phone_stats[phone]['last_seen'] or record.start_time > phone_stats[phone]['last_seen']:
+                    phone_stats[phone]['last_seen'] = record.start_time
+        
+        # Mark suspect if flagged
+        if record.is_suspect_call:
+            phone_stats[device_phone]['is_suspect'] = True
+            phone_stats[partner_phone]['is_suspect'] = True
+    
+    # Calculate risk levels based on call patterns
+    def calculate_risk(stats):
+        # High call volume or long duration = higher risk
+        if stats['is_suspect']:
+            return 'critical', 90
+        if stats['calls'] > 50 or stats['duration'] > 10000:
+            return 'high', 75
+        if stats['calls'] > 20 or stats['duration'] > 5000:
+            return 'medium', 50
+        if stats['calls'] > 5:
+            return 'low', 25
+        return 'unknown', 0
+    
+    # Simple clustering based on connectivity
+    # Devices (main actors) get cluster 1, high-contact numbers get cluster 2, etc.
+    def assign_cluster(stats):
+        if stats['is_device']:
+            return 1  # Main device/suspect
+        contact_count = len(stats['contacts'])
+        if contact_count > 5:
+            return 2  # Hub/coordinator
+        if contact_count > 2:
+            return 3  # Active contact
+        return 4  # Peripheral
+    
+    # Create entities
+    phone_to_entity_id = {}
+    entities_created = 0
+    
+    for phone, stats in phone_stats.items():
+        risk_level, risk_score = calculate_risk(stats)
+        cluster_id = assign_cluster(stats)
+        
+        entity = CallEntity(
+            case_id=case_id,
+            entity_type='phone',
+            label=phone,
+            phone_number=phone,
+            person_name=stats['name'],
+            total_calls=stats['calls'],
+            total_duration=stats['duration'],
+            risk_level=risk_level,
+            risk_score=risk_score,
+            cluster_id=cluster_id,
+            role='Device Owner' if stats['is_device'] else 'Contact',
+            first_seen=stats['first_seen'],
+            last_seen=stats['last_seen']
+        )
+        db.add(entity)
+        db.flush()
+        phone_to_entity_id[phone] = entity.id
+        entities_created += 1
+    
+    # Create links between entities
+    link_stats = {}  # (source, target) -> {calls, duration, first, last}
+    
+    for record in records:
+        device_phone = record.device_number or record.device_owner or "Unknown Device"
+        partner_phone = record.partner_number
+        
+        # Ensure consistent ordering for undirected links
+        source, target = (device_phone, partner_phone) if device_phone < partner_phone else (partner_phone, device_phone)
+        key = (source, target)
+        
+        if key not in link_stats:
+            link_stats[key] = {'calls': 0, 'duration': 0, 'first': None, 'last': None, 'types': set()}
+        
+        link_stats[key]['calls'] += 1
+        link_stats[key]['duration'] += record.duration_seconds or 0
+        
+        # Track call type
+        if record.call_type:
+            link_stats[key]['types'].add(str(record.call_type.value) if hasattr(record.call_type, 'value') else str(record.call_type))
+        
+        if record.start_time:
+            if not link_stats[key]['first'] or record.start_time < link_stats[key]['first']:
+                link_stats[key]['first'] = record.start_time
+            if not link_stats[key]['last'] or record.start_time > link_stats[key]['last']:
+                link_stats[key]['last'] = record.start_time
+    
+    links_created = 0
+    for (source, target), stats in link_stats.items():
+        source_id = phone_to_entity_id.get(source)
+        target_id = phone_to_entity_id.get(target)
+        
+        if source_id and target_id:
+            # Weight based on call count
+            weight = min(stats['calls'], 100)  # Cap at 100
+            
+            link = CallLink(
+                case_id=case_id,
+                source_entity_id=source_id,
+                target_entity_id=target_id,
+                link_type='call',
+                call_count=stats['calls'],
+                total_duration=stats['duration'],
+                first_contact=stats['first'],
+                last_contact=stats['last'],
+                weight=weight
+            )
+            db.add(link)
+            links_created += 1
+    
+    db.commit()
+    
+    return {
+        "message": "Network generated successfully",
+        "entities_created": entities_created,
+        "links_created": links_created,
+        "total_records_processed": len(records)
+    }
+
+
 # ==================== NETWORK DATA ENDPOINT ====================
 
 @router.get("/case/{case_id}/network", response_model=NetworkDataResponse)
 async def get_network_data(
     case_id: int,
+    auto_generate: bool = True,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get complete network data for visualization"""
+    """Get complete network data for visualization.
+    If auto_generate=True and no entities exist, will auto-generate from call records.
+    """
     
     # Get entities
     entities = db.query(CallEntity).filter(CallEntity.case_id == case_id).all()
+    
+    # Auto-generate if no entities but records exist
+    if not entities and auto_generate:
+        records_count = db.query(func.count(CallRecord.id)).filter(
+            CallRecord.case_id == case_id
+        ).scalar() or 0
+        
+        if records_count > 0:
+            # Auto-generate network
+            await generate_network_from_records(case_id, db, current_user)
+            # Re-fetch entities
+            entities = db.query(CallEntity).filter(CallEntity.case_id == case_id).all()
     
     # Get links
     links = db.query(CallLink).filter(CallLink.case_id == case_id).all()

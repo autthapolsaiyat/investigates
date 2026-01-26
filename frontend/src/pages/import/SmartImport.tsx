@@ -880,7 +880,7 @@ const SmartImport: React.FC = () => {
             });
             if (genResponse.ok) {
               const genResult = await genResponse.json();
-              log(`  ✅ Network: ${genResult.entities} entities, ${genResult.links} links`);
+              log(`  ✅ Network: ${genResult.entities_created} entities, ${genResult.links_created} links`);
             }
           } catch (err) {
             log(`  ⚠️ Failed to generate network`);

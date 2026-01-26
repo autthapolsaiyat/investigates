@@ -23,7 +23,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
-
+  RefreshCw,
   Search,
 
   ZoomOut,
@@ -428,6 +428,8 @@ export const CallAnalysis = () => {
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [patterns, setPatterns] = useState<SuspiciousPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [recordsCount, setRecordsCount] = useState(0);
   const [_error, setError] = useState<string | null>(null);
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
@@ -450,89 +452,137 @@ export const CallAnalysis = () => {
   
   // Use global case store
   const { selectedCaseId } = useCaseStore();
+
+  // Generate network from call records
+  const generateNetwork = async () => {
+    if (!selectedCaseId) return;
+    
+    setIsGenerating(true);
+    const token = localStorage.getItem('access_token');
+    
+    try {
+      const response = await fetch(
+        `${API_BASE}/call-analysis/case/${selectedCaseId}/generate-network`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate network');
+      }
+      
+      const result = await response.json();
+      console.log('Network generated:', result);
+      
+      // Refetch network data
+      fetchNetworkData();
+    } catch (err) {
+      console.error('Error generating network:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate network');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   
   // Fetch network data from API
-  useEffect(() => {
-    const fetchNetworkData = async () => {
-      if (!selectedCaseId) {
-        setIsLoading(false);
-        return;
-      }
+  const fetchNetworkData = async () => {
+    if (!selectedCaseId) {
+      setIsLoading(false);
+      return;
+    }
       
-      setIsLoading(true);
-      setError(null);
-      
-      const token = localStorage.getItem('access_token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-      
-      try {
-        const response = await fetch(
-          `${API_BASE}/call-analysis/case/${selectedCaseId}/network`,
-          { headers }
-        );
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            // No data yet - this is okay
-            setEntities([]);
-            setLinks([]);
-            setClusters([]);
-            setPatterns([]);
-            setIsLoading(false);
-            return;
-          }
-          throw new Error('Failed to fetch network data');
-        }
-        
-        const data = await response.json();
-        
-        // Transform API data to component format
-        const transformedEntities: Entity[] = data.entities.map((e: any) => ({
-          id: e.id,
-          type: e.type as EntityType,
-          label: e.label,
-          subLabel: e.subLabel,
-          risk: e.risk as RiskLevel,
-          clusterId: e.clusterId,
-          metadata: e.metadata || {}
-        }));
-        
-        const transformedLinks: Link[] = data.links.map((l: any) => ({
-          id: l.id,
-          source: l.source,
-          target: l.target,
-          type: l.type as LinkType,
-          weight: l.weight || 1,
-          firstSeen: l.firstSeen,
-          lastSeen: l.lastSeen,
-          metadata: l.metadata || {}
-        }));
-        
-        const transformedClusters: Cluster[] = data.clusters.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          color: c.color,
-          entities: c.entities || [],
-          risk: c.risk as RiskLevel,
-          description: c.description || ''
-        }));
-        
-        setEntities(transformedEntities);
-        setLinks(transformedLinks);
-        setClusters(transformedClusters);
-        setPatterns([]); // TODO: fetch patterns from API
-        
-      } catch (err) {
-        console.error('Error fetching network data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    setError(null);
+    
+    const token = localStorage.getItem('access_token');
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     };
     
+    try {
+      // First, get the records count to know if we have data to process
+      const statsResponse = await fetch(
+        `${API_BASE}/call-analysis/case/${selectedCaseId}/stats`,
+        { headers }
+      );
+      if (statsResponse.ok) {
+        const stats = await statsResponse.json();
+        setRecordsCount(stats.total_records || 0);
+      }
+      
+      // Then fetch network data
+      const response = await fetch(
+        `${API_BASE}/call-analysis/case/${selectedCaseId}/network`,
+        { headers }
+      );
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No data yet - this is okay
+          setEntities([]);
+          setLinks([]);
+          setClusters([]);
+          setPatterns([]);
+          setIsLoading(false);
+          return;
+        }
+        throw new Error('Failed to fetch network data');
+      }
+      
+      const data = await response.json();
+      
+      // Transform API data to component format
+      const transformedEntities: Entity[] = data.entities.map((e: any) => ({
+        id: e.id,
+        type: e.type as EntityType,
+        label: e.label,
+        subLabel: e.subLabel,
+        risk: e.risk as RiskLevel,
+        clusterId: e.clusterId,
+        metadata: e.metadata || {}
+      }));
+      
+      const transformedLinks: Link[] = data.links.map((l: any) => ({
+        id: l.id,
+        source: l.source,
+        target: l.target,
+        type: l.type as LinkType,
+        weight: l.weight || 1,
+        firstSeen: l.firstSeen,
+        lastSeen: l.lastSeen,
+        metadata: l.metadata || {}
+      }));
+      
+      const transformedClusters: Cluster[] = data.clusters.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        color: c.color,
+        entities: c.entities || [],
+        risk: c.risk as RiskLevel,
+        description: c.description || ''
+      }));
+      
+      setEntities(transformedEntities);
+      setLinks(transformedLinks);
+      setClusters(transformedClusters);
+      setPatterns([]); // TODO: fetch patterns from API
+      
+    } catch (err) {
+      console.error('Error fetching network data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // useEffect to fetch data when case changes
+  useEffect(() => {
     fetchNetworkData();
   }, [selectedCaseId]);
 
@@ -850,6 +900,22 @@ export const CallAnalysis = () => {
                     <RotateCcw size={14} className="mr-1" />
                     Reset
                   </Button>
+                  {recordsCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={generateNetwork}
+                      disabled={isGenerating}
+                      title="Regenerate network from call records"
+                    >
+                      {isGenerating ? (
+                        <Loader2 size={14} className="mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCw size={14} className="mr-1" />
+                      )}
+                      {isGenerating ? 'Generating...' : 'Regenerate'}
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
                     {sidebarCollapsed ? <ChevronRight size={14} /> : <X size={14} />}
                   </Button>
@@ -874,10 +940,36 @@ export const CallAnalysis = () => {
                     <div className="text-center">
                       <Network className="w-16 h-16 text-dark-600 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-white mb-2">No Network Data</h3>
-                      <p className="text-dark-400 max-w-md">
-                        Import call logs via Smart Import to visualize communication networks.
-                        The system will automatically analyze and create network connections.
-                      </p>
+                      {recordsCount > 0 ? (
+                        <>
+                          <p className="text-dark-400 max-w-md mb-4">
+                            You have <span className="text-primary-400 font-semibold">{recordsCount}</span> call records imported.
+                            Click the button below to generate the network visualization.
+                          </p>
+                          <button
+                            onClick={generateNetwork}
+                            disabled={isGenerating}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-500/50 rounded-lg font-medium transition-colors"
+                          >
+                            {isGenerating ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Generating Network...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4" />
+                                Generate Network
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <p className="text-dark-400 max-w-md">
+                          Import call logs via Smart Import to visualize communication networks.
+                          The system will automatically analyze and create network connections.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
