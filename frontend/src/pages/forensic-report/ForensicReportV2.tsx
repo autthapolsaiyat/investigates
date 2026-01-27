@@ -297,6 +297,7 @@ export const ForensicReportV2 = () => {
   
   // Crypto states
   const [cryptoTransactions, setCryptoTransactions] = useState<CryptoTransaction[]>([]);
+  const [cryptoWallets, setCryptoWallets] = useState<SavedWallet[]>([]);
   
   // Evidence states
   const [evidences, setEvidences] = useState<Evidence[]>([]);
@@ -426,15 +427,16 @@ export const ForensicReportV2 = () => {
       try {
         const walletsRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/wallets`, { headers });
         if (walletsRes.ok) {
-          const walletsData = await walletsRes.json();
+          const walletsData: SavedWallet[] = await walletsRes.json();
+          setCryptoWallets(walletsData || []);
           // Transform wallets to transaction-like format for display
           const walletTransactions: CryptoTransaction[] = (walletsData || []).map((w: SavedWallet, idx: number) => ({
             id: w.id || idx,
             blockchain: w.blockchain || 'unknown',
             from_address: w.address,
-            from_label: w.label || w.owner_name,
+            from_label: w.label || w.owner_name || undefined,
             to_address: '-',
-            to_label: null,
+            to_label: undefined,
             amount: w.total_received + w.total_sent,
             amount_usd: w.total_received_usd + w.total_sent_usd,
             risk_flag: w.is_mixer ? 'mixer_detected' : w.is_suspect ? 'high_risk' : 'none',
@@ -445,6 +447,7 @@ export const ForensicReportV2 = () => {
         }
       } catch {
         // Fallback to transactions if wallets endpoint fails
+        setCryptoWallets([]);
         try {
           const cryptoRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
           if (cryptoRes.ok) {
@@ -530,75 +533,240 @@ export const ForensicReportV2 = () => {
   };
 
   // Generate summary
+  // Generate summary for TTS (returns plain text)
   const generateSummary = (): string => {
-    // Check if we have any data to analyze
-    const hasMoneyFlow = stats && (stats.totalNodes > 0 || stats.totalTransactions > 0);
-    const hasCalls = callEntities.length > 0;
-    const hasLocations = locationPoints.length > 0;
-    const hasCrypto = cryptoTransactions.length > 0 || (stats?.cryptoWallets || 0) > 0;
-    
-    // If no data at all
-    if (!hasMoneyFlow && !hasCalls && !hasLocations && !hasCrypto) {
+    const sections = generateSummarySections();
+    if (sections.length === 0) {
       return language === 'en' 
         ? 'Insufficient data for analysis. Please import more data.'
         : 'ข้อมูลไม่เพียงพอสำหรับการวิเคราะห์ กรุณานำเข้าข้อมูลเพิ่มเติม';
     }
     
-    // Build summary from available data
+    let text = language === 'en' ? 'Analysis observations: ' : 'ข้อสังเกตจากการวิเคราะห์: ';
+    sections.forEach((section, index) => {
+      text += `${index + 1}. ${section.title}: ${section.summary} `;
+    });
+    text += language === 'en' 
+      ? 'Overall: This is preliminary analysis only. Further investigation is recommended.'
+      : 'สรุปภาพรวม: นี่เป็นการวิเคราะห์เบื้องต้น แนะนำให้สอบสวนเพิ่มเติม';
+    return text;
+  };
+
+  // Generate summary sections for each data type
+  interface SummarySection {
+    icon: string;
+    title: string;
+    count: number;
+    summary: string;
+    insights: string[];
+  }
+
+  const generateSummarySections = (): SummarySection[] => {
+    const sections: SummarySection[] = [];
+    
+    // 1. Money Flow Summary
+    const hasMoneyFlow = stats && (stats.totalNodes > 0 || stats.totalTransactions > 0);
+    if (hasMoneyFlow && stats) {
+      const insights: string[] = [];
+      
+      if (highRiskPersons.length > 0) {
+        const topPerson = highRiskPersons[0];
+        insights.push(language === 'en'
+          ? `Highest risk: "${topPerson.node.label}" (Risk: ${topPerson.riskScore})`
+          : `ความเสี่ยงสูงสุด: "${topPerson.node.label}" (Risk: ${topPerson.riskScore})`);
+      }
+      
+      // Find suspicious patterns from highRiskPersons
+      const suspectCount = highRiskPersons.filter(p => p.riskScore >= 70).length;
+      if (suspectCount > 0) {
+        insights.push(language === 'en'
+          ? `${suspectCount} high-risk entity(ies) identified`
+          : `พบบุคคล/บัญชีความเสี่ยงสูง ${suspectCount} รายการ`);
+      }
+      
+      // Large transactions from keyTransactions
+      const largeTransactions = keyTransactions.filter(t => (t.edge?.amount || 0) >= 100000);
+      if (largeTransactions.length > 0) {
+        insights.push(language === 'en'
+          ? `${largeTransactions.length} large transactions (≥฿100K)`
+          : `ธุรกรรมขนาดใหญ่ ${largeTransactions.length} รายการ (≥฿100K)`);
+      }
+      
+      sections.push({
+        icon: '💰',
+        title: language === 'en' ? 'Money Flow' : 'Money Flow',
+        count: stats.totalTransactions,
+        summary: language === 'en'
+          ? `${stats.totalNodes} accounts, ${stats.totalTransactions} transactions, total ${formatCurrency(stats.totalAmount)}`
+          : `${stats.totalNodes} บัญชี, ${stats.totalTransactions} ธุรกรรม, มูลค่ารวม ${formatCurrency(stats.totalAmount)}`,
+        insights
+      });
+    }
+    
+    // 2. Crypto Tracker Summary
+    const hasCrypto = cryptoTransactions.length > 0 || cryptoWallets.length > 0;
+    if (hasCrypto) {
+      const insights: string[] = [];
+      
+      // Group by blockchain
+      const blockchainCounts: Record<string, number> = {};
+      cryptoTransactions.forEach(tx => {
+        const bc = tx.blockchain?.toUpperCase() || 'OTHER';
+        blockchainCounts[bc] = (blockchainCounts[bc] || 0) + 1;
+      });
+      
+      if (Object.keys(blockchainCounts).length > 0) {
+        const bcSummary = Object.entries(blockchainCounts)
+          .map(([bc, count]) => `${bc}: ${count}`)
+          .join(', ');
+        insights.push(language === 'en' ? `Blockchains: ${bcSummary}` : `บล็อกเชน: ${bcSummary}`);
+      }
+      
+      // High risk wallets
+      const highRiskWallets = cryptoWallets.filter(w => w.risk_score >= 70);
+      if (highRiskWallets.length > 0) {
+        insights.push(language === 'en'
+          ? `${highRiskWallets.length} high-risk wallet(s)`
+          : `กระเป๋าความเสี่ยงสูง ${highRiskWallets.length} รายการ`);
+      }
+      
+      // Mixer detection
+      const mixerWallets = cryptoWallets.filter(w => w.is_mixer);
+      const mixerTx = cryptoTransactions.filter(tx => tx.risk_flag?.includes('mixer'));
+      if (mixerWallets.length > 0 || mixerTx.length > 0) {
+        insights.push(language === 'en'
+          ? `⚠️ Mixer activity detected`
+          : `⚠️ พบการใช้งาน Mixer`);
+      }
+      
+      // Total USD value
+      const totalUSD = cryptoTransactions.reduce((sum, tx) => sum + (tx.amount_usd || 0), 0);
+      
+      sections.push({
+        icon: '₿',
+        title: language === 'en' ? 'Crypto Tracker' : 'Crypto Tracker',
+        count: cryptoTransactions.length + cryptoWallets.length,
+        summary: language === 'en'
+          ? `${cryptoTransactions.length} transactions, ${cryptoWallets.length} wallets${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`
+          : `${cryptoTransactions.length} ธุรกรรม, ${cryptoWallets.length} กระเป๋า${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`,
+        insights
+      });
+    }
+    
+    // 3. Call Analysis Summary
+    const hasCalls = callEntities.length > 0;
+    if (hasCalls) {
+      const insights: string[] = [];
+      const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
+      const totalDuration = callEntities.reduce((sum, e) => sum + e.total_duration, 0);
+      
+      // Top caller
+      const sortedByCall = [...callEntities].sort((a, b) => b.total_calls - a.total_calls);
+      if (sortedByCall.length > 0) {
+        const top = sortedByCall[0];
+        insights.push(language === 'en'
+          ? `Most active: ${top.phone_number} (${top.total_calls} calls)`
+          : `โทรมากที่สุด: ${top.phone_number} (${top.total_calls} สาย)`);
+      }
+      
+      // Time pattern analysis (if available)
+      if (totalDuration > 0) {
+        insights.push(language === 'en'
+          ? `Total talk time: ${formatDuration(totalDuration, 'en')}`
+          : `เวลาสนทนารวม: ${formatDuration(totalDuration, 'th')}`);
+      }
+      
+      sections.push({
+        icon: '📞',
+        title: language === 'en' ? 'Call Analysis' : 'Call Analysis',
+        count: totalCalls,
+        summary: language === 'en'
+          ? `${callEntities.length} phone numbers, ${totalCalls} total calls`
+          : `${callEntities.length} หมายเลข, รวม ${totalCalls} สาย`,
+        insights
+      });
+    }
+    
+    // 4. Location Timeline Summary
+    const hasLocations = locationPoints.length > 0;
+    if (hasLocations) {
+      const insights: string[] = [];
+      
+      // Unique locations
+      const uniqueLocations = new Set(locationPoints.map(p => p.location_name));
+      const locationCounts: Record<string, number> = {};
+      locationPoints.forEach(p => {
+        locationCounts[p.location_name] = (locationCounts[p.location_name] || 0) + 1;
+      });
+      
+      // Most frequent location
+      const sortedLocations = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]);
+      if (sortedLocations.length > 0) {
+        const [topLocation, topCount] = sortedLocations[0];
+        insights.push(language === 'en'
+          ? `Most frequent: ${topLocation} (${topCount} times)`
+          : `พบบ่อยที่สุด: ${topLocation} (${topCount} ครั้ง)`);
+      }
+      
+      // Source breakdown
+      const sourceCounts: Record<string, number> = {};
+      locationPoints.forEach(p => {
+        sourceCounts[p.source] = (sourceCounts[p.source] || 0) + 1;
+      });
+      const sourceBreakdown = Object.entries(sourceCounts)
+        .map(([src, count]) => `${src}: ${count}`)
+        .join(', ');
+      if (sourceBreakdown) {
+        insights.push(language === 'en'
+          ? `Sources: ${sourceBreakdown}`
+          : `แหล่งข้อมูล: ${sourceBreakdown}`);
+      }
+      
+      sections.push({
+        icon: '📍',
+        title: language === 'en' ? 'Location Timeline' : 'Location Timeline',
+        count: locationPoints.length,
+        summary: language === 'en'
+          ? `${uniqueLocations.size} unique locations, ${locationPoints.length} data points`
+          : `${uniqueLocations.size} สถานที่, ${locationPoints.length} จุดข้อมูล`,
+        insights
+      });
+    }
+    
+    return sections;
+  };
+
+  // Generate overall summary
+  const generateOverallSummary = (): string => {
+    const sections = generateSummarySections();
+    if (sections.length === 0) return '';
+    
+    const dataTypes = sections.map(s => s.title).join(', ');
+    const totalItems = sections.reduce((sum, s) => sum + s.count, 0);
+    
     if (language === 'en') {
-      let summary = 'From preliminary analysis: ';
+      let overall = `From analyzing ${sections.length} data source(s) (${dataTypes}) with ${totalItems} total items: `;
       
-      if (hasMoneyFlow && highRiskPersons.length > 0) {
-        const topPerson = highRiskPersons[0];
-        summary += `Transaction pattern analysis shows "${topPerson.node.label}" (Risk Score: ${topPerson.riskScore}) may have a key role in this network. Total transaction value approximately ${formatCurrency(stats?.totalAmount || 0)}. `;
-      } else if (hasMoneyFlow && stats) {
-        summary += `${stats.totalNodes} accounts identified with ${stats.totalTransactions} transactions totaling ${formatCurrency(stats.totalAmount)}. `;
-      }
+      // Key findings
+      const hasHighRisk = highRiskPersons.length > 0 || cryptoWallets.some(w => w.risk_score >= 70);
+      const hasMixer = cryptoWallets.some(w => w.is_mixer) || cryptoTransactions.some(tx => tx.risk_flag?.includes('mixer'));
       
-      if (hasCalls) {
-        const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
-        summary += `Call analysis shows ${callEntities.length} unique phone numbers with ${totalCalls} total calls. `;
-      }
+      if (hasHighRisk) overall += 'High-risk entities identified. ';
+      if (hasMixer) overall += 'Suspicious mixer activity detected. ';
       
-      if (hasLocations) {
-        const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
-        summary += `Location tracking identified ${uniqueLocations} unique locations with ${locationPoints.length} data points. `;
-      }
-      
-      if (hasCrypto) {
-        const cryptoCount = cryptoTransactions.length || stats?.cryptoWallets || 0;
-        summary += `${cryptoCount} crypto transactions/wallets tracked. `;
-      }
-      
-      summary += `This is preliminary analysis only. Further investigation and evidence collection is recommended.`;
-      return summary;
+      overall += 'Further investigation and evidence collection is recommended.';
+      return overall;
     } else {
-      let summary = 'จากการวิเคราะห์เบื้องต้น: ';
+      let overall = `จากการวิเคราะห์ข้อมูล ${sections.length} แหล่ง (${dataTypes}) รวม ${totalItems} รายการ: `;
       
-      if (hasMoneyFlow && highRiskPersons.length > 0) {
-        const topPerson = highRiskPersons[0];
-        summary += `พบข้อสังเกตว่า "${topPerson.node.label}" (คะแนนความเสี่ยง: ${topPerson.riskScore}) อาจมีบทบาทสำคัญในเครือข่ายนี้ มูลค่าธุรกรรมรวมประมาณ ${formatCurrency(stats?.totalAmount || 0)} `;
-      } else if (hasMoneyFlow && stats) {
-        summary += `พบ ${stats.totalNodes} บัญชี ${stats.totalTransactions} ธุรกรรม มูลค่ารวม ${formatCurrency(stats.totalAmount)} `;
-      }
+      const hasHighRisk = highRiskPersons.length > 0 || cryptoWallets.some(w => w.risk_score >= 70);
+      const hasMixer = cryptoWallets.some(w => w.is_mixer) || cryptoTransactions.some(tx => tx.risk_flag?.includes('mixer'));
       
-      if (hasCalls) {
-        const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
-        summary += `การวิเคราะห์การโทรพบ ${callEntities.length} หมายเลข รวม ${totalCalls} สาย `;
-      }
+      if (hasHighRisk) overall += 'พบบุคคล/บัญชีความเสี่ยงสูง ';
+      if (hasMixer) overall += 'พบการใช้งาน Mixer ที่น่าสงสัย ';
       
-      if (hasLocations) {
-        const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
-        summary += `การติดตามตำแหน่งพบ ${uniqueLocations} สถานที่ จาก ${locationPoints.length} จุดข้อมูล `;
-      }
-      
-      if (hasCrypto) {
-        const cryptoCount = cryptoTransactions.length || stats?.cryptoWallets || 0;
-        summary += `ติดตาม ${cryptoCount} ธุรกรรม/กระเป๋าคริปโต `;
-      }
-      
-      summary += `อย่างไรก็ตาม นี่เป็นการวิเคราะห์เบื้องต้นเท่านั้น แนะนำให้สอบสวนและรวบรวมหลักฐานเพิ่มเติม`;
-      return summary;
+      overall += 'แนะนำให้สอบสวนและรวบรวมหลักฐานเพิ่มเติม';
+      return overall;
     }
   };
 
@@ -1194,9 +1362,54 @@ export const ForensicReportV2 = () => {
                   )}
                 </Button>
               </div>
-              <p className="text-dark-300 leading-relaxed">
-                {generateSummary()}
-              </p>
+              
+              {/* Summary Sections */}
+              <div className="space-y-4">
+                {generateSummarySections().map((section, index) => (
+                  <div key={index} className="bg-dark-800/50 rounded-lg p-3 border border-dark-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">{section.icon}</span>
+                      <span className="font-medium text-white">{section.title}</span>
+                      <span className="text-xs bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded-full">
+                        {section.count}
+                      </span>
+                    </div>
+                    <p className="text-dark-300 text-sm mb-2">{section.summary}</p>
+                    {section.insights.length > 0 && (
+                      <ul className="space-y-1">
+                        {section.insights.map((insight, i) => (
+                          <li key={i} className="text-xs text-dark-400 flex items-start gap-2">
+                            <span className="text-primary-400">•</span>
+                            <span>{insight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Overall Summary */}
+                {generateSummarySections().length > 0 && (
+                  <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-3 border border-amber-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">📌</span>
+                      <span className="font-medium text-amber-400">
+                        {language === 'th' ? 'สรุปภาพรวม' : 'Overall Summary'}
+                      </span>
+                    </div>
+                    <p className="text-dark-300 text-sm">{generateOverallSummary()}</p>
+                  </div>
+                )}
+                
+                {generateSummarySections().length === 0 && (
+                  <p className="text-dark-400 italic">
+                    {language === 'th' 
+                      ? 'ข้อมูลไม่เพียงพอสำหรับการวิเคราะห์ กรุณานำเข้าข้อมูลเพิ่มเติม'
+                      : 'Insufficient data for analysis. Please import more data.'}
+                  </p>
+                )}
+              </div>
+              
               <p className="text-xs text-dark-500 mt-3 italic">
                 * {language === 'th' 
                   ? 'นี่เป็นการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรมเท่านั้น ไม่ใช่ข้อสรุปของคดี' 
