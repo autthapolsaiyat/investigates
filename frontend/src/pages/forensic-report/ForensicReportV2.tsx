@@ -306,7 +306,25 @@ export const ForensicReportV2 = () => {
   
   // TTS states
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Load voices on mount
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length > 0) {
+        setVoices(availableVoices);
+      }
+    };
+    
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   // Helper to get label
   const t = (key: string): string => labels[key]?.[language] || key;
@@ -600,7 +618,22 @@ export const ForensicReportV2 = () => {
 
     const summary = generateSummary();
     const utterance = new SpeechSynthesisUtterance(summary);
-    utterance.lang = language === 'th' ? 'th-TH' : 'en-US';
+    
+    // Select appropriate voice based on language
+    if (language === 'th') {
+      const thaiVoice = voices.find(v => v.lang.startsWith('th'));
+      if (thaiVoice) {
+        utterance.voice = thaiVoice;
+      }
+      utterance.lang = 'th-TH';
+    } else {
+      const enVoice = voices.find(v => v.lang.startsWith('en'));
+      if (enVoice) {
+        utterance.voice = enVoice;
+      }
+      utterance.lang = 'en-US';
+    }
+    
     utterance.rate = 0.9;
     utterance.pitch = 1;
     
