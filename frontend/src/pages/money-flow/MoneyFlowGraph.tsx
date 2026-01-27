@@ -606,25 +606,33 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
 
       {/* Legend */}
       <div className={`p-3 border-t ${darkMode ? 'border-dark-700 bg-dark-800' : 'border-gray-200 bg-white'}`}>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {legends.map(item => (
             <div key={item.label} className="flex items-center gap-2 text-xs">
-              <span className="text-lg">{item.emoji}</span>
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                style={{ 
+                  backgroundColor: item.color, 
+                  border: `2px solid ${item.borderColor}`,
+                }}
+              >
+                {item.emoji}
+              </div>
               <span className={darkMode ? 'text-dark-300' : 'text-gray-600'}>{item.label}</span>
             </div>
           ))}
         </div>
-        <div className={`flex items-center gap-4 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
+        <div className={`flex items-center gap-6 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
+            <div className="w-6 h-0.5 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
             <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Bank Transfer</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
+            <div className="w-6 h-0.5 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
             <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Crypto</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.cash }} />
+            <div className="w-6 h-0.5 rounded" style={{ backgroundColor: EDGE_COLORS.cash }} />
             <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Cash</span>
           </div>
         </div>
