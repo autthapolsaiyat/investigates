@@ -508,39 +508,73 @@ export const ForensicReportV2 = () => {
 
   // Generate summary
   const generateSummary = (): string => {
-    if (!stats || !highRiskPersons.length) {
+    // Check if we have any data to analyze
+    const hasMoneyFlow = stats && (stats.totalNodes > 0 || stats.totalTransactions > 0);
+    const hasCalls = callEntities.length > 0;
+    const hasLocations = locationPoints.length > 0;
+    const hasCrypto = cryptoTransactions.length > 0 || (stats?.cryptoWallets || 0) > 0;
+    
+    // If no data at all
+    if (!hasMoneyFlow && !hasCalls && !hasLocations && !hasCrypto) {
       return language === 'en' 
         ? 'Insufficient data for analysis. Please import more data.'
         : 'ข้อมูลไม่เพียงพอสำหรับการวิเคราะห์ กรุณานำเข้าข้อมูลเพิ่มเติม';
     }
     
-    const topPerson = highRiskPersons[0];
-    
+    // Build summary from available data
     if (language === 'en') {
-      let summary = `From preliminary transaction pattern analysis, interesting observations show that "${topPerson.node.label}" (Risk Score: ${topPerson.riskScore}) may have a key role in this network. `;
-      summary += `Total transaction value approximately ${formatCurrency(stats.totalAmount)}. `;
-      if (callEntities.length > 0) {
+      let summary = 'From preliminary analysis: ';
+      
+      if (hasMoneyFlow && highRiskPersons.length > 0) {
+        const topPerson = highRiskPersons[0];
+        summary += `Transaction pattern analysis shows "${topPerson.node.label}" (Risk Score: ${topPerson.riskScore}) may have a key role in this network. Total transaction value approximately ${formatCurrency(stats?.totalAmount || 0)}. `;
+      } else if (hasMoneyFlow && stats) {
+        summary += `${stats.totalNodes} accounts identified with ${stats.totalTransactions} transactions totaling ${formatCurrency(stats.totalAmount)}. `;
+      }
+      
+      if (hasCalls) {
         const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
         summary += `Call analysis shows ${callEntities.length} unique phone numbers with ${totalCalls} total calls. `;
       }
-      if (locationPoints.length > 0) {
+      
+      if (hasLocations) {
         const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
-        summary += `Location tracking identified ${uniqueLocations} unique locations visited. `;
+        summary += `Location tracking identified ${uniqueLocations} unique locations with ${locationPoints.length} data points. `;
       }
-      summary += `However, this data is only an analysis from transaction patterns. Further investigation and evidence collection is recommended to confirm the facts.`;
+      
+      if (hasCrypto) {
+        const cryptoCount = cryptoTransactions.length || stats?.cryptoWallets || 0;
+        summary += `${cryptoCount} crypto transactions/wallets tracked. `;
+      }
+      
+      summary += `This is preliminary analysis only. Further investigation and evidence collection is recommended.`;
       return summary;
     } else {
-      let summary = `จากการวิเคราะห์รูปแบบธุรกรรมเบื้องต้น พบข้อสังเกตที่น่าสนใจว่า "${topPerson.node.label}" (คะแนนความเสี่ยง: ${topPerson.riskScore}) อาจมีบทบาทสำคัญในเครือข่ายนี้ `;
-      summary += `มูลค่าธุรกรรมรวมประมาณ ${formatCurrency(stats.totalAmount)} `;
-      if (callEntities.length > 0) {
+      let summary = 'จากการวิเคราะห์เบื้องต้น: ';
+      
+      if (hasMoneyFlow && highRiskPersons.length > 0) {
+        const topPerson = highRiskPersons[0];
+        summary += `พบข้อสังเกตว่า "${topPerson.node.label}" (คะแนนความเสี่ยง: ${topPerson.riskScore}) อาจมีบทบาทสำคัญในเครือข่ายนี้ มูลค่าธุรกรรมรวมประมาณ ${formatCurrency(stats?.totalAmount || 0)} `;
+      } else if (hasMoneyFlow && stats) {
+        summary += `พบ ${stats.totalNodes} บัญชี ${stats.totalTransactions} ธุรกรรม มูลค่ารวม ${formatCurrency(stats.totalAmount)} `;
+      }
+      
+      if (hasCalls) {
         const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
-        summary += `การวิเคราะห์การโทรพบหมายเลขโทรศัพท์ ${callEntities.length} หมายเลข รวม ${totalCalls} สาย `;
+        summary += `การวิเคราะห์การโทรพบ ${callEntities.length} หมายเลข รวม ${totalCalls} สาย `;
       }
-      if (locationPoints.length > 0) {
+      
+      if (hasLocations) {
         const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
-        summary += `การติดตามตำแหน่งพบสถานที่ ${uniqueLocations} แห่ง `;
+        summary += `การติดตามตำแหน่งพบ ${uniqueLocations} สถานที่ จาก ${locationPoints.length} จุดข้อมูล `;
       }
-      summary += `อย่างไรก็ตาม ข้อมูลนี้เป็นการวิเคราะห์จากรูปแบบธุรกรรมเท่านั้น แนะนำให้ดำเนินการสอบสวนและรวบรวมหลักฐานเพิ่มเติมเพื่อยืนยันข้อเท็จจริง`;
+      
+      if (hasCrypto) {
+        const cryptoCount = cryptoTransactions.length || stats?.cryptoWallets || 0;
+        summary += `ติดตาม ${cryptoCount} ธุรกรรม/กระเป๋าคริปโต `;
+      }
+      
+      summary += `อย่างไรก็ตาม นี่เป็นการวิเคราะห์เบื้องต้นเท่านั้น แนะนำให้สอบสวนและรวบรวมหลักฐานเพิ่มเติม`;
       return summary;
     }
   };
