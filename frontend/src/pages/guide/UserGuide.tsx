@@ -4,7 +4,7 @@
 import { 
   BookOpen, Sparkles, Network, Wallet, Phone, MapPin, 
   FileText, Shield, Upload, Search, CheckCircle, ArrowRight,
-  Briefcase, DollarSign, QrCode, Lock
+  Briefcase, DollarSign, QrCode, Lock, Download, Table
 } from 'lucide-react';
 
 const UserGuide = () => {
@@ -272,6 +272,304 @@ const UserGuide = () => {
                 <li>• GPS/Location Data</li>
               </ul>
             </div>
+          </div>
+        </section>
+
+        {/* Sample Data Downloads */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+            <Download className="text-green-400" />
+            Sample Data Downloads
+          </h2>
+          <p className="text-dark-400 mb-6">
+            Download these sample files to test the system. All files are in CSV format ready for Smart Import.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <a 
+              href="/samples/01_CallLogs_Improved.csv" 
+              download
+              className="flex items-center gap-4 bg-dark-800 border border-dark-700 hover:border-purple-500/50 rounded-xl p-5 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Phone className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold group-hover:text-purple-400 transition-colors">Call Logs Sample</h3>
+                <p className="text-sm text-dark-400">80 records • 16 KB</p>
+              </div>
+              <Download className="w-5 h-5 text-dark-400 group-hover:text-purple-400" />
+            </a>
+
+            <a 
+              href="/samples/02_BankTransactions_6Banks.csv" 
+              download
+              className="flex items-center gap-4 bg-dark-800 border border-dark-700 hover:border-green-500/50 rounded-xl p-5 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-6 h-6 text-green-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold group-hover:text-green-400 transition-colors">Bank Transactions Sample</h3>
+                <p className="text-sm text-dark-400">67 records • 10 KB</p>
+              </div>
+              <Download className="w-5 h-5 text-dark-400 group-hover:text-green-400" />
+            </a>
+
+            <a 
+              href="/samples/03_CryptoTransactions_BTC_ETH_USDT.csv" 
+              download
+              className="flex items-center gap-4 bg-dark-800 border border-dark-700 hover:border-orange-500/50 rounded-xl p-5 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Wallet className="w-6 h-6 text-orange-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold group-hover:text-orange-400 transition-colors">Crypto Transactions Sample</h3>
+                <p className="text-sm text-dark-400">50 records • 7 KB</p>
+              </div>
+              <Download className="w-5 h-5 text-dark-400 group-hover:text-orange-400" />
+            </a>
+
+            <a 
+              href="/samples/04_LocationTimeline_Improved.csv" 
+              download
+              className="flex items-center gap-4 bg-dark-800 border border-dark-700 hover:border-red-500/50 rounded-xl p-5 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-6 h-6 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold group-hover:text-red-400 transition-colors">Location Timeline Sample</h3>
+                <p className="text-sm text-dark-400">86 records • 15 KB</p>
+              </div>
+              <Download className="w-5 h-5 text-dark-400 group-hover:text-red-400" />
+            </a>
+          </div>
+        </section>
+
+        {/* Required Fields */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+            <Table className="text-cyan-400" />
+            Required Fields for Import
+          </h2>
+          <p className="text-dark-400 mb-6">
+            Below are the required and recommended fields for each data type. Smart Import will auto-detect columns but using these names ensures best results.
+          </p>
+          
+          {/* Call Logs Fields */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <Phone className="w-5 h-5 text-purple-400" />
+              Call Logs / CDR
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-dark-800 border border-dark-700">
+                    <th className="px-4 py-3 text-left font-medium">Field Name</th>
+                    <th className="px-4 py-3 text-left font-medium">Required</th>
+                    <th className="px-4 py-3 text-left font-medium">Description</th>
+                    <th className="px-4 py-3 text-left font-medium">Example</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-dark-700">
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-purple-400">partner_number</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">Phone number contacted</td>
+                    <td className="px-4 py-3 text-dark-400">082-345-6789</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-purple-400">device_number</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">Recommended</span></td>
+                    <td className="px-4 py-3 text-dark-400">Device owner's number</td>
+                    <td className="px-4 py-3 text-dark-400">081-234-5678</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-purple-400">start_time</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">Recommended</span></td>
+                    <td className="px-4 py-3 text-dark-400">Call date/time (ISO format)</td>
+                    <td className="px-4 py-3 text-dark-400">2026-01-10T08:15:00</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-purple-400">duration_sec</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Duration in seconds</td>
+                    <td className="px-4 py-3 text-dark-400">210</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-purple-400">direction</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">INCOMING / OUTGOING / MISSED</td>
+                    <td className="px-4 py-3 text-dark-400">OUTGOING</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Bank Transaction Fields */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-400" />
+              Bank Transactions
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-dark-800 border border-dark-700">
+                    <th className="px-4 py-3 text-left font-medium">Field Name</th>
+                    <th className="px-4 py-3 text-left font-medium">Required</th>
+                    <th className="px-4 py-3 text-left font-medium">Description</th>
+                    <th className="px-4 py-3 text-left font-medium">Example</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-dark-700">
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-green-400">From_Account / To_Account</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">Account number (at least one side)</td>
+                    <td className="px-4 py-3 text-dark-400">1234567890</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-green-400">Amount / Amount_THB</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">Transaction amount</td>
+                    <td className="px-4 py-3 text-dark-400">150000</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-green-400">Date</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">Recommended</span></td>
+                    <td className="px-4 py-3 text-dark-400">Transaction date</td>
+                    <td className="px-4 py-3 text-dark-400">2026-01-10</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-green-400">From_Name / To_Name</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Account holder names</td>
+                    <td className="px-4 py-3 text-dark-400">John Doe</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-green-400">From_Bank / To_Bank</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Bank names</td>
+                    <td className="px-4 py-3 text-dark-400">KBANK, SCB, KTB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Crypto Transaction Fields */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-orange-400" />
+              Crypto Transactions
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-dark-800 border border-dark-700">
+                    <th className="px-4 py-3 text-left font-medium">Field Name</th>
+                    <th className="px-4 py-3 text-left font-medium">Required</th>
+                    <th className="px-4 py-3 text-left font-medium">Description</th>
+                    <th className="px-4 py-3 text-left font-medium">Example</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-dark-700">
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-orange-400">From_Wallet / To_Wallet</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">Wallet address (at least one side)</td>
+                    <td className="px-4 py-3 text-dark-400">0x1234...abcd</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-orange-400">Amount</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">Crypto amount</td>
+                    <td className="px-4 py-3 text-dark-400">0.5</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-orange-400">Blockchain</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">Recommended</span></td>
+                    <td className="px-4 py-3 text-dark-400">Chain type</td>
+                    <td className="px-4 py-3 text-dark-400">BTC, ETH, USDT</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-orange-400">TX_Hash</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Transaction hash</td>
+                    <td className="px-4 py-3 text-dark-400">a1b2c3d4e5...</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-orange-400">Risk_Flag</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Risk indicator</td>
+                    <td className="px-4 py-3 text-dark-400">NORMAL, MIXER, SUSPICIOUS</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Location Timeline Fields */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-red-400" />
+              Location Timeline
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-dark-800 border border-dark-700">
+                    <th className="px-4 py-3 text-left font-medium">Field Name</th>
+                    <th className="px-4 py-3 text-left font-medium">Required</th>
+                    <th className="px-4 py-3 text-left font-medium">Description</th>
+                    <th className="px-4 py-3 text-left font-medium">Example</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-dark-700">
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-red-400">latitude</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">GPS latitude</td>
+                    <td className="px-4 py-3 text-dark-400">13.7563</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-red-400">longitude</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">Required</span></td>
+                    <td className="px-4 py-3 text-dark-400">GPS longitude</td>
+                    <td className="px-4 py-3 text-dark-400">100.5018</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-red-400">date + time / datetime</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">Recommended</span></td>
+                    <td className="px-4 py-3 text-dark-400">Date and time</td>
+                    <td className="px-4 py-3 text-dark-400">2026-01-10, 08:00:00</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-red-400">suspect_id / suspect_name</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Person identifier</td>
+                    <td className="px-4 py-3 text-dark-400">PHONE_001</td>
+                  </tr>
+                  <tr className="bg-dark-800/50">
+                    <td className="px-4 py-3 font-mono text-red-400">location_name</td>
+                    <td className="px-4 py-3"><span className="px-2 py-0.5 bg-dark-600 text-dark-300 rounded text-xs">Optional</span></td>
+                    <td className="px-4 py-3 text-dark-400">Place name</td>
+                    <td className="px-4 py-3 text-dark-400">Siam Paragon</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <p className="text-blue-400 text-sm">
+              <strong>💡 Tip:</strong> Smart Import supports various column name formats (e.g. "phone_number", "Phone Number", "phoneNumber"). 
+              The system will auto-detect and map columns for you. For best results, use the exact field names shown above.
+            </p>
           </div>
         </section>
 
