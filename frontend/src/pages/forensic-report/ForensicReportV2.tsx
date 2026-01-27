@@ -552,61 +552,92 @@ export const ForensicReportV2 = () => {
     return text;
   };
 
-  // Generate summary sections for each data type
+  // Generate summary sections for each data type - AI-style narrative
   interface SummarySection {
     icon: string;
     title: string;
     count: number;
     summary: string;
-    insights: string[];
+    narrative: string; // AI-style detailed narrative
   }
 
   const generateSummarySections = (): SummarySection[] => {
     const sections: SummarySection[] = [];
     
-    // 1. Money Flow Summary
+    // 1. Money Flow Summary - AI Narrative Style
     const hasMoneyFlow = stats && (stats.totalNodes > 0 || stats.totalTransactions > 0);
     if (hasMoneyFlow && stats) {
-      const insights: string[] = [];
+      let narrative = '';
       
-      if (highRiskPersons.length > 0) {
-        const topPerson = highRiskPersons[0];
-        insights.push(language === 'en'
-          ? `Highest risk: "${topPerson.node.label}" (Risk: ${topPerson.riskScore})`
-          : `ความเสี่ยงสูงสุด: "${topPerson.node.label}" (Risk: ${topPerson.riskScore})`);
-      }
-      
-      // Find suspicious patterns from highRiskPersons
-      const suspectCount = highRiskPersons.filter(p => p.riskScore >= 70).length;
-      if (suspectCount > 0) {
-        insights.push(language === 'en'
-          ? `${suspectCount} high-risk entity(ies) identified`
-          : `พบบุคคล/บัญชีความเสี่ยงสูง ${suspectCount} รายการ`);
-      }
-      
-      // Large transactions from keyTransactions
-      const largeTransactions = keyTransactions.filter(t => (t.edge?.amount || 0) >= 100000);
-      if (largeTransactions.length > 0) {
-        insights.push(language === 'en'
-          ? `${largeTransactions.length} large transactions (≥฿100K)`
-          : `ธุรกรรมขนาดใหญ่ ${largeTransactions.length} รายการ (≥฿100K)`);
+      if (language === 'th') {
+        narrative = `พบเครือข่ายการเงินประกอบด้วย ${stats.totalNodes} บัญชี มีธุรกรรมทั้งหมด ${stats.totalTransactions} รายการ มูลค่ารวม ${formatCurrency(stats.totalAmount)} `;
+        
+        // Top risk persons with names
+        if (highRiskPersons.length > 0) {
+          const topPersons = highRiskPersons.slice(0, 3);
+          const names = topPersons.map(p => `"${p.node.label}" (Risk: ${p.riskScore})`).join(', ');
+          narrative += `\n\n🔴 บุคคลความเสี่ยงสูง: ${names}`;
+          
+          // Describe the highest risk person
+          const top = topPersons[0];
+          if (top.riskFactors && top.riskFactors.length > 0) {
+            const factors = top.riskFactors.slice(0, 2).map(f => f.factor).join(', ');
+            narrative += `\n   "${top.node.label}" มีพฤติกรรมน่าสงสัย: ${factors}`;
+          }
+        }
+        
+        // Key transactions narrative
+        if (keyTransactions.length > 0) {
+          const topTx = keyTransactions.slice(0, 3);
+          narrative += `\n\n💸 ธุรกรรมสำคัญ:`;
+          topTx.forEach((tx, i) => {
+            const from = tx.fromNode?.label || 'ไม่ทราบ';
+            const to = tx.toNode?.label || 'ไม่ทราบ';
+            const amount = formatCurrency(tx.edge?.amount || 0);
+            narrative += `\n   ${i + 1}. ${from} → ${to} (${amount}) - ${tx.reason}`;
+          });
+        }
+        
+        // Suspects and victims
+        if (stats.suspects > 0 || stats.victims > 0) {
+          narrative += `\n\n⚠️ ระบุตัวตน: ผู้ต้องสงสัย ${stats.suspects} ราย, ผู้เสียหาย ${stats.victims} ราย`;
+        }
+      } else {
+        narrative = `Network contains ${stats.totalNodes} accounts with ${stats.totalTransactions} transactions totaling ${formatCurrency(stats.totalAmount)}. `;
+        
+        if (highRiskPersons.length > 0) {
+          const topPersons = highRiskPersons.slice(0, 3);
+          const names = topPersons.map(p => `"${p.node.label}" (Risk: ${p.riskScore})`).join(', ');
+          narrative += `\n\n🔴 High-risk entities: ${names}`;
+        }
+        
+        if (keyTransactions.length > 0) {
+          const topTx = keyTransactions.slice(0, 3);
+          narrative += `\n\n💸 Key transactions:`;
+          topTx.forEach((tx, i) => {
+            const from = tx.fromNode?.label || 'Unknown';
+            const to = tx.toNode?.label || 'Unknown';
+            const amount = formatCurrency(tx.edge?.amount || 0);
+            narrative += `\n   ${i + 1}. ${from} → ${to} (${amount}) - ${tx.reason}`;
+          });
+        }
       }
       
       sections.push({
         icon: '💰',
-        title: language === 'en' ? 'Money Flow' : 'Money Flow',
+        title: 'Money Flow',
         count: stats.totalTransactions,
-        summary: language === 'en'
-          ? `${stats.totalNodes} accounts, ${stats.totalTransactions} transactions, total ${formatCurrency(stats.totalAmount)}`
-          : `${stats.totalNodes} บัญชี, ${stats.totalTransactions} ธุรกรรม, มูลค่ารวม ${formatCurrency(stats.totalAmount)}`,
-        insights
+        summary: language === 'th'
+          ? `${stats.totalNodes} บัญชี, ${stats.totalTransactions} ธุรกรรม, มูลค่ารวม ${formatCurrency(stats.totalAmount)}`
+          : `${stats.totalNodes} accounts, ${stats.totalTransactions} transactions, total ${formatCurrency(stats.totalAmount)}`,
+        narrative
       });
     }
     
-    // 2. Crypto Tracker Summary
+    // 2. Crypto Tracker Summary - AI Narrative Style
     const hasCrypto = cryptoTransactions.length > 0 || cryptoWallets.length > 0;
     if (hasCrypto) {
-      const insights: string[] = [];
+      let narrative = '';
       
       // Group by blockchain
       const blockchainCounts: Record<string, number> = {};
@@ -615,128 +646,219 @@ export const ForensicReportV2 = () => {
         blockchainCounts[bc] = (blockchainCounts[bc] || 0) + 1;
       });
       
-      if (Object.keys(blockchainCounts).length > 0) {
-        const bcSummary = Object.entries(blockchainCounts)
-          .map(([bc, count]) => `${bc}: ${count}`)
-          .join(', ');
-        insights.push(language === 'en' ? `Blockchains: ${bcSummary}` : `บล็อกเชน: ${bcSummary}`);
-      }
-      
-      // High risk wallets
-      const highRiskWallets = cryptoWallets.filter(w => w.risk_score >= 70);
-      if (highRiskWallets.length > 0) {
-        insights.push(language === 'en'
-          ? `${highRiskWallets.length} high-risk wallet(s)`
-          : `กระเป๋าความเสี่ยงสูง ${highRiskWallets.length} รายการ`);
-      }
-      
-      // Mixer detection
-      const mixerWallets = cryptoWallets.filter(w => w.is_mixer);
-      const mixerTx = cryptoTransactions.filter(tx => tx.risk_flag?.includes('mixer'));
-      if (mixerWallets.length > 0 || mixerTx.length > 0) {
-        insights.push(language === 'en'
-          ? `⚠️ Mixer activity detected`
-          : `⚠️ พบการใช้งาน Mixer`);
-      }
-      
       // Total USD value
       const totalUSD = cryptoTransactions.reduce((sum, tx) => sum + (tx.amount_usd || 0), 0);
       
+      if (language === 'th') {
+        narrative = `ตรวจพบธุรกรรม Crypto ${cryptoTransactions.length} รายการ`;
+        if (cryptoWallets.length > 0) {
+          narrative += ` จากกระเป๋า ${cryptoWallets.length} ใบ`;
+        }
+        if (totalUSD > 0) {
+          narrative += ` มูลค่ารวมประมาณ $${totalUSD.toLocaleString()}`;
+        }
+        
+        // Blockchain breakdown
+        if (Object.keys(blockchainCounts).length > 0) {
+          const bcList = Object.entries(blockchainCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([bc, count]) => `${bc} (${count} รายการ)`)
+            .join(', ');
+          narrative += `\n\n🔗 บล็อกเชนที่ใช้: ${bcList}`;
+        }
+        
+        // High risk wallets
+        const highRiskWallets = cryptoWallets.filter(w => w.risk_score >= 70);
+        if (highRiskWallets.length > 0) {
+          narrative += `\n\n⚠️ กระเป๋าความเสี่ยงสูง ${highRiskWallets.length} ใบ:`;
+          highRiskWallets.slice(0, 3).forEach(w => {
+            const addr = w.address.substring(0, 12) + '...';
+            narrative += `\n   • ${addr} (${w.blockchain}, Risk: ${w.risk_score})`;
+          });
+        }
+        
+        // Mixer detection
+        const mixerWallets = cryptoWallets.filter(w => w.is_mixer);
+        const mixerTx = cryptoTransactions.filter(tx => tx.risk_flag?.includes('mixer'));
+        if (mixerWallets.length > 0 || mixerTx.length > 0) {
+          narrative += `\n\n🚨 พบการใช้ Mixer/Tumbler ${mixerWallets.length + mixerTx.length} รายการ - อาจเป็นการฟอกเงิน`;
+        }
+      } else {
+        narrative = `Detected ${cryptoTransactions.length} crypto transactions`;
+        if (cryptoWallets.length > 0) narrative += ` from ${cryptoWallets.length} wallets`;
+        if (totalUSD > 0) narrative += `, approximately $${totalUSD.toLocaleString()}`;
+        
+        if (Object.keys(blockchainCounts).length > 0) {
+          const bcList = Object.entries(blockchainCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([bc, count]) => `${bc} (${count})`)
+            .join(', ');
+          narrative += `\n\n🔗 Blockchains: ${bcList}`;
+        }
+        
+        const highRiskWallets = cryptoWallets.filter(w => w.risk_score >= 70);
+        if (highRiskWallets.length > 0) {
+          narrative += `\n\n⚠️ ${highRiskWallets.length} high-risk wallet(s) detected`;
+        }
+        
+        const mixerWallets = cryptoWallets.filter(w => w.is_mixer);
+        if (mixerWallets.length > 0) {
+          narrative += `\n\n🚨 Mixer/Tumbler activity detected - possible money laundering`;
+        }
+      }
+      
       sections.push({
         icon: '₿',
-        title: language === 'en' ? 'Crypto Tracker' : 'Crypto Tracker',
+        title: 'Crypto Tracker',
         count: cryptoTransactions.length + cryptoWallets.length,
-        summary: language === 'en'
-          ? `${cryptoTransactions.length} transactions, ${cryptoWallets.length} wallets${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`
-          : `${cryptoTransactions.length} ธุรกรรม, ${cryptoWallets.length} กระเป๋า${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`,
-        insights
+        summary: language === 'th'
+          ? `${cryptoTransactions.length} ธุรกรรม, ${cryptoWallets.length} กระเป๋า${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`
+          : `${cryptoTransactions.length} transactions, ${cryptoWallets.length} wallets${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`,
+        narrative
       });
     }
     
-    // 3. Call Analysis Summary
+    // 3. Call Analysis Summary - AI Narrative Style
     const hasCalls = callEntities.length > 0;
     if (hasCalls) {
-      const insights: string[] = [];
       const totalCalls = callEntities.reduce((sum, e) => sum + e.total_calls, 0);
       const totalDuration = callEntities.reduce((sum, e) => sum + e.total_duration, 0);
       
-      // Top caller
-      const sortedByCall = [...callEntities].sort((a, b) => b.total_calls - a.total_calls);
-      if (sortedByCall.length > 0) {
-        const top = sortedByCall[0];
-        insights.push(language === 'en'
-          ? `Most active: ${top.phone_number} (${top.total_calls} calls)`
-          : `โทรมากที่สุด: ${top.phone_number} (${top.total_calls} สาย)`);
-      }
+      let narrative = '';
       
-      // Time pattern analysis (if available)
-      if (totalDuration > 0) {
-        insights.push(language === 'en'
-          ? `Total talk time: ${formatDuration(totalDuration, 'en')}`
-          : `เวลาสนทนารวม: ${formatDuration(totalDuration, 'th')}`);
+      // Sort by calls
+      const sortedByCall = [...callEntities].sort((a, b) => b.total_calls - a.total_calls);
+      const sortedByDuration = [...callEntities].sort((a, b) => b.total_duration - a.total_duration);
+      
+      if (language === 'th') {
+        narrative = `วิเคราะห์การโทรพบ ${callEntities.length} หมายเลข รวม ${totalCalls} สาย เวลาสนทนารวม ${formatDuration(totalDuration, 'th')}`;
+        
+        // Top callers
+        if (sortedByCall.length > 0) {
+          narrative += `\n\n📱 หมายเลขที่โทรบ่อยที่สุด:`;
+          sortedByCall.slice(0, 3).forEach((e, i) => {
+            const name = e.label !== e.phone_number ? ` (${e.label})` : '';
+            narrative += `\n   ${i + 1}. ${e.phone_number}${name} - ${e.total_calls} สาย`;
+          });
+        }
+        
+        // Longest talk time
+        if (sortedByDuration.length > 0 && sortedByDuration[0].total_duration > 0) {
+          narrative += `\n\n⏱️ สนทนานานที่สุด:`;
+          sortedByDuration.slice(0, 2).forEach((e, i) => {
+            narrative += `\n   ${i + 1}. ${e.phone_number} - ${formatDuration(e.total_duration, 'th')}`;
+          });
+        }
+        
+        // Risk levels
+        const highRiskCalls = callEntities.filter(e => e.risk_level === 'high');
+        if (highRiskCalls.length > 0) {
+          narrative += `\n\n🔴 หมายเลขความเสี่ยงสูง ${highRiskCalls.length} หมายเลข`;
+        }
+      } else {
+        narrative = `Analyzed ${callEntities.length} phone numbers with ${totalCalls} total calls, ${formatDuration(totalDuration, 'en')} talk time`;
+        
+        if (sortedByCall.length > 0) {
+          narrative += `\n\n📱 Most active numbers:`;
+          sortedByCall.slice(0, 3).forEach((e, i) => {
+            narrative += `\n   ${i + 1}. ${e.phone_number} - ${e.total_calls} calls`;
+          });
+        }
+        
+        const highRiskCalls = callEntities.filter(e => e.risk_level === 'high');
+        if (highRiskCalls.length > 0) {
+          narrative += `\n\n🔴 ${highRiskCalls.length} high-risk number(s) identified`;
+        }
       }
       
       sections.push({
         icon: '📞',
-        title: language === 'en' ? 'Call Analysis' : 'Call Analysis',
+        title: 'Call Analysis',
         count: totalCalls,
-        summary: language === 'en'
-          ? `${callEntities.length} phone numbers, ${totalCalls} total calls`
-          : `${callEntities.length} หมายเลข, รวม ${totalCalls} สาย`,
-        insights
+        summary: language === 'th'
+          ? `${callEntities.length} หมายเลข, รวม ${totalCalls} สาย`
+          : `${callEntities.length} phone numbers, ${totalCalls} total calls`,
+        narrative
       });
     }
     
-    // 4. Location Timeline Summary
+    // 4. Location Timeline Summary - AI Narrative Style
     const hasLocations = locationPoints.length > 0;
     if (hasLocations) {
-      const insights: string[] = [];
+      let narrative = '';
       
-      // Unique locations
-      const uniqueLocations = new Set(locationPoints.map(p => p.location_name));
+      // Count by location
       const locationCounts: Record<string, number> = {};
       locationPoints.forEach(p => {
         locationCounts[p.location_name] = (locationCounts[p.location_name] || 0) + 1;
       });
       
-      // Most frequent location
+      // Sort by frequency
       const sortedLocations = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]);
-      if (sortedLocations.length > 0) {
-        const [topLocation, topCount] = sortedLocations[0];
-        insights.push(language === 'en'
-          ? `Most frequent: ${topLocation} (${topCount} times)`
-          : `พบบ่อยที่สุด: ${topLocation} (${topCount} ครั้ง)`);
-      }
+      const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
       
       // Source breakdown
       const sourceCounts: Record<string, number> = {};
       locationPoints.forEach(p => {
         sourceCounts[p.source] = (sourceCounts[p.source] || 0) + 1;
       });
-      const sourceBreakdown = Object.entries(sourceCounts)
-        .map(([src, count]) => `${src}: ${count}`)
-        .join(', ');
-      if (sourceBreakdown) {
-        insights.push(language === 'en'
-          ? `Sources: ${sourceBreakdown}`
-          : `แหล่งข้อมูล: ${sourceBreakdown}`);
+      
+      if (language === 'th') {
+        narrative = `ติดตามตำแหน่งพบ ${uniqueLocations} สถานที่ จาก ${locationPoints.length} จุดข้อมูล`;
+        
+        // Top locations
+        if (sortedLocations.length > 0) {
+          narrative += `\n\n📍 สถานที่ที่พบบ่อย:`;
+          sortedLocations.slice(0, 5).forEach(([loc, count], i) => {
+            narrative += `\n   ${i + 1}. ${loc} (${count} ครั้ง)`;
+          });
+        }
+        
+        // Data sources
+        const sourceList = Object.entries(sourceCounts)
+          .map(([src, count]) => {
+            const srcName = src === 'gps' ? 'GPS' : src === 'cell_tower' ? 'เสาสัญญาณ' : src === 'wifi' ? 'WiFi' : src === 'photo' ? 'ภาพถ่าย' : src;
+            return `${srcName}: ${count}`;
+          })
+          .join(', ');
+        narrative += `\n\n📡 แหล่งข้อมูล: ${sourceList}`;
+        
+        // Movement pattern (if multiple dates)
+        const dates = new Set(locationPoints.map(p => p.timestamp?.split('T')[0]).filter(Boolean));
+        if (dates.size > 1) {
+          narrative += `\n\n🗓️ ช่วงเวลา: ติดตามได้ ${dates.size} วัน`;
+        }
+      } else {
+        narrative = `Tracked ${uniqueLocations} unique locations from ${locationPoints.length} data points`;
+        
+        if (sortedLocations.length > 0) {
+          narrative += `\n\n📍 Most frequent locations:`;
+          sortedLocations.slice(0, 5).forEach(([loc, count], i) => {
+            narrative += `\n   ${i + 1}. ${loc} (${count} times)`;
+          });
+        }
+        
+        const sourceList = Object.entries(sourceCounts)
+          .map(([src, count]) => `${src}: ${count}`)
+          .join(', ');
+        narrative += `\n\n📡 Data sources: ${sourceList}`;
       }
       
       sections.push({
         icon: '📍',
-        title: language === 'en' ? 'Location Timeline' : 'Location Timeline',
+        title: 'Location Timeline',
         count: locationPoints.length,
-        summary: language === 'en'
-          ? `${uniqueLocations.size} unique locations, ${locationPoints.length} data points`
-          : `${uniqueLocations.size} สถานที่, ${locationPoints.length} จุดข้อมูล`,
-        insights
+        summary: language === 'th'
+          ? `${uniqueLocations} สถานที่, ${locationPoints.length} จุดข้อมูล`
+          : `${uniqueLocations} unique locations, ${locationPoints.length} data points`,
+        narrative
       });
     }
     
     return sections;
   };
 
-  // Generate overall summary
+  // Generate overall summary - AI conclusion
   const generateOverallSummary = (): string => {
     const sections = generateSummarySections();
     if (sections.length === 0) return '';
@@ -744,30 +866,480 @@ export const ForensicReportV2 = () => {
     const dataTypes = sections.map(s => s.title).join(', ');
     const totalItems = sections.reduce((sum, s) => sum + s.count, 0);
     
-    if (language === 'en') {
-      let overall = `From analyzing ${sections.length} data source(s) (${dataTypes}) with ${totalItems} total items: `;
+    if (language === 'th') {
+      let overall = `📊 สรุปจากการวิเคราะห์ข้อมูล ${sections.length} แหล่ง (${dataTypes}) รวม ${totalItems} รายการ:\n\n`;
       
       // Key findings
-      const hasHighRisk = highRiskPersons.length > 0 || cryptoWallets.some(w => w.risk_score >= 70);
-      const hasMixer = cryptoWallets.some(w => w.is_mixer) || cryptoTransactions.some(tx => tx.risk_flag?.includes('mixer'));
+      const findings: string[] = [];
       
-      if (hasHighRisk) overall += 'High-risk entities identified. ';
-      if (hasMixer) overall += 'Suspicious mixer activity detected. ';
+      if (highRiskPersons.length > 0) {
+        findings.push(`• พบบุคคลความเสี่ยงสูง ${highRiskPersons.length} ราย โดยเฉพาะ "${highRiskPersons[0].node.label}"`);
+      }
       
-      overall += 'Further investigation and evidence collection is recommended.';
+      if (cryptoWallets.some(w => w.is_mixer)) {
+        findings.push(`• ⚠️ พบการใช้ Crypto Mixer ซึ่งมักใช้ในการฟอกเงิน`);
+      }
+      
+      if (stats && stats.totalAmount >= 1000000) {
+        findings.push(`• มูลค่าธุรกรรมรวมสูงถึง ${formatCurrency(stats.totalAmount)}`);
+      }
+      
+      if (findings.length > 0) {
+        overall += findings.join('\n') + '\n\n';
+      }
+      
+      overall += '💡 แนะนำ: ควรสอบสวนเพิ่มเติมและรวบรวมหลักฐานประกอบ';
       return overall;
     } else {
-      let overall = `จากการวิเคราะห์ข้อมูล ${sections.length} แหล่ง (${dataTypes}) รวม ${totalItems} รายการ: `;
+      let overall = `📊 Analysis of ${sections.length} data source(s) (${dataTypes}) with ${totalItems} total items:\n\n`;
       
-      const hasHighRisk = highRiskPersons.length > 0 || cryptoWallets.some(w => w.risk_score >= 70);
-      const hasMixer = cryptoWallets.some(w => w.is_mixer) || cryptoTransactions.some(tx => tx.risk_flag?.includes('mixer'));
+      const findings: string[] = [];
       
-      if (hasHighRisk) overall += 'พบบุคคล/บัญชีความเสี่ยงสูง ';
-      if (hasMixer) overall += 'พบการใช้งาน Mixer ที่น่าสงสัย ';
+      if (highRiskPersons.length > 0) {
+        findings.push(`• ${highRiskPersons.length} high-risk entities identified, especially "${highRiskPersons[0].node.label}"`);
+      }
       
-      overall += 'แนะนำให้สอบสวนและรวบรวมหลักฐานเพิ่มเติม';
+      if (cryptoWallets.some(w => w.is_mixer)) {
+        findings.push(`• ⚠️ Crypto mixer usage detected - commonly used for money laundering`);
+      }
+      
+      if (findings.length > 0) {
+        overall += findings.join('\n') + '\n\n';
+      }
+      
+      overall += '💡 Recommendation: Further investigation and evidence collection advised';
       return overall;
     }
+  };
+
+  // ==================== FBI-STYLE INTELLIGENCE ANALYSIS ====================
+  
+  // 1. Confidence Level - คำนวณจากจำนวนและคุณภาพข้อมูล
+  interface ConfidenceAssessment {
+    level: 'high' | 'medium' | 'low';
+    percentage: number;
+    factors: string[];
+  }
+  
+  const calculateConfidenceLevel = (): ConfidenceAssessment => {
+    const factors: string[] = [];
+    let score = 0;
+    const maxScore = 100;
+    
+    // Data source count (max 25 points)
+    const sections = generateSummarySections();
+    const sourcePoints = Math.min(sections.length * 6, 25);
+    score += sourcePoints;
+    if (sections.length >= 3) {
+      factors.push(language === 'th' 
+        ? `ข้อมูลจาก ${sections.length} แหล่งยืนยันกัน`
+        : `${sections.length} data sources corroborate`);
+    }
+    
+    // Data volume (max 25 points)
+    const totalItems = sections.reduce((sum, s) => sum + s.count, 0);
+    if (totalItems >= 100) {
+      score += 25;
+      factors.push(language === 'th' ? 'ปริมาณข้อมูลมาก (100+ รายการ)' : 'High data volume (100+ items)');
+    } else if (totalItems >= 50) {
+      score += 15;
+      factors.push(language === 'th' ? 'ปริมาณข้อมูลปานกลาง' : 'Moderate data volume');
+    } else if (totalItems >= 20) {
+      score += 10;
+    }
+    
+    // Cross-validation (max 25 points)
+    const hasMoneyFlow = stats && stats.totalTransactions > 0;
+    const hasCrypto = cryptoTransactions.length > 0;
+    const hasCalls = callEntities.length > 0;
+    const hasLocations = locationPoints.length > 0;
+    
+    // Check if data types corroborate each other
+    if (hasMoneyFlow && hasCalls) {
+      score += 10;
+      factors.push(language === 'th' 
+        ? 'ข้อมูลการเงินและการโทรสอดคล้องกัน'
+        : 'Financial and call data align');
+    }
+    if (hasMoneyFlow && hasLocations) {
+      score += 10;
+      factors.push(language === 'th'
+        ? 'ข้อมูลการเงินและตำแหน่งยืนยันกัน'
+        : 'Financial and location data corroborate');
+    }
+    if (hasCrypto && hasMoneyFlow) {
+      score += 5;
+    }
+    
+    // High-risk identification (max 25 points)
+    if (highRiskPersons.length > 0) {
+      score += 15;
+      factors.push(language === 'th'
+        ? `ระบุบุคคลความเสี่ยงสูงได้ ${highRiskPersons.length} ราย`
+        : `${highRiskPersons.length} high-risk persons identified`);
+    }
+    if (keyTransactions.length > 0) {
+      score += 10;
+    }
+    
+    const percentage = Math.min(Math.round(score), maxScore);
+    let level: 'high' | 'medium' | 'low' = 'low';
+    if (percentage >= 70) level = 'high';
+    else if (percentage >= 40) level = 'medium';
+    
+    return { level, percentage, factors };
+  };
+  
+  // 2. Red Flags Detection - ตรวจจับ patterns น่าสงสัย
+  interface RedFlag {
+    type: string;
+    severity: 'critical' | 'high' | 'medium';
+    description: string;
+    evidence: string;
+  }
+  
+  const detectRedFlags = (): RedFlag[] => {
+    const flags: RedFlag[] = [];
+    
+    // Structuring Detection (แบ่งโอนหลีกเลี่ยงรายงาน)
+    if (keyTransactions.length > 0) {
+      const smallTransactions = keyTransactions.filter(t => {
+        const amount = t.edge?.amount || 0;
+        return amount > 40000 && amount < 50000;
+      });
+      if (smallTransactions.length >= 3) {
+        flags.push({
+          type: 'Structuring',
+          severity: 'critical',
+          description: language === 'th'
+            ? 'แบ่งโอนเงินต่ำกว่า ฿50,000 หลายครั้ง เพื่อหลีกเลี่ยงการรายงาน'
+            : 'Multiple transactions just under ฿50,000 reporting threshold',
+          evidence: language === 'th'
+            ? `พบ ${smallTransactions.length} รายการ ในช่วง ฿40,000-50,000`
+            : `Found ${smallTransactions.length} transactions between ฿40,000-50,000`
+        });
+      }
+    }
+    
+    // Rapid Movement (เงินเข้า-ออกเร็ว)
+    if (highRiskPersons.length > 0) {
+      const rapidMovers = highRiskPersons.filter(p => 
+        p.riskFactors?.some(f => f.factor?.includes('rapid') || f.factor?.includes('เร็ว'))
+      );
+      if (rapidMovers.length > 0) {
+        flags.push({
+          type: 'Rapid Movement',
+          severity: 'high',
+          description: language === 'th'
+            ? 'เงินเข้า-ออกภายในเวลาสั้น (อาจเป็น Pass-through account)'
+            : 'Money in-out within short period (possible pass-through account)',
+          evidence: language === 'th'
+            ? `พบ ${rapidMovers.length} บัญชีที่มีพฤติกรรมนี้`
+            : `${rapidMovers.length} account(s) showing this pattern`
+        });
+      }
+    }
+    
+    // Mixer/Tumbler Usage
+    const mixerWallets = cryptoWallets.filter(w => w.is_mixer);
+    const mixerTx = cryptoTransactions.filter(tx => tx.risk_flag?.includes('mixer'));
+    if (mixerWallets.length > 0 || mixerTx.length > 0) {
+      flags.push({
+        type: 'Crypto Mixer',
+        severity: 'critical',
+        description: language === 'th'
+          ? 'ใช้ Mixer/Tumbler ปกปิดที่มาของ Crypto - เทคนิคฟอกเงินทั่วไป'
+          : 'Mixer/Tumbler usage to obscure crypto origin - common money laundering technique',
+        evidence: language === 'th'
+          ? `พบ ${mixerWallets.length + mixerTx.length} รายการเกี่ยวข้อง Mixer`
+          : `${mixerWallets.length + mixerTx.length} mixer-related items found`
+      });
+    }
+    
+    // High-risk Crypto Wallets
+    const highRiskCrypto = cryptoWallets.filter(w => w.risk_score >= 70);
+    if (highRiskCrypto.length > 0) {
+      flags.push({
+        type: 'High-Risk Wallets',
+        severity: 'high',
+        description: language === 'th'
+          ? 'กระเป๋า Crypto มีประวัติเชื่อมโยงกิจกรรมผิดกฎหมาย'
+          : 'Crypto wallets with history linked to illicit activity',
+        evidence: highRiskCrypto.slice(0, 2).map(w => 
+          `${w.address.substring(0, 10)}... (${w.blockchain})`
+        ).join(', ')
+      });
+    }
+    
+    // Layering Detection (เงินผ่านหลายชั้น)
+    if (stats && stats.totalNodes >= 10 && keyTransactions.length >= 5) {
+      const chainLength = Math.floor(stats.totalNodes / 3);
+      if (chainLength >= 3) {
+        flags.push({
+          type: 'Layering',
+          severity: 'high',
+          description: language === 'th'
+            ? `เงินผ่านหลายชั้น (${chainLength}+ ระดับ) ก่อนถึงปลายทาง`
+            : `Money passed through multiple layers (${chainLength}+ levels)`,
+          evidence: language === 'th'
+            ? `เครือข่าย ${stats.totalNodes} บัญชี, ${stats.totalTransactions} ธุรกรรม`
+            : `Network of ${stats.totalNodes} accounts, ${stats.totalTransactions} transactions`
+        });
+      }
+    }
+    
+    // Unusual Call Patterns
+    const highRiskCalls = callEntities.filter(e => e.risk_level === 'high');
+    if (highRiskCalls.length > 0) {
+      flags.push({
+        type: 'Suspicious Calls',
+        severity: 'medium',
+        description: language === 'th'
+          ? 'หมายเลขโทรศัพท์มีรูปแบบการโทรผิดปกติ'
+          : 'Phone numbers with unusual call patterns',
+        evidence: language === 'th'
+          ? `${highRiskCalls.length} หมายเลขความเสี่ยงสูง`
+          : `${highRiskCalls.length} high-risk number(s)`
+      });
+    }
+    
+    // Large Cash Transactions
+    if (keyTransactions.length > 0) {
+      const largeCash = keyTransactions.filter(t => {
+        const amount = t.edge?.amount || 0;
+        return amount >= 500000;
+      });
+      if (largeCash.length > 0) {
+        flags.push({
+          type: 'Large Transactions',
+          severity: 'medium',
+          description: language === 'th'
+            ? 'ธุรกรรมมูลค่าสูง (≥฿500,000)'
+            : 'High-value transactions (≥฿500,000)',
+          evidence: language === 'th'
+            ? `${largeCash.length} รายการ`
+            : `${largeCash.length} transaction(s)`
+        });
+      }
+    }
+    
+    return flags.sort((a, b) => {
+      const severityOrder = { critical: 0, high: 1, medium: 2 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+  };
+  
+  // 3. Recommended Actions - คำแนะนำตามประเภทความเสี่ยง
+  interface RecommendedAction {
+    priority: 'immediate' | 'high' | 'standard';
+    action: string;
+    reason: string;
+  }
+  
+  const generateRecommendedActions = (): RecommendedAction[] => {
+    const actions: RecommendedAction[] = [];
+    const redFlags = detectRedFlags();
+    
+    // Based on high-risk persons
+    if (highRiskPersons.length > 0) {
+      const topPerson = highRiskPersons[0];
+      actions.push({
+        priority: 'high',
+        action: language === 'th'
+          ? `สอบปากคำ "${topPerson.node.label}"`
+          : `Interview "${topPerson.node.label}"`,
+        reason: language === 'th'
+          ? `คะแนนความเสี่ยงสูงสุด (${topPerson.riskScore})`
+          : `Highest risk score (${topPerson.riskScore})`
+      });
+    }
+    
+    // Based on mixer detection
+    if (redFlags.some(f => f.type === 'Crypto Mixer')) {
+      actions.push({
+        priority: 'immediate',
+        action: language === 'th'
+          ? 'ขอข้อมูล KYC จาก Crypto Exchange ที่เกี่ยวข้อง'
+          : 'Request KYC data from related Crypto Exchanges',
+        reason: language === 'th'
+          ? 'พบการใช้ Mixer - ต้องติดตามที่มาของเงิน'
+          : 'Mixer usage detected - need to trace fund origin'
+      });
+    }
+    
+    // Based on structuring
+    if (redFlags.some(f => f.type === 'Structuring')) {
+      actions.push({
+        priority: 'immediate',
+        action: language === 'th'
+          ? 'ขอหมายศาลอายัดบัญชีที่เกี่ยวข้อง'
+          : 'Obtain court order to freeze related accounts',
+        reason: language === 'th'
+          ? 'พบ Structuring - หลักฐานการฟอกเงินชัดเจน'
+          : 'Structuring detected - clear money laundering indicator'
+      });
+    }
+    
+    // Based on large transactions
+    if (stats && stats.totalAmount >= 1000000) {
+      actions.push({
+        priority: 'high',
+        action: language === 'th'
+          ? 'ขอประวัติธุรกรรมย้อนหลัง 6 เดือนจากธนาคาร'
+          : 'Request 6-month transaction history from banks',
+        reason: language === 'th'
+          ? `มูลค่าธุรกรรมสูง (${formatCurrency(stats.totalAmount)})`
+          : `High transaction value (${formatCurrency(stats.totalAmount)})`
+      });
+    }
+    
+    // Based on call analysis
+    if (callEntities.length > 0) {
+      const topCaller = [...callEntities].sort((a, b) => b.total_calls - a.total_calls)[0];
+      actions.push({
+        priority: 'standard',
+        action: language === 'th'
+          ? `ขอข้อมูลเจ้าของหมายเลข ${topCaller.phone_number}`
+          : `Identify owner of ${topCaller.phone_number}`,
+        reason: language === 'th'
+          ? `โทรมากที่สุด (${topCaller.total_calls} สาย)`
+          : `Most frequent caller (${topCaller.total_calls} calls)`
+      });
+    }
+    
+    // Based on locations
+    if (locationPoints.length > 0) {
+      const locationCounts: Record<string, number> = {};
+      locationPoints.forEach(p => {
+        locationCounts[p.location_name] = (locationCounts[p.location_name] || 0) + 1;
+      });
+      const topLocation = Object.entries(locationCounts).sort((a, b) => b[1] - a[1])[0];
+      if (topLocation) {
+        actions.push({
+          priority: 'standard',
+          action: language === 'th'
+            ? `ตรวจสอบกล้อง CCTV บริเวณ "${topLocation[0]}"`
+            : `Check CCTV footage at "${topLocation[0]}"`,
+          reason: language === 'th'
+            ? `พบบ่อยที่สุด (${topLocation[1]} ครั้ง)`
+            : `Most frequent location (${topLocation[1]} times)`
+        });
+      }
+    }
+    
+    // Standard recommendations
+    actions.push({
+      priority: 'standard',
+      action: language === 'th'
+        ? 'รวบรวมหลักฐานเพิ่มเติมก่อนดำเนินคดี'
+        : 'Gather additional evidence before prosecution',
+      reason: language === 'th'
+        ? 'เป็นการวิเคราะห์เบื้องต้น'
+        : 'Preliminary analysis only'
+    });
+    
+    return actions.sort((a, b) => {
+      const priorityOrder = { immediate: 0, high: 1, standard: 2 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+  };
+  
+  // 4. Intelligence Gaps - ข้อมูลที่ยังขาด
+  interface IntelligenceGap {
+    category: string;
+    gap: string;
+    impact: 'critical' | 'significant' | 'minor';
+    suggestion: string;
+  }
+  
+  const identifyIntelligenceGaps = (): IntelligenceGap[] => {
+    const gaps: IntelligenceGap[] = [];
+    
+    const hasMoneyFlow = stats && stats.totalTransactions > 0;
+    const hasCrypto = cryptoTransactions.length > 0 || cryptoWallets.length > 0;
+    const hasCalls = callEntities.length > 0;
+    const hasLocations = locationPoints.length > 0;
+    
+    // Missing data types
+    if (!hasMoneyFlow) {
+      gaps.push({
+        category: language === 'th' ? 'ข้อมูลการเงิน' : 'Financial Data',
+        gap: language === 'th' ? 'ไม่มีข้อมูลธุรกรรมธนาคาร' : 'No bank transaction data',
+        impact: 'critical',
+        suggestion: language === 'th'
+          ? 'ขอข้อมูลจาก ปปง. หรือธนาคารที่เกี่ยวข้อง'
+          : 'Request data from AMLO or related banks'
+      });
+    }
+    
+    if (!hasCrypto && hasMoneyFlow && (stats?.totalAmount || 0) >= 1000000) {
+      gaps.push({
+        category: language === 'th' ? 'ข้อมูล Crypto' : 'Crypto Data',
+        gap: language === 'th' ? 'ไม่มีข้อมูล Cryptocurrency' : 'No cryptocurrency data',
+        impact: 'significant',
+        suggestion: language === 'th'
+          ? 'ตรวจสอบว่ามีการใช้ Crypto หรือไม่'
+          : 'Investigate potential crypto usage'
+      });
+    }
+    
+    if (!hasCalls && hasMoneyFlow) {
+      gaps.push({
+        category: language === 'th' ? 'ข้อมูลการโทร' : 'Call Data',
+        gap: language === 'th' ? 'ไม่มีข้อมูล Call Records' : 'No call record data',
+        impact: 'significant',
+        suggestion: language === 'th'
+          ? 'ขอข้อมูลจากผู้ให้บริการโทรศัพท์'
+          : 'Request data from telecom providers'
+      });
+    }
+    
+    if (!hasLocations) {
+      gaps.push({
+        category: language === 'th' ? 'ข้อมูลตำแหน่ง' : 'Location Data',
+        gap: language === 'th' ? 'ไม่มีข้อมูลพิกัด/ตำแหน่ง' : 'No location/GPS data',
+        impact: 'minor',
+        suggestion: language === 'th'
+          ? 'รวบรวมจาก Cell Tower, GPS, หรือ EXIF ภาพถ่าย'
+          : 'Collect from Cell Tower, GPS, or photo EXIF'
+      });
+    }
+    
+    // Specific gaps based on available data
+    if (highRiskPersons.length > 0) {
+      const unknownPersons = highRiskPersons.filter(p => 
+        !p.node.label || p.node.label.includes('Unknown') || p.node.label.includes('ไม่ทราบ')
+      );
+      if (unknownPersons.length > 0) {
+        gaps.push({
+          category: language === 'th' ? 'ข้อมูลบุคคล' : 'Person Data',
+          gap: language === 'th' 
+            ? `บุคคลความเสี่ยงสูง ${unknownPersons.length} รายยังไม่ทราบตัวตน`
+            : `${unknownPersons.length} high-risk person(s) unidentified`,
+          impact: 'critical',
+          suggestion: language === 'th'
+            ? 'ขอข้อมูล KYC จากธนาคาร/Exchange'
+            : 'Request KYC data from banks/exchanges'
+        });
+      }
+    }
+    
+    // Money source gap
+    if (hasMoneyFlow && stats && stats.totalAmount >= 500000) {
+      gaps.push({
+        category: language === 'th' ? 'แหล่งที่มา' : 'Source',
+        gap: language === 'th' ? 'ไม่ทราบแหล่งที่มาของเงินเริ่มต้น' : 'Initial fund source unknown',
+        impact: 'significant',
+        suggestion: language === 'th'
+          ? 'ติดตามธุรกรรมย้อนกลับไปหาต้นทาง'
+          : 'Trace transactions back to origin'
+      });
+    }
+    
+    return gaps.sort((a, b) => {
+      const impactOrder = { critical: 0, significant: 1, minor: 2 };
+      return impactOrder[a.impact] - impactOrder[b.impact];
+    });
   };
 
   // Text-to-Speech function
@@ -1363,41 +1935,200 @@ export const ForensicReportV2 = () => {
                 </Button>
               </div>
               
-              {/* Summary Sections */}
+              {/* Summary Sections - AI Narrative Style */}
               <div className="space-y-4">
                 {generateSummarySections().map((section, index) => (
-                  <div key={index} className="bg-dark-800/50 rounded-lg p-3 border border-dark-700">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{section.icon}</span>
-                      <span className="font-medium text-white">{section.title}</span>
+                  <div key={index} className="bg-dark-800/50 rounded-lg p-4 border border-dark-700">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">{section.icon}</span>
+                      <span className="font-semibold text-white text-lg">{section.title}</span>
                       <span className="text-xs bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded-full">
                         {section.count}
                       </span>
                     </div>
-                    <p className="text-dark-300 text-sm mb-2">{section.summary}</p>
-                    {section.insights.length > 0 && (
-                      <ul className="space-y-1">
-                        {section.insights.map((insight, i) => (
-                          <li key={i} className="text-xs text-dark-400 flex items-start gap-2">
-                            <span className="text-primary-400">•</span>
-                            <span>{insight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <p className="text-dark-300 text-sm mb-3">{section.summary}</p>
+                    {/* AI Narrative - detailed analysis */}
+                    <div className="bg-dark-900/50 rounded-lg p-3 border-l-2 border-primary-500/50">
+                      <pre className="text-sm text-dark-200 whitespace-pre-wrap font-sans leading-relaxed">
+                        {section.narrative}
+                      </pre>
+                    </div>
                   </div>
                 ))}
                 
                 {/* Overall Summary */}
                 {generateSummarySections().length > 0 && (
-                  <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-3 border border-amber-500/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">📌</span>
-                      <span className="font-medium text-amber-400">
+                  <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-4 border border-amber-500/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">📌</span>
+                      <span className="font-semibold text-amber-400 text-lg">
                         {language === 'th' ? 'สรุปภาพรวม' : 'Overall Summary'}
                       </span>
                     </div>
-                    <p className="text-dark-300 text-sm">{generateOverallSummary()}</p>
+                    <pre className="text-sm text-dark-200 whitespace-pre-wrap font-sans leading-relaxed">
+                      {generateOverallSummary()}
+                    </pre>
+                  </div>
+                )}
+                
+                {/* FBI-Style Intelligence Analysis */}
+                {generateSummarySections().length > 0 && (
+                  <div className="space-y-4 mt-6 pt-6 border-t border-dark-700">
+                    <h4 className="font-semibold text-white flex items-center gap-2">
+                      🔍 {language === 'th' ? 'การวิเคราะห์เชิงลึก (FBI-Style)' : 'Deep Analysis (FBI-Style)'}
+                    </h4>
+                    
+                    {/* Confidence Level */}
+                    {(() => {
+                      const confidence = calculateConfidenceLevel();
+                      const levelColor = confidence.level === 'high' ? 'text-green-400 bg-green-500/20' 
+                        : confidence.level === 'medium' ? 'text-yellow-400 bg-yellow-500/20' 
+                        : 'text-red-400 bg-red-500/20';
+                      const levelText = language === 'th' 
+                        ? (confidence.level === 'high' ? 'สูง' : confidence.level === 'medium' ? 'ปานกลาง' : 'ต่ำ')
+                        : confidence.level.toUpperCase();
+                      return (
+                        <div className="bg-dark-800/50 rounded-lg p-4 border border-dark-700">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-lg">🎯</span>
+                            <span className="font-medium text-white">
+                              {language === 'th' ? 'ระดับความมั่นใจ' : 'Confidence Level'}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${levelColor}`}>
+                              {levelText} ({confidence.percentage}%)
+                            </span>
+                          </div>
+                          <div className="w-full bg-dark-700 rounded-full h-2 mb-3">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                confidence.level === 'high' ? 'bg-green-500' 
+                                : confidence.level === 'medium' ? 'bg-yellow-500' 
+                                : 'bg-red-500'
+                              }`}
+                              style={{ width: `${confidence.percentage}%` }}
+                            />
+                          </div>
+                          {confidence.factors.length > 0 && (
+                            <ul className="space-y-1">
+                              {confidence.factors.map((factor, i) => (
+                                <li key={i} className="text-xs text-dark-400 flex items-start gap-2">
+                                  <CheckCircle className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
+                                  <span>{factor}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Red Flags */}
+                    {(() => {
+                      const redFlags = detectRedFlags();
+                      if (redFlags.length === 0) return null;
+                      return (
+                        <div className="bg-dark-800/50 rounded-lg p-4 border border-red-500/30">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">🚩</span>
+                            <span className="font-medium text-red-400">
+                              Red Flags ({redFlags.length})
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            {redFlags.map((flag, i) => {
+                              const severityColor = flag.severity === 'critical' ? 'border-red-500 bg-red-500/10' 
+                                : flag.severity === 'high' ? 'border-orange-500 bg-orange-500/10' 
+                                : 'border-yellow-500 bg-yellow-500/10';
+                              const severityText = flag.severity === 'critical' ? '🔴' : flag.severity === 'high' ? '🟠' : '🟡';
+                              return (
+                                <div key={i} className={`rounded-lg p-3 border-l-4 ${severityColor}`}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span>{severityText}</span>
+                                    <span className="font-medium text-white text-sm">{flag.type}</span>
+                                  </div>
+                                  <p className="text-xs text-dark-300 mb-1">{flag.description}</p>
+                                  <p className="text-xs text-dark-500">📎 {flag.evidence}</p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Recommended Actions */}
+                    {(() => {
+                      const actions = generateRecommendedActions();
+                      return (
+                        <div className="bg-dark-800/50 rounded-lg p-4 border border-blue-500/30">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">📋</span>
+                            <span className="font-medium text-blue-400">
+                              {language === 'th' ? 'ขั้นตอนแนะนำ' : 'Recommended Actions'}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {actions.slice(0, 6).map((action, i) => {
+                              const priorityBadge = action.priority === 'immediate' 
+                                ? 'bg-red-500/20 text-red-400' 
+                                : action.priority === 'high' 
+                                ? 'bg-orange-500/20 text-orange-400' 
+                                : 'bg-blue-500/20 text-blue-400';
+                              const priorityText = language === 'th'
+                                ? (action.priority === 'immediate' ? 'เร่งด่วน' : action.priority === 'high' ? 'สำคัญ' : 'ปกติ')
+                                : action.priority.toUpperCase();
+                              return (
+                                <div key={i} className="flex items-start gap-3 p-2 bg-dark-900/50 rounded">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityBadge}`}>
+                                    {priorityText}
+                                  </span>
+                                  <div className="flex-1">
+                                    <p className="text-sm text-white">{action.action}</p>
+                                    <p className="text-xs text-dark-500">{action.reason}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Intelligence Gaps */}
+                    {(() => {
+                      const gaps = identifyIntelligenceGaps();
+                      if (gaps.length === 0) return null;
+                      return (
+                        <div className="bg-dark-800/50 rounded-lg p-4 border border-purple-500/30">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">⚠️</span>
+                            <span className="font-medium text-purple-400">
+                              {language === 'th' ? 'ข้อมูลที่ยังขาด' : 'Intelligence Gaps'}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {gaps.map((gap, i) => {
+                              const impactColor = gap.impact === 'critical' ? 'text-red-400' 
+                                : gap.impact === 'significant' ? 'text-yellow-400' 
+                                : 'text-blue-400';
+                              return (
+                                <div key={i} className="p-2 bg-dark-900/50 rounded">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className={`text-xs font-medium ${impactColor}`}>
+                                      [{gap.category}]
+                                    </span>
+                                    <span className="text-sm text-white">{gap.gap}</span>
+                                  </div>
+                                  <p className="text-xs text-dark-400">
+                                    💡 {gap.suggestion}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
                 
