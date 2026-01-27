@@ -41,24 +41,25 @@ cytoscape.use(cytoscapeSvg);
 
 type LayoutType = 'cose' | 'circle' | 'grid' | 'breadthfirst' | 'concentric';
 
-// Node type configuration
-const NODE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
-  bank_account: { emoji: '🏦', color: '#3B82F6', label: 'Bank Account' },
-  crypto_wallet: { emoji: '💰', color: '#F59E0B', label: 'Crypto Wallet' },
-  person: { emoji: '👤', color: '#10B981', label: 'Person' },
-  company: { emoji: '🏢', color: '#8B5CF6', label: 'Company' },
-  exchange: { emoji: '🔄', color: '#EC4899', label: 'Exchange' },
-  suspect: { emoji: '⚠️', color: '#EF4444', label: 'Suspect' },
-  victim: { emoji: '🛡️', color: '#06B6D4', label: 'Victim' },
-  unknown: { emoji: '❓', color: '#6B7280', label: 'Unknown' },
+// Node type configuration - FBI/i2 Analyst's Notebook Style
+// Using muted professional colors with clear icons
+const NODE_CONFIG: Record<string, { emoji: string; color: string; borderColor: string; label: string }> = {
+  bank_account: { emoji: '🏦', color: '#DBEAFE', borderColor: '#2563EB', label: 'Bank Account' },
+  crypto_wallet: { emoji: '₿', color: '#FEF3C7', borderColor: '#D97706', label: 'Crypto Wallet' },
+  person: { emoji: '👤', color: '#D1FAE5', borderColor: '#059669', label: 'Person' },
+  company: { emoji: '🏢', color: '#EDE9FE', borderColor: '#7C3AED', label: 'Company' },
+  exchange: { emoji: '🔄', color: '#FCE7F3', borderColor: '#DB2777', label: 'Exchange' },
+  suspect: { emoji: '⚠️', color: '#FEE2E2', borderColor: '#DC2626', label: 'Suspect' },
+  victim: { emoji: '🛡️', color: '#CFFAFE', borderColor: '#0891B2', label: 'Victim' },
+  unknown: { emoji: '❓', color: '#F3F4F6', borderColor: '#6B7280', label: 'Unknown' },
 };
 
-// Edge type colors
+// Edge type colors - Professional thin lines
 const EDGE_COLORS: Record<string, string> = {
-  bank_transfer: '#3B82F6',
-  crypto_transfer: '#F59E0B',
-  cash: '#10B981',
-  other: '#6B7280',
+  bank_transfer: '#2563EB',    // Blue - bank transfers
+  crypto_transfer: '#D97706',  // Amber - crypto transfers  
+  cash: '#059669',             // Green - cash
+  other: '#6B7280',            // Gray - other
 };
 
 // Format currency
@@ -76,11 +77,10 @@ const getNodeDisplay = (node: MoneyFlowNode) => {
   return NODE_CONFIG[node.node_type] || NODE_CONFIG.unknown;
 };
 
-// Format node label
+// Format node label - cleaner without emoji for professional look
 const formatNodeLabel = (node: MoneyFlowNode): string => {
-  const display = getNodeDisplay(node);
-  const riskBadge = node.risk_score && node.risk_score > 0 ? ` [${node.risk_score}]` : '';
-  return `${display.emoji}\n${node.label}${riskBadge}`;
+  const riskBadge = node.risk_score && node.risk_score > 0 ? `\n[${node.risk_score}]` : '';
+  return `${node.label}${riskBadge}`;
 };
 
 interface MoneyFlowGraphProps {
@@ -140,26 +140,36 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
 
   // Build Cytoscape elements
   const elements = useMemo(() => {
-    // Create nodes
+    // Create nodes - FBI/i2 style with light fill and dark border
     const cyNodes = nodes.map(node => {
       const display = getNodeDisplay(node);
-      const riskColor = node.risk_score && node.risk_score >= 70 ? '#EF4444' :
-                       node.risk_score && node.risk_score >= 40 ? '#F59E0B' : display.color;
+      
+      // Border color: Red for suspect, Cyan for victim, otherwise type color
+      const borderColor = node.is_suspect ? '#DC2626' : 
+                         node.is_victim ? '#0891B2' : 
+                         display.borderColor;
+      
+      // Border width: thicker for suspect/victim
+      const borderWidth = node.is_suspect ? 4 : node.is_victim ? 3 : 2;
       
       return {
         data: {
           id: String(node.id),
           label: formatNodeLabel(node),
           type: node.node_type,
+          emoji: display.emoji,
           color: display.color,
-          borderColor: node.is_suspect ? '#EF4444' : node.is_victim ? '#06B6D4' : riskColor,
-          size: node.is_suspect || node.is_victim ? 80 : 60,
+          borderColor: borderColor,
+          borderWidth: borderWidth,
+          size: 55,
+          isSuspect: node.is_suspect || false,
+          isVictim: node.is_victim || false,
           nodeData: node,
         }
       };
     });
 
-    // Create edges
+    // Create edges - thin professional lines
     const cyEdges = edges.map(edge => ({
       data: {
         id: `edge-${edge.id}`,
@@ -167,7 +177,7 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
         target: String(edge.to_node_id),
         label: edge.amount ? formatCurrency(edge.amount) : '',
         color: EDGE_COLORS[edge.edge_type] || EDGE_COLORS.other,
-        width: edge.amount ? Math.min(Math.max(edge.amount / 50000, 2), 10) : 2,
+        width: Math.min(Math.max((edge.amount || 0) / 100000, 1.5), 4),
         edgeData: edge,
       }
     }));
@@ -175,39 +185,65 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
     return [...cyNodes, ...cyEdges];
   }, [nodes, edges]);
 
-  // Cytoscape stylesheet
+  // Cytoscape stylesheet - FBI/i2 Analyst's Notebook Style
   const stylesheet: any[] = [
     {
       selector: 'node',
       style: {
         'background-color': 'data(color)',
+        'background-opacity': 1,
         'border-color': 'data(borderColor)',
-        'border-width': 3,
+        'border-width': 'data(borderWidth)',
+        'border-opacity': 1,
         'width': 'data(size)',
         'height': 'data(size)',
         'label': 'data(label)',
-        'text-valign': 'center',
+        'text-valign': 'bottom',
         'text-halign': 'center',
-        'font-size': 11,
-        'color': '#ffffff',
-        'text-outline-color': '#000000',
-        'text-outline-width': 2,
+        'text-margin-y': 5,
+        'font-size': 9,
+        'font-weight': 600,
+        'color': darkMode ? '#E5E7EB' : '#1F2937',
+        'text-outline-color': darkMode ? '#0f172a' : '#ffffff',
+        'text-outline-width': 1.5,
         'text-wrap': 'wrap',
-        'text-max-width': '100px',
+        'text-max-width': '80px',
+      }
+    },
+    {
+      selector: 'node[?isSuspect]',
+      style: {
+        'border-color': '#DC2626',
+        'border-width': 4,
+        'border-style': 'solid',
+        'background-color': '#FEE2E2',
+      }
+    },
+    {
+      selector: 'node[?isVictim]',
+      style: {
+        'border-color': '#0891B2',
+        'border-width': 3,
+        'border-style': 'solid',
+        'background-color': '#CFFAFE',
       }
     },
     {
       selector: 'node:selected',
       style: {
-        'border-color': '#fbbf24',
-        'border-width': 5,
+        'border-color': '#F59E0B',
+        'border-width': 4,
+        'overlay-color': '#F59E0B',
+        'overlay-opacity': 0.2,
       }
     },
     {
       selector: 'node.highlighted',
       style: {
-        'border-color': '#00ff00',
-        'border-width': 5,
+        'border-color': '#10B981',
+        'border-width': 4,
+        'overlay-color': '#10B981',
+        'overlay-opacity': 0.15,
       }
     },
     {
@@ -221,33 +257,37 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
       style: {
         'width': 'data(width)',
         'line-color': 'data(color)',
+        'line-opacity': 0.7,
         'target-arrow-color': 'data(color)',
         'target-arrow-shape': 'triangle',
+        'arrow-scale': 0.8,
         'curve-style': 'bezier',
-        'opacity': 0.8,
         'label': 'data(label)',
-        'font-size': 9,
-        'color': '#ffffff',
-        'text-outline-color': '#000000',
+        'font-size': 8,
+        'font-weight': 500,
+        'color': darkMode ? '#9CA3AF' : '#4B5563',
+        'text-outline-color': darkMode ? '#0f172a' : '#ffffff',
         'text-outline-width': 1,
         'text-rotation': 'autorotate',
-        'text-margin-y': -10,
+        'text-margin-y': -6,
       }
     },
     {
       selector: 'edge:selected',
       style: {
-        'line-color': '#fbbf24',
-        'target-arrow-color': '#fbbf24',
-        'width': 5,
+        'line-color': '#F59E0B',
+        'target-arrow-color': '#F59E0B',
+        'width': 3,
+        'line-opacity': 1,
       }
     },
     {
       selector: 'edge.highlighted',
       style: {
-        'line-color': '#00ff00',
-        'target-arrow-color': '#00ff00',
-        'opacity': 1,
+        'line-color': '#10B981',
+        'target-arrow-color': '#10B981',
+        'line-opacity': 1,
+        'width': 2.5,
       }
     },
     {
