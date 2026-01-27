@@ -13,7 +13,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   FileText, Download, Printer, Users, TrendingUp, RefreshCw, Loader2, 
   AlertTriangle, Phone, Wallet, Building2, Shield, ChevronRight,
-  Target, ArrowRightLeft, CheckCircle, Lock, Fingerprint, MapPin
+  Target, ArrowRightLeft, CheckCircle, Lock, Fingerprint, MapPin,
+  Volume2, VolumeX, Lightbulb
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI, evidenceAPI } from '../../services/api';
@@ -302,6 +303,10 @@ export const ForensicReportV2 = () => {
   
   // UI states
   const [showChainOfCustody, setShowChainOfCustody] = useState(true);
+  
+  // TTS states
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Helper to get label
   const t = (key: string): string => labels[key]?.[language] || key;
@@ -578,6 +583,41 @@ export const ForensicReportV2 = () => {
       return summary;
     }
   };
+
+  // Text-to-Speech function
+  const speakSummary = () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Browser ไม่รองรับ Text-to-Speech');
+      return;
+    }
+
+    // Stop if already speaking
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const summary = generateSummary();
+    const utterance = new SpeechSynthesisUtterance(summary);
+    utterance.lang = language === 'th' ? 'th-TH' : 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    speechRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
 
   // Export to PDF with all modules
   const exportToPDF = async () => {
@@ -1085,6 +1125,50 @@ export const ForensicReportV2 = () => {
             <div>
               <div className="text-dark-400 text-sm">Total Transaction Value</div>
               <div className="text-3xl font-bold text-primary-400">{formatCurrency(stats.totalAmount)}</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* AI Summary Card */}
+      {selectedCaseId && (
+        <Card className="mb-6 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-amber-500/20 rounded-lg">
+              <Lightbulb size={24} className="text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-amber-400 flex items-center gap-2">
+                  📝 {language === 'th' ? 'ข้อสังเกตจากการวิเคราะห์' : 'Analysis Observations'}
+                </h3>
+                <Button
+                  variant={isSpeaking ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={speakSummary}
+                  className="flex items-center gap-2"
+                >
+                  {isSpeaking ? (
+                    <>
+                      <VolumeX size={16} />
+                      <span>{language === 'th' ? 'หยุด' : 'Stop'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 size={16} />
+                      <span>{language === 'th' ? 'ฟังสรุป' : 'Listen'}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-dark-300 leading-relaxed">
+                {generateSummary()}
+              </p>
+              <p className="text-xs text-dark-500 mt-3 italic">
+                * {language === 'th' 
+                  ? 'นี่เป็นการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรมเท่านั้น ไม่ใช่ข้อสรุปของคดี' 
+                  : 'This is preliminary analysis only, not a case conclusion'}
+              </p>
             </div>
           </div>
         </Card>
