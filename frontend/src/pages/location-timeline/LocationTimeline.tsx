@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Plus,
   Filter,
   User,
   Navigation,
@@ -43,7 +42,7 @@ interface LocationPoint {
   lng: number;
   timestamp: Date;
   label: string;
-  source: 'gps' | 'cell_tower' | 'wifi' | 'photo' | 'manual';
+  source: 'gps' | 'cell_tower' | 'wifi' | 'photo';
   accuracy?: number;
   address?: string;
   notes?: string;
@@ -51,16 +50,19 @@ interface LocationPoint {
   personName?: string;
 }
 
-// Source icons and colors
+// Source icons and colors - FBI/i2 Style
 const SOURCE_CONFIG: Record<string, { color: string; borderColor: string; icon: string; label: string }> = {
-  gps: { color: '#dcfce7', borderColor: '#22c55e', icon: '📍', label: 'GPS' },
-  cell_tower: { color: '#dbeafe', borderColor: '#3b82f6', icon: '📡', label: 'Cell Tower' },
-  wifi: { color: '#ede9fe', borderColor: '#8b5cf6', icon: '📶', label: 'WiFi' },
-  photo: { color: '#fef3c7', borderColor: '#f59e0b', icon: '📷', label: 'Photo EXIF' },
+  gps: { color: '#D1FAE5', borderColor: '#059669', icon: '📍', label: 'GPS' },
+  cell_tower: { color: '#DBEAFE', borderColor: '#2563EB', icon: '📡', label: 'Cell Tower' },
+  wifi: { color: '#EDE9FE', borderColor: '#7C3AED', icon: '📶', label: 'WiFi' },
+  photo: { color: '#FEF3C7', borderColor: '#D97706', icon: '📷', label: 'Photo EXIF' },
 };
 
-// Valid evidence sources only (no manual/user input)
-const VALID_SOURCES = ['gps', 'cell_tower', 'wifi', 'photo'];
+// Default config for unknown sources
+const DEFAULT_SOURCE_CONFIG = { color: '#F3F4F6', borderColor: '#6B7280', icon: '📍', label: 'Unknown' };
+
+// Get source config with fallback
+const getSourceConfig = (source: string) => SOURCE_CONFIG[source] || DEFAULT_SOURCE_CONFIG;
 
 // Speed options
 const SPEED_OPTIONS = [
@@ -129,13 +131,14 @@ export const LocationTimeline = () => {
         const data = await response.json();
         
         // Transform API data to component format
+        const validSources = ['gps', 'cell_tower', 'wifi', 'photo'];
         const transformedLocations: LocationPoint[] = data.points.map((p: any) => ({
           id: p.id,
           lat: p.lat,
           lng: p.lng,
           timestamp: p.timestamp ? new Date(p.timestamp) : new Date(),
           label: p.label,
-          source: p.source || 'manual',
+          source: validSources.includes(p.source) ? p.source : (p.source || 'unknown'), // Keep original source for filtering
           accuracy: p.accuracy,
           address: p.address,
           notes: p.notes,
@@ -171,8 +174,10 @@ export const LocationTimeline = () => {
 
   // Filtered and sorted locations (exclude manual - evidence only)
   const filteredLocations = useMemo(() => {
+    // Valid evidence sources
+    const validSources = ['gps', 'cell_tower', 'wifi', 'photo'];
     return locations
-      .filter(l => VALID_SOURCES.includes(l.source as string)) // Evidence sources only
+      .filter(l => validSources.includes(l.source as string)) // Only allow valid evidence sources
       .filter(l => filterPerson === 'all' || l.personName === filterPerson)
       .filter(l => filterSource === 'all' || l.source === filterSource)
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -295,7 +300,7 @@ export const LocationTimeline = () => {
       pulseMarkerRef.current.remove();
     }
     
-    const config = SOURCE_CONFIG[loc.source];
+    const config = getSourceConfig(loc.source);
     
     // Create pulsing marker with inline animation (pseudo-elements don't work well with Leaflet)
     const pulseIcon = L.divIcon({
@@ -335,7 +340,7 @@ export const LocationTimeline = () => {
             margin: -25px 0 0 -25px;
             background: ${config.color};
             border-radius: 50%;
-            border: 4px solid #fff;
+            border: 4px solid ${config.borderColor};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -387,7 +392,7 @@ export const LocationTimeline = () => {
     // Add new markers
     const coords: [number, number][] = [];
     filteredLocations.forEach((loc, index) => {
-      const config = SOURCE_CONFIG[loc.source];
+      const config = getSourceConfig(loc.source);
 
       // Create custom icon (smaller for non-current points)
       const icon = L.divIcon({
@@ -398,13 +403,13 @@ export const LocationTimeline = () => {
             height: 28px;
             background: ${config.color};
             border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.7);
+            border: 2px solid ${config.borderColor};
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            opacity: 0.8;
+            opacity: 0.9;
           ">
             ${config.icon}
           </div>
@@ -700,7 +705,7 @@ export const LocationTimeline = () => {
             
             {/* Map Overlay Controls */}
             {mapLoaded && filteredLocations.length > 0 && (
-              <div className="absolute bottom-4 left-4 right-4" style={{ zIndex: 10000 }}>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2" style={{ zIndex: 10000, width: 'calc(100% - 300px)', maxWidth: '600px' }}>
                 {/* Progress Bar */}
                 <div className="bg-dark-800/95 backdrop-blur-md rounded-lg p-3 shadow-xl border border-dark-600">
                   <div className="flex items-center gap-3 mb-2">
@@ -795,6 +800,41 @@ export const LocationTimeline = () => {
                 </div>
               </div>
             )}
+            
+            {/* Legend Overlay - Bottom Left */}
+            {mapLoaded && (
+              <div className="absolute bottom-4 left-3 z-[9999]" style={{ maxWidth: '260px' }}>
+                <div className="bg-dark-800/95 backdrop-blur-md rounded-lg p-3 shadow-xl border border-dark-600">
+                  <div className="text-xs text-dark-400 mb-2 font-medium">Data Sources</div>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <div 
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                          style={{ 
+                            backgroundColor: config.color, 
+                            border: `2px solid ${config.borderColor}`,
+                          }}
+                        >
+                          {config.icon}
+                        </div>
+                        <span className="text-dark-300 text-xs">{config.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-dark-600 mt-2 pt-2 flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs text-dark-400">
+                      <div className="w-4 h-0.5" style={{ borderBottom: '2px dashed #6b7280' }} />
+                      <span>Route</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-dark-400">
+                      <div className="w-4 h-0.5 bg-primary-500 rounded" />
+                      <span>Traveled</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
@@ -806,10 +846,13 @@ export const LocationTimeline = () => {
             <Card className="p-4 bg-primary-500/10 border-primary-500/30">
               <div className="flex items-start gap-3">
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl animate-pulse"
-                  style={{ background: SOURCE_CONFIG[selectedLocation.source].color }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                  style={{ 
+                    background: getSourceConfig(selectedLocation.source).color,
+                    border: `3px solid ${getSourceConfig(selectedLocation.source).borderColor}`,
+                  }}
                 >
-                  {SOURCE_CONFIG[selectedLocation.source].icon}
+                  {getSourceConfig(selectedLocation.source).icon}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -817,7 +860,7 @@ export const LocationTimeline = () => {
                       #{currentIndex + 1}
                     </span>
                     <Badge variant="info" className="text-xs">
-                      {SOURCE_CONFIG[selectedLocation.source].label}
+                      {getSourceConfig(selectedLocation.source).label}
                     </Badge>
                   </div>
                   <h3 className="font-semibold mt-1">{selectedLocation.label}</h3>
@@ -854,7 +897,7 @@ export const LocationTimeline = () => {
                 {filteredLocations.map((loc, index) => {
                   const isActive = index === currentIndex;
                   const isPast = index < currentIndex;
-                  const config = SOURCE_CONFIG[loc.source];
+                  const config = getSourceConfig(loc.source);
                   const prevLoc = index > 0 ? filteredLocations[index - 1] : null;
                   
                   return (
@@ -915,37 +958,6 @@ export const LocationTimeline = () => {
         </div>
         )}
       </div>
-
-      {/* Legend - Hidden in fullscreen */}
-      {!isFullscreen && (
-      <Card className="p-3">
-        <div className="flex items-center gap-6 justify-center flex-wrap">
-          {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
-            <div key={key} className="flex items-center gap-2 text-sm">
-              <div 
-                className="w-6 h-6 rounded-full flex items-center justify-center text-xs"
-                style={{ 
-                  background: config.color,
-                  border: `2px solid ${config.borderColor}`
-                }}
-              >
-                {config.icon}
-              </div>
-              <span className="text-dark-400">{config.label}</span>
-            </div>
-          ))}
-          <div className="w-px h-4 bg-dark-600" />
-          <div className="flex items-center gap-2 text-sm text-dark-400">
-            <div className="w-8 h-0.5 bg-dark-500" style={{ borderBottom: '2px dashed #6b7280' }} />
-            <span>Full Route</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-dark-400">
-            <div className="w-8 h-1 bg-primary-500 rounded" />
-            <span>Traveled Path</span>
-          </div>
-        </div>
-      </Card>
-      )}
     </div>
   );
 };

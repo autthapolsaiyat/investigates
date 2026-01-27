@@ -4,13 +4,10 @@
  */
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 // @ts-ignore
-// @ts-ignore
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
 import {
-  Clock,
   Users,
-  AlertTriangle,
   Network,
   ChevronRight,
   ChevronDown,
@@ -19,13 +16,11 @@ import {
   Target,
   Share2,
   Shield,
-  Zap,
   Eye,
   EyeOff,
   Loader2,
-
+  RefreshCw,
   Search,
-
   ZoomOut,
   Maximize2,
   Minimize2,
@@ -34,8 +29,6 @@ import {
   Image,
   Filter,
   RotateCcw,
-  ChevronUp,
-  ChevronDown,
   Layout,
   Circle,
   GitBranch,
@@ -98,33 +91,59 @@ interface Cluster {
   description: string;
 }
 
-interface SuspiciousPattern {
-  id: string;
-  type: string;
-  severity: RiskLevel;
-  description: string;
-  entities: string[];
-  evidence: string[];
-}
-
 // ============================================
 // HELPERS
 // ============================================
 
+// Entity configuration - FBI/i2 style with background + border colors
+const ENTITY_CONFIG: Record<EntityType, { emoji: string; color: string; borderColor: string; label: string }> = {
+  person: { emoji: '👤', color: '#D1FAE5', borderColor: '#059669', label: 'Person' },
+  phone: { emoji: '📱', color: '#DBEAFE', borderColor: '#2563EB', label: 'Phone' },
+  account: { emoji: '🏦', color: '#DBEAFE', borderColor: '#2563EB', label: 'Account' },
+  address: { emoji: '🏠', color: '#FEF3C7', borderColor: '#D97706', label: 'Address' },
+  organization: { emoji: '🏢', color: '#EDE9FE', borderColor: '#7C3AED', label: 'Organization' },
+  crypto: { emoji: '₿', color: '#FEF3C7', borderColor: '#D97706', label: 'Crypto' },
+  vehicle: { emoji: '🚗', color: '#F3F4F6', borderColor: '#6B7280', label: 'Vehicle' },
+};
+
 const getEntityEmoji = (type: EntityType): string => {
-  const emojis: Record<EntityType, string> = {
-    person: '👤', phone: '📱', account: '🏦', address: '🏠',
-    organization: '🏢', crypto: '₿', vehicle: '🚗'
-  };
-  return emojis[type] || '●';
+  return ENTITY_CONFIG[type]?.emoji || '●';
+};
+
+const getEntityConfig = (type: EntityType) => {
+  return ENTITY_CONFIG[type] || { emoji: '●', color: '#F3F4F6', borderColor: '#6B7280', label: 'Unknown' };
 };
 
 const getRiskColor = (risk: RiskLevel): string => {
   const colors: Record<RiskLevel, string> = {
-    critical: '#ef4444', high: '#f97316', medium: '#eab308',
-    low: '#22c55e', unknown: '#6b7280'
+    critical: '#DC2626', high: '#F59E0B', medium: '#EAB308',
+    low: '#22C55E', unknown: '#6B7280'
   };
   return colors[risk];
+};
+
+const getRiskBgColor = (risk: RiskLevel): string => {
+  const colors: Record<RiskLevel, string> = {
+    critical: '#FCA5A5', high: '#FDE68A', medium: '#FEF9C3',
+    low: '#D1FAE5', unknown: '#F3F4F6'
+  };
+  return colors[risk];
+};
+
+const getRiskSize = (risk: RiskLevel): number => {
+  const sizes: Record<RiskLevel, number> = {
+    critical: 80, high: 70, medium: 60,
+    low: 55, unknown: 55
+  };
+  return sizes[risk];
+};
+
+const getRiskBorderWidth = (risk: RiskLevel): number => {
+  const widths: Record<RiskLevel, number> = {
+    critical: 5, high: 4, medium: 3,
+    low: 2, unknown: 2
+  };
+  return widths[risk];
 };
 
 const getLinkColor = (type: LinkType): string => {
@@ -149,35 +168,61 @@ const cytoscapeStylesheet: any[] = [
   {
     selector: "node",
     style: {
-      "background-color": "data(color)",
+      "background-color": "data(bgColor)",
+      "background-opacity": 1,
       "border-color": "data(riskColor)",
-      "border-width": 3,
-      "width": 55,
-      "height": 55,
-      "label": "data(emoji)",
-      "font-size": 26,
+      "border-width": "data(borderWidth)",
+      "border-opacity": 1,
+      "width": "data(size)",
+      "height": "data(size)",
+      "label": "data(displayLabel)",
+      "font-size": 9,
+      "font-weight": 600,
       "text-valign": "center",
       "text-halign": "center",
+      "color": "#1F2937",
+      "text-outline-color": "#ffffff",
+      "text-outline-width": 1.5,
+      "text-wrap": "wrap",
+      "text-max-width": "70px",
+    }
+  },
+  {
+    selector: 'node[risk = "critical"]',
+    style: {
+      "font-size": 11,
+      "font-weight": 700,
+    }
+  },
+  {
+    selector: 'node[risk = "high"]',
+    style: {
+      "font-size": 10,
+      "font-weight": 700,
     }
   },
   {
     selector: 'node:selected',
     style: {
-      'border-color': '#ffffff',
+      'border-color': '#7C3AED',
       'border-width': 5,
+      'overlay-color': '#7C3AED',
+      'overlay-opacity': 0.2,
     }
   },
   {
     selector: 'node.highlighted',
     style: {
-      'border-color': '#00ff00',
-      'border-width': 5,
+      'border-color': '#10B981',
+      'border-width': 4,
+      'overlay-color': '#10B981',
+      'overlay-opacity': 0.15,
     }
   },
   {
     selector: 'node.searched',
     style: {
-      'border-color': '#ffff00',
+      'border-color': '#FBBF24',
       'border-width': 5,
       'border-style': 'dashed',
     }
@@ -185,26 +230,36 @@ const cytoscapeStylesheet: any[] = [
   {
     selector: 'node.faded',
     style: {
-      'opacity': 0.3,
+      'opacity': 0.2,
     }
   },
   {
     selector: 'edge',
     style: {
-      'width': 'mapData(weight, 1, 300, 1, 8)',
+      'width': 'mapData(weight, 1, 300, 1.5, 4)',
       'line-color': 'data(color)',
+      'line-opacity': 0.75,
       'target-arrow-color': 'data(color)',
       'target-arrow-shape': 'triangle',
+      'arrow-scale': 0.8,
       'curve-style': 'bezier',
-      'opacity': 0.7,
     }
   },
   {
     selector: 'edge:selected',
     style: {
-      'line-color': '#ffffff',
-      'target-arrow-color': '#ffffff',
-      'opacity': 1,
+      'line-color': '#7C3AED',
+      'target-arrow-color': '#7C3AED',
+      'line-opacity': 1,
+      'width': 3,
+    }
+  },
+  {
+    selector: 'edge.highlighted',
+    style: {
+      'line-color': '#10B981',
+      'target-arrow-color': '#10B981',
+      'line-opacity': 1,
     }
   },
   {
@@ -393,31 +448,6 @@ const EntityDetailPanel = ({ entity, links, entities, clusters, onClose }: {
   );
 };
 
-const SuspiciousPatternCard = ({ pattern }: { pattern: SuspiciousPattern }) => (
-  <div className="border border-dark-700 rounded-xl p-4" style={{ backgroundColor: getRiskColor(pattern.severity) + '10' }}>
-    <div className="flex items-start gap-3">
-      <AlertTriangle size={18} style={{ color: getRiskColor(pattern.severity) }} />
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className="text-white font-medium text-sm">{pattern.type}</h4>
-          <span className="px-2 py-0.5 rounded text-xs uppercase" style={{ backgroundColor: getRiskColor(pattern.severity) + '30', color: getRiskColor(pattern.severity) }}>
-            {pattern.severity}
-          </span>
-        </div>
-        <p className="text-xs text-dark-400 mb-2">{pattern.description}</p>
-        <div className="space-y-1">
-          {pattern.evidence.map((ev, i) => (
-            <div key={i} className="flex items-center gap-1 text-xs text-dark-500">
-              <ChevronRight size={10} />
-              <span>{ev}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 // ============================================
 // MAIN COMPONENT
 // ============================================
@@ -427,13 +457,13 @@ export const CallAnalysis = () => {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
   const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [patterns, setPatterns] = useState<SuspiciousPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [recordsCount, setRecordsCount] = useState(0);
   const [_error, setError] = useState<string | null>(null);
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
-  const [activeTab, setActiveTab] = useState<'network' | 'patterns' | 'timeline'>('network');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [caseInfoCollapsed, setCaseInfoCollapsed] = useState(false);
   const [clusterPanelCollapsed, setClusterPanelCollapsed] = useState(false);
@@ -452,89 +482,135 @@ export const CallAnalysis = () => {
   
   // Use global case store
   const { selectedCaseId } = useCaseStore();
+
+  // Generate network from call records
+  const generateNetwork = async () => {
+    if (!selectedCaseId) return;
+    
+    setIsGenerating(true);
+    const token = localStorage.getItem('access_token');
+    
+    try {
+      const response = await fetch(
+        `${API_BASE}/call-analysis/case/${selectedCaseId}/generate-network`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate network');
+      }
+      
+      const result = await response.json();
+      console.log('Network generated:', result);
+      
+      // Refetch network data
+      fetchNetworkData();
+    } catch (err) {
+      console.error('Error generating network:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate network');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   
   // Fetch network data from API
-  useEffect(() => {
-    const fetchNetworkData = async () => {
-      if (!selectedCaseId) {
-        setIsLoading(false);
-        return;
-      }
+  const fetchNetworkData = async () => {
+    if (!selectedCaseId) {
+      setIsLoading(false);
+      return;
+    }
       
-      setIsLoading(true);
-      setError(null);
-      
-      const token = localStorage.getItem('access_token');
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-      
-      try {
-        const response = await fetch(
-          `${API_BASE}/call-analysis/case/${selectedCaseId}/network`,
-          { headers }
-        );
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            // No data yet - this is okay
-            setEntities([]);
-            setLinks([]);
-            setClusters([]);
-            setPatterns([]);
-            setIsLoading(false);
-            return;
-          }
-          throw new Error('Failed to fetch network data');
-        }
-        
-        const data = await response.json();
-        
-        // Transform API data to component format
-        const transformedEntities: Entity[] = data.entities.map((e: any) => ({
-          id: e.id,
-          type: e.type as EntityType,
-          label: e.label,
-          subLabel: e.subLabel,
-          risk: e.risk as RiskLevel,
-          clusterId: e.clusterId,
-          metadata: e.metadata || {}
-        }));
-        
-        const transformedLinks: Link[] = data.links.map((l: any) => ({
-          id: l.id,
-          source: l.source,
-          target: l.target,
-          type: l.type as LinkType,
-          weight: l.weight || 1,
-          firstSeen: l.firstSeen,
-          lastSeen: l.lastSeen,
-          metadata: l.metadata || {}
-        }));
-        
-        const transformedClusters: Cluster[] = data.clusters.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          color: c.color,
-          entities: c.entities || [],
-          risk: c.risk as RiskLevel,
-          description: c.description || ''
-        }));
-        
-        setEntities(transformedEntities);
-        setLinks(transformedLinks);
-        setClusters(transformedClusters);
-        setPatterns([]); // TODO: fetch patterns from API
-        
-      } catch (err) {
-        console.error('Error fetching network data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    setError(null);
+    
+    const token = localStorage.getItem('access_token');
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     };
     
+    try {
+      // First, get the records count to know if we have data to process
+      const statsResponse = await fetch(
+        `${API_BASE}/call-analysis/case/${selectedCaseId}/stats`,
+        { headers }
+      );
+      if (statsResponse.ok) {
+        const stats = await statsResponse.json();
+        setRecordsCount(stats.total_records || 0);
+      }
+      
+      // Then fetch network data
+      const response = await fetch(
+        `${API_BASE}/call-analysis/case/${selectedCaseId}/network`,
+        { headers }
+      );
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No data yet - this is okay
+          setEntities([]);
+          setLinks([]);
+          setClusters([]);
+          setIsLoading(false);
+          return;
+        }
+        throw new Error('Failed to fetch network data');
+      }
+      
+      const data = await response.json();
+      
+      // Transform API data to component format
+      const transformedEntities: Entity[] = data.entities.map((e: any) => ({
+        id: e.id,
+        type: e.type as EntityType,
+        label: e.label,
+        subLabel: e.subLabel,
+        risk: e.risk as RiskLevel,
+        clusterId: e.clusterId,
+        metadata: e.metadata || {}
+      }));
+      
+      const transformedLinks: Link[] = data.links.map((l: any) => ({
+        id: l.id,
+        source: l.source,
+        target: l.target,
+        type: l.type as LinkType,
+        weight: l.weight || 1,
+        firstSeen: l.firstSeen,
+        lastSeen: l.lastSeen,
+        metadata: l.metadata || {}
+      }));
+      
+      const transformedClusters: Cluster[] = data.clusters.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        color: c.color,
+        entities: c.entities || [],
+        risk: c.risk as RiskLevel,
+        description: c.description || ''
+      }));
+      
+      setEntities(transformedEntities);
+      setLinks(transformedLinks);
+      setClusters(transformedClusters);
+      
+    } catch (err) {
+      console.error('Error fetching network data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // useEffect to fetch data when case changes
+  useEffect(() => {
     fetchNetworkData();
   }, [selectedCaseId]);
 
@@ -557,18 +633,32 @@ export const CallAnalysis = () => {
 
   // Memoized cytoscape elements
   const elements = useMemo(() => {
-    const nodes = filteredEntities.map(entity => ({
-      data: {
-        id: entity.id,
-        label: showLabels ? entity.label : '',
-        type: entity.type,
-        risk: entity.risk,
-        clusterId: entity.clusterId,
-        color: getClusterColor(entity.clusterId, clusters),
-        emoji: getEntityEmoji(entity.type),
-        riskColor: getRiskColor(entity.risk),
-      }
-    }));
+    const nodes = filteredEntities.map(entity => {
+      const config = getEntityConfig(entity.type);
+      const riskBg = getRiskBgColor(entity.risk);
+      const size = getRiskSize(entity.risk);
+      const borderWidth = getRiskBorderWidth(entity.risk);
+      
+      // Use risk background color for critical/high, otherwise entity type color
+      const bgColor = (entity.risk === 'critical' || entity.risk === 'high') ? riskBg : config.color;
+      
+      return {
+        data: {
+          id: entity.id,
+          label: entity.label,
+          displayLabel: `${config.emoji}\n${entity.label}`,
+          type: entity.type,
+          risk: entity.risk,
+          clusterId: entity.clusterId,
+          color: config.color,
+          bgColor: bgColor,
+          emoji: config.emoji,
+          riskColor: getRiskColor(entity.risk),
+          size: size,
+          borderWidth: borderWidth,
+        }
+      };
+    });
 
     const edges = filteredLinks.map(link => ({
       data: {
@@ -780,49 +870,25 @@ export const CallAnalysis = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="px-4 border-b border-dark-700">
-        <div className="flex gap-1">
-          {[
-            { id: 'network', label: 'Network Graph', icon: Network },
-            { id: 'patterns', label: 'Suspicious Patterns', icon: AlertTriangle },
-            { id: 'timeline', label: 'Timeline', icon: Clock },
-          ].map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? 'text-primary-400 border-primary-400' : 'text-dark-400 border-transparent hover:text-white'}`}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
-        {activeTab === 'network' && (
-          <>
-            {/* Graph Area */}
-            <div className="flex-1 p-4 flex flex-col overflow-hidden">
-              {/* Toolbar */}
-              <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-400" size={14} />
-                    <input
-                      type="text"
-                      placeholder="Search Entity..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-48 pl-8 pr-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-500 focus:outline-none focus:border-primary-500"
-                    />
-                    {searchTerm && (
-                      <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
+        <>
+          {/* Graph Area */}
+          <div className="flex-1 p-4 flex flex-col overflow-hidden">
+            {/* Toolbar */}
+            <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-400" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search Entity..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-48 pl-8 pr-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-500 focus:outline-none focus:border-primary-500"
+                  />
+                  {searchTerm && (
+                    <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
                         <X size={12} className="text-dark-400" />
                       </button>
                     )}
@@ -859,6 +925,22 @@ export const CallAnalysis = () => {
                     <RotateCcw size={14} className="mr-1" />
                     Reset
                   </Button>
+                  {recordsCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={generateNetwork}
+                      disabled={isGenerating}
+                      title="Regenerate network from call records"
+                    >
+                      {isGenerating ? (
+                        <Loader2 size={14} className="mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCw size={14} className="mr-1" />
+                      )}
+                      {isGenerating ? 'Generating...' : 'Regenerate'}
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
                     {sidebarCollapsed ? <ChevronRight size={14} /> : <X size={14} />}
                   </Button>
@@ -883,10 +965,36 @@ export const CallAnalysis = () => {
                     <div className="text-center">
                       <Network className="w-16 h-16 text-dark-600 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-white mb-2">No Network Data</h3>
-                      <p className="text-dark-400 max-w-md">
-                        Import call logs via Smart Import to visualize communication networks.
-                        The system will automatically analyze and create network connections.
-                      </p>
+                      {recordsCount > 0 ? (
+                        <>
+                          <p className="text-dark-400 max-w-md mb-4">
+                            You have <span className="text-primary-400 font-semibold">{recordsCount}</span> call records imported.
+                            Click the button below to generate the network visualization.
+                          </p>
+                          <button
+                            onClick={generateNetwork}
+                            disabled={isGenerating}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-500/50 rounded-lg font-medium transition-colors"
+                          >
+                            {isGenerating ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Generating Network...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4" />
+                                Generate Network
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <p className="text-dark-400 max-w-md">
+                          Import call logs via Smart Import to visualize communication networks.
+                          The system will automatically analyze and create network connections.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -920,25 +1028,44 @@ export const CallAnalysis = () => {
               </div>
               
               {/* Legend */}
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
-                <span className="text-dark-400">Link Types:</span>
-                {[
-                  { type: 'call', label: 'Phone' },
-                  { type: 'sms', label: 'SMS' },
-                  { type: 'transfer', label: 'Transfer' },
-                  { type: 'meeting', label: 'Meeting' },
-                  { type: 'business', label: 'Business' },
-                ].map(item => (
-                  <div key={item.type} className="flex items-center gap-1">
-                    <div className="w-4 h-1 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
-                    <span className="text-dark-400">{item.label}</span>
-                  </div>
-                ))}
+              <div className="mt-3 p-3 bg-dark-800 rounded-lg border border-dark-700">
+                {/* Entity Types */}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+                  {Object.entries(ENTITY_CONFIG).map(([key, config]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <div 
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                        style={{ 
+                          backgroundColor: config.color, 
+                          border: `2px solid ${config.borderColor}`,
+                        }}
+                      >
+                        {config.emoji}
+                      </div>
+                      <span className="text-dark-300">{config.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Link Types */}
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 pt-3 border-t border-dark-700 text-xs">
+                  {[
+                    { type: 'call', label: 'Phone' },
+                    { type: 'sms', label: 'SMS' },
+                    { type: 'transfer', label: 'Transfer' },
+                    { type: 'meeting', label: 'Meeting' },
+                    { type: 'business', label: 'Business' },
+                  ].map(item => (
+                    <div key={item.type} className="flex items-center gap-2">
+                      <div className="w-6 h-0.5 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
+                      <span className="text-dark-400">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             
-            {/* Sidebar */}
-            {!sidebarCollapsed && (
+            {/* Sidebar - hidden in fullscreen */}
+            {!sidebarCollapsed && !isFullscreen && (
               <div className="w-72 border-l border-dark-700 p-4 space-y-4 overflow-y-auto">
                 <ClusterLegend
                   clusters={clusters}
@@ -972,35 +1099,6 @@ export const CallAnalysis = () => {
               </div>
             )}
           </>
-        )}
-
-        {activeTab === 'patterns' && (
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="max-w-4xl mx-auto space-y-4">
-              <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-                <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                  <Zap className="text-amber-400" />
-                  AI Pattern Detection
-                </h3>
-                <p className="text-sm text-dark-400">Found {patterns.length} suspicious patterns</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {patterns.map(pattern => (
-                  <SuspiciousPatternCard key={pattern.id} pattern={pattern} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'timeline' && (
-          <div className="flex-1 p-4 flex items-center justify-center">
-            <div className="text-center text-dark-400">
-              <Clock size={48} className="mx-auto mb-4 opacity-50" />
-              <p>Timeline Analysis - Coming Soon</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
