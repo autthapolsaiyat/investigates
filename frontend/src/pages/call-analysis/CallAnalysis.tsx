@@ -465,6 +465,7 @@ export const CallAnalysis = () => {
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [caseInfoCollapsed, setCaseInfoCollapsed] = useState(false);
   const [clusterPanelCollapsed, setClusterPanelCollapsed] = useState(false);
   const [filterPanelCollapsed, setFilterPanelCollapsed] = useState(false);
   
@@ -837,9 +838,16 @@ export const CallAnalysis = () => {
           </div>
         </div>
         
-        {/* Case Info */}
+        {/* Case Info - Collapsible */}
         <div className="mt-4">
-          <CaseInfoBar />
+          <button 
+            onClick={() => setCaseInfoCollapsed(!caseInfoCollapsed)}
+            className="w-full flex items-center justify-between text-xs text-dark-400 hover:text-white mb-2"
+          >
+            <span>Case Info</span>
+            {caseInfoCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          </button>
+          {!caseInfoCollapsed && <CaseInfoBar />}
         </div>
         
         {/* Stats */}
