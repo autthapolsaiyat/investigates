@@ -58,6 +58,12 @@ const SOURCE_CONFIG: Record<string, { color: string; borderColor: string; icon: 
   photo: { color: '#FEF3C7', borderColor: '#D97706', icon: '📷', label: 'Photo EXIF' },
 };
 
+// Default config for unknown sources
+const DEFAULT_SOURCE_CONFIG = { color: '#F3F4F6', borderColor: '#6B7280', icon: '📍', label: 'Unknown' };
+
+// Get source config with fallback
+const getSourceConfig = (source: string) => SOURCE_CONFIG[source] || DEFAULT_SOURCE_CONFIG;
+
 // Speed options
 const SPEED_OPTIONS = [
   { value: 0.5, label: '0.5x' },
@@ -290,7 +296,7 @@ export const LocationTimeline = () => {
       pulseMarkerRef.current.remove();
     }
     
-    const config = SOURCE_CONFIG[loc.source];
+    const config = getSourceConfig(loc.source);
     
     // Create pulsing marker with inline animation (pseudo-elements don't work well with Leaflet)
     const pulseIcon = L.divIcon({
@@ -382,7 +388,7 @@ export const LocationTimeline = () => {
     // Add new markers
     const coords: [number, number][] = [];
     filteredLocations.forEach((loc, index) => {
-      const config = SOURCE_CONFIG[loc.source];
+      const config = getSourceConfig(loc.source);
 
       // Create custom icon (smaller for non-current points)
       const icon = L.divIcon({
@@ -838,11 +844,11 @@ export const LocationTimeline = () => {
                 <div 
                   className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
                   style={{ 
-                    background: SOURCE_CONFIG[selectedLocation.source].color,
-                    border: `3px solid ${SOURCE_CONFIG[selectedLocation.source].borderColor}`,
+                    background: getSourceConfig(selectedLocation.source).color,
+                    border: `3px solid ${getSourceConfig(selectedLocation.source).borderColor}`,
                   }}
                 >
-                  {SOURCE_CONFIG[selectedLocation.source].icon}
+                  {getSourceConfig(selectedLocation.source).icon}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -850,7 +856,7 @@ export const LocationTimeline = () => {
                       #{currentIndex + 1}
                     </span>
                     <Badge variant="info" className="text-xs">
-                      {SOURCE_CONFIG[selectedLocation.source].label}
+                      {getSourceConfig(selectedLocation.source).label}
                     </Badge>
                   </div>
                   <h3 className="font-semibold mt-1">{selectedLocation.label}</h3>
@@ -887,7 +893,7 @@ export const LocationTimeline = () => {
                 {filteredLocations.map((loc, index) => {
                   const isActive = index === currentIndex;
                   const isPast = index < currentIndex;
-                  const config = SOURCE_CONFIG[loc.source];
+                  const config = getSourceConfig(loc.source);
                   const prevLoc = index > 0 ? filteredLocations[index - 1] : null;
                   
                   return (
