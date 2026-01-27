@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Plus,
   Filter,
   User,
   Navigation,
@@ -43,7 +42,7 @@ interface LocationPoint {
   lng: number;
   timestamp: Date;
   label: string;
-  source: 'gps' | 'cell_tower' | 'wifi' | 'photo' | 'manual';
+  source: 'gps' | 'cell_tower' | 'wifi' | 'photo';
   accuracy?: number;
   address?: string;
   notes?: string;
@@ -57,7 +56,6 @@ const SOURCE_CONFIG: Record<string, { color: string; borderColor: string; icon: 
   cell_tower: { color: '#DBEAFE', borderColor: '#2563EB', icon: '📡', label: 'Cell Tower' },
   wifi: { color: '#EDE9FE', borderColor: '#7C3AED', icon: '📶', label: 'WiFi' },
   photo: { color: '#FEF3C7', borderColor: '#D97706', icon: '📷', label: 'Photo EXIF' },
-  manual: { color: '#F3F4F6', borderColor: '#6B7280', icon: '✏️', label: 'Manual' },
 };
 
 // Speed options
@@ -80,7 +78,6 @@ export const LocationTimeline = () => {
   const [filterPerson, setFilterPerson] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
   
   // New playback states
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -134,7 +131,7 @@ export const LocationTimeline = () => {
           lng: p.lng,
           timestamp: p.timestamp ? new Date(p.timestamp) : new Date(),
           label: p.label,
-          source: p.source || 'manual',
+          source: p.source || 'gps',
           accuracy: p.accuracy,
           address: p.address,
           notes: p.notes,
@@ -951,59 +948,6 @@ export const LocationTimeline = () => {
         </div>
         )}
       </div>
-
-      {/* Add Location Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-[500px] p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Plus className="text-primary-400" />
-              Add New Location
-            </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-dark-400 block mb-1">Latitude</label>
-                  <input type="number" step="0.0001" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" placeholder="13.7563" />
-                </div>
-                <div>
-                  <label className="text-sm text-dark-400 block mb-1">Longitude</label>
-                  <input type="number" step="0.0001" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" placeholder="100.5018" />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm text-dark-400 block mb-1">Location Name</label>
-                <input type="text" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" placeholder="Suspect's residence" />
-              </div>
-              <div>
-                <label className="text-sm text-dark-400 block mb-1">Date Time</label>
-                <input type="datetime-local" className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2" />
-              </div>
-              <div>
-                <label className="text-sm text-dark-400 block mb-1">Data Source</label>
-                <select className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2">
-                  {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
-                    <option key={key} value={key}>{config.icon} {config.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-dark-400 block mb-1">Notes</label>
-                <textarea rows={2} className="w-full bg-dark-700 border border-dark-600 rounded-lg p-2 resize-none" placeholder="Additional details..." />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" className="flex-1" onClick={() => setShowAddModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" className="flex-1" onClick={() => setShowAddModal(false)}>
-                  <Plus size={16} className="mr-2" />
-                  Add Location
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };
