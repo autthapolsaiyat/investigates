@@ -7,6 +7,22 @@ import {
   Shield, Settings, Link, Unlink, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { casesAPI, evidenceAPI } from '../../services/api';
+// WalletInfo type for backend response
+interface WalletInfo {
+  address: string;
+  blockchain: string;
+  balance: number;
+  balanceUSD: number;
+  totalReceived: number;
+  totalSent: number;
+  txCount: number;
+  firstTxDate: string | null;
+  lastTxDate: string | null;
+  isContract: boolean;
+  labels: string[];
+  riskScore: number;
+  riskFactors: Array<{ type: string; severity: string; description: string; score: number }>;
+}
 
 // SHA-256 Hash Calculator
 const calculateSHA256 = async (file: File): Promise<string> => {
@@ -137,12 +153,12 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   contact_name: ['called_name', 'caller_name', 'partner_name', 'owner_name'],  // Phone contact names
   
   // Crypto fields (XRY, Chainalysis specific)
-  from_wallet: ['source_wallet', 'sender_wallet', 'from_address', 'source_address'],
-  to_wallet: ['target_wallet', 'receiver_wallet', 'to_address', 'dest_address', 'destination_wallet', 'destination_address'],
-  from_label: ['source_label', 'sender_label'],
-  to_label: ['target_label', 'receiver_label'],
-  tx_hash: ['transaction_hash', 'hash', 'txid', 'transaction_id'],
-  currency: ['coin', 'token', 'crypto', 'asset'],
+  from_wallet: ['source_wallet', 'sender_wallet', 'from_address', 'source_address', 'From_Wallet', 'FROM_WALLET'],
+  to_wallet: ['target_wallet', 'receiver_wallet', 'to_address', 'dest_address', 'destination_wallet', 'destination_address', 'To_Wallet', 'TO_WALLET'],
+  from_label: ['source_label', 'sender_label', 'From_Label', 'FROM_LABEL'],
+  to_label: ['target_label', 'receiver_label', 'To_Label', 'TO_LABEL'],
+  tx_hash: ['transaction_hash', 'hash', 'txid', 'transaction_id', 'TX_Hash', 'TX_HASH'],
+  currency: ['coin', 'token', 'crypto', 'asset', 'Blockchain', 'BLOCKCHAIN'],
   
   // Common fields
   date: ['transaction_date', 'trx_date', 'datetime', 'timestamp', 'Date'],
@@ -880,7 +896,7 @@ const SmartImport: React.FC = () => {
             });
             if (genResponse.ok) {
               const genResult = await genResponse.json();
-              log(`  ✅ Network: ${genResult.entities_created} entities, ${genResult.links_created} links`);
+              log(`  ✅ Network: ${genResult.entities} entities, ${genResult.links} links`);
             }
           } catch (err) {
             log(`  ⚠️ Failed to generate network`);
@@ -952,23 +968,165 @@ const SmartImport: React.FC = () => {
       
       // Save Crypto Transactions
       if (cryptoFiles.length > 0) {
-        log(`\n💰 Save Crypto Transactions...`);
-        let cryptoSuccess = 0;
+        log(`\n💰 Processing Crypto Data...`);
+        
+        // ============================================
+        // STEP 1: Extract unique wallet addresses from CSV
+        // ============================================
+        log(`\n🔍 Step 1: Extracting unique wallet addresses...`);
+        
+        const walletAddresses = new Set<string>();
+        const walletLabelsFromCSV = new Map<string, string>(); // address -> label from CSV
+        const walletBlockchainHint = new Map<string, string>(); // address -> blockchain hint from CSV
+        
+        for (const file of cryptoFiles) {
+          for (const r of file.records) {
+            const blockchain = r.Blockchain || r.blockchain || r.currency || r.coin || '';
+            
+            // From wallet
+            const fromWallet = r.From_Wallet || r.from_wallet || r.from_address;
+            if (fromWallet && fromWallet !== 'Unknown' && fromWallet.length > 10) {
+              walletAddresses.add(fromWallet);
+              if (r.From_Label || r.from_label) {
+                walletLabelsFromCSV.set(fromWallet.toLowerCase(), r.From_Label || r.from_label);
+              }
+              if (blockchain) {
+                walletBlockchainHint.set(fromWallet.toLowerCase(), blockchain);
+              }
+            }
+            
+            // To wallet
+            const toWallet = r.To_Wallet || r.to_wallet || r.to_address;
+            if (toWallet && toWallet !== 'Unknown' && toWallet.length > 10) {
+              walletAddresses.add(toWallet);
+              if (r.To_Label || r.to_label) {
+                walletLabelsFromCSV.set(toWallet.toLowerCase(), r.To_Label || r.to_label);
+              }
+              if (blockchain) {
+                walletBlockchainHint.set(toWallet.toLowerCase(), blockchain);
+              }
+            }
+          }
+        }
+        
+        log(`  📊 Found ${walletAddresses.size} unique wallet addresses`);
+        
+        // ============================================
+        // STEP 2: Auto-detect blockchain & lookup via Backend API
+        // ============================================
+        log(`\n🌐 Step 2: Looking up wallets via Backend Proxy...`);
+        
+        const detectBlockchain = (address: string, hint?: string): string => {
+          // Use hint from CSV first
+          if (hint) {
+            const h = hint.toLowerCase();
+            if (h.includes('btc') || h.includes('bitcoin')) return 'bitcoin';
+            if (h.includes('eth') || h.includes('ethereum')) return 'ethereum';
+            if (h.includes('trx') || h.includes('tron') || h.includes('usdt-trc') || h.includes('usdt_trc')) return 'tron';
+            if (h.includes('bnb') || h.includes('bsc')) return 'bsc';
+            if (h.includes('matic') || h.includes('polygon')) return 'polygon';
+          }
+          
+          // Auto-detect from address format
+          if (address.startsWith('0x') && address.length === 42) return 'ethereum';
+          if (address.startsWith('T') && address.length === 34) return 'tron';
+          if (address.startsWith('bc1') || address.startsWith('1') || address.startsWith('3')) return 'bitcoin';
+          if (address.startsWith('bnb1')) return 'bsc';
+          
+          return 'ethereum'; // default
+        };
+        
+        // Lookup wallet via Backend proxy
+        const lookupWalletViaBackend = async (blockchain: string, address: string): Promise<WalletInfo | null> => {
+          try {
+            const response = await fetch(`${baseUrl}/crypto/lookup/${blockchain}/${address}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              return {
+                address: data.address,
+                blockchain: data.blockchain,
+                balance: data.balance,
+                balanceUSD: data.balanceUSD,
+                totalReceived: data.totalReceived,
+                totalSent: data.totalSent,
+                txCount: data.txCount,
+                firstTxDate: data.firstTxDate,
+                lastTxDate: data.lastTxDate,
+                isContract: data.isContract,
+                labels: data.labels || [],
+                riskScore: data.riskScore,
+                riskFactors: data.riskFactors || []
+              };
+            }
+            return null;
+          } catch (err) {
+            console.error(`Backend lookup failed for ${address}:`, err);
+            return null;
+          }
+        };
+        
+        const walletResults: Array<{
+          address: string;
+          blockchain: string;
+          walletInfo: WalletInfo | null;
+          csvLabel: string | null;
+          apiSuccess: boolean;
+        }> = [];
+        
+        let apiSuccessCount = 0;
+        let apiFallbackCount = 0;
+        
+        for (const address of walletAddresses) {
+          const hint = walletBlockchainHint.get(address.toLowerCase());
+          const blockchain = detectBlockchain(address, hint);
+          const csvLabel = walletLabelsFromCSV.get(address.toLowerCase()) || null;
+          
+          log(`  🔎 ${blockchain.toUpperCase()}: ${address.substring(0, 16)}...`);
+          
+          try {
+            const walletInfo = await lookupWalletViaBackend(blockchain, address);
+            
+            if (walletInfo) {
+              apiSuccessCount++;
+              log(`    ✅ Balance: $${walletInfo.balanceUSD.toLocaleString()}, TX: ${walletInfo.txCount}, Risk: ${walletInfo.riskScore}`);
+              walletResults.push({ address, blockchain, walletInfo, csvLabel, apiSuccess: true });
+            } else {
+              apiFallbackCount++;
+              log(`    ⚠️ API returned no data, using CSV info`);
+              walletResults.push({ address, blockchain, walletInfo: null, csvLabel, apiSuccess: false });
+            }
+          } catch (err) {
+            apiFallbackCount++;
+            log(`    ⚠️ API error, using CSV info`);
+            walletResults.push({ address, blockchain, walletInfo: null, csvLabel, apiSuccess: false });
+          }
+        }
+        
+        log(`\n  📊 API Results: ${apiSuccessCount} success, ${apiFallbackCount} fallback`);
+        
+        // ============================================
+        // STEP 3: Save transactions from CSV
+        // ============================================
+        log(`\n💾 Step 3: Saving transactions...`);
+        let cryptoTxSuccess = 0;
         
         for (const file of cryptoFiles) {
           try {
             const cryptoTxs = file.records.map(r => ({
-              blockchain: r.currency?.toLowerCase() || r.coin?.toLowerCase() || 'other',
-              tx_hash: r.tx_hash || r.hash || null,
-              from_address: r.from_wallet || r.from_address || 'Unknown',
-              from_label: r.from_label || null,
-              to_address: r.to_wallet || r.to_address || 'Unknown',
-              to_label: r.to_label || null,
-              amount: parseFloat(r.amount || '0'),
-              amount_usd: parseFloat(r.amount_usd || r.amount_thb || '0'),
-              timestamp: r.datetime || r.timestamp || (r.date && r.time ? `${r.date}T${r.time}` : r.date) || null,
-              risk_flag: r.risk_flag || (r.note?.toLowerCase().includes('mixer') ? 'mixer_detected' : 'none'),
-              notes: r.note || r.notes || null,
+              blockchain: r.Blockchain?.toLowerCase() || r.currency?.toLowerCase() || r.coin?.toLowerCase() || 'other',
+              tx_hash: r.TX_Hash || r.tx_hash || r.hash || null,
+              from_address: r.From_Wallet || r.from_wallet || r.from_address || 'Unknown',
+              from_label: r.From_Label || r.from_label || null,
+              to_address: r.To_Wallet || r.to_wallet || r.to_address || 'Unknown',
+              to_label: r.To_Label || r.to_label || null,
+              amount: parseFloat(r.Amount || r.amount || '0'),
+              amount_usd: parseFloat(r.Amount_USD || r.amount_usd || r.amount_thb || '0'),
+              timestamp: r.datetime || r.timestamp || (r.Date && r.Time ? `${r.Date}T${r.Time}` : r.Date || r.date) || null,
+              risk_flag: r.Risk_Flag || r.risk_flag || 'none',
+              notes: r.Notes || r.notes || r.note || null,
               raw_data: JSON.stringify(r)
             }));
             
@@ -980,14 +1138,117 @@ const SmartImport: React.FC = () => {
             
             if (response.ok) {
               const result = await response.json();
-              cryptoSuccess += result.count || 0;
+              cryptoTxSuccess += result.count || 0;
               log(`  ✅ ${file.name}: ${result.count} transactions`);
             }
           } catch (err) {
-            log(`  ⚠️ ${file.name}: failed to save`);
+            log(`  ⚠️ ${file.name}: failed to save transactions`);
           }
         }
-        log(`  📊 Total: ${cryptoSuccess} crypto transactions saved`);
+        log(`  📊 Total: ${cryptoTxSuccess} transactions saved`);
+        
+        // ============================================
+        // STEP 4: Save wallets with API data
+        // ============================================
+        log(`\n💼 Step 4: Saving wallets with enriched data...`);
+        
+        // Aggregate CSV data for wallets
+        const csvWalletData = new Map<string, { totalSent: number; totalReceived: number; txCount: number; riskFlags: string[] }>();
+        
+        for (const file of cryptoFiles) {
+          for (const r of file.records) {
+            const amount = parseFloat(r.Amount_USD || r.amount_usd || r.Amount || r.amount || '0');
+            const riskFlag = r.Risk_Flag || r.risk_flag || '';
+            
+            const fromWallet = (r.From_Wallet || r.from_wallet || r.from_address || '').toLowerCase();
+            if (fromWallet && fromWallet !== 'unknown') {
+              const existing = csvWalletData.get(fromWallet) || { totalSent: 0, totalReceived: 0, txCount: 0, riskFlags: [] };
+              existing.totalSent += amount;
+              existing.txCount += 1;
+              if (riskFlag && !['none', 'NORMAL', ''].includes(riskFlag) && !existing.riskFlags.includes(riskFlag)) {
+                existing.riskFlags.push(riskFlag);
+              }
+              csvWalletData.set(fromWallet, existing);
+            }
+            
+            const toWallet = (r.To_Wallet || r.to_wallet || r.to_address || '').toLowerCase();
+            if (toWallet && toWallet !== 'unknown') {
+              const existing = csvWalletData.get(toWallet) || { totalSent: 0, totalReceived: 0, txCount: 0, riskFlags: [] };
+              existing.totalReceived += amount;
+              existing.txCount += 1;
+              csvWalletData.set(toWallet, existing);
+            }
+          }
+        }
+        
+        const walletsToCreate = walletResults.map(w => {
+          const csvData = csvWalletData.get(w.address.toLowerCase());
+          const api = w.walletInfo;
+          
+          // Merge API data with CSV data
+          const totalReceived = api?.totalReceived || csvData?.totalReceived || 0;
+          const totalSent = api?.totalSent || csvData?.totalSent || 0;
+          const txCount = api?.txCount || csvData?.txCount || 0;
+          const riskScore = api?.riskScore || 0;
+          const riskFlags = csvData?.riskFlags || [];
+          
+          // Calculate final risk score
+          let finalRiskScore = riskScore;
+          const isMixer = riskFlags.some(f => f.toLowerCase().includes('mixer') || f.toLowerCase().includes('tornado')) || 
+                          (api?.labels?.some(l => l.toLowerCase().includes('mixer') || l.toLowerCase().includes('tornado')));
+          const isHighValue = totalReceived + totalSent > 50000;
+          
+          if (isMixer && finalRiskScore < 70) finalRiskScore = Math.max(finalRiskScore, 70);
+          if (isHighValue && finalRiskScore < 30) finalRiskScore += 20;
+          finalRiskScore = Math.min(finalRiskScore, 100);
+          
+          // Determine label
+          const label = w.csvLabel || api?.labels?.[0] || null;
+          
+          return {
+            address: w.address,
+            blockchain: w.blockchain,
+            label: label,
+            owner_name: label,
+            owner_type: isMixer ? 'mixer' : (label?.toLowerCase().includes('exchange') ? 'exchange' : 'unknown'),
+            total_received: totalReceived,
+            total_sent: totalSent,
+            total_received_usd: api?.balanceUSD ? totalReceived : totalReceived,
+            total_sent_usd: totalSent,
+            transaction_count: txCount,
+            risk_score: finalRiskScore,
+            risk_flags: riskFlags.join(',') || null,
+            is_suspect: finalRiskScore >= 70,
+            is_exchange: label?.toLowerCase().includes('exchange') || label?.toLowerCase().includes('binance') || label?.toLowerCase().includes('bitkub') || label?.toLowerCase().includes('okx'),
+            is_mixer: isMixer,
+            first_tx_date: api?.firstTxDate || null,
+            last_tx_date: api?.lastTxDate || null
+          };
+        });
+        
+        if (walletsToCreate.length > 0) {
+          try {
+            const walletResponse = await fetch(`${baseUrl}/crypto/case/${selectedCase}/wallets/bulk`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ wallets: walletsToCreate })
+            });
+            
+            if (walletResponse.ok) {
+              const walletResult = await walletResponse.json();
+              log(`  ✅ Saved ${walletResult.count || walletsToCreate.length} wallets (${apiSuccessCount} with real API data)`);
+            } else {
+              log(`  ⚠️ Failed to save wallets: ${walletResponse.statusText}`);
+            }
+          } catch (err) {
+            log(`  ⚠️ Failed to save wallets`);
+          }
+        }
+        
+        log(`\n✨ Crypto import complete!`);
+        log(`   📊 ${cryptoTxSuccess} transactions`);
+        log(`   💼 ${walletsToCreate.length} wallets`);
+        log(`   🌐 ${apiSuccessCount} enriched via real blockchain APIs`);
       }
       
       log(`\n🎉 Done!`);
