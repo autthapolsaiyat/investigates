@@ -171,9 +171,10 @@ export const LocationTimeline = () => {
     return uniquePersons as string[];
   }, [locations]);
 
-  // Filtered and sorted locations
+  // Filtered and sorted locations (exclude manual - evidence only)
   const filteredLocations = useMemo(() => {
     return locations
+      .filter(l => (l.source as string) !== 'manual') // Exclude manual entries - evidence only
       .filter(l => filterPerson === 'all' || l.personName === filterPerson)
       .filter(l => filterSource === 'all' || l.source === filterSource)
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
