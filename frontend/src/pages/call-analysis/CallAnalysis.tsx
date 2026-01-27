@@ -4,13 +4,10 @@
  */
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 // @ts-ignore
-// @ts-ignore
 import CytoscapeComponent from 'react-cytoscapejs';
 import type { Core } from 'cytoscape';
 import {
-  Clock,
   Users,
-  AlertTriangle,
   Network,
   ChevronRight,
   ChevronDown,
@@ -19,13 +16,11 @@ import {
   Target,
   Share2,
   Shield,
-  Zap,
   Eye,
   EyeOff,
   Loader2,
   RefreshCw,
   Search,
-
   ZoomOut,
   Maximize2,
   Minimize2,
@@ -34,7 +29,6 @@ import {
   Image,
   Filter,
   RotateCcw,
-
   Layout,
   Circle,
   GitBranch,
@@ -95,15 +89,6 @@ interface Cluster {
   entities: string[];
   risk: RiskLevel;
   description: string;
-}
-
-interface SuspiciousPattern {
-  id: string;
-  type: string;
-  severity: RiskLevel;
-  description: string;
-  entities: string[];
-  evidence: string[];
 }
 
 // ============================================
@@ -463,31 +448,6 @@ const EntityDetailPanel = ({ entity, links, entities, clusters, onClose }: {
   );
 };
 
-const SuspiciousPatternCard = ({ pattern }: { pattern: SuspiciousPattern }) => (
-  <div className="border border-dark-700 rounded-xl p-4" style={{ backgroundColor: getRiskColor(pattern.severity) + '10' }}>
-    <div className="flex items-start gap-3">
-      <AlertTriangle size={18} style={{ color: getRiskColor(pattern.severity) }} />
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className="text-white font-medium text-sm">{pattern.type}</h4>
-          <span className="px-2 py-0.5 rounded text-xs uppercase" style={{ backgroundColor: getRiskColor(pattern.severity) + '30', color: getRiskColor(pattern.severity) }}>
-            {pattern.severity}
-          </span>
-        </div>
-        <p className="text-xs text-dark-400 mb-2">{pattern.description}</p>
-        <div className="space-y-1">
-          {pattern.evidence.map((ev, i) => (
-            <div key={i} className="flex items-center gap-1 text-xs text-dark-500">
-              <ChevronRight size={10} />
-              <span>{ev}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 // ============================================
 // MAIN COMPONENT
 // ============================================
@@ -497,7 +457,6 @@ export const CallAnalysis = () => {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
   const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [patterns, setPatterns] = useState<SuspiciousPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [recordsCount, setRecordsCount] = useState(0);
@@ -505,7 +464,6 @@ export const CallAnalysis = () => {
   
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
-  const [activeTab, setActiveTab] = useState<'network' | 'patterns' | 'timeline'>('network');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [clusterPanelCollapsed, setClusterPanelCollapsed] = useState(false);
   const [filterPanelCollapsed, setFilterPanelCollapsed] = useState(false);
@@ -599,7 +557,6 @@ export const CallAnalysis = () => {
           setEntities([]);
           setLinks([]);
           setClusters([]);
-          setPatterns([]);
           setIsLoading(false);
           return;
         }
@@ -642,7 +599,6 @@ export const CallAnalysis = () => {
       setEntities(transformedEntities);
       setLinks(transformedLinks);
       setClusters(transformedClusters);
-      setPatterns([]); // TODO: fetch patterns from API
       
     } catch (err) {
       console.error('Error fetching network data:', err);
@@ -906,49 +862,25 @@ export const CallAnalysis = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="px-4 border-b border-dark-700">
-        <div className="flex gap-1">
-          {[
-            { id: 'network', label: 'Network Graph', icon: Network },
-            { id: 'patterns', label: 'Suspicious Patterns', icon: AlertTriangle },
-            { id: 'timeline', label: 'Timeline', icon: Clock },
-          ].map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? 'text-primary-400 border-primary-400' : 'text-dark-400 border-transparent hover:text-white'}`}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
-        {activeTab === 'network' && (
-          <>
-            {/* Graph Area */}
-            <div className="flex-1 p-4 flex flex-col overflow-hidden">
-              {/* Toolbar */}
-              <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-400" size={14} />
-                    <input
-                      type="text"
-                      placeholder="Search Entity..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-48 pl-8 pr-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-500 focus:outline-none focus:border-primary-500"
-                    />
-                    {searchTerm && (
-                      <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
+        <>
+          {/* Graph Area */}
+          <div className="flex-1 p-4 flex flex-col overflow-hidden">
+            {/* Toolbar */}
+            <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dark-400" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search Entity..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-48 pl-8 pr-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-500 focus:outline-none focus:border-primary-500"
+                  />
+                  {searchTerm && (
+                    <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
                         <X size={12} className="text-dark-400" />
                       </button>
                     )}
@@ -1105,8 +1037,8 @@ export const CallAnalysis = () => {
               </div>
             </div>
             
-            {/* Sidebar */}
-            {!sidebarCollapsed && (
+            {/* Sidebar - hidden in fullscreen */}
+            {!sidebarCollapsed && !isFullscreen && (
               <div className="w-72 border-l border-dark-700 p-4 space-y-4 overflow-y-auto">
                 <ClusterLegend
                   clusters={clusters}
@@ -1140,35 +1072,6 @@ export const CallAnalysis = () => {
               </div>
             )}
           </>
-        )}
-
-        {activeTab === 'patterns' && (
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="max-w-4xl mx-auto space-y-4">
-              <div className="bg-dark-800 rounded-xl border border-dark-700 p-4">
-                <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                  <Zap className="text-amber-400" />
-                  AI Pattern Detection
-                </h3>
-                <p className="text-sm text-dark-400">Found {patterns.length} suspicious patterns</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {patterns.map(pattern => (
-                  <SuspiciousPatternCard key={pattern.id} pattern={pattern} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'timeline' && (
-          <div className="flex-1 p-4 flex items-center justify-center">
-            <div className="text-center text-dark-400">
-              <Clock size={48} className="mx-auto mb-4 opacity-50" />
-              <p>Timeline Analysis - Coming Soon</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

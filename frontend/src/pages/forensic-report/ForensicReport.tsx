@@ -1,17 +1,16 @@
 /**
- * Forensic Report Page - Enhanced with Cytoscape.js Visualization
- * Court Summary Report - Digital Forensic Standard
+ * Forensic Report Page - Court Summary Report
+ * Digital Forensic Standard
  */
 import { useEffect, useState, useCallback } from 'react';
 import { 
   FileText, Download, Printer, Users, 
   TrendingUp, RefreshCw, Loader2, Clock, ChevronRight,
-  GitBranch, Network, List, BarChart3
+  List, BarChart3
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
 import type { Case, MoneyFlowNode, MoneyFlowEdge } from '../../services/api';
-import { ForensicReportGraph } from './ForensicReportGraph';
 
 interface Statistics {
   totalNodes: number;
@@ -40,7 +39,7 @@ export const ForensicReport = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Statistics | null>(null);
   const [, setSelectedNode] = useState<MoneyFlowNode | null>(null);
-  const [activeTab, setActiveTab] = useState<'hierarchy' | 'network' | 'timeline' | 'accounts' | 'transactions'>('hierarchy');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'accounts' | 'transactions'>('timeline');
 
   useEffect(() => {
     fetchCases();
@@ -224,11 +223,9 @@ export const ForensicReport = () => {
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-dark-700">
         {[
-          { id: 'hierarchy', labelTh: 'Network Structure', icon: GitBranch },
-          { id: 'network', labelTh: 'Network Map', icon: Network },
           { id: 'timeline', labelTh: 'Timeline', icon: Clock },
           { id: 'accounts', labelTh: 'Accounts', icon: List },
-          { id: 'transactions', labelTh: 'transactions', icon: BarChart3 }
+          { id: 'transactions', labelTh: 'Transactions', icon: BarChart3 }
         ].map(tab => (
           <button
             key={tab.id}
@@ -244,17 +241,6 @@ export const ForensicReport = () => {
           </button>
         ))}
       </div>
-
-      {/* Graph Views - Using Cytoscape.js */}
-      {(activeTab === 'hierarchy' || activeTab === 'network') && (
-        <div className="rounded-xl overflow-hidden" style={{ height: '650px' }}>
-          <ForensicReportGraph
-            nodes={nodes}
-            edges={edges}
-            onNodeClick={(node) => setSelectedNode(node)}
-          />
-        </div>
-      )}
 
       {/* Timeline View */}
       {activeTab === 'timeline' && (
