@@ -77,10 +77,11 @@ const getNodeDisplay = (node: MoneyFlowNode) => {
   return NODE_CONFIG[node.node_type] || NODE_CONFIG.unknown;
 };
 
-// Format node label - cleaner without emoji for professional look
+// Format node label - with emoji for type identification
 const formatNodeLabel = (node: MoneyFlowNode): string => {
+  const display = getNodeDisplay(node);
   const riskBadge = node.risk_score && node.risk_score > 0 ? `\n[${node.risk_score}]` : '';
-  return `${node.label}${riskBadge}`;
+  return `${display.emoji}\n${node.label}${riskBadge}`;
 };
 
 interface MoneyFlowGraphProps {
@@ -144,13 +145,50 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
     const cyNodes = nodes.map(node => {
       const display = getNodeDisplay(node);
       
-      // Border color: Red for suspect, Cyan for victim, otherwise type color
-      const borderColor = node.is_suspect ? '#DC2626' : 
-                         node.is_victim ? '#0891B2' : 
-                         display.borderColor;
+      // Calculate importance: Suspect > Victim > High Risk > Normal
+      const riskScore = node.risk_score || 0;
       
-      // Border width: thicker for suspect/victim
-      const borderWidth = node.is_suspect ? 4 : node.is_victim ? 3 : 2;
+      // Size based on importance (bigger = more important)
+      let size = 55; // default
+      if (node.is_suspect) {
+        size = 85; // Suspect = biggest
+      } else if (node.is_victim) {
+        size = 75; // Victim = big
+      } else if (riskScore >= 50) {
+        size = 70; // High risk = medium-big
+      } else if (riskScore >= 30) {
+        size = 62; // Medium risk
+      }
+      
+      // Border color based on risk level
+      let borderColor = display.borderColor;
+      let borderWidth = 2;
+      
+      if (node.is_suspect) {
+        borderColor = '#DC2626'; // Red
+        borderWidth = 5;
+      } else if (node.is_victim) {
+        borderColor = '#0891B2'; // Cyan
+        borderWidth = 4;
+      } else if (riskScore >= 50) {
+        borderColor = '#DC2626'; // Red - high risk
+        borderWidth = 3;
+      } else if (riskScore >= 30) {
+        borderColor = '#F59E0B'; // Orange - medium risk
+        borderWidth = 3;
+      }
+      
+      // Background color - darker for more important
+      let bgColor = display.color;
+      if (node.is_suspect) {
+        bgColor = '#FCA5A5'; // Darker red
+      } else if (node.is_victim) {
+        bgColor = '#67E8F9'; // Darker cyan
+      } else if (riskScore >= 50) {
+        bgColor = '#FECACA'; // Light red
+      } else if (riskScore >= 30) {
+        bgColor = '#FDE68A'; // Light orange
+      }
       
       return {
         data: {
@@ -158,12 +196,13 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
           label: formatNodeLabel(node),
           type: node.node_type,
           emoji: display.emoji,
-          color: display.color,
+          color: bgColor,
           borderColor: borderColor,
           borderWidth: borderWidth,
-          size: 65,
+          size: size,
           isSuspect: node.is_suspect || false,
           isVictim: node.is_victim || false,
+          riskScore: riskScore,
           nodeData: node,
         }
       };
@@ -200,39 +239,43 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
         'label': 'data(label)',
         'text-valign': 'center',
         'text-halign': 'center',
-        'font-size': 10,
+        'font-size': 9,
         'font-weight': 600,
         'color': '#1F2937',
         'text-outline-color': '#ffffff',
-        'text-outline-width': 1,
+        'text-outline-width': 1.5,
         'text-wrap': 'wrap',
-        'text-max-width': '70px',
+        'text-max-width': '75px',
+      }
+    },
+    // High risk nodes get bigger font
+    {
+      selector: 'node[riskScore >= 30]',
+      style: {
+        'font-size': 10,
+        'font-weight': 700,
       }
     },
     {
       selector: 'node[?isSuspect]',
       style: {
-        'border-color': '#DC2626',
-        'border-width': 4,
-        'border-style': 'solid',
-        'background-color': '#FEE2E2',
+        'font-size': 11,
+        'font-weight': 700,
       }
     },
     {
       selector: 'node[?isVictim]',
       style: {
-        'border-color': '#0891B2',
-        'border-width': 3,
-        'border-style': 'solid',
-        'background-color': '#CFFAFE',
+        'font-size': 10,
+        'font-weight': 700,
       }
     },
     {
       selector: 'node:selected',
       style: {
-        'border-color': '#F59E0B',
-        'border-width': 4,
-        'overlay-color': '#F59E0B',
+        'border-color': '#7C3AED',
+        'border-width': 5,
+        'overlay-color': '#7C3AED',
         'overlay-opacity': 0.2,
       }
     },
@@ -256,7 +299,7 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
       style: {
         'width': 'data(width)',
         'line-color': 'data(color)',
-        'line-opacity': 0.7,
+        'line-opacity': 0.75,
         'target-arrow-color': 'data(color)',
         'target-arrow-shape': 'triangle',
         'arrow-scale': 0.8,
@@ -274,8 +317,8 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
     {
       selector: 'edge:selected',
       style: {
-        'line-color': '#F59E0B',
-        'target-arrow-color': '#F59E0B',
+        'line-color': '#7C3AED',
+        'target-arrow-color': '#7C3AED',
         'width': 3,
         'line-opacity': 1,
       }
