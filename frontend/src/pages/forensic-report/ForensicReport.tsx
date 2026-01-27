@@ -2,11 +2,11 @@
  * Forensic Report Page - Court Summary Report
  * Digital Forensic Standard
  */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   FileText, Download, Printer, Users, 
   TrendingUp, RefreshCw, Loader2, Clock, ChevronRight,
-  List, BarChart3
+  List, BarChart3, Volume2, VolumeX, Lightbulb
 } from 'lucide-react';
 import { Button, Card, Badge } from '../../components/ui';
 import { casesAPI, moneyFlowAPI } from '../../services/api';
@@ -40,6 +40,17 @@ export const ForensicReport = () => {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [, setSelectedNode] = useState<MoneyFlowNode | null>(null);
   const [activeTab, setActiveTab] = useState<'timeline' | 'accounts' | 'transactions'>('timeline');
+  
+  // Summary and TTS states
+  const [callCount, setCallCount] = useState(0);
+  const [uniquePhones, setUniquePhones] = useState(0);
+  const [locationCount, setLocationCount] = useState(0);
+  const [uniqueLocations, setUniqueLocations] = useState(0);
+  const [cryptoCount, setCryptoCount] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-backend.azurewebsites.net';
 
   useEffect(() => {
     fetchCases();
@@ -81,13 +92,138 @@ export const ForensicReport = () => {
     }
   }, [selectedCaseId]);
 
+  // Fetch additional data for summary
+  const fetchSummaryData = useCallback(async () => {
+    if (!selectedCaseId) return;
+    const token = localStorage.getItem('access_token');
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    // Fetch Call Analysis data
+    try {
+      const callRes = await fetch(`${API_BASE}/call-analysis/case/${selectedCaseId}/network`, { headers });
+      if (callRes.ok) {
+        const callData = await callRes.json();
+        const entities = callData.entities || [];
+        const totalCalls = entities.reduce((sum: number, e: { metadata?: { calls?: number } }) => sum + (e.metadata?.calls || 0), 0);
+        setCallCount(totalCalls);
+        setUniquePhones(entities.length);
+      }
+    } catch {
+      setCallCount(0);
+      setUniquePhones(0);
+    }
+
+    // Fetch Location data
+    try {
+      const locRes = await fetch(`${API_BASE}/locations/case/${selectedCaseId}/timeline`, { headers });
+      if (locRes.ok) {
+        const locData = await locRes.json();
+        const validSources = ['gps', 'cell_tower', 'wifi', 'photo'];
+        const points = (locData.points || []).filter((p: { source?: string }) => validSources.includes(p.source || ''));
+        setLocationCount(points.length);
+        const uniqueLocs = new Set(points.map((p: { address?: string; label?: string }) => p.address || p.label)).size;
+        setUniqueLocations(uniqueLocs);
+      }
+    } catch {
+      setLocationCount(0);
+      setUniqueLocations(0);
+    }
+
+    // Fetch Crypto data
+    try {
+      const cryptoRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/wallets`, { headers });
+      if (cryptoRes.ok) {
+        const cryptoData = await cryptoRes.json();
+        setCryptoCount(cryptoData.length || 0);
+      }
+    } catch {
+      setCryptoCount(0);
+    }
+  }, [selectedCaseId, API_BASE]);
+
   useEffect(() => {
     if (selectedCaseId) {
       fetchMoneyFlow();
+      fetchSummaryData();
       const selectedCaseData = cases.find(c => c.id === selectedCaseId);
       setSelectedCase(selectedCaseData || null);
     }
-  }, [selectedCaseId, cases, fetchMoneyFlow]);
+  }, [selectedCaseId, cases, fetchMoneyFlow, fetchSummaryData]);
+
+  // Generate summary text
+  const generateSummary = (): string => {
+    const hasMoneyFlow = stats && (stats.totalNodes > 0 || stats.totalTransactions > 0);
+    const hasCalls = callCount > 0;
+    const hasLocations = locationCount > 0;
+    const hasCrypto = cryptoCount > 0;
+
+    if (!hasMoneyFlow && !hasCalls && !hasLocations && !hasCrypto) {
+      return 'ข้อมูลไม่เพียงพอสำหรับการวิเคราะห์ กรุณานำเข้าข้อมูลเพิ่มเติม';
+    }
+
+    let summary = 'จากการวิเคราะห์เบื้องต้น: ';
+
+    if (hasMoneyFlow && stats) {
+      const highRisk = nodes.filter(n => n.is_suspect);
+      if (highRisk.length > 0) {
+        summary += `พบผู้ต้องสงสัย ${highRisk.length} ราย `;
+      }
+      summary += `มี ${stats.totalNodes} บัญชี ${stats.totalTransactions} ธุรกรรม มูลค่ารวม ${formatCurrency(stats.totalAmount)} `;
+    }
+
+    if (hasCalls) {
+      summary += `การวิเคราะห์การโทรพบ ${uniquePhones} หมายเลข รวม ${callCount} สาย `;
+    }
+
+    if (hasLocations) {
+      summary += `การติดตามตำแหน่งพบ ${uniqueLocations} สถานที่ จาก ${locationCount} จุดข้อมูล `;
+    }
+
+    if (hasCrypto) {
+      summary += `ติดตาม ${cryptoCount} กระเป๋าคริปโต `;
+    }
+
+    summary += 'อย่างไรก็ตาม นี่เป็นการวิเคราะห์เบื้องต้นเท่านั้น แนะนำให้สอบสวนและรวบรวมหลักฐานเพิ่มเติม';
+    return summary;
+  };
+
+  // Text-to-Speech functions
+  const speakSummary = () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Browser ไม่รองรับ Text-to-Speech');
+      return;
+    }
+
+    // Stop if already speaking
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const summary = generateSummary();
+    const utterance = new SpeechSynthesisUtterance(summary);
+    utterance.lang = 'th-TH';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    speechRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
 
   const calculateStats = (nodeList: MoneyFlowNode[], edgeList: MoneyFlowEdge[]) => {
     const totalAmount = edgeList.reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -218,6 +354,48 @@ export const ForensicReport = () => {
             <div className="text-sm text-dark-400">Total Amount</div>
           </Card>
         </div>
+      )}
+
+      {/* AI Summary Card */}
+      {selectedCaseId && (
+        <Card className="p-4 bg-gradient-to-r from-primary-500/10 to-purple-500/10 border-primary-500/30">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-primary-500/20 rounded-lg">
+              <Lightbulb size={24} className="text-primary-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-primary-400 flex items-center gap-2">
+                  📝 ข้อสังเกตจากการวิเคราะห์
+                </h3>
+                <Button
+                  variant={isSpeaking ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={speakSummary}
+                  className="flex items-center gap-2"
+                >
+                  {isSpeaking ? (
+                    <>
+                      <VolumeX size={16} />
+                      <span>หยุด</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 size={16} />
+                      <span>ฟังสรุป</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-dark-300 leading-relaxed">
+                {generateSummary()}
+              </p>
+              <p className="text-xs text-dark-500 mt-3 italic">
+                * นี่เป็นการวิเคราะห์เบื้องต้นจากรูปแบบธุรกรรมเท่านั้น ไม่ใช่ข้อสรุปของคดี
+              </p>
+            </div>
+          </div>
+        </Card>
       )}
 
       {/* Tabs */}
