@@ -449,10 +449,6 @@ const LandingPage = () => {
               </div>
             ))}
           </div>
-          <div className="text-center mt-8 text-dark-400">
-            <p>* Training charged separately from ฿10,000/person (2 days)</p>
-            <p>* Volume discount for 5+ licenses - Contact Us</p>
-          </div>
         </div>
       </section>
 
