@@ -1,12 +1,12 @@
 /**
  * User Settings Page
- * Settings for regular users: Profile, Security (2FA), Appearance, Language
+ * Settings for regular users: Profile, Security (2FA), Appearance, Language, Storage
  */
 import { useState, useEffect, useRef } from 'react';
 import { 
   User, Shield, Palette, Globe, Save, Loader2, 
   Check, Moon, Sun, Monitor, Camera, X, Eye, EyeOff,
-  AlertCircle
+  AlertCircle, HardDrive, Trash2, RefreshCw
 } from 'lucide-react';
 import { Button, Input, Card } from '../../components/ui';
 import { useAuthStore } from '../../store/authStore';
@@ -15,7 +15,7 @@ import type { Theme, Language, DateFormat } from '../../store/settingsStore';
 import { settingsAPI, authAPI } from '../../services/api';
 import TwoFactorSetup from '../../components/TwoFactorSetup';
 
-type TabType = 'profile' | 'security' | 'appearance' | 'language';
+type TabType = 'profile' | 'security' | 'appearance' | 'language' | 'storage';
 
 interface TabInfo {
   id: TabType;
@@ -60,6 +60,14 @@ const translations = {
     selectLanguage: 'SelectLanguage',
     timezone: 'Timezone',
     dateFormat: 'Date Format',
+    storage: 'Storage',
+    storageSettings: 'Storage & Cache',
+    clearCache: 'Clear Cache',
+    clearCacheDesc: 'Clear cached data to fix issues',
+    clearCacheSuccess: 'Cache cleared',
+    clearing: 'Clearing...',
+    appVersion: 'App Version',
+    checkUpdate: 'Check Updates',
   },
   en: {
     settings: 'Settings',
@@ -95,6 +103,14 @@ const translations = {
     selectLanguage: 'Select Language',
     timezone: 'Timezone',
     dateFormat: 'Date Format',
+    storage: 'Storage',
+    storageSettings: 'Storage & Cache',
+    clearCache: 'Clear Cache',
+    clearCacheDesc: 'Clear cached data to fix display issues or free up space',
+    clearCacheSuccess: 'Cache cleared successfully',
+    clearing: 'Clearing...',
+    appVersion: 'App Version',
+    checkUpdate: 'Check for Updates',
   },
 };
 
@@ -136,6 +152,10 @@ export default function UserSettings() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Cache clearing
+  const [clearingCache, setClearingCache] = useState(false);
+  const [cacheCleared, setCacheCleared] = useState(false);
+
   // Load user data
   useEffect(() => {
     if (user) {
@@ -174,6 +194,7 @@ export default function UserSettings() {
     { id: 'security', labelTh: 'Security', labelEn: 'Security', icon: <Shield size={18} /> },
     { id: 'appearance', labelTh: 'Appearance', labelEn: 'Appearance', icon: <Palette size={18} /> },
     { id: 'language', labelTh: 'Language', labelEn: 'Language', icon: <Globe size={18} /> },
+    { id: 'storage', labelTh: 'Storage', labelEn: 'Storage', icon: <HardDrive size={18} /> },
   ];
 
   // Save profile
@@ -220,6 +241,42 @@ export default function UserSettings() {
       setPasswordError(err.response?.data?.detail || 'Failed to change password');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Clear cache
+  const handleClearCache = async () => {
+    setClearingCache(true);
+    setCacheCleared(false);
+    
+    try {
+      // Clear Service Worker cache
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+      }
+      
+      // Clear browser caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      // Clear localStorage (except auth token)
+      const token = localStorage.getItem('access_token');
+      const refreshToken = localStorage.getItem('refresh_token');
+      localStorage.clear();
+      if (token) localStorage.setItem('access_token', token);
+      if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
+      
+      // Clear sessionStorage
+      sessionStorage.clear();
+      
+      setCacheCleared(true);
+      setTimeout(() => setCacheCleared(false), 3000);
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    } finally {
+      setClearingCache(false);
     }
   };
 
@@ -641,6 +698,69 @@ export default function UserSettings() {
                         {format}
                       </button>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Storage Tab */}
+            {activeTab === 'storage' && (
+              <div className="space-y-6">
+                <h2 className="text-lg font-semibold mb-4">{t.storageSettings}</h2>
+                
+                {/* Clear Cache */}
+                <div className="p-4 bg-dark-800 rounded-xl border border-dark-700">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Trash2 className="w-6 h-6 text-red-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-white">{t.clearCache}</h3>
+                      <p className="text-sm text-dark-400 mt-1">{t.clearCacheDesc}</p>
+                      <button
+                        onClick={handleClearCache}
+                        disabled={clearingCache}
+                        className="mt-3 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {clearingCache ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            {t.clearing}
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            {t.clearCache}
+                          </>
+                        )}
+                      </button>
+                      {cacheCleared && (
+                        <p className="text-sm text-green-400 mt-2 flex items-center gap-1">
+                          <Check className="w-4 h-4" />
+                          {t.clearCacheSuccess}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* App Version */}
+                <div className="p-4 bg-dark-800 rounded-xl border border-dark-700">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-primary-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <RefreshCw className="w-6 h-6 text-primary-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-white">{t.appVersion}</h3>
+                      <p className="text-sm text-dark-400 mt-1">v1.0.0 (Build 2026.01.27)</p>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="mt-3 px-4 py-2 bg-primary-500/20 text-primary-400 rounded-lg hover:bg-primary-500/30 transition-colors flex items-center gap-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        {t.checkUpdate}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

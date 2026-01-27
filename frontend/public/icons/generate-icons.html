@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate PWA Icons</title>
+</head>
+<body>
+  <h1>PWA Icon Generator for InvestiGate</h1>
+  <canvas id="canvas"></canvas>
+  <div id="links"></div>
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const linksDiv = document.getElementById('links');
+    
+    sizes.forEach(size => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#6366f1');
+      gradient.addColorStop(1, '#22c55e');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // Magnifying glass icon
+      ctx.strokeStyle = 'white';
+      ctx.fillStyle = 'white';
+      ctx.lineWidth = size * 0.06;
+      
+      // Circle
+      const centerX = size * 0.4;
+      const centerY = size * 0.4;
+      const radius = size * 0.25;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Handle
+      ctx.beginPath();
+      ctx.moveTo(centerX + radius * 0.7, centerY + radius * 0.7);
+      ctx.lineTo(size * 0.75, size * 0.75);
+      ctx.stroke();
+      
+      // Download link
+      const link = document.createElement('a');
+      link.download = `icon-${size}x${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.textContent = `Download ${size}x${size}`;
+      link.style.display = 'block';
+      link.style.margin = '10px';
+      linksDiv.appendChild(link);
+      
+      // Auto-click to download
+      // link.click();
+    });
+  </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Layout, AdminLayout, AdminRoute } from './components/layout';
+import { UpdatePrompt, OfflineIndicator } from './components/pwa';
 import { LoginPage } from './pages/auth/Login';
 import { RegisterPage } from './pages/auth/Register';
 import { PendingApprovalPage } from './pages/auth/PendingApproval';
@@ -54,6 +55,10 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* PWA Components */}
+      <UpdatePrompt />
+      <OfflineIndicator />
+      
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
