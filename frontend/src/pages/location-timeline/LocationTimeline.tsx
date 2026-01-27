@@ -51,13 +51,13 @@ interface LocationPoint {
   personName?: string;
 }
 
-// Source icons and colors
-const SOURCE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
-  gps: { color: '#22c55e', icon: '📍', label: 'GPS' },
-  cell_tower: { color: '#3b82f6', icon: '📡', label: 'Cell Tower' },
-  wifi: { color: '#8b5cf6', icon: '📶', label: 'WiFi' },
-  photo: { color: '#f59e0b', icon: '📷', label: 'Photo EXIF' },
-  manual: { color: '#6b7280', icon: '✏️', label: 'Manual' },
+// Source icons and colors - FBI/i2 Style
+const SOURCE_CONFIG: Record<string, { color: string; borderColor: string; icon: string; label: string }> = {
+  gps: { color: '#D1FAE5', borderColor: '#059669', icon: '📍', label: 'GPS' },
+  cell_tower: { color: '#DBEAFE', borderColor: '#2563EB', icon: '📡', label: 'Cell Tower' },
+  wifi: { color: '#EDE9FE', borderColor: '#7C3AED', icon: '📶', label: 'WiFi' },
+  photo: { color: '#FEF3C7', borderColor: '#D97706', icon: '📷', label: 'Photo EXIF' },
+  manual: { color: '#F3F4F6', borderColor: '#6B7280', icon: '✏️', label: 'Manual' },
 };
 
 // Speed options
@@ -333,7 +333,7 @@ export const LocationTimeline = () => {
             margin: -25px 0 0 -25px;
             background: ${config.color};
             border-radius: 50%;
-            border: 4px solid #fff;
+            border: 4px solid ${config.borderColor};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -396,13 +396,13 @@ export const LocationTimeline = () => {
             height: 28px;
             background: ${config.color};
             border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.7);
+            border: 2px solid ${config.borderColor};
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            opacity: 0.8;
+            opacity: 0.9;
           ">
             ${config.icon}
           </div>
@@ -804,8 +804,11 @@ export const LocationTimeline = () => {
             <Card className="p-4 bg-primary-500/10 border-primary-500/30">
               <div className="flex items-start gap-3">
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl animate-pulse"
-                  style={{ background: SOURCE_CONFIG[selectedLocation.source].color }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                  style={{ 
+                    background: SOURCE_CONFIG[selectedLocation.source].color,
+                    border: `3px solid ${SOURCE_CONFIG[selectedLocation.source].borderColor}`,
+                  }}
                 >
                   {SOURCE_CONFIG[selectedLocation.source].icon}
                 </div>
@@ -919,23 +922,26 @@ export const LocationTimeline = () => {
       <Card className="p-3">
         <div className="flex items-center gap-6 justify-center flex-wrap">
           {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
-            <div key={key} className="flex items-center gap-2 text-sm">
+            <div key={key} className="flex items-center gap-2 text-xs">
               <div 
-                className="w-6 h-6 rounded-full flex items-center justify-center text-xs"
-                style={{ background: config.color }}
+                className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                style={{ 
+                  backgroundColor: config.color, 
+                  border: `2px solid ${config.borderColor}`,
+                }}
               >
                 {config.icon}
               </div>
-              <span className="text-dark-400">{config.label}</span>
+              <span className="text-dark-300">{config.label}</span>
             </div>
           ))}
-          <div className="w-px h-4 bg-dark-600" />
-          <div className="flex items-center gap-2 text-sm text-dark-400">
-            <div className="w-8 h-0.5 bg-dark-500" style={{ borderBottom: '2px dashed #6b7280' }} />
+          <div className="w-px h-6 bg-dark-600" />
+          <div className="flex items-center gap-2 text-xs text-dark-400">
+            <div className="w-6 h-0.5 bg-dark-500" style={{ borderBottom: '2px dashed #6b7280' }} />
             <span>Full Route</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-dark-400">
-            <div className="w-8 h-1 bg-primary-500 rounded" />
+          <div className="flex items-center gap-2 text-xs text-dark-400">
+            <div className="w-6 h-0.5 bg-primary-500 rounded" />
             <span>Traveled Path</span>
           </div>
         </div>
