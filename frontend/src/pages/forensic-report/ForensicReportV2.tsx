@@ -377,18 +377,22 @@ export const ForensicReportV2 = () => {
         const locRes = await fetch(`${API_BASE}/locations/case/${selectedCaseId}/timeline`, { headers });
         if (locRes.ok) {
           const locData = await locRes.json();
+          // Valid evidence sources only (exclude manual)
+          const validSources = ['gps', 'cell_tower', 'wifi', 'photo'];
           // Transform API response to our interface
           // Priority: address > label (which might be "Point X") > coordinates
-          const parsedPoints: LocationPoint[] = (locData.points || []).map((p: LocationPointAPI) => ({
-            id: p.id,
-            latitude: p.lat,
-            longitude: p.lng,
-            location_name: p.address || (p.label && !p.label.startsWith('Point ') ? p.label : '') || `${p.lat?.toFixed(4)}, ${p.lng?.toFixed(4)}`,
-            location_type: p.locationType || p.source || 'unknown',
-            source: p.source || 'unknown',
-            suspect_name: p.personName || '',
-            timestamp: p.timestamp
-          }));
+          const parsedPoints: LocationPoint[] = (locData.points || [])
+            .filter((p: LocationPointAPI) => validSources.includes(p.source || '')) // Filter out manual entries
+            .map((p: LocationPointAPI) => ({
+              id: p.id,
+              latitude: p.lat,
+              longitude: p.lng,
+              location_name: p.address || (p.label && !p.label.startsWith('Point ') ? p.label : '') || `${p.lat?.toFixed(4)}, ${p.lng?.toFixed(4)}`,
+              location_type: p.locationType || p.source || 'unknown',
+              source: p.source || 'unknown',
+              suspect_name: p.personName || '',
+              timestamp: p.timestamp
+            }));
           setLocationPoints(parsedPoints);
         }
       } catch {
