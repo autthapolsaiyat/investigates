@@ -246,7 +246,7 @@ const LandingPage = () => {
                   <ArrowRight size={20} />
                 </button>
                 <button 
-                  onClick={() => window.location.href = 'mailto:sales@investigates.in.th'}
+                  onClick={() => window.location.href = 'mailto:sales@investigates.app'}
                   className="flex items-center justify-center gap-2 px-6 py-3 border border-dark-600 hover:border-dark-500 rounded-lg font-medium transition-colors"
                 >
                   Contact Sales
@@ -429,7 +429,7 @@ const LandingPage = () => {
                   <span className="text-dark-400 ml-1">{plan.period}</span>
                 </div>
                 <button
-                  onClick={() => plan.isFree ? navigate('/login') : window.location.href = 'mailto:sales@investigates.in.th'}
+                  onClick={() => plan.isFree ? navigate('/login') : window.location.href = 'mailto:sales@investigates.app'}
                   className={`w-full py-3 rounded-lg font-medium transition-colors mb-6 ${
                     plan.highlight
                       ? 'bg-primary-500 hover:bg-primary-600'
@@ -504,7 +504,7 @@ const LandingPage = () => {
               <ArrowRight size={24} />
             </button>
             <button
-              onClick={() => window.location.href = 'mailto:sales@investigates.in.th'}
+              onClick={() => window.location.href = 'mailto:sales@investigates.app'}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-dark-600 hover:border-dark-500 rounded-lg font-medium text-lg transition-colors"
             >
               Contact Sales
@@ -538,15 +538,15 @@ const LandingPage = () => {
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-dark-400 text-sm">
-                <li><a href="mailto:sales@investigates.in.th" className="hover:text-white">Contact Sales</a></li>
-                <li><a href="mailto:support@investigates.in.th" className="hover:text-white">Support</a></li>
+                <li><a href="mailto:sales@investigates.app" className="hover:text-white">Contact Sales</a></li>
+                <li><a href="mailto:support@investigates.app" className="hover:text-white">Support</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-dark-400 text-sm">
-                <li>sales@investigates.in.th</li>
-                <li>support@investigates.in.th</li>
+                <li>sales@investigates.app</li>
+                <li>support@investigates.app</li>
               </ul>
             </div>
           </div>
