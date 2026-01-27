@@ -1028,20 +1028,39 @@ export const CallAnalysis = () => {
               </div>
               
               {/* Legend */}
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
-                <span className="text-dark-400">Link Types:</span>
-                {[
-                  { type: 'call', label: 'Phone' },
-                  { type: 'sms', label: 'SMS' },
-                  { type: 'transfer', label: 'Transfer' },
-                  { type: 'meeting', label: 'Meeting' },
-                  { type: 'business', label: 'Business' },
-                ].map(item => (
-                  <div key={item.type} className="flex items-center gap-1">
-                    <div className="w-4 h-1 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
-                    <span className="text-dark-400">{item.label}</span>
-                  </div>
-                ))}
+              <div className="mt-3 p-3 bg-dark-800 rounded-lg border border-dark-700">
+                {/* Entity Types */}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+                  {Object.entries(ENTITY_CONFIG).map(([key, config]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <div 
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                        style={{ 
+                          backgroundColor: config.color, 
+                          border: `2px solid ${config.borderColor}`,
+                        }}
+                      >
+                        {config.emoji}
+                      </div>
+                      <span className="text-dark-300">{config.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Link Types */}
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 pt-3 border-t border-dark-700 text-xs">
+                  {[
+                    { type: 'call', label: 'Phone' },
+                    { type: 'sms', label: 'SMS' },
+                    { type: 'transfer', label: 'Transfer' },
+                    { type: 'meeting', label: 'Meeting' },
+                    { type: 'business', label: 'Business' },
+                  ].map(item => (
+                    <div key={item.type} className="flex items-center gap-2">
+                      <div className="w-6 h-0.5 rounded" style={{ backgroundColor: getLinkColor(item.type as LinkType) }} />
+                      <span className="text-dark-400">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             
