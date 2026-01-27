@@ -8,6 +8,23 @@ import {
 } from 'lucide-react';
 import { casesAPI, evidenceAPI } from '../../services/api';
 
+// Wallet Info interface for Backend Proxy response
+interface WalletInfo {
+  address: string;
+  blockchain: string;
+  balance: number;
+  balanceUSD: number;
+  totalReceived: number;
+  totalSent: number;
+  txCount: number;
+  firstTxDate: string | null;
+  lastTxDate: string | null;
+  isContract: boolean;
+  labels: string[];
+  riskScore: number;
+  riskFactors: Array<{ type: string; severity: string; description: string; score: number }>;
+}
+
 // SHA-256 Hash Calculator
 const calculateSHA256 = async (file: File): Promise<string> => {
   const buffer = await file.arrayBuffer();
@@ -950,25 +967,166 @@ const SmartImport: React.FC = () => {
         log(`  📊 Total: ${locSuccess} location points saved`);
       }
       
-      // Save Crypto Transactions
+      // Save Crypto Transactions with Wallet Lookup
       if (cryptoFiles.length > 0) {
-        log(`\n💰 Save Crypto Transactions...`);
+        log(`\n💰 Processing Crypto Data...`);
+        
+        // ============================================
+        // STEP 1: Collect unique wallet addresses
+        // ============================================
+        log(`\n🔍 Step 1: Collecting wallet addresses...`);
+        const walletAddresses = new Set<string>();
+        const walletLabelsFromCSV = new Map<string, string>();
+        const walletBlockchainHint = new Map<string, string>();
+        
+        for (const file of cryptoFiles) {
+          for (const r of file.records) {
+            const blockchain = r.Blockchain || r.blockchain || r.currency || r.coin || '';
+            
+            // From wallet
+            const fromWallet = r.From_Wallet || r.from_wallet || r.from_address;
+            if (fromWallet && fromWallet !== 'Unknown' && fromWallet.length > 10) {
+              walletAddresses.add(fromWallet);
+              if (r.From_Label || r.from_label) {
+                walletLabelsFromCSV.set(fromWallet.toLowerCase(), r.From_Label || r.from_label);
+              }
+              if (blockchain) {
+                walletBlockchainHint.set(fromWallet.toLowerCase(), blockchain);
+              }
+            }
+            
+            // To wallet
+            const toWallet = r.To_Wallet || r.to_wallet || r.to_address;
+            if (toWallet && toWallet !== 'Unknown' && toWallet.length > 10) {
+              walletAddresses.add(toWallet);
+              if (r.To_Label || r.to_label) {
+                walletLabelsFromCSV.set(toWallet.toLowerCase(), r.To_Label || r.to_label);
+              }
+              if (blockchain) {
+                walletBlockchainHint.set(toWallet.toLowerCase(), blockchain);
+              }
+            }
+          }
+        }
+        
+        log(`  📊 Found ${walletAddresses.size} unique wallet addresses`);
+        
+        // ============================================
+        // STEP 2: Auto-detect blockchain & lookup via Backend API
+        // ============================================
+        log(`\n🌐 Step 2: Looking up wallets via Backend Proxy...`);
+        
+        const detectBlockchain = (address: string, hint?: string): string => {
+          // Use hint from CSV first
+          if (hint) {
+            const h = hint.toLowerCase();
+            if (h.includes('btc') || h.includes('bitcoin')) return 'bitcoin';
+            if (h.includes('eth') || h.includes('ethereum')) return 'ethereum';
+            if (h.includes('trx') || h.includes('tron') || h.includes('usdt-trc') || h.includes('usdt_trc')) return 'tron';
+            if (h.includes('bnb') || h.includes('bsc')) return 'bsc';
+            if (h.includes('matic') || h.includes('polygon')) return 'polygon';
+          }
+          
+          // Auto-detect from address format
+          if (address.startsWith('0x') && address.length === 42) return 'ethereum';
+          if (address.startsWith('T') && address.length === 34) return 'tron';
+          if (address.startsWith('bc1') || address.startsWith('1') || address.startsWith('3')) return 'bitcoin';
+          if (address.startsWith('bnb1')) return 'bsc';
+          
+          return 'ethereum'; // default
+        };
+        
+        // Lookup wallet via Backend proxy
+        const lookupWalletViaBackend = async (blockchain: string, address: string): Promise<WalletInfo | null> => {
+          try {
+            const response = await fetch(`${baseUrl}/crypto/lookup/${blockchain}/${address}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              return {
+                address: data.address,
+                blockchain: data.blockchain,
+                balance: data.balance,
+                balanceUSD: data.balanceUSD,
+                totalReceived: data.totalReceived,
+                totalSent: data.totalSent,
+                txCount: data.txCount,
+                firstTxDate: data.firstTxDate,
+                lastTxDate: data.lastTxDate,
+                isContract: data.isContract,
+                labels: data.labels || [],
+                riskScore: data.riskScore,
+                riskFactors: data.riskFactors || []
+              };
+            }
+            return null;
+          } catch (err) {
+            console.error(`Backend lookup failed for ${address}:`, err);
+            return null;
+          }
+        };
+        
+        const walletResults: Array<{
+          address: string;
+          blockchain: string;
+          walletInfo: WalletInfo | null;
+          csvLabel: string | null;
+          apiSuccess: boolean;
+        }> = [];
+        
+        let apiSuccessCount = 0;
+        let apiFallbackCount = 0;
+        
+        for (const address of walletAddresses) {
+          const hint = walletBlockchainHint.get(address.toLowerCase());
+          const blockchain = detectBlockchain(address, hint);
+          const csvLabel = walletLabelsFromCSV.get(address.toLowerCase()) || null;
+          
+          log(`  🔎 ${blockchain.toUpperCase()}: ${address.substring(0, 16)}...`);
+          
+          try {
+            const walletInfo = await lookupWalletViaBackend(blockchain, address);
+            
+            if (walletInfo) {
+              apiSuccessCount++;
+              log(`    ✅ Balance: $${walletInfo.balanceUSD.toLocaleString()}, TX: ${walletInfo.txCount}, Risk: ${walletInfo.riskScore}`);
+              walletResults.push({ address, blockchain, walletInfo, csvLabel, apiSuccess: true });
+            } else {
+              apiFallbackCount++;
+              log(`    ⚠️ API returned no data, using CSV info`);
+              walletResults.push({ address, blockchain, walletInfo: null, csvLabel, apiSuccess: false });
+            }
+          } catch (err) {
+            apiFallbackCount++;
+            log(`    ⚠️ API error, using CSV info`);
+            walletResults.push({ address, blockchain, walletInfo: null, csvLabel, apiSuccess: false });
+          }
+        }
+        
+        log(`\n  📊 API Results: ${apiSuccessCount} success, ${apiFallbackCount} fallback`);
+        
+        // ============================================
+        // STEP 3: Save transactions from CSV
+        // ============================================
+        log(`\n💾 Step 3: Saving transactions...`);
         let cryptoSuccess = 0;
         
         for (const file of cryptoFiles) {
           try {
             const cryptoTxs = file.records.map(r => ({
-              blockchain: r.currency?.toLowerCase() || r.coin?.toLowerCase() || 'other',
-              tx_hash: r.tx_hash || r.hash || null,
-              from_address: r.from_wallet || r.from_address || 'Unknown',
-              from_label: r.from_label || null,
-              to_address: r.to_wallet || r.to_address || 'Unknown',
-              to_label: r.to_label || null,
-              amount: parseFloat(r.amount || '0'),
-              amount_usd: parseFloat(r.amount_usd || r.amount_thb || '0'),
-              timestamp: r.datetime || r.timestamp || (r.date && r.time ? `${r.date}T${r.time}` : r.date) || null,
-              risk_flag: r.risk_flag || (r.note?.toLowerCase().includes('mixer') ? 'mixer_detected' : 'none'),
-              notes: r.note || r.notes || null,
+              blockchain: r.Blockchain?.toLowerCase() || r.currency?.toLowerCase() || r.coin?.toLowerCase() || 'other',
+              tx_hash: r.TX_Hash || r.tx_hash || r.hash || null,
+              from_address: r.From_Wallet || r.from_wallet || r.from_address || 'Unknown',
+              from_label: r.From_Label || r.from_label || null,
+              to_address: r.To_Wallet || r.to_wallet || r.to_address || 'Unknown',
+              to_label: r.To_Label || r.to_label || null,
+              amount: parseFloat(r.Amount || r.amount || '0'),
+              amount_usd: parseFloat(r.Amount_USD || r.amount_usd || r.amount_thb || '0'),
+              timestamp: r.Timestamp || r.datetime || r.timestamp || (r.date && r.time ? `${r.date}T${r.time}` : r.date) || null,
+              risk_flag: r.Risk_Flag || r.risk_flag || (r.note?.toLowerCase().includes('mixer') ? 'mixer_detected' : 'none'),
+              notes: r.Note || r.note || r.notes || null,
               raw_data: JSON.stringify(r)
             }));
             
