@@ -698,7 +698,7 @@ export const LocationTimeline = () => {
             
             {/* Map Overlay Controls */}
             {mapLoaded && filteredLocations.length > 0 && (
-              <div className="absolute bottom-4 left-4 right-4" style={{ zIndex: 10000 }}>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2" style={{ zIndex: 10000, width: 'calc(100% - 300px)', maxWidth: '600px' }}>
                 {/* Progress Bar */}
                 <div className="bg-dark-800/95 backdrop-blur-md rounded-lg p-3 shadow-xl border border-dark-600">
                   <div className="flex items-center gap-3 mb-2">
@@ -789,6 +789,41 @@ export const LocationTimeline = () => {
                     >
                       {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
                     </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Legend Overlay - Bottom Left */}
+            {mapLoaded && (
+              <div className="absolute bottom-4 left-3 z-[9999]" style={{ maxWidth: '260px' }}>
+                <div className="bg-dark-800/95 backdrop-blur-md rounded-lg p-3 shadow-xl border border-dark-600">
+                  <div className="text-xs text-dark-400 mb-2 font-medium">Data Sources</div>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <div 
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                          style={{ 
+                            backgroundColor: config.color, 
+                            border: `2px solid ${config.borderColor}`,
+                          }}
+                        >
+                          {config.icon}
+                        </div>
+                        <span className="text-dark-300 text-xs">{config.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-dark-600 mt-2 pt-2 flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs text-dark-400">
+                      <div className="w-4 h-0.5" style={{ borderBottom: '2px dashed #6b7280' }} />
+                      <span>Route</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-dark-400">
+                      <div className="w-4 h-0.5 bg-primary-500 rounded" />
+                      <span>Traveled</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -916,37 +951,6 @@ export const LocationTimeline = () => {
         </div>
         )}
       </div>
-
-      {/* Legend - Hidden in fullscreen */}
-      {!isFullscreen && (
-      <Card className="p-3">
-        <div className="flex items-center gap-6 justify-center flex-wrap">
-          {Object.entries(SOURCE_CONFIG).map(([key, config]) => (
-            <div key={key} className="flex items-center gap-2 text-xs">
-              <div 
-                className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
-                style={{ 
-                  backgroundColor: config.color, 
-                  border: `2px solid ${config.borderColor}`,
-                }}
-              >
-                {config.icon}
-              </div>
-              <span className="text-dark-300">{config.label}</span>
-            </div>
-          ))}
-          <div className="w-px h-6 bg-dark-600" />
-          <div className="flex items-center gap-2 text-xs text-dark-400">
-            <div className="w-6 h-0.5 bg-dark-500" style={{ borderBottom: '2px dashed #6b7280' }} />
-            <span>Full Route</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-dark-400">
-            <div className="w-6 h-0.5 bg-primary-500 rounded" />
-            <span>Traveled Path</span>
-          </div>
-        </div>
-      </Card>
-      )}
 
       {/* Add Location Modal */}
       {showAddModal && (
