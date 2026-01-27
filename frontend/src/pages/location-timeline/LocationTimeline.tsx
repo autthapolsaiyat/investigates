@@ -131,13 +131,14 @@ export const LocationTimeline = () => {
         const data = await response.json();
         
         // Transform API data to component format
+        const validSources = ['gps', 'cell_tower', 'wifi', 'photo'];
         const transformedLocations: LocationPoint[] = data.points.map((p: any) => ({
           id: p.id,
           lat: p.lat,
           lng: p.lng,
           timestamp: p.timestamp ? new Date(p.timestamp) : new Date(),
           label: p.label,
-          source: p.source || 'gps',
+          source: validSources.includes(p.source) ? p.source : (p.source || 'unknown'), // Keep original source for filtering
           accuracy: p.accuracy,
           address: p.address,
           notes: p.notes,
@@ -173,8 +174,10 @@ export const LocationTimeline = () => {
 
   // Filtered and sorted locations (exclude manual - evidence only)
   const filteredLocations = useMemo(() => {
+    // Valid evidence sources
+    const validSources = ['gps', 'cell_tower', 'wifi', 'photo'];
     return locations
-      .filter(l => (l.source as string) !== 'manual') // Exclude manual entries - evidence only
+      .filter(l => validSources.includes(l.source as string)) // Only allow valid evidence sources
       .filter(l => filterPerson === 'all' || l.personName === filterPerson)
       .filter(l => filterSource === 'all' || l.source === filterSource)
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
