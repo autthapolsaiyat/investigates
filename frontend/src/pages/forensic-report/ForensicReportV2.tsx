@@ -883,7 +883,7 @@ export const ForensicReportV2 = () => {
   <h2>🔐 ${t('chainOfCustody')}</h2>
   <div style="display: grid; grid-template-columns: 180px 1fr; gap: 20px; margin-bottom: 20px;">
     <div style="text-align: center; padding: 15px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px;">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase?.case_number}`)}" alt="QR Code" style="width: 140px; height: 140px;" />
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://investigates.app/verify?case=${selectedCase?.case_number}`)}" alt="QR Code" style="width: 140px; height: 140px;" />
       <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">${t('scanToVerify')}</p>
     </div>
     <div>
@@ -1106,7 +1106,7 @@ export const ForensicReportV2 = () => {
             {/* QR Code */}
             <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wonderful-wave-0486dd100.6.azurestaticapps.net/verify?case=${selectedCase?.case_number}`)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://investigates.app/verify?case=${selectedCase?.case_number}`)}`}
                 alt="QR Code"
                 className="w-36 h-36"
               />
