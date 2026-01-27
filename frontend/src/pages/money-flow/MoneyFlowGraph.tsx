@@ -140,9 +140,15 @@ export const MoneyFlowGraph = ({ nodes, edges, onNodeClick }: MoneyFlowGraphProp
 
   // Build Cytoscape elements
   const elements = useMemo(() => {
+    // Debug: log node types to see what's coming from backend
+    console.log('Node types:', nodes.map(n => ({ label: n.label, type: n.node_type, is_suspect: n.is_suspect, is_victim: n.is_victim })));
+    
     // Create nodes - FBI/i2 style with light fill and dark border
     const cyNodes = nodes.map(node => {
       const display = getNodeDisplay(node);
+      
+      // Debug: log display config
+      console.log(`Node ${node.label}: type=${node.node_type}, display=`, display);
       
       // Border color: Red for suspect, Cyan for victim, otherwise type color
       const borderColor = node.is_suspect ? '#DC2626' : 
