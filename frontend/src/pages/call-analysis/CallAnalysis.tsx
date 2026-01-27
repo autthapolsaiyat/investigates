@@ -110,20 +110,55 @@ interface SuspiciousPattern {
 // HELPERS
 // ============================================
 
+// Entity configuration - FBI/i2 style with background + border colors
+const ENTITY_CONFIG: Record<EntityType, { emoji: string; color: string; borderColor: string; label: string }> = {
+  person: { emoji: '👤', color: '#D1FAE5', borderColor: '#059669', label: 'Person' },
+  phone: { emoji: '📱', color: '#DBEAFE', borderColor: '#2563EB', label: 'Phone' },
+  account: { emoji: '🏦', color: '#DBEAFE', borderColor: '#2563EB', label: 'Account' },
+  address: { emoji: '🏠', color: '#FEF3C7', borderColor: '#D97706', label: 'Address' },
+  organization: { emoji: '🏢', color: '#EDE9FE', borderColor: '#7C3AED', label: 'Organization' },
+  crypto: { emoji: '₿', color: '#FEF3C7', borderColor: '#D97706', label: 'Crypto' },
+  vehicle: { emoji: '🚗', color: '#F3F4F6', borderColor: '#6B7280', label: 'Vehicle' },
+};
+
 const getEntityEmoji = (type: EntityType): string => {
-  const emojis: Record<EntityType, string> = {
-    person: '👤', phone: '📱', account: '🏦', address: '🏠',
-    organization: '🏢', crypto: '₿', vehicle: '🚗'
-  };
-  return emojis[type] || '●';
+  return ENTITY_CONFIG[type]?.emoji || '●';
+};
+
+const getEntityConfig = (type: EntityType) => {
+  return ENTITY_CONFIG[type] || { emoji: '●', color: '#F3F4F6', borderColor: '#6B7280', label: 'Unknown' };
 };
 
 const getRiskColor = (risk: RiskLevel): string => {
   const colors: Record<RiskLevel, string> = {
-    critical: '#ef4444', high: '#f97316', medium: '#eab308',
-    low: '#22c55e', unknown: '#6b7280'
+    critical: '#DC2626', high: '#F59E0B', medium: '#EAB308',
+    low: '#22C55E', unknown: '#6B7280'
   };
   return colors[risk];
+};
+
+const getRiskBgColor = (risk: RiskLevel): string => {
+  const colors: Record<RiskLevel, string> = {
+    critical: '#FCA5A5', high: '#FDE68A', medium: '#FEF9C3',
+    low: '#D1FAE5', unknown: '#F3F4F6'
+  };
+  return colors[risk];
+};
+
+const getRiskSize = (risk: RiskLevel): number => {
+  const sizes: Record<RiskLevel, number> = {
+    critical: 80, high: 70, medium: 60,
+    low: 55, unknown: 55
+  };
+  return sizes[risk];
+};
+
+const getRiskBorderWidth = (risk: RiskLevel): number => {
+  const widths: Record<RiskLevel, number> = {
+    critical: 5, high: 4, medium: 3,
+    low: 2, unknown: 2
+  };
+  return widths[risk];
 };
 
 const getLinkColor = (type: LinkType): string => {
@@ -148,35 +183,61 @@ const cytoscapeStylesheet: any[] = [
   {
     selector: "node",
     style: {
-      "background-color": "data(color)",
+      "background-color": "data(bgColor)",
+      "background-opacity": 1,
       "border-color": "data(riskColor)",
-      "border-width": 3,
-      "width": 55,
-      "height": 55,
-      "label": "data(emoji)",
-      "font-size": 26,
+      "border-width": "data(borderWidth)",
+      "border-opacity": 1,
+      "width": "data(size)",
+      "height": "data(size)",
+      "label": "data(displayLabel)",
+      "font-size": 9,
+      "font-weight": 600,
       "text-valign": "center",
       "text-halign": "center",
+      "color": "#1F2937",
+      "text-outline-color": "#ffffff",
+      "text-outline-width": 1.5,
+      "text-wrap": "wrap",
+      "text-max-width": "70px",
+    }
+  },
+  {
+    selector: 'node[risk = "critical"]',
+    style: {
+      "font-size": 11,
+      "font-weight": 700,
+    }
+  },
+  {
+    selector: 'node[risk = "high"]',
+    style: {
+      "font-size": 10,
+      "font-weight": 700,
     }
   },
   {
     selector: 'node:selected',
     style: {
-      'border-color': '#ffffff',
+      'border-color': '#7C3AED',
       'border-width': 5,
+      'overlay-color': '#7C3AED',
+      'overlay-opacity': 0.2,
     }
   },
   {
     selector: 'node.highlighted',
     style: {
-      'border-color': '#00ff00',
-      'border-width': 5,
+      'border-color': '#10B981',
+      'border-width': 4,
+      'overlay-color': '#10B981',
+      'overlay-opacity': 0.15,
     }
   },
   {
     selector: 'node.searched',
     style: {
-      'border-color': '#ffff00',
+      'border-color': '#FBBF24',
       'border-width': 5,
       'border-style': 'dashed',
     }
@@ -184,26 +245,36 @@ const cytoscapeStylesheet: any[] = [
   {
     selector: 'node.faded',
     style: {
-      'opacity': 0.3,
+      'opacity': 0.2,
     }
   },
   {
     selector: 'edge',
     style: {
-      'width': 'mapData(weight, 1, 300, 1, 8)',
+      'width': 'mapData(weight, 1, 300, 1.5, 4)',
       'line-color': 'data(color)',
+      'line-opacity': 0.75,
       'target-arrow-color': 'data(color)',
       'target-arrow-shape': 'triangle',
+      'arrow-scale': 0.8,
       'curve-style': 'bezier',
-      'opacity': 0.7,
     }
   },
   {
     selector: 'edge:selected',
     style: {
-      'line-color': '#ffffff',
-      'target-arrow-color': '#ffffff',
-      'opacity': 1,
+      'line-color': '#7C3AED',
+      'target-arrow-color': '#7C3AED',
+      'line-opacity': 1,
+      'width': 3,
+    }
+  },
+  {
+    selector: 'edge.highlighted',
+    style: {
+      'line-color': '#10B981',
+      'target-arrow-color': '#10B981',
+      'line-opacity': 1,
     }
   },
   {
@@ -605,18 +676,32 @@ export const CallAnalysis = () => {
 
   // Memoized cytoscape elements
   const elements = useMemo(() => {
-    const nodes = filteredEntities.map(entity => ({
-      data: {
-        id: entity.id,
-        label: showLabels ? entity.label : '',
-        type: entity.type,
-        risk: entity.risk,
-        clusterId: entity.clusterId,
-        color: getClusterColor(entity.clusterId, clusters),
-        emoji: getEntityEmoji(entity.type),
-        riskColor: getRiskColor(entity.risk),
-      }
-    }));
+    const nodes = filteredEntities.map(entity => {
+      const config = getEntityConfig(entity.type);
+      const riskBg = getRiskBgColor(entity.risk);
+      const size = getRiskSize(entity.risk);
+      const borderWidth = getRiskBorderWidth(entity.risk);
+      
+      // Use risk background color for critical/high, otherwise entity type color
+      const bgColor = (entity.risk === 'critical' || entity.risk === 'high') ? riskBg : config.color;
+      
+      return {
+        data: {
+          id: entity.id,
+          label: entity.label,
+          displayLabel: `${config.emoji}\n${entity.label}`,
+          type: entity.type,
+          risk: entity.risk,
+          clusterId: entity.clusterId,
+          color: config.color,
+          bgColor: bgColor,
+          emoji: config.emoji,
+          riskColor: getRiskColor(entity.risk),
+          size: size,
+          borderWidth: borderWidth,
+        }
+      };
+    });
 
     const edges = filteredLinks.map(link => ({
       data: {

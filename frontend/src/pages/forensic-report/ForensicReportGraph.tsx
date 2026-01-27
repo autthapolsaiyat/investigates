@@ -43,24 +43,24 @@ cytoscape.use(cytoscapeSvg);
 
 type LayoutType = 'breadthfirst' | 'cose' | 'circle' | 'grid' | 'concentric';
 
-// Node type configuration
-const NODE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
-  boss: { emoji: '👑', color: '#DC2626', label: 'Network Boss' },
-  suspect: { emoji: '⚠️', color: '#F97316', label: 'Suspect' },
-  victim: { emoji: '🛡️', color: '#22C55E', label: 'Victim' },
-  mule: { emoji: '🏦', color: '#F59E0B', label: 'Mule Account' },
-  crypto: { emoji: '💰', color: '#8B5CF6', label: 'Crypto Wallet' },
-  exchange: { emoji: '🔄', color: '#3B82F6', label: 'Exchange' },
-  person: { emoji: '👤', color: '#6B7280', label: 'Person' },
+// Node type configuration - FBI/i2 Style
+const NODE_CONFIG: Record<string, { emoji: string; color: string; borderColor: string; label: string; riskLevel: number }> = {
+  boss: { emoji: '👑', color: '#FEE2E2', borderColor: '#DC2626', label: 'Network Boss', riskLevel: 100 },
+  suspect: { emoji: '⚠️', color: '#FFEDD5', borderColor: '#EA580C', label: 'Suspect', riskLevel: 80 },
+  victim: { emoji: '🛡️', color: '#D1FAE5', borderColor: '#059669', label: 'Victim', riskLevel: 0 },
+  mule: { emoji: '🏦', color: '#FEF3C7', borderColor: '#D97706', label: 'Mule Account', riskLevel: 60 },
+  crypto: { emoji: '₿', color: '#EDE9FE', borderColor: '#7C3AED', label: 'Crypto Wallet', riskLevel: 40 },
+  exchange: { emoji: '🔄', color: '#DBEAFE', borderColor: '#2563EB', label: 'Exchange', riskLevel: 20 },
+  person: { emoji: '👤', color: '#F3F4F6', borderColor: '#6B7280', label: 'Person', riskLevel: 10 },
 };
 
-// Edge type colors
+// Edge type colors - Professional thin lines
 const EDGE_COLORS: Record<string, string> = {
-  bank_transfer: '#4ECDC4',
-  crypto_transfer: '#8B5CF6',
-  crypto_purchase: '#EC4899',
-  deposit: '#3B82F6',
-  transfer: '#4ECDC4',
+  bank_transfer: '#2563EB',
+  crypto_transfer: '#7C3AED',
+  crypto_purchase: '#DB2777',
+  deposit: '#0891B2',
+  transfer: '#059669',
   other: '#6B7280',
 };
 
@@ -188,26 +188,65 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
 
   // Build Cytoscape elements
   const elements = useMemo(() => {
-    // Create nodes
+    // Create nodes - FBI/i2 style with visual hierarchy
     const cyNodes = filteredNodes.map(node => {
       const display = getNodeDisplay(node);
-      const riskColor = node.risk_score && node.risk_score >= 70 ? '#EF4444' :
-                       node.risk_score && node.risk_score >= 40 ? '#F59E0B' : display.color;
+      const riskScore = node.risk_score || 0;
+      
+      // Size based on importance
+      let size = 55;
+      const group = getNodeGroup(node);
+      if (group === 'boss') {
+        size = 90;
+      } else if (group === 'suspect') {
+        size = 75;
+      } else if (group === 'victim') {
+        size = 70;
+      } else if (riskScore >= 50) {
+        size = 65;
+      }
+      
+      // Border color and width based on risk
+      let borderColor = display.borderColor;
+      let borderWidth = 2;
+      
+      if (group === 'boss') {
+        borderWidth = 5;
+      } else if (group === 'suspect') {
+        borderWidth = 4;
+      } else if (group === 'victim') {
+        borderWidth = 3;
+      } else if (riskScore >= 50) {
+        borderWidth = 3;
+        borderColor = '#DC2626';
+      }
+      
+      // Background color - darker for high risk
+      let bgColor = display.color;
+      if (group === 'boss') {
+        bgColor = '#FCA5A5';
+      } else if (riskScore >= 70) {
+        bgColor = '#FECACA';
+      } else if (riskScore >= 40) {
+        bgColor = '#FDE68A';
+      }
       
       return {
         data: {
           id: String(node.id),
           label: formatNodeLabel(node),
-          type: getNodeGroup(node),
-          color: display.color,
-          borderColor: node.is_suspect ? '#EF4444' : node.is_victim ? '#22C55E' : riskColor,
-          size: node.is_suspect ? 80 : node.is_victim ? 70 : 60,
+          type: group,
+          color: bgColor,
+          borderColor: borderColor,
+          borderWidth: borderWidth,
+          size: size,
+          riskScore: riskScore,
           nodeData: node,
         }
       };
     });
 
-    // Create edges
+    // Create edges - thin professional lines
     const cyEdges = filteredEdges.map(edge => ({
       data: {
         id: `edge-${edge.id}`,
@@ -215,7 +254,7 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
         target: String(edge.to_node_id),
         label: edge.amount ? formatCurrency(edge.amount) : '',
         color: EDGE_COLORS[edge.edge_type || 'transfer'] || EDGE_COLORS.other,
-        width: edge.amount ? Math.min(Math.max(edge.amount / 50000, 2), 10) : 2,
+        width: Math.min(Math.max((edge.amount || 0) / 100000, 1.5), 4),
         edgeData: edge,
       }
     }));
@@ -223,39 +262,60 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
     return [...cyNodes, ...cyEdges];
   }, [filteredNodes, filteredEdges]);
 
-  // Cytoscape stylesheet
+  // Cytoscape stylesheet - FBI/i2 Analyst's Notebook Style
   const stylesheet: any[] = [
     {
       selector: 'node',
       style: {
         'background-color': 'data(color)',
+        'background-opacity': 1,
         'border-color': 'data(borderColor)',
-        'border-width': 3,
+        'border-width': 'data(borderWidth)',
+        'border-opacity': 1,
         'width': 'data(size)',
         'height': 'data(size)',
         'label': 'data(label)',
         'text-valign': 'center',
         'text-halign': 'center',
-        'font-size': 10,
-        'color': '#ffffff',
-        'text-outline-color': '#000000',
-        'text-outline-width': 2,
+        'font-size': 9,
+        'font-weight': 600,
+        'color': '#1F2937',
+        'text-outline-color': '#ffffff',
+        'text-outline-width': 1.5,
         'text-wrap': 'wrap',
-        'text-max-width': '100px',
+        'text-max-width': '75px',
+      }
+    },
+    {
+      selector: 'node[riskScore >= 50]',
+      style: {
+        'font-size': 10,
+        'font-weight': 700,
+      }
+    },
+    {
+      selector: 'node[type = "boss"]',
+      style: {
+        'font-size': 11,
+        'font-weight': 700,
       }
     },
     {
       selector: 'node:selected',
       style: {
-        'border-color': '#fbbf24',
+        'border-color': '#7C3AED',
         'border-width': 5,
+        'overlay-color': '#7C3AED',
+        'overlay-opacity': 0.2,
       }
     },
     {
       selector: 'node.highlighted',
       style: {
-        'border-color': '#00ff00',
-        'border-width': 5,
+        'border-color': '#10B981',
+        'border-width': 4,
+        'overlay-color': '#10B981',
+        'overlay-opacity': 0.15,
       }
     },
     {
@@ -269,33 +329,36 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
       style: {
         'width': 'data(width)',
         'line-color': 'data(color)',
+        'line-opacity': 0.75,
         'target-arrow-color': 'data(color)',
         'target-arrow-shape': 'triangle',
+        'arrow-scale': 0.8,
         'curve-style': 'bezier',
-        'opacity': 0.8,
         'label': 'data(label)',
-        'font-size': 8,
-        'color': '#ffffff',
-        'text-outline-color': '#000000',
-        'text-outline-width': 1,
+        'font-size': 9,
+        'font-weight': 600,
+        'color': darkMode ? '#E5E7EB' : '#374151',
+        'text-outline-color': darkMode ? '#0f172a' : '#ffffff',
+        'text-outline-width': 2,
         'text-rotation': 'autorotate',
-        'text-margin-y': -10,
+        'text-margin-y': -8,
       }
     },
     {
       selector: 'edge:selected',
       style: {
-        'line-color': '#fbbf24',
-        'target-arrow-color': '#fbbf24',
-        'width': 5,
+        'line-color': '#7C3AED',
+        'target-arrow-color': '#7C3AED',
+        'line-opacity': 1,
+        'width': 3,
       }
     },
     {
       selector: 'edge.highlighted',
       style: {
-        'line-color': '#00ff00',
-        'target-arrow-color': '#00ff00',
-        'opacity': 1,
+        'line-color': '#10B981',
+        'target-arrow-color': '#10B981',
+        'line-opacity': 1,
       }
     },
     {
@@ -625,26 +688,34 @@ export const ForensicReportGraph = ({ nodes, edges, onNodeClick }: ForensicRepor
 
       {/* Legend */}
       <div className={`p-3 border-t ${darkMode ? 'border-dark-700 bg-dark-800' : 'border-gray-200 bg-white'}`}>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {legends.map(item => (
             <div key={item.label} className="flex items-center gap-2 text-xs">
-              <span className="text-lg">{item.emoji}</span>
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                style={{ 
+                  backgroundColor: item.color, 
+                  border: `2px solid ${item.borderColor}`,
+                }}
+              >
+                {item.emoji}
+              </div>
               <span className={darkMode ? 'text-dark-300' : 'text-gray-600'}>{item.label}</span>
             </div>
           ))}
         </div>
-        <div className={`flex items-center gap-4 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
+        <div className={`flex items-center gap-6 mt-2 pt-2 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
+            <div className="w-6 h-0.5 rounded" style={{ backgroundColor: EDGE_COLORS.bank_transfer }} />
             <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Transfer</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
+            <div className="w-6 h-0.5 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_transfer }} />
             <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Crypto</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_purchase }} />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Crypto Purchase</span>
+            <div className="w-6 h-0.5 rounded" style={{ backgroundColor: EDGE_COLORS.crypto_purchase }} />
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Purchase</span>
           </div>
         </div>
       </div>

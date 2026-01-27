@@ -38,38 +38,33 @@ interface CryptoGraphProps {
 
 type LayoutType = 'cose' | 'circle' | 'grid' | 'breadthfirst' | 'concentric';
 
-// Entity type to emoji
-const getEntityEmoji = (type: string): string => {
-  const emojis: Record<string, string> = {
-    main: '💎',
-    exchange: '🏦',
-    mixer: '🌀',
-    defi: '📊',
-    bridge: '🌉',
-    scam: '⚠️',
-    gambling: '🎰',
-    nft: '🎨',
-    darknet: '🕵️',
-    unknown: '❓'
-  };
-  return emojis[type] || '❓';
+// Entity type config - FBI/i2 Style with light bg + dark border
+const ENTITY_CONFIG: Record<string, { emoji: string; color: string; borderColor: string; label: string; riskLevel: number }> = {
+  main: { emoji: '💎', color: '#DBEAFE', borderColor: '#2563EB', label: 'Main Wallet', riskLevel: 0 },
+  exchange: { emoji: '🏦', color: '#D1FAE5', borderColor: '#059669', label: 'Exchange', riskLevel: 0 },
+  mixer: { emoji: '🌀', color: '#FEE2E2', borderColor: '#DC2626', label: 'Mixer', riskLevel: 80 },
+  defi: { emoji: '📊', color: '#EDE9FE', borderColor: '#7C3AED', label: 'DeFi', riskLevel: 20 },
+  bridge: { emoji: '🌉', color: '#FEF3C7', borderColor: '#D97706', label: 'Bridge', riskLevel: 30 },
+  scam: { emoji: '⚠️', color: '#FEE2E2', borderColor: '#DC2626', label: 'Scam', riskLevel: 100 },
+  gambling: { emoji: '🎰', color: '#FFEDD5', borderColor: '#EA580C', label: 'Gambling', riskLevel: 60 },
+  nft: { emoji: '🎨', color: '#FCE7F3', borderColor: '#DB2777', label: 'NFT', riskLevel: 10 },
+  darknet: { emoji: '🕵️', color: '#FEE2E2', borderColor: '#991B1B', label: 'Darknet', riskLevel: 100 },
+  unknown: { emoji: '❓', color: '#F3F4F6', borderColor: '#6B7280', label: 'Unknown', riskLevel: 40 },
 };
 
-// Entity type to color
+// Get entity config
+const getEntityConfig = (type: string) => {
+  return ENTITY_CONFIG[type] || ENTITY_CONFIG.unknown;
+};
+
+// Entity type to emoji
+const getEntityEmoji = (type: string): string => {
+  return getEntityConfig(type).emoji;
+};
+
+// Entity type to color - now returns border color for backward compat
 const getEntityColor = (type: string): string => {
-  const colors: Record<string, string> = {
-    main: '#3b82f6',
-    exchange: '#22c55e',
-    mixer: '#ef4444',
-    defi: '#8b5cf6',
-    bridge: '#f59e0b',
-    scam: '#dc2626',
-    gambling: '#f97316',
-    nft: '#ec4899',
-    darknet: '#7c3aed',
-    unknown: '#6b7280'
-  };
-  return colors[type] || '#6b7280';
+  return getEntityConfig(type).borderColor;
 };
 
 // Format address
@@ -143,16 +138,47 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
       }
     });
 
-    // Create Cytoscape nodes
-    const nodes = Array.from(nodeMap.values()).map(n => ({
-      data: {
-        id: n.id,
-        label: `${getEntityEmoji(n.type)}\n${n.label}`,
-        type: n.type,
-        color: getEntityColor(n.type),
-        size: n.type === 'main' ? 70 : 50,
+    // Create Cytoscape nodes with FBI-style visual hierarchy
+    const nodes = Array.from(nodeMap.values()).map(n => {
+      const config = getEntityConfig(n.type);
+      const riskLevel = config.riskLevel;
+      
+      // Size based on importance
+      let size = 50;
+      if (n.type === 'main') {
+        size = 80;
+      } else if (riskLevel >= 80) {
+        size = 70; // High risk = big
+      } else if (riskLevel >= 50) {
+        size = 60;
       }
-    }));
+      
+      // Border width based on risk
+      let borderWidth = 2;
+      if (riskLevel >= 80) borderWidth = 4;
+      else if (riskLevel >= 50) borderWidth = 3;
+      
+      // Background color - darker for high risk
+      let bgColor = config.color;
+      if (riskLevel >= 80) {
+        bgColor = '#FCA5A5'; // Red tint
+      } else if (riskLevel >= 50) {
+        bgColor = '#FDE68A'; // Orange tint
+      }
+      
+      return {
+        data: {
+          id: n.id,
+          label: `${config.emoji}\n${n.label}`,
+          type: n.type,
+          color: bgColor,
+          borderColor: config.borderColor,
+          borderWidth: borderWidth,
+          size: size,
+          riskLevel: riskLevel,
+        }
+      };
+    });
 
     // Create Cytoscape edges
     const edges = transactions.slice(0, 100).map(tx => ({
@@ -169,45 +195,66 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
     return [...nodes, ...edges];
   }, [walletInfo, transactions, getKnownEntity]);
 
-  // Cytoscape stylesheet
+  // Cytoscape stylesheet - FBI/i2 Analyst's Notebook Style
   const stylesheet: any[] = [
     {
       selector: 'node',
       style: {
         'background-color': 'data(color)',
-        'border-color': '#ffffff',
-        'border-width': 2,
+        'background-opacity': 1,
+        'border-color': 'data(borderColor)',
+        'border-width': 'data(borderWidth)',
+        'border-opacity': 1,
         'width': 'data(size)',
         'height': 'data(size)',
         'label': 'data(label)',
         'text-valign': 'center',
         'text-halign': 'center',
-        'font-size': 12,
-        'color': '#ffffff',
-        'text-outline-color': '#000000',
-        'text-outline-width': 2,
+        'font-size': 9,
+        'font-weight': 600,
+        'color': '#1F2937',
+        'text-outline-color': '#ffffff',
+        'text-outline-width': 1.5,
         'text-wrap': 'wrap',
-        'text-max-width': '80px',
+        'text-max-width': '75px',
+      }
+    },
+    {
+      selector: 'node[riskLevel >= 50]',
+      style: {
+        'font-size': 10,
+        'font-weight': 700,
+      }
+    },
+    {
+      selector: 'node[riskLevel >= 80]',
+      style: {
+        'font-size': 11,
+        'font-weight': 700,
       }
     },
     {
       selector: 'node:selected',
       style: {
-        'border-color': '#fbbf24',
-        'border-width': 4,
+        'border-color': '#7C3AED',
+        'border-width': 5,
+        'overlay-color': '#7C3AED',
+        'overlay-opacity': 0.2,
       }
     },
     {
       selector: 'node.highlighted',
       style: {
-        'border-color': '#00ff00',
+        'border-color': '#10B981',
         'border-width': 4,
+        'overlay-color': '#10B981',
+        'overlay-opacity': 0.15,
       }
     },
     {
       selector: 'node.faded',
       style: {
-        'opacity': 0.3,
+        'opacity': 0.2,
       }
     },
     {
@@ -215,24 +262,36 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
       style: {
         'width': 'data(width)',
         'line-color': 'data(color)',
+        'line-opacity': 0.75,
         'target-arrow-color': 'data(color)',
         'target-arrow-shape': 'triangle',
+        'arrow-scale': 0.8,
         'curve-style': 'bezier',
-        'opacity': 0.8,
         'label': 'data(label)',
-        'font-size': 8,
-        'color': '#ffffff',
-        'text-outline-color': '#000000',
-        'text-outline-width': 1,
+        'font-size': 9,
+        'font-weight': 600,
+        'color': darkMode ? '#E5E7EB' : '#374151',
+        'text-outline-color': darkMode ? '#0f172a' : '#ffffff',
+        'text-outline-width': 2,
         'text-rotation': 'autorotate',
+        'text-margin-y': -8,
       }
     },
     {
       selector: 'edge:selected',
       style: {
-        'line-color': '#fbbf24',
-        'target-arrow-color': '#fbbf24',
-        'width': 4,
+        'line-color': '#7C3AED',
+        'target-arrow-color': '#7C3AED',
+        'line-opacity': 1,
+        'width': 3,
+      }
+    },
+    {
+      selector: 'edge.highlighted',
+      style: {
+        'line-color': '#10B981',
+        'target-arrow-color': '#10B981',
+        'line-opacity': 1,
       }
     },
     {
@@ -332,15 +391,15 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
   ];
 
   const legends = [
-    { emoji: '💎', label: 'Main Wallet', color: '#3b82f6' },
-    { emoji: '🏦', label: 'Exchange', color: '#22c55e' },
-    { emoji: '🌀', label: 'Mixer (High Risk)', color: '#ef4444' },
-    { emoji: '📊', label: 'DeFi', color: '#8b5cf6' },
-    { emoji: '🌉', label: 'Bridge', color: '#f59e0b' },
-    { emoji: '🎰', label: 'Gambling', color: '#f97316' },
-    { emoji: '🎨', label: 'NFT', color: '#ec4899' },
-    { emoji: '🕵️', label: 'Darknet', color: '#7c3aed' },
-    { emoji: '❓', label: 'Unknown', color: '#6b7280' },
+    ENTITY_CONFIG.main,
+    ENTITY_CONFIG.exchange,
+    ENTITY_CONFIG.mixer,
+    ENTITY_CONFIG.defi,
+    ENTITY_CONFIG.bridge,
+    ENTITY_CONFIG.gambling,
+    ENTITY_CONFIG.nft,
+    ENTITY_CONFIG.darknet,
+    ENTITY_CONFIG.unknown,
   ];
 
   return (
@@ -425,22 +484,30 @@ export const CryptoGraph = ({ walletInfo, transactions, getKnownEntity }: Crypto
 
       {/* Legend */}
       <div className={`p-3 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {legends.map(item => (
             <div key={item.label} className="flex items-center gap-2 text-xs">
-              <span className="text-lg">{item.emoji}</span>
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                style={{ 
+                  backgroundColor: item.color, 
+                  border: `2px solid ${item.borderColor}`,
+                }}
+              >
+                {item.emoji}
+              </div>
               <span className={darkMode ? 'text-dark-300' : 'text-gray-600'}>{item.label}</span>
             </div>
           ))}
         </div>
-        <div className="flex items-center gap-4 mt-2 pt-2 border-t border-dark-700">
+        <div className="flex items-center gap-6 mt-2 pt-2 border-t border-dark-700">
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 bg-green-500 rounded" />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Incoming (Receive)</span>
+            <div className="w-6 h-0.5 bg-green-500 rounded" />
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Incoming</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-8 h-1 bg-red-500 rounded" />
-            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Outgoing (Send)</span>
+            <div className="w-6 h-0.5 bg-red-500 rounded" />
+            <span className={darkMode ? 'text-dark-400' : 'text-gray-500'}>Outgoing</span>
           </div>
         </div>
       </div>
