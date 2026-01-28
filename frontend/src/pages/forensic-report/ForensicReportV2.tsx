@@ -423,40 +423,28 @@ export const ForensicReportV2 = () => {
         setLocationPoints([]);
       }
       
-      // 5. Fetch Crypto data - wallets endpoint contains all crypto data
+      // 5. Fetch Crypto data - both transactions AND wallets
       try {
-        const cryptoUrl = `${API_BASE}/crypto/case/${selectedCaseId}/wallets`;
-        const walletsRes = await fetch(cryptoUrl, { headers });
+        // 5a. Fetch imported transactions from /crypto/case/{id}/transactions
+        const transactionsUrl = `${API_BASE}/crypto/case/${selectedCaseId}/transactions?limit=500`;
+        const transactionsRes = await fetch(transactionsUrl, { headers });
+        
+        if (transactionsRes.ok) {
+          const transactionsData: CryptoTransaction[] = await transactionsRes.json();
+          setCryptoTransactions(transactionsData || []);
+        } else {
+          setCryptoTransactions([]);
+        }
+        
+        // 5b. Fetch saved wallets from /crypto/case/{id}/wallets (for additional context)
+        const walletsUrl = `${API_BASE}/crypto/case/${selectedCaseId}/wallets`;
+        const walletsRes = await fetch(walletsUrl, { headers });
         
         if (walletsRes.ok) {
           const walletsData: SavedWallet[] = await walletsRes.json();
-          
-          if (walletsData && walletsData.length > 0) {
-            // Store original wallets for display (with risk scores)
-            setCryptoWallets(walletsData);
-            
-            // Also transform to transactions for count display
-            const walletTransactions: CryptoTransaction[] = walletsData.map((w: SavedWallet, idx: number) => ({
-              id: w.id || idx,
-              blockchain: w.blockchain || 'unknown',
-              from_address: w.address,
-              from_label: w.label || w.owner_name || undefined,
-              to_address: '-',
-              to_label: undefined,
-              amount: (w.total_received || 0) + (w.total_sent || 0),
-              amount_usd: (w.total_received_usd || 0) + (w.total_sent_usd || 0),
-              risk_flag: w.is_mixer ? 'mixer_detected' : w.is_suspect ? 'high_risk' : 'none',
-              risk_score: w.risk_score || 0,
-              timestamp: undefined
-            }));
-            setCryptoTransactions(walletTransactions);
-          } else {
-            setCryptoWallets([]);
-            setCryptoTransactions([]);
-          }
+          setCryptoWallets(walletsData || []);
         } else {
           setCryptoWallets([]);
-          setCryptoTransactions([]);
         }
       } catch {
         setCryptoWallets([]);

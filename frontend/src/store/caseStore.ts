@@ -92,8 +92,14 @@ export const useCaseStore = create<CaseState>()(
           );
           const evidences = evidencesRes.ok ? await evidencesRes.json() : [];
 
-          // Count by evidence type
-          let cryptoCount = 0;
+          // Fetch crypto transactions count (from crypto_transactions table)
+          const cryptoRes = await fetch(
+            `${API_BASE}/crypto/case/${caseId}/transactions?limit=1000`,
+            { headers }
+          );
+          const cryptoTransactions = cryptoRes.ok ? await cryptoRes.json() : [];
+
+          // Count by evidence type (for calls and locations)
           let callsCount = 0;
           let locationsCount = 0;
 
@@ -101,9 +107,7 @@ export const useCaseStore = create<CaseState>()(
             const fileType = ev.file_type?.toLowerCase() || '';
             const fileName = ev.file_name?.toLowerCase() || '';
             
-            if (fileType === 'crypto' || fileName.includes('crypto')) {
-              cryptoCount += ev.records_count || 1;
-            } else if (fileType === 'phone' || fileName.includes('call')) {
+            if (fileType === 'phone' || fileName.includes('call')) {
               callsCount += ev.records_count || 1;
             } else if (fileType === 'location' || fileName.includes('location') || fileName.includes('gps')) {
               locationsCount += ev.records_count || 1;
@@ -113,7 +117,7 @@ export const useCaseStore = create<CaseState>()(
           set({
             dataCounts: {
               moneyFlow: nodes.length + edges.length,
-              crypto: cryptoCount,
+              crypto: cryptoTransactions.length,  // Count from crypto_transactions API
               calls: callsCount,
               locations: locationsCount,
               evidences: evidences.length,
