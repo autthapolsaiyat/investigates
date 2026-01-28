@@ -22,7 +22,7 @@ import {
   Clock, Hash, Activity, AlertCircle, Info,
   Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge
 } from 'lucide-react';
-import { Button, Card, Badge } from '../../components/ui';
+import { useNavigate } from 'react-router-dom';import { Button, Card, Badge } from '../../components/ui';
 import blockchainApi, {
   getKnownEntity,
   getExplorerUrl,
@@ -31,7 +31,6 @@ import blockchainApi, {
   calculateRiskScore
 } from '../../services/blockchainApi';
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
-import { CryptoImportModal } from './CryptoImportModal';
 import { CryptoGraph } from './CryptoGraph';
 
 // Blockchain configurations
@@ -167,7 +166,7 @@ const generateMockWalletData = (address: string, chain: BlockchainType): { walle
 };
 
 export const CryptoTracker = () => {
-  const [searchAddress, setSearchAddress] = useState('');
+  const navigate = useNavigate();  const [searchAddress, setSearchAddress] = useState('');
   const [selectedChain, setSelectedChain] = useState<BlockchainType>('ethereum');
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -180,7 +179,6 @@ export const CryptoTracker = () => {
   const [dataSource, setDataSource] = useState<'api' | 'mock'>('mock');
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [currentPrice, setCurrentPrice] = useState<number>(0);
-  const [showImportModal, setShowImportModal] = useState(false);
   
   
   
@@ -381,9 +379,9 @@ export const CryptoTracker = () => {
           </div>
           
           {walletInfo && (
-            <Button variant="primary" onClick={() => setShowImportModal(true)}>
-              <GitMerge size={18} className="mr-2" />
-              Import to Money Flow
+            <Button variant="primary" onClick={() => navigate('/app/import')}>
+              <FileText size={18} className="mr-2" />
+              Import CSV via Smart Import
             </Button>
           )}
           <Button variant="secondary">
@@ -1055,13 +1053,6 @@ export const CryptoTracker = () => {
         </Card>
       )}
 
-      {/* Import Modal */}
-      <CryptoImportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        walletData={walletInfo}
-        transactions={transactions}
-      />
     </div>
   );
 };
