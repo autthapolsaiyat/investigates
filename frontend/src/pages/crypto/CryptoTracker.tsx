@@ -1,6 +1,6 @@
 /**
  * Crypto Tracker - Professional Blockchain Forensics
- * Digital Forensic standard for Crypto Case Investigation
+ * มาตรฐาน Digital Forensic สำหรับการสืบสวนคดีคริปโต
  * 
  * Features:
  * - Multi-chain Wallet Lookup (BTC, ETH, USDT-TRC20, BNB, Polygon)
@@ -14,18 +14,15 @@
  * 
  * @version 2.0 - Real API Integration
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Wallet, Search, Loader2, ExternalLink, Copy, CheckCircle2,
   AlertTriangle, ArrowUpRight, ArrowDownLeft,
   Shield, ShieldAlert, ShieldCheck, Eye, FileText, Download, Link2,
   Clock, Hash, Activity, AlertCircle, Info,
-  Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge,
-  Save, Trash2, FolderOpen
+  Network, BarChart3, Fingerprint, Globe, Building, Wifi, WifiOff, GitMerge
 } from 'lucide-react';
-import { Button, Card, Badge, CaseInfoBar } from '../../components/ui';
-import { useCaseStore } from '../../store/caseStore';
-
+import { Button, Card, Badge } from '../../components/ui';
 import blockchainApi, {
   getKnownEntity,
   getExplorerUrl,
@@ -36,27 +33,6 @@ import blockchainApi, {
 import type { WalletInfo, Transaction, BlockchainType } from '../../services/blockchainApi';
 import { CryptoImportModal } from './CryptoImportModal';
 import { CryptoGraph } from './CryptoGraph';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
-
-// Saved wallet type from backend
-interface SavedWallet {
-  id: number;
-  address: string;
-  blockchain: string;
-  label: string | null;
-  owner_name: string | null;
-  owner_type: string | null;
-  total_received: number;
-  total_sent: number;
-  total_received_usd: number;
-  total_sent_usd: number;
-  transaction_count: number;
-  risk_score: number;
-  is_suspect: boolean;
-  is_exchange: boolean;
-  is_mixer: boolean;
-}
 
 // Blockchain configurations
 interface BlockchainConfig {
@@ -206,135 +182,11 @@ export const CryptoTracker = () => {
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   const [showImportModal, setShowImportModal] = useState(false);
   
-  // Use global case store
-  const { selectedCase } = useCaseStore();
   
-  // Saved wallets state
-  const [savedWallets, setSavedWallets] = useState<SavedWallet[]>([]);
-  const [savingWallet, setSavingWallet] = useState(false);
-  const [loadingSavedWallets, setLoadingSavedWallets] = useState(false);
+  
 
   // Get current blockchain config
   const currentChain = blockchains.find(b => b.id === selectedChain)!;
-  
-  // Fetch saved wallets for current case
-  const fetchSavedWallets = useCallback(async () => {
-    if (!selectedCase?.id) return;
-    
-    setLoadingSavedWallets(true);
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE}/crypto/case/${selectedCase.id}/wallets`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSavedWallets(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch saved wallets:', err);
-    } finally {
-      setLoadingSavedWallets(false);
-    }
-  }, [selectedCase?.id]);
-  
-  // Save wallet to case
-  const saveWalletToCase = async () => {
-    if (!selectedCase?.id || !walletInfo) return;
-    
-    setSavingWallet(true);
-    try {
-      const token = localStorage.getItem('access_token');
-      const walletData = {
-        address: walletInfo.address,
-        blockchain: walletInfo.blockchain,
-        label: walletInfo.labels[0] || null,
-        owner_name: getKnownEntity(walletInfo.address)?.name || null,
-        owner_type: walletInfo.isContract ? 'contract' : (getKnownEntity(walletInfo.address)?.type || 'unknown'),
-        total_received: walletInfo.totalReceived,
-        total_sent: walletInfo.totalSent,
-        total_received_usd: walletInfo.totalReceived,
-        total_sent_usd: walletInfo.totalSent,
-        transaction_count: walletInfo.txCount,
-        risk_score: walletInfo.riskScore,
-        is_suspect: walletInfo.riskScore >= 70,
-        is_exchange: walletInfo.labels.some(l => l.toLowerCase().includes('exchange')),
-        is_mixer: walletInfo.labels.some(l => l.toLowerCase().includes('mixer') || l.toLowerCase().includes('tornado')),
-        first_tx_date: walletInfo.firstTxDate,
-        last_tx_date: walletInfo.lastTxDate
-      };
-      
-      const response = await fetch(`${API_BASE}/crypto/case/${selectedCase.id}/wallets`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(walletData)
-      });
-      
-      if (response.ok) {
-        await fetchSavedWallets();
-        alert('Wallet saved to case successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to save wallet: ${errorData.detail || 'Unknown error'}`);
-      }
-    } catch (err) {
-      console.error('Failed to save wallet:', err);
-      alert('Failed to save wallet to case');
-    } finally {
-      setSavingWallet(false);
-    }
-  };
-  
-  // Delete wallet from case
-  const deleteWalletFromCase = async (walletId: number) => {
-    if (!selectedCase?.id) return;
-    
-    if (!confirm('Are you sure you want to delete this wallet?')) return;
-    
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE}/crypto/case/${selectedCase.id}/wallets/${walletId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        await fetchSavedWallets();
-      } else {
-        alert('Failed to delete wallet');
-      }
-    } catch (err) {
-      console.error('Failed to delete wallet:', err);
-      alert('Failed to delete wallet');
-    }
-  };
-  
-  // Load saved wallet for viewing
-  const loadSavedWallet = (wallet: SavedWallet) => {
-    setSearchAddress(wallet.address);
-    // Detect and set chain
-    const chain = detectBlockchain(wallet.address);
-    setSelectedChain(chain);
-    // Trigger search
-    setTimeout(() => {
-      const searchBtn = document.querySelector('[data-search-btn]') as HTMLButtonElement;
-      if (searchBtn) searchBtn.click();
-    }, 100);
-  };
-  
-  // Fetch saved wallets on case change
-  useEffect(() => {
-    fetchSavedWallets();
-  }, [fetchSavedWallets]);;
 
   // Check API status on mount
   useEffect(() => {
@@ -398,7 +250,7 @@ export const CryptoTracker = () => {
   // Search wallet - with real API integration
   const searchWallet = async () => {
     if (!searchAddress.trim()) {
-      setError('Please enter Wallet Address');
+      setError('กรุณาใส่ Wallet Address');
       return;
     }
     
@@ -478,9 +330,9 @@ export const CryptoTracker = () => {
   };
 
   const getRiskLabel = (score: number) => {
-    if (score >= 70) return 'High Risk';
-    if (score >= 40) return 'Medium Risk';
-    return 'Low Risk';
+    if (score >= 70) return 'ความเสี่ยงสูง';
+    if (score >= 40) return 'ความเสี่ยงปานกลาง';
+    return 'ความเสี่ยงต่ำ';
   };
 
   const getSeverityColor = (severity: string) => {
@@ -505,7 +357,7 @@ export const CryptoTracker = () => {
             Crypto Tracker
           </h1>
           <p className="text-dark-400 mt-1">
-            Blockchain Forensics - Professional Crypto Transaction Analysis
+            Blockchain Forensics - วิเคราะห์ธุรกรรมคริปโตระดับมืออาชีพ
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -534,67 +386,16 @@ export const CryptoTracker = () => {
               Import to Money Flow
             </Button>
           )}
+          <Button variant="secondary">
+            <FileText size={18} className="mr-2" />
+            รายงาน
+          </Button>
+          <Button variant="secondary">
+            <Download size={18} className="mr-2" />
+            Export
+          </Button>
         </div>
       </div>
-
-      {/* Case Info */}
-      <CaseInfoBar />
-
-      {/* Saved Wallets Section */}
-      {selectedCase && savedWallets.length > 0 && (
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-primary-400" />
-              Saved Wallets ({savedWallets.length})
-            </h3>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={fetchSavedWallets}
-              disabled={loadingSavedWallets}
-            >
-              {loadingSavedWallets ? <Loader2 size={16} className="animate-spin" /> : 'Refresh'}
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {savedWallets.map(wallet => (
-              <div 
-                key={wallet.id} 
-                className={`p-3 rounded-lg border cursor-pointer transition-colors hover:border-primary-500 ${
-                  searchAddress.toLowerCase() === wallet.address.toLowerCase() 
-                    ? 'bg-primary-500/10 border-primary-500' 
-                    : 'bg-dark-800 border-dark-700'
-                }`}
-                onClick={() => loadSavedWallet(wallet)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant={wallet.risk_score >= 70 ? 'danger' : wallet.risk_score >= 40 ? 'warning' : 'success'}>
-                    Risk: {wallet.risk_score}
-                  </Badge>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteWalletFromCase(wallet.id); }}
-                    className="p-1 text-dark-400 hover:text-red-400 transition-colors"
-                    title="Delete wallet"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <p className="font-mono text-sm text-dark-300 truncate" title={wallet.address}>
-                  {wallet.address.substring(0, 10)}...{wallet.address.substring(wallet.address.length - 8)}
-                </p>
-                <div className="flex items-center justify-between mt-2 text-xs text-dark-400">
-                  <span className="uppercase">{wallet.blockchain}</span>
-                  <span>{wallet.transaction_count} txs</span>
-                </div>
-                {wallet.label && (
-                  <Badge variant="default" className="mt-2 text-xs">{wallet.label}</Badge>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
       {/* Search Section */}
       <Card className="p-4">
@@ -626,7 +427,7 @@ export const CryptoTracker = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={18} />
             <input
               type="text"
-              placeholder="Enter Wallet Address (0x... or T... or bc1...)"
+              placeholder="ใส่ Wallet Address (0x... หรือ T... หรือ bc1...)"
               value={searchAddress}
               onChange={(e) => setSearchAddress(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && searchWallet()}
@@ -634,16 +435,16 @@ export const CryptoTracker = () => {
             />
           </div>
 
-          <Button onClick={searchWallet} disabled={isLoading} data-search-btn>
+          <Button onClick={searchWallet} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 size={18} className="mr-2 animate-spin" />
-                LoadingSearch...
+                กำลังค้นหา...
               </>
             ) : (
               <>
                 <Search size={18} className="mr-2" />
-                Search
+                ค้นหา
               </>
             )}
           </Button>
@@ -651,7 +452,7 @@ export const CryptoTracker = () => {
 
         {/* Quick Search Examples */}
         <div className="mt-3 flex items-center gap-2 text-xs">
-          <span className="text-dark-500">Example:</span>
+          <span className="text-dark-500">ตัวอย่าง:</span>
           <button
             onClick={() => setSearchAddress('0x28c6c06298d514db089934071355e5743bf21d60')}
             className="text-primary-400 hover:underline"
@@ -692,12 +493,12 @@ export const CryptoTracker = () => {
             {dataSource === 'api' ? (
               <>
                 <CheckCircle2 size={16} />
-                <span>Data from real API (Real-time)</span>
+                <span>ข้อมูลจาก API จริง (Real-time)</span>
               </>
             ) : (
               <>
                 <AlertTriangle size={16} />
-                <span>Demo data (Demo Mode) - API unavailable or rate limited</span>
+                <span>ข้อมูลจำลอง (Demo Mode) - API ไม่พร้อมใช้งานหรือถูก rate limit</span>
               </>
             )}
           </div>
@@ -711,7 +512,7 @@ export const CryptoTracker = () => {
                   <span className="text-2xl">{currentChain.icon}</span>
                 </div>
                 <div>
-                  <p className="text-sm text-dark-400">Balance</p>
+                  <p className="text-sm text-dark-400">ยอดคงเหลือ</p>
                   <p className="text-2xl font-bold">{formatCrypto(walletInfo.balance, currentChain.symbol)}</p>
                   <p className="text-sm text-dark-400">{formatUSD(walletInfo.balanceUSD)}</p>
                 </div>
@@ -722,7 +523,7 @@ export const CryptoTracker = () => {
             <Card className="p-4">
               <div className="flex items-center gap-2 text-green-400 mb-1">
                 <ArrowDownLeft size={16} />
-                <span className="text-sm">Incoming</span>
+                <span className="text-sm">รับเข้า</span>
               </div>
               <p className="text-xl font-bold text-green-400">{formatUSD(walletInfo.totalReceived)}</p>
             </Card>
@@ -731,7 +532,7 @@ export const CryptoTracker = () => {
             <Card className="p-4">
               <div className="flex items-center gap-2 text-red-400 mb-1">
                 <ArrowUpRight size={16} />
-                <span className="text-sm">Export</span>
+                <span className="text-sm">ส่งออก</span>
               </div>
               <p className="text-xl font-bold text-red-400">{formatUSD(walletInfo.totalSent)}</p>
             </Card>
@@ -740,7 +541,7 @@ export const CryptoTracker = () => {
             <Card className="p-4">
               <div className="flex items-center gap-2 text-blue-400 mb-1">
                 <Activity size={16} />
-                <span className="text-sm">Transactions</span>
+                <span className="text-sm">ธุรกรรม</span>
               </div>
               <p className="text-xl font-bold">{walletInfo.txCount.toLocaleString()}</p>
             </Card>
@@ -784,11 +585,11 @@ export const CryptoTracker = () => {
               <div className="flex items-center gap-4 text-sm">
                 <div>
                   <p className="text-dark-400">First TX</p>
-                  <p>{walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('en-US') : '-'}</p>
+                  <p>{walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('th-TH') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-dark-400">Last TX</p>
-                  <p>{walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('en-US') : '-'}</p>
+                  <p>{walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('th-TH') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-dark-400">Type</p>
@@ -835,48 +636,16 @@ export const CryptoTracker = () => {
                 Blockchair
               </a>
             </div>
-            
-            {/* Save to Case Action */}
-            {selectedCase && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-700">
-                <div className="flex items-center gap-2 text-sm text-dark-400">
-                  <FolderOpen size={16} />
-                  <span>Case: {selectedCase.case_number}</span>
-                </div>
-                <Button 
-                  variant="primary" 
-                  onClick={saveWalletToCase}
-                  disabled={savingWallet || savedWallets.some(w => w.address.toLowerCase() === walletInfo.address.toLowerCase())}
-                >
-                  {savingWallet ? (
-                    <>
-                      <Loader2 size={18} className="mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : savedWallets.some(w => w.address.toLowerCase() === walletInfo.address.toLowerCase()) ? (
-                    <>
-                      <CheckCircle2 size={18} className="mr-2" />
-                      Already Saved
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} className="mr-2" />
-                      Save to Case
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
           </Card>
 
           {/* Tabs */}
           <div className="flex items-center gap-1 border-b border-dark-700">
             {[
-              { id: 'overview', label: 'Overview', icon: Eye },
-              { id: 'transactions', label: 'Transactions', icon: Activity },
-              { id: 'graph', label: 'Network Graph', icon: Network },
-              { id: 'risk', label: 'Risk Analysis', icon: ShieldAlert },
-              { id: 'evidence', label: 'Evidence', icon: Fingerprint },
+              { id: 'overview', label: 'ภาพรวม', icon: Eye },
+              { id: 'transactions', label: 'ธุรกรรม', icon: Activity },
+              { id: 'graph', label: 'กราฟเครือข่าย', icon: Network },
+              { id: 'risk', label: 'วิเคราะห์ความเสี่ยง', icon: ShieldAlert },
+              { id: 'evidence', label: 'หลักฐาน', icon: Fingerprint },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -900,7 +669,7 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Clock className="text-primary-400" />
-                  Recent Transactions
+                  ธุรกรรมล่าสุด
                 </h3>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {transactions.slice(0, 10).map((tx) => {
@@ -919,7 +688,7 @@ export const CryptoTracker = () => {
                                 {entity?.name || formatAddress(tx.type === 'in' ? tx.from : tx.to)}
                               </p>
                               <p className="text-xs text-dark-400">
-                                {new Date(tx.timestamp).toLocaleString('en-US')}
+                                {new Date(tx.timestamp).toLocaleString('th-TH')}
                               </p>
                             </div>
                           </div>
@@ -950,7 +719,7 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Link2 className="text-primary-400" />
-                  Main Counterparties
+                  Counterparties หลัก
                 </h3>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {(() => {
@@ -979,7 +748,7 @@ export const CryptoTracker = () => {
                                 <p className="font-medium text-sm">
                                   {entity?.name || formatAddress(cp.address)}
                                 </p>
-                                <p className="text-xs text-dark-400">{cp.txCount} Transactions</p>
+                                <p className="text-xs text-dark-400">{cp.txCount} ธุรกรรม</p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -1003,7 +772,7 @@ export const CryptoTracker = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Activity className="text-primary-400" />
-                  Transactions ({filteredTx.length} List)
+                  รายการธุรกรรม ({filteredTx.length} รายการ)
                 </h3>
                 <div className="flex items-center gap-2">
                   <select
@@ -1011,9 +780,9 @@ export const CryptoTracker = () => {
                     value={txFilter}
                     onChange={(e) => setTxFilter(e.target.value as typeof txFilter)}
                   >
-                    <option value="all">All</option>
-                    <option value="in">Incoming</option>
-                    <option value="out">Export</option>
+                    <option value="all">ทั้งหมด</option>
+                    <option value="in">รับเข้า</option>
+                    <option value="out">ส่งออก</option>
                   </select>
                 </div>
               </div>
@@ -1022,10 +791,10 @@ export const CryptoTracker = () => {
                   <thead className="bg-dark-800">
                     <tr>
                       <th className="text-left px-4 py-3">Hash</th>
-                      <th className="text-left px-4 py-3">Time</th>
-                      <th className="text-left px-4 py-3">Type</th>
-                      <th className="text-left px-4 py-3">from/to</th>
-                      <th className="text-right px-4 py-3">Quantity</th>
+                      <th className="text-left px-4 py-3">เวลา</th>
+                      <th className="text-left px-4 py-3">ประเภท</th>
+                      <th className="text-left px-4 py-3">จาก/ถึง</th>
+                      <th className="text-right px-4 py-3">จำนวน</th>
                       <th className="text-left px-4 py-3">Entity</th>
                       <th className="text-center px-4 py-3">Explorer</th>
                     </tr>
@@ -1037,7 +806,7 @@ export const CryptoTracker = () => {
                       return (
                         <tr key={tx.hash} className="hover:bg-dark-800/50">
                           <td className="px-4 py-3 font-mono text-xs">{formatAddress(tx.hash, 8)}</td>
-                          <td className="px-4 py-3 text-dark-400">{new Date(tx.timestamp).toLocaleString('en-US')}</td>
+                          <td className="px-4 py-3 text-dark-400">{new Date(tx.timestamp).toLocaleString('th-TH')}</td>
                           <td className="px-4 py-3">
                             <Badge variant={tx.type === 'in' ? 'success' : 'danger'}>{tx.type === 'in' ? 'IN' : 'OUT'}</Badge>
                           </td>
@@ -1066,7 +835,7 @@ export const CryptoTracker = () => {
               {filteredTx.length > 50 && !showAllTx && (
                 <div className="text-center mt-4">
                   <Button variant="ghost" onClick={() => setShowAllTx(true)}>
-                    ShowAll ({filteredTx.length} List)
+                    แสดงทั้งหมด ({filteredTx.length} รายการ)
                   </Button>
                 </div>
               )}
@@ -1110,7 +879,7 @@ export const CryptoTracker = () => {
               <Card className="p-4 col-span-2">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <AlertTriangle className="text-yellow-400" />
-                  Detected Risk Factors
+                  ปัจจัยความเสี่ยงที่ตรวจพบ
                 </h3>
                 {walletInfo.riskFactors.length > 0 ? (
                   <div className="space-y-3">
@@ -1129,10 +898,10 @@ export const CryptoTracker = () => {
                             </div>
                             <div>
                               <p className="font-medium">{factor.description}</p>
-                              <p className="text-xs text-dark-400 mt-1">Severity: {factor.severity.toUpperCase()}</p>
+                              <p className="text-xs text-dark-400 mt-1">ความรุนแรง: {factor.severity.toUpperCase()}</p>
                             </div>
                           </div>
-                          <Badge variant="danger">+{factor.score} points</Badge>
+                          <Badge variant="danger">+{factor.score} คะแนน</Badge>
                         </div>
                       </div>
                     ))}
@@ -1140,36 +909,36 @@ export const CryptoTracker = () => {
                 ) : (
                   <div className="text-center py-8">
                     <ShieldCheck size={48} className="mx-auto text-green-400 mb-3" />
-                    <p className="text-lg font-medium text-green-400">No significant risks found</p>
-                    <p className="text-sm text-dark-400 mt-1">This wallet has normal behavior</p>
+                    <p className="text-lg font-medium text-green-400">ไม่พบความเสี่ยงที่มีนัยสำคัญ</p>
+                    <p className="text-sm text-dark-400 mt-1">Wallet นี้มีพฤติกรรมปกติ</p>
                   </div>
                 )}
 
                 <div className="mt-6 p-4 bg-dark-900 rounded-lg">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Info size={16} className="text-primary-400" />
-                    Investigation Recommendations
+                    คำแนะนำสำหรับการสืบสวน
                   </h4>
                   <ul className="space-y-2 text-sm">
                     {walletInfo.riskScore >= 70 && (
                       <>
                         <li className="flex items-start gap-2">
                           <CheckCircle2 size={14} className="text-red-400 mt-0.5" />
-                          <span>Thoroughly investigate transactions related to Mixer</span>
+                          <span>ควรตรวจสอบธุรกรรมที่เกี่ยวข้องกับ Mixer อย่างละเอียด</span>
                         </li>
                         <li className="flex items-start gap-2">
                           <CheckCircle2 size={14} className="text-red-400 mt-0.5" />
-                          <span>Track counterparties with high transaction volume</span>
+                          <span>ติดตาม counterparties ที่มีปริมาณธุรกรรมสูง</span>
                         </li>
                       </>
                     )}
                     <li className="flex items-start gap-2">
                       <CheckCircle2 size={14} className="text-primary-400 mt-0.5" />
-                      <span>Check Exchange used for Cash-out and request KYC data</span>
+                      <span>ตรวจสอบ Exchange ที่ใช้ในการ Cash-out และขอข้อมูล KYC</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 size={14} className="text-primary-400 mt-0.5" />
-                      <span>Analyze Time Pattern to identify abnormal behavior</span>
+                      <span>วิเคราะห์ Time Pattern เพื่อระบุพฤติกรรมผิดปกติ</span>
                     </li>
                   </ul>
                 </div>
@@ -1183,7 +952,7 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Fingerprint className="text-primary-400" />
-                  SummaryEvidence
+                  สรุปหลักฐาน
                 </h3>
                 <div className="space-y-4">
                   <div className="p-4 bg-dark-800 rounded-lg">
@@ -1195,19 +964,19 @@ export const CryptoTracker = () => {
                     <p className="font-medium">{currentChain.name} ({currentChain.symbol})</p>
                   </div>
                   <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-dark-400 mb-2">Transaction Time Range</p>
+                    <p className="text-sm text-dark-400 mb-2">ช่วงเวลาธุรกรรม</p>
                     <p className="font-medium">
-                      {walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('en-US') : '-'}
+                      {walletInfo.firstTxDate ? new Date(walletInfo.firstTxDate).toLocaleDateString('th-TH') : '-'}
                       {' → '}
-                      {walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('en-US') : '-'}
+                      {walletInfo.lastTxDate ? new Date(walletInfo.lastTxDate).toLocaleDateString('th-TH') : '-'}
                     </p>
                   </div>
                   <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-dark-400 mb-2">Total Value</p>
+                    <p className="text-sm text-dark-400 mb-2">มูลค่ารวม</p>
                     <p className="font-medium text-lg">{formatUSD(walletInfo.totalReceived + walletInfo.totalSent)}</p>
                   </div>
                   <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-dark-400 mb-2">Data Source</p>
+                    <p className="text-sm text-dark-400 mb-2">แหล่งข้อมูล</p>
                     <Badge variant={dataSource === 'api' ? 'success' : 'warning'}>
                       {dataSource === 'api' ? 'Real-time API' : 'Demo Data'}
                     </Badge>
@@ -1218,14 +987,14 @@ export const CryptoTracker = () => {
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Download className="text-primary-400" />
-                  Export Evidence
+                  Export หลักฐาน
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { icon: FileText, color: 'text-red-400', title: 'PDF Report', desc: 'Report for court submission with Chain of Custody' },
-                    { icon: BarChart3, color: 'text-green-400', title: 'Excel/CSV', desc: 'All transaction data for additional analysis' },
-                    { icon: Network, color: 'text-blue-400', title: 'Graph Export', desc: 'Network Graph image (PNG/SVG)' },
-                    { icon: Hash, color: 'text-purple-400', title: 'JSON Data', desc: 'Raw data for import to other systems' },
+                    { icon: FileText, color: 'text-red-400', title: 'PDF Report', desc: 'รายงานสำหรับส่งศาล พร้อม Chain of Custody' },
+                    { icon: BarChart3, color: 'text-green-400', title: 'Excel/CSV', desc: 'ข้อมูลธุรกรรมทั้งหมดสำหรับวิเคราะห์เพิ่มเติม' },
+                    { icon: Network, color: 'text-blue-400', title: 'Graph Export', desc: 'ภาพ Network Graph (PNG/SVG)' },
+                    { icon: Hash, color: 'text-purple-400', title: 'JSON Data', desc: 'ข้อมูลดิบสำหรับ Import เข้าระบบอื่น' },
                   ].map((item, idx) => (
                     <button key={idx} className="w-full p-4 bg-dark-800 rounded-lg hover:bg-dark-750 transition-colors text-left">
                       <div className="flex items-center gap-3">
@@ -1242,7 +1011,7 @@ export const CryptoTracker = () => {
                 <div className="mt-6">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Globe size={16} className="text-primary-400" />
-                    Blockchain Explorer Links
+                    ลิงก์ Blockchain Explorer
                   </h4>
                   <div className="space-y-2">
                     <a href={getExplorerUrl(walletInfo.blockchain as BlockchainType, 'address', walletInfo.address)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-dark-800 rounded-lg hover:bg-dark-750 transition-colors">
@@ -1271,9 +1040,9 @@ export const CryptoTracker = () => {
       {!walletInfo && !isLoading && (
         <Card className="p-12 text-center">
           <Wallet size={64} className="mx-auto text-dark-600 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Search Wallet to start Analysis</h2>
+          <h2 className="text-xl font-semibold mb-2">ค้นหา Wallet เพื่อเริ่มวิเคราะห์</h2>
           <p className="text-dark-400 mb-6">
-            Enter Wallet Address to view transaction data, analyze risks, and track money movement
+            ใส่ Wallet Address เพื่อดูข้อมูลธุรกรรม, วิเคราะห์ความเสี่ยง และติดตามการเคลื่อนไหวของเงิน
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {blockchains.map(chain => (
