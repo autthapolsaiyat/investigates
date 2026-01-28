@@ -423,40 +423,65 @@ export const ForensicReportV2 = () => {
         setLocationPoints([]);
       }
       
-      // 5. Fetch Crypto data - from saved wallets (not imported transactions)
+      // 5. Fetch Crypto data - try both wallets and transactions endpoints
+      console.log('[Forensic] Fetching crypto for case ID:', selectedCaseId);
       try {
-        const walletsRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/wallets`, { headers });
+        // First try wallets endpoint
+        const cryptoUrl = `${API_BASE}/crypto/case/${selectedCaseId}/wallets`;
+        console.log('[Forensic] Crypto URL:', cryptoUrl);
+        
+        const walletsRes = await fetch(cryptoUrl, { headers });
+        console.log('[Forensic] Wallets response status:', walletsRes.status);
+        
         if (walletsRes.ok) {
           const walletsData: SavedWallet[] = await walletsRes.json();
-          setCryptoWallets(walletsData || []);
-          // Transform wallets to transaction-like format for display
-          const walletTransactions: CryptoTransaction[] = (walletsData || []).map((w: SavedWallet, idx: number) => ({
-            id: w.id || idx,
-            blockchain: w.blockchain || 'unknown',
-            from_address: w.address,
-            from_label: w.label || w.owner_name || undefined,
-            to_address: '-',
-            to_label: undefined,
-            amount: w.total_received + w.total_sent,
-            amount_usd: w.total_received_usd + w.total_sent_usd,
-            risk_flag: w.is_mixer ? 'mixer_detected' : w.is_suspect ? 'high_risk' : 'none',
-            risk_score: w.risk_score,
-            timestamp: undefined
-          }));
-          setCryptoTransactions(walletTransactions);
-        }
-      } catch {
-        // Fallback to transactions if wallets endpoint fails
-        setCryptoWallets([]);
-        try {
-          const cryptoRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
-          if (cryptoRes.ok) {
-            const cryptoData = await cryptoRes.json();
-            setCryptoTransactions(cryptoData || []);
+          console.log('[Forensic] Wallets received:', walletsData?.length || 0, walletsData);
+          
+          if (walletsData && walletsData.length > 0) {
+            setCryptoWallets(walletsData);
+            // Transform wallets to transaction-like format for display
+            const walletTransactions: CryptoTransaction[] = walletsData.map((w: SavedWallet, idx: number) => ({
+              id: w.id || idx,
+              blockchain: w.blockchain || 'unknown',
+              from_address: w.address,
+              from_label: w.label || w.owner_name || undefined,
+              to_address: '-',
+              to_label: undefined,
+              amount: (w.total_received || 0) + (w.total_sent || 0),
+              amount_usd: (w.total_received_usd || 0) + (w.total_sent_usd || 0),
+              risk_flag: w.is_mixer ? 'mixer_detected' : w.is_suspect ? 'high_risk' : 'none',
+              risk_score: w.risk_score || 0,
+              timestamp: undefined
+            }));
+            setCryptoTransactions(walletTransactions);
+            console.log('[Forensic] Crypto transactions set:', walletTransactions.length);
+          } else {
+            // No wallets, try transactions
+            console.log('[Forensic] No wallets found, trying transactions endpoint');
+            setCryptoWallets([]);
+            const txRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
+            console.log('[Forensic] Transactions response:', txRes.status);
+            if (txRes.ok) {
+              const txData = await txRes.json();
+              console.log('[Forensic] Transactions received:', txData?.length || 0);
+              setCryptoTransactions(txData || []);
+            }
           }
-        } catch {
-          setCryptoTransactions([]);
+        } else {
+          // Wallets endpoint failed, try transactions
+          console.log('[Forensic] Wallets failed with status:', walletsRes.status);
+          setCryptoWallets([]);
+          const txRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
+          if (txRes.ok) {
+            const txData = await txRes.json();
+            setCryptoTransactions(txData || []);
+          }
         }
+      } catch (err) {
+        // Both failed
+        console.error('[Forensic] Crypto fetch error:', err);
+        setCryptoWallets([]);
+        setCryptoTransactions([]);
       }
       
     } catch (err) {
