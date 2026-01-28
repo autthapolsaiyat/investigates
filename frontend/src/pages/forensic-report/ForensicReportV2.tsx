@@ -572,29 +572,37 @@ export const ForensicReportV2 = () => {
       if (language === 'th') {
         narrative = `พบเครือข่ายการเงินประกอบด้วย ${stats.totalNodes} บัญชี มีธุรกรรมทั้งหมด ${stats.totalTransactions} รายการ มูลค่ารวม ${formatCurrency(stats.totalAmount)} `;
         
-        // Top risk persons with names
+        // Top risk persons with names and account numbers
         if (highRiskPersons.length > 0) {
           const topPersons = highRiskPersons.slice(0, 3);
-          const names = topPersons.map(p => `"${p.node.label}" (Risk: ${p.riskScore})`).join(', ');
-          narrative += `\n\n🔴 บุคคลความเสี่ยงสูง: ${names}`;
+          narrative += `\n\n🔴 บุคคลความเสี่ยงสูง:`;
+          topPersons.forEach((p, i) => {
+            const accountInfo = p.node.identifier ? ` [${p.node.identifier}]` : 
+                               p.node.wallet_address ? ` [${p.node.wallet_address.substring(0, 12)}...]` : '';
+            const bankInfo = p.node.bank_name ? ` (${p.node.bank_name})` : '';
+            narrative += `\n   ${i + 1}. "${p.node.label}"${accountInfo}${bankInfo} - Risk: ${p.riskScore}`;
+          });
           
-          // Describe the highest risk person
+          // Describe the highest risk person's behavior
           const top = topPersons[0];
           if (top.riskFactors && top.riskFactors.length > 0) {
             const factors = top.riskFactors.slice(0, 2).map(f => f.factor).join(', ');
-            narrative += `\n   "${top.node.label}" มีพฤติกรรมน่าสงสัย: ${factors}`;
+            narrative += `\n      → พฤติกรรม: ${factors}`;
           }
         }
         
-        // Key transactions narrative
+        // Key transactions narrative with account numbers
         if (keyTransactions.length > 0) {
           const topTx = keyTransactions.slice(0, 3);
           narrative += `\n\n💸 ธุรกรรมสำคัญ:`;
           topTx.forEach((tx, i) => {
             const from = tx.fromNode?.label || 'ไม่ทราบ';
+            const fromAcct = tx.fromNode?.identifier ? ` [${tx.fromNode.identifier}]` : '';
             const to = tx.toNode?.label || 'ไม่ทราบ';
+            const toAcct = tx.toNode?.identifier ? ` [${tx.toNode.identifier}]` : '';
             const amount = formatCurrency(tx.edge?.amount || 0);
-            narrative += `\n   ${i + 1}. ${from} → ${to} (${amount}) - ${tx.reason}`;
+            narrative += `\n   ${i + 1}. ${from}${fromAcct} → ${to}${toAcct}`;
+            narrative += `\n      💵 ${amount} - ${tx.reason}`;
           });
         }
         
@@ -607,8 +615,12 @@ export const ForensicReportV2 = () => {
         
         if (highRiskPersons.length > 0) {
           const topPersons = highRiskPersons.slice(0, 3);
-          const names = topPersons.map(p => `"${p.node.label}" (Risk: ${p.riskScore})`).join(', ');
-          narrative += `\n\n🔴 High-risk entities: ${names}`;
+          narrative += `\n\n🔴 High-risk entities:`;
+          topPersons.forEach((p, i) => {
+            const accountInfo = p.node.identifier ? ` [${p.node.identifier}]` : '';
+            const bankInfo = p.node.bank_name ? ` (${p.node.bank_name})` : '';
+            narrative += `\n   ${i + 1}. "${p.node.label}"${accountInfo}${bankInfo} - Risk: ${p.riskScore}`;
+          });
         }
         
         if (keyTransactions.length > 0) {
@@ -616,9 +628,12 @@ export const ForensicReportV2 = () => {
           narrative += `\n\n💸 Key transactions:`;
           topTx.forEach((tx, i) => {
             const from = tx.fromNode?.label || 'Unknown';
+            const fromAcct = tx.fromNode?.identifier ? ` [${tx.fromNode.identifier}]` : '';
             const to = tx.toNode?.label || 'Unknown';
+            const toAcct = tx.toNode?.identifier ? ` [${tx.toNode.identifier}]` : '';
             const amount = formatCurrency(tx.edge?.amount || 0);
-            narrative += `\n   ${i + 1}. ${from} → ${to} (${amount}) - ${tx.reason}`;
+            narrative += `\n   ${i + 1}. ${from}${fromAcct} → ${to}${toAcct}`;
+            narrative += `\n      💵 ${amount} - ${tx.reason}`;
           });
         }
       }
@@ -729,6 +744,7 @@ export const ForensicReportV2 = () => {
       // Sort by calls
       const sortedByCall = [...callEntities].sort((a, b) => b.total_calls - a.total_calls);
       const sortedByDuration = [...callEntities].sort((a, b) => b.total_duration - a.total_duration);
+      const highRiskCalls = callEntities.filter(e => e.risk_level === 'high');
       
       if (language === 'th') {
         narrative = `วิเคราะห์การโทรพบ ${callEntities.length} หมายเลข รวม ${totalCalls} สาย เวลาสนทนารวม ${formatDuration(totalDuration, 'th')}`;
@@ -738,7 +754,8 @@ export const ForensicReportV2 = () => {
           narrative += `\n\n📱 หมายเลขที่โทรบ่อยที่สุด:`;
           sortedByCall.slice(0, 3).forEach((e, i) => {
             const name = e.label !== e.phone_number ? ` (${e.label})` : '';
-            narrative += `\n   ${i + 1}. ${e.phone_number}${name} - ${e.total_calls} สาย`;
+            const riskBadge = e.risk_level === 'high' ? ' ⚠️' : '';
+            narrative += `\n   ${i + 1}. ${e.phone_number}${name} - ${e.total_calls} สาย, ${formatDuration(e.total_duration, 'th')}${riskBadge}`;
           });
         }
         
@@ -746,14 +763,18 @@ export const ForensicReportV2 = () => {
         if (sortedByDuration.length > 0 && sortedByDuration[0].total_duration > 0) {
           narrative += `\n\n⏱️ สนทนานานที่สุด:`;
           sortedByDuration.slice(0, 2).forEach((e, i) => {
-            narrative += `\n   ${i + 1}. ${e.phone_number} - ${formatDuration(e.total_duration, 'th')}`;
+            const name = e.label !== e.phone_number ? ` (${e.label})` : '';
+            narrative += `\n   ${i + 1}. ${e.phone_number}${name} - ${formatDuration(e.total_duration, 'th')}`;
           });
         }
         
-        // Risk levels
-        const highRiskCalls = callEntities.filter(e => e.risk_level === 'high');
+        // High risk numbers - show actual numbers
         if (highRiskCalls.length > 0) {
-          narrative += `\n\n🔴 หมายเลขความเสี่ยงสูง ${highRiskCalls.length} หมายเลข`;
+          narrative += `\n\n🔴 หมายเลขความเสี่ยงสูง (${highRiskCalls.length}):`;
+          highRiskCalls.slice(0, 5).forEach((e, i) => {
+            const name = e.label !== e.phone_number ? ` (${e.label})` : '';
+            narrative += `\n   • ${e.phone_number}${name} - ${e.total_calls} สาย`;
+          });
         }
       } else {
         narrative = `Analyzed ${callEntities.length} phone numbers with ${totalCalls} total calls, ${formatDuration(totalDuration, 'en')} talk time`;
@@ -761,13 +782,19 @@ export const ForensicReportV2 = () => {
         if (sortedByCall.length > 0) {
           narrative += `\n\n📱 Most active numbers:`;
           sortedByCall.slice(0, 3).forEach((e, i) => {
-            narrative += `\n   ${i + 1}. ${e.phone_number} - ${e.total_calls} calls`;
+            const name = e.label !== e.phone_number ? ` (${e.label})` : '';
+            const riskBadge = e.risk_level === 'high' ? ' ⚠️' : '';
+            narrative += `\n   ${i + 1}. ${e.phone_number}${name} - ${e.total_calls} calls, ${formatDuration(e.total_duration, 'en')}${riskBadge}`;
           });
         }
         
-        const highRiskCalls = callEntities.filter(e => e.risk_level === 'high');
+        // High risk numbers - show actual numbers
         if (highRiskCalls.length > 0) {
-          narrative += `\n\n🔴 ${highRiskCalls.length} high-risk number(s) identified`;
+          narrative += `\n\n🔴 High-risk numbers (${highRiskCalls.length}):`;
+          highRiskCalls.slice(0, 5).forEach((e, i) => {
+            const name = e.label !== e.phone_number ? ` (${e.label})` : '';
+            narrative += `\n   • ${e.phone_number}${name} - ${e.total_calls} calls`;
+          });
         }
       }
       
@@ -787,15 +814,29 @@ export const ForensicReportV2 = () => {
     if (hasLocations) {
       let narrative = '';
       
-      // Count by location
-      const locationCounts: Record<string, number> = {};
+      // Group by location with coordinates
+      interface LocationGroup {
+        name: string;
+        count: number;
+        lat: number;
+        lng: number;
+      }
+      const locationGroups: Record<string, LocationGroup> = {};
       locationPoints.forEach(p => {
-        locationCounts[p.location_name] = (locationCounts[p.location_name] || 0) + 1;
+        if (!locationGroups[p.location_name]) {
+          locationGroups[p.location_name] = {
+            name: p.location_name,
+            count: 0,
+            lat: p.latitude,
+            lng: p.longitude
+          };
+        }
+        locationGroups[p.location_name].count++;
       });
       
       // Sort by frequency
-      const sortedLocations = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]);
-      const uniqueLocations = new Set(locationPoints.map(p => p.location_name)).size;
+      const sortedLocations = Object.values(locationGroups).sort((a, b) => b.count - a.count);
+      const uniqueLocations = sortedLocations.length;
       
       // Source breakdown
       const sourceCounts: Record<string, number> = {};
@@ -806,11 +847,12 @@ export const ForensicReportV2 = () => {
       if (language === 'th') {
         narrative = `ติดตามตำแหน่งพบ ${uniqueLocations} สถานที่ จาก ${locationPoints.length} จุดข้อมูล`;
         
-        // Top locations
+        // Top locations with coordinates
         if (sortedLocations.length > 0) {
           narrative += `\n\n📍 สถานที่ที่พบบ่อย:`;
-          sortedLocations.slice(0, 5).forEach(([loc, count], i) => {
-            narrative += `\n   ${i + 1}. ${loc} (${count} ครั้ง)`;
+          sortedLocations.slice(0, 5).forEach((loc, i) => {
+            narrative += `\n   ${i + 1}. ${loc.name} (${loc.count} ครั้ง)`;
+            narrative += `\n      📌 พิกัด: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`;
           });
         }
         
@@ -828,13 +870,28 @@ export const ForensicReportV2 = () => {
         if (dates.size > 1) {
           narrative += `\n\n🗓️ ช่วงเวลา: ติดตามได้ ${dates.size} วัน`;
         }
+        
+        // Calculate approximate distance if multiple locations
+        if (sortedLocations.length >= 2) {
+          const firstLoc = sortedLocations[0];
+          const lastLoc = sortedLocations[sortedLocations.length - 1];
+          // Haversine approximation (rough km estimate)
+          const latDiff = Math.abs(firstLoc.lat - lastLoc.lat);
+          const lngDiff = Math.abs(firstLoc.lng - lastLoc.lng);
+          const approxKm = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111; // 1 degree ≈ 111km
+          if (approxKm > 1) {
+            narrative += `\n\n🚗 ระยะห่างระหว่างจุด: ~${approxKm.toFixed(1)} กม.`;
+          }
+        }
       } else {
         narrative = `Tracked ${uniqueLocations} unique locations from ${locationPoints.length} data points`;
         
+        // Top locations with coordinates
         if (sortedLocations.length > 0) {
           narrative += `\n\n📍 Most frequent locations:`;
-          sortedLocations.slice(0, 5).forEach(([loc, count], i) => {
-            narrative += `\n   ${i + 1}. ${loc} (${count} times)`;
+          sortedLocations.slice(0, 5).forEach((loc, i) => {
+            narrative += `\n   ${i + 1}. ${loc.name} (${loc.count} times)`;
+            narrative += `\n      📌 Coords: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`;
           });
         }
         
@@ -842,6 +899,12 @@ export const ForensicReportV2 = () => {
           .map(([src, count]) => `${src}: ${count}`)
           .join(', ');
         narrative += `\n\n📡 Data sources: ${sourceList}`;
+        
+        // Time period
+        const dates = new Set(locationPoints.map(p => p.timestamp?.split('T')[0]).filter(Boolean));
+        if (dates.size > 1) {
+          narrative += `\n\n🗓️ Time period: ${dates.size} days tracked`;
+        }
       }
       
       sections.push({
