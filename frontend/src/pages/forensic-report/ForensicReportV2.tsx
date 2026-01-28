@@ -423,9 +423,8 @@ export const ForensicReportV2 = () => {
         setLocationPoints([]);
       }
       
-      // 5. Fetch Crypto data - try both wallets and transactions endpoints
+      // 5. Fetch Crypto data - wallets endpoint contains all crypto data
       try {
-        // First try wallets endpoint
         const cryptoUrl = `${API_BASE}/crypto/case/${selectedCaseId}/wallets`;
         const walletsRes = await fetch(cryptoUrl, { headers });
         
@@ -433,8 +432,10 @@ export const ForensicReportV2 = () => {
           const walletsData: SavedWallet[] = await walletsRes.json();
           
           if (walletsData && walletsData.length > 0) {
+            // Store original wallets for display (with risk scores)
             setCryptoWallets(walletsData);
-            // Transform wallets to transaction-like format for display
+            
+            // Also transform to transactions for count display
             const walletTransactions: CryptoTransaction[] = walletsData.map((w: SavedWallet, idx: number) => ({
               id: w.id || idx,
               blockchain: w.blockchain || 'unknown',
@@ -450,25 +451,14 @@ export const ForensicReportV2 = () => {
             }));
             setCryptoTransactions(walletTransactions);
           } else {
-            // No wallets, try transactions
             setCryptoWallets([]);
-            const txRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
-            if (txRes.ok) {
-              const txData = await txRes.json();
-              setCryptoTransactions(txData || []);
-            }
+            setCryptoTransactions([]);
           }
         } else {
-          // Wallets endpoint failed, try transactions
           setCryptoWallets([]);
-          const txRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
-          if (txRes.ok) {
-            const txData = await txRes.json();
-            setCryptoTransactions(txData || []);
-          }
+          setCryptoTransactions([]);
         }
       } catch {
-        // Both failed
         setCryptoWallets([]);
         setCryptoTransactions([]);
       }
@@ -668,7 +658,7 @@ export const ForensicReportV2 = () => {
     if (hasCrypto) {
       let narrative = '';
       
-      // Group by blockchain
+      // Group by blockchain from transactions
       const blockchainCounts: Record<string, number> = {};
       cryptoTransactions.forEach(tx => {
         const bc = tx.blockchain?.toUpperCase() || 'OTHER';
@@ -678,19 +668,23 @@ export const ForensicReportV2 = () => {
       // Total USD value
       const totalUSD = cryptoTransactions.reduce((sum, tx) => sum + (tx.amount_usd || 0), 0);
       
-      // Get wallets with risk scores (from cryptoWallets or cryptoTransactions)
-      const walletsWithRisk = cryptoWallets.length > 0 
-        ? cryptoWallets 
+      // Use cryptoWallets if available, otherwise build from transactions with risk_score
+      const walletsForDisplay = cryptoWallets.length > 0 
+        ? cryptoWallets.map(w => ({
+            address: w.address,
+            label: w.label || w.owner_name,
+            blockchain: w.blockchain,
+            risk_score: w.risk_score || 0,
+            is_mixer: w.is_mixer,
+            total_received_usd: w.total_received_usd || 0
+          }))
         : cryptoTransactions.map(tx => ({
             address: tx.from_address,
             label: tx.from_label,
             blockchain: tx.blockchain,
             risk_score: tx.risk_score || 0,
             is_mixer: tx.risk_flag?.includes('mixer'),
-            total_received: tx.amount || 0,
-            total_sent: 0,
-            total_received_usd: tx.amount_usd || 0,
-            total_sent_usd: 0
+            total_received_usd: tx.amount_usd || 0
           }));
       
       if (language === 'th') {
@@ -711,18 +705,19 @@ export const ForensicReportV2 = () => {
           narrative += `\n\n🔗 บล็อกเชนที่ใช้: ${bcList}`;
         }
         
-        // Show all wallets with addresses and risk scores
-        if (walletsWithRisk.length > 0) {
+        // Show wallets with addresses and risk scores
+        if (walletsForDisplay.length > 0) {
           // Sort by risk score (highest first)
-          const sortedWallets = [...walletsWithRisk].sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
+          const sortedWallets = [...walletsForDisplay].sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
           
           narrative += `\n\n💼 กระเป๋าที่พบ (${sortedWallets.length}):`;
           sortedWallets.slice(0, 8).forEach((w, i) => {
             const addr = w.address ? (w.address.length > 20 ? w.address.substring(0, 10) + '...' + w.address.slice(-6) : w.address) : 'N/A';
             const label = w.label ? ` "${w.label}"` : '';
             const riskBadge = (w.risk_score || 0) >= 70 ? ' 🔴' : (w.risk_score || 0) >= 40 ? ' 🟡' : '';
+            const mixerBadge = w.is_mixer ? ' 🌀' : '';
             const value = w.total_received_usd ? ` ~$${w.total_received_usd.toLocaleString()}` : '';
-            narrative += `\n   ${i + 1}. ${addr}${label} (${w.blockchain || 'N/A'})${riskBadge}`;
+            narrative += `\n   ${i + 1}. ${addr}${label} (${w.blockchain || 'N/A'})${riskBadge}${mixerBadge}`;
             narrative += `\n      Risk: ${w.risk_score || 0}${value}`;
           });
           
@@ -732,16 +727,15 @@ export const ForensicReportV2 = () => {
         }
         
         // High risk wallets summary
-        const highRiskWallets = walletsWithRisk.filter(w => (w.risk_score || 0) >= 70);
+        const highRiskWallets = walletsForDisplay.filter(w => (w.risk_score || 0) >= 70);
         if (highRiskWallets.length > 0) {
           narrative += `\n\n⚠️ กระเป๋าความเสี่ยงสูง: ${highRiskWallets.length} ใบ (Risk ≥70)`;
         }
         
         // Mixer detection
-        const mixerWallets = walletsWithRisk.filter(w => w.is_mixer);
-        const mixerTx = cryptoTransactions.filter(tx => tx.risk_flag?.includes('mixer'));
-        if (mixerWallets.length > 0 || mixerTx.length > 0) {
-          narrative += `\n\n🚨 พบการใช้ Mixer/Tumbler ${mixerWallets.length + mixerTx.length} รายการ - อาจเป็นการฟอกเงิน`;
+        const mixerWallets = walletsForDisplay.filter(w => w.is_mixer);
+        if (mixerWallets.length > 0) {
+          narrative += `\n\n🚨 พบการใช้ Mixer/Tumbler ${mixerWallets.length} รายการ - อาจเป็นการฟอกเงิน`;
           mixerWallets.slice(0, 3).forEach(w => {
             const addr = w.address ? w.address.substring(0, 12) + '...' : 'N/A';
             narrative += `\n   • ${addr} (${w.blockchain})`;
@@ -761,24 +755,25 @@ export const ForensicReportV2 = () => {
         }
         
         // Show wallets with addresses
-        if (walletsWithRisk.length > 0) {
-          const sortedWallets = [...walletsWithRisk].sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
+        if (walletsForDisplay.length > 0) {
+          const sortedWallets = [...walletsForDisplay].sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
           
           narrative += `\n\n💼 Wallets found (${sortedWallets.length}):`;
           sortedWallets.slice(0, 8).forEach((w, i) => {
             const addr = w.address ? (w.address.length > 20 ? w.address.substring(0, 10) + '...' + w.address.slice(-6) : w.address) : 'N/A';
             const label = w.label ? ` "${w.label}"` : '';
             const riskBadge = (w.risk_score || 0) >= 70 ? ' 🔴' : (w.risk_score || 0) >= 40 ? ' 🟡' : '';
-            narrative += `\n   ${i + 1}. ${addr}${label} (${w.blockchain || 'N/A'}) Risk: ${w.risk_score || 0}${riskBadge}`;
+            const mixerBadge = w.is_mixer ? ' 🌀' : '';
+            narrative += `\n   ${i + 1}. ${addr}${label} (${w.blockchain || 'N/A'}) Risk: ${w.risk_score || 0}${riskBadge}${mixerBadge}`;
           });
         }
         
-        const highRiskWallets = walletsWithRisk.filter(w => (w.risk_score || 0) >= 70);
+        const highRiskWallets = walletsForDisplay.filter(w => (w.risk_score || 0) >= 70);
         if (highRiskWallets.length > 0) {
           narrative += `\n\n⚠️ ${highRiskWallets.length} high-risk wallet(s) (Risk ≥70)`;
         }
         
-        const mixerWallets = walletsWithRisk.filter(w => w.is_mixer);
+        const mixerWallets = walletsForDisplay.filter(w => w.is_mixer);
         if (mixerWallets.length > 0) {
           narrative += `\n\n🚨 Mixer/Tumbler activity detected - possible money laundering`;
         }
@@ -787,10 +782,10 @@ export const ForensicReportV2 = () => {
       sections.push({
         icon: '₿',
         title: 'Crypto Tracker',
-        count: cryptoTransactions.length + cryptoWallets.length,
+        count: cryptoWallets.length > 0 ? cryptoWallets.length : cryptoTransactions.length,
         summary: language === 'th'
-          ? `${cryptoTransactions.length} ธุรกรรม, ${cryptoWallets.length} กระเป๋า${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`
-          : `${cryptoTransactions.length} transactions, ${cryptoWallets.length} wallets${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`,
+          ? `${cryptoWallets.length > 0 ? cryptoWallets.length : cryptoTransactions.length} กระเป๋า${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`
+          : `${cryptoWallets.length > 0 ? cryptoWallets.length : cryptoTransactions.length} wallets${totalUSD > 0 ? `, ~$${totalUSD.toLocaleString()}` : ''}`,
         narrative
       });
     }
