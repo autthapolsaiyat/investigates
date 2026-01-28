@@ -39,6 +39,7 @@ import { SupportTickets } from './pages/admin/SupportTickets';
 import { LoginMap } from './pages/admin/LoginMap';
 import { LicenseManagement } from './pages/admin/LicenseManagement';
 import { SalesDocumentation } from './pages/admin/SalesDocumentation';
+import { ApiKeys as ApiKeysPage } from './pages/admin/ApiKeys';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -95,6 +96,7 @@ function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="deleted-cases" element={<DeletedCases />} />
           <Route path="licenses" element={<LicenseManagement />} />
+          <Route path="api-keys" element={<ApiKeysPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="activity" element={<ActivityLogPage />} />
           <Route path="subscriptions" element={<SubscriptionsPage />} />
