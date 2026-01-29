@@ -472,28 +472,16 @@ export const CryptoTracker = () => {
       const apiResult = await blockchainApi.lookupWallet(detectedChain, searchAddress);
       
       if (apiResult) {
-        console.log('[CryptoTracker] API lookup successful!');
+        console.log('[CryptoTracker] API lookup successful!', apiResult);
         setWalletInfo(apiResult);
         setDataSource('api');
         
-        // For now, generate mock transactions (real API would return these)
-        // In full implementation, fetchEthereumWallet returns transactions
+        // Generate mock transactions for display
+        // (Backend doesn't return transactions yet)
         const { txs } = generateMockWalletData(searchAddress, detectedChain);
-        
-        // Recalculate risk with transactions
-        const { score, factors } = calculateRiskScore(
-          txs, 
-          apiResult.totalReceived, 
-          apiResult.firstTxDate
-        );
-        
-        setWalletInfo(prev => prev ? {
-          ...prev,
-          riskScore: score,
-          riskFactors: factors
-        } : null);
-        
         setTransactions(txs);
+        
+        // DON'T override riskScore from API - it includes Chainalysis sanctions data!
       } else {
         // Fallback to mock data
         console.log('[CryptoTracker] API failed, using mock data');

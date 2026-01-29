@@ -483,14 +483,84 @@ export async function fetchTronWallet(
 }
 
 // ============================================
-// UNIVERSAL WALLET LOOKUP
+// UNIVERSAL WALLET LOOKUP (via Backend API)
 // ============================================
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
 export async function lookupWallet(
   chain: BlockchainType,
   address: string
 ): Promise<WalletInfo | null> {
-  console.log(`[BlockchainAPI] Looking up ${chain} wallet: ${address}`);
+  console.log(`[BlockchainAPI] Looking up ${chain} wallet via Backend API: ${address}`);
+  
+  try {
+    // Get auth token from localStorage
+    const authData = localStorage.getItem('auth-storage');
+    let token = '';
+    if (authData) {
+      try {
+        const parsed = JSON.parse(authData);
+        token = parsed?.state?.token || '';
+      } catch {
+        console.warn('[BlockchainAPI] Failed to parse auth token');
+      }
+    }
+    
+    if (!token) {
+      console.warn('[BlockchainAPI] No auth token, falling back to local lookup');
+      return await lookupWalletLocal(chain, address);
+    }
+    
+    // Call Backend API with Chainalysis sanctions check
+    const response = await fetch(`${API_BASE}/crypto/lookup/${chain}/${address}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.warn(`[BlockchainAPI] Backend lookup failed: ${response.status}`);
+      // Fallback to local lookup
+      return await lookupWalletLocal(chain, address);
+    }
+    
+    const data = await response.json();
+    console.log('[BlockchainAPI] Backend lookup result:', data);
+    
+    // Map backend response to WalletInfo
+    return {
+      address: data.address,
+      blockchain: data.blockchain,
+      balance: data.balance || 0,
+      balanceUSD: data.balanceUSD || 0,
+      totalReceived: data.totalReceived || 0,
+      totalSent: data.totalSent || 0,
+      txCount: data.txCount || 0,
+      firstTxDate: data.firstTxDate || null,
+      lastTxDate: data.lastTxDate || null,
+      isContract: data.isContract || false,
+      isSanctioned: data.isSanctioned || false,
+      sanctionsData: data.sanctionsData || null,
+      labels: data.labels || [],
+      riskScore: data.riskScore || 0,
+      riskFactors: data.riskFactors || []
+    };
+    
+  } catch (error) {
+    console.error('[BlockchainAPI] Backend lookup error:', error);
+    // Fallback to local lookup
+    return await lookupWalletLocal(chain, address);
+  }
+}
+
+// Fallback local lookup (original implementation)
+async function lookupWalletLocal(
+  chain: BlockchainType,
+  address: string
+): Promise<WalletInfo | null> {
+  console.log(`[BlockchainAPI] Fallback to local lookup for ${chain}: ${address}`);
   
   try {
     if (chain === 'tron') {
@@ -563,7 +633,7 @@ export async function lookupWallet(
     };
     
   } catch (error) {
-    console.error('[BlockchainAPI] Lookup error:', error);
+    console.error('[BlockchainAPI] Local lookup error:', error);
     return null;
   }
 }
