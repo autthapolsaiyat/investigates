@@ -495,17 +495,8 @@ export async function lookupWallet(
   console.log(`[BlockchainAPI] Looking up ${chain} wallet via Backend API: ${address}`);
   
   try {
-    // Get auth token from localStorage
-    const authData = localStorage.getItem('auth-storage');
-    let token = '';
-    if (authData) {
-      try {
-        const parsed = JSON.parse(authData);
-        token = parsed?.state?.token || '';
-      } catch {
-        console.warn('[BlockchainAPI] Failed to parse auth token');
-      }
-    }
+    // Get auth token from localStorage (same as api.ts)
+    const token = localStorage.getItem('access_token');
     
     if (!token) {
       console.warn('[BlockchainAPI] No auth token, falling back to local lookup');
