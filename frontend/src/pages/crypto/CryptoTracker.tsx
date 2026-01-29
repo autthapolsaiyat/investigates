@@ -915,6 +915,37 @@ export const CryptoTracker = () => {
             </div>
           )}
 
+          {/* OFAC SANCTIONS WARNING */}
+          {walletInfo.isSanctioned && (
+            <div className="bg-red-900/50 border-2 border-red-500 rounded-lg p-4 animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-500 rounded-lg">
+                  <ShieldAlert size={32} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                    ⚠️ OFAC SANCTIONED ADDRESS
+                  </h3>
+                  <p className="text-red-300 mt-1">
+                    This wallet address is on the U.S. Treasury OFAC Sanctions List.
+                    {walletInfo.sanctionsData?.name && (
+                      <span className="font-semibold"> Entity: {walletInfo.sanctionsData.name}</span>
+                    )}
+                  </p>
+                  {walletInfo.sanctionsData?.description && (
+                    <p className="text-red-300/80 text-sm mt-1">{walletInfo.sanctionsData.description}</p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <Badge variant="danger" className="text-lg px-4 py-2">
+                    SANCTIONED
+                  </Badge>
+                  <p className="text-xs text-red-400 mt-2">Verified by Chainalysis</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Wallet Summary */}
           <div className="grid grid-cols-6 gap-4">
             {/* Balance */}
@@ -1015,7 +1046,16 @@ export const CryptoTracker = () => {
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dark-700">
                 <span className="text-sm text-dark-400">Labels:</span>
                 {walletInfo.labels.map((label, idx) => (
-                  <Badge key={idx} variant={label.includes('Risk') ? 'danger' : 'default'}>
+                  <Badge 
+                    key={idx} 
+                    variant={
+                      label.includes('SANCTIONED') ? 'danger' : 
+                      label.includes('Risk') ? 'danger' : 
+                      label.includes('Tornado') || label.includes('Mixer') ? 'warning' :
+                      'default'
+                    }
+                    className={label.includes('SANCTIONED') ? 'animate-pulse bg-red-600' : ''}
+                  >
                     {label}
                   </Badge>
                 ))}

@@ -27,6 +27,14 @@ export interface WalletInfo {
   firstTxDate: string | null;
   lastTxDate: string | null;
   isContract: boolean;
+  isSanctioned?: boolean;
+  sanctionsData?: {
+    isSanctioned: boolean;
+    category?: string;
+    name?: string;
+    description?: string;
+    url?: string;
+  } | null;
   labels: string[];
   riskScore: number;
   riskFactors: RiskFactor[];
