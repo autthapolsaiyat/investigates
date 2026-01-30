@@ -142,27 +142,15 @@ export interface TokenResponse {
 }
 
 export interface LoginResponse {
-  user?: User;
-  tokens?: TokenResponse;
-  requires_2fa?: boolean;
-  temp_token?: string;
-  message?: string;
+  user: User;
+  tokens: TokenResponse;
 }
 
 export const authAPI = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post('/auth/login', data);
-    
-    // Check if 2FA is required
-    if (response.data.requires_2fa && response.data.temp_token) {
-      return response.data;
-    }
-    
-    // Normal login - store tokens
     const { tokens } = response.data;
-    if (tokens) {
-      setTokens(tokens.access_token, tokens.refresh_token);
-    }
+    setTokens(tokens.access_token, tokens.refresh_token);
     return response.data;
   },
 
@@ -1531,115 +1519,6 @@ export const settingsAPI = {
   // Delete avatar
   deleteAvatar: async (): Promise<{ message: string }> => {
     const response = await api.delete('/settings/avatar');
-    return response.data;
-  },
-};
-
-// ============================================================
-// Two-Factor Authentication API
-// ============================================================
-
-export interface TwoFAStatus {
-  enabled: boolean;
-  enabled_at: string | null;
-  has_backup_codes: boolean;
-}
-
-export interface TwoFASetupResponse {
-  secret: string;
-  qr_code: string;
-  uri: string;
-}
-
-export interface TwoFAEnableResponse {
-  enabled: boolean;
-  backup_codes: string[];
-  message: string;
-}
-
-export interface TwoFAUserStatus {
-  user_id: number;
-  email: string;
-  full_name: string;
-  two_fa_enabled: boolean;
-  two_fa_enabled_at: string | null;
-}
-
-export interface TwoFAStats {
-  total_active_users: number;
-  users_with_2fa: number;
-  users_without_2fa: number;
-  adoption_rate: number;
-}
-
-export interface TwoFARequiredResponse {
-  requires_2fa: boolean;
-  message: string;
-  temp_token: string;
-}
-
-export const twoFactorAPI = {
-  // Get 2FA status
-  getStatus: async (): Promise<TwoFAStatus> => {
-    const response = await api.get('/2fa/status');
-    return response.data;
-  },
-
-  // Start 2FA setup
-  setup: async (): Promise<TwoFASetupResponse> => {
-    const response = await api.post('/2fa/setup');
-    return response.data;
-  },
-
-  // Verify and enable 2FA
-  verify: async (code: string): Promise<TwoFAEnableResponse> => {
-    const response = await api.post('/2fa/verify', { code });
-    return response.data;
-  },
-
-  // Disable 2FA
-  disable: async (password: string, code?: string): Promise<{ message: string }> => {
-    const response = await api.post('/2fa/disable', { password, code });
-    return response.data;
-  },
-
-  // Regenerate backup codes
-  regenerateBackupCodes: async (code: string): Promise<{ message: string; backup_codes: string[] }> => {
-    const response = await api.post('/2fa/regenerate-backup-codes', { code });
-    return response.data;
-  },
-
-  // Admin: List users 2FA status
-  listUsers: async (): Promise<TwoFAUserStatus[]> => {
-    const response = await api.get('/2fa/admin/users');
-    return response.data;
-  },
-
-  // Admin: Reset user's 2FA
-  resetUser: async (userId: number): Promise<{ message: string; user_id: number; email: string }> => {
-    const response = await api.post('/2fa/admin/reset', { user_id: userId });
-    return response.data;
-  },
-
-  // Admin: Get 2FA stats
-  getStats: async (): Promise<TwoFAStats> => {
-    const response = await api.get('/2fa/admin/stats');
-    return response.data;
-  },
-
-  // Login with 2FA (step 2)
-  loginWith2FA: async (tempToken: string, code: string): Promise<LoginResponse> => {
-    const response = await axios.post(`${API_BASE_URL}/auth/login/2fa`, {
-      temp_token: tempToken,
-      code,
-    });
-    
-    // Store tokens
-    const { tokens } = response.data;
-    if (tokens) {
-      setTokens(tokens.access_token, tokens.refresh_token);
-    }
-    
     return response.data;
   },
 };
