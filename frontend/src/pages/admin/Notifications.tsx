@@ -176,7 +176,7 @@ export const Notifications = () => {
                 <Send className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total_sent}</p>
+                <p className="text-2xl font-bold text-white">{stats.sent_count || 0}</p>
                 <p className="text-sm text-gray-400">Sent</p>
               </div>
             </div>
@@ -188,7 +188,7 @@ export const Notifications = () => {
                 <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total_active}</p>
+                <p className="text-2xl font-bold text-white">{stats.active || 0}</p>
                 <p className="text-sm text-gray-400">Active</p>
               </div>
             </div>
@@ -200,7 +200,7 @@ export const Notifications = () => {
                 <Eye className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total_read}</p>
+                <p className="text-2xl font-bold text-white">{Math.round((stats.sent_count || 0) * (stats.read_rate || 0) / 100)}</p>
                 <p className="text-sm text-gray-400">Read</p>
               </div>
             </div>
