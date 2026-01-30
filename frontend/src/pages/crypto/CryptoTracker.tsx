@@ -568,11 +568,6 @@ export const CryptoTracker = () => {
               <span className="text-dark-400">| ETH ${currentPrice.toLocaleString()}</span>
             )}
           </div>
-          
-          <Button variant="primary" onClick={() => navigate('/app/import')}>
-            <FileText size={18} className="mr-2" />
-            Import CSV via Smart Import
-          </Button>
         </div>
       </div>
 
