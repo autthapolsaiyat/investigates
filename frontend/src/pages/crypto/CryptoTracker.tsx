@@ -644,7 +644,30 @@ export const CryptoTracker = () => {
               </thead>
               <tbody>
                 {(showAllImported ? importedTransactions : importedTransactions.slice(0, 10)).map((tx) => (
-                  <tr key={tx.id} className="border-b border-dark-800 hover:bg-dark-800/50">
+                  <tr 
+                    key={tx.id} 
+                    className="border-b border-dark-800 hover:bg-dark-800/50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // Load the "To" wallet for analysis
+                      const chain = tx.blockchain?.toLowerCase() || 'ethereum';
+                      const chainMap: Record<string, BlockchainType> = {
+                        'btc': 'bitcoin', 'bitcoin': 'bitcoin',
+                        'eth': 'ethereum', 'ethereum': 'ethereum',
+                        'usdt_trc20': 'tron', 'tron': 'tron', 'trx': 'tron',
+                        'bsc': 'bsc', 'bnb': 'bsc',
+                        'polygon': 'polygon', 'matic': 'polygon'
+                      };
+                      const mappedChain = chainMap[chain] || 'ethereum';
+                      setSelectedChain(mappedChain);
+                      setSearchAddress(tx.to_address);
+                      // Trigger search
+                      setTimeout(() => {
+                        const searchBtn = document.querySelector('[data-search-btn]') as HTMLButtonElement;
+                        if (searchBtn) searchBtn.click();
+                      }, 100);
+                    }}
+                    title="Click to analyze this wallet"
+                  >
                     <td className="py-2 px-2">
                       <span className="uppercase text-xs px-2 py-1 bg-dark-700 rounded">
                         {tx.blockchain}
