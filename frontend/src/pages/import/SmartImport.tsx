@@ -1155,8 +1155,11 @@ const SmartImport: React.FC = () => {
         await fetchDataCounts(selectedCase);
       }
       
+      log(`\n🔄 Redirecting to Money Flow...`);
       await new Promise(resolve => setTimeout(resolve, 1500));
-      navigate(`/app/money-flow?case=${selectedCase}`);
+      
+      // Use window.location to force full page refresh (ensures all data reloads)
+      window.location.href = `/app/money-flow?case=${selectedCase}`;
     } catch (error) { log(`\n❌ Error: ${error}`); }
     finally { setIsCreatingNetwork(false); }
   };
