@@ -11,6 +11,7 @@ from sqlalchemy import func, and_, or_
 from app.database import get_db
 from app.models.support_ticket import SupportTicket
 from app.models.user import User
+from app.models.notification import UserNotification
 from app.schemas.support_ticket import (
     TicketCreate,
     TicketAdminUpdate,
@@ -150,6 +151,21 @@ async def create_ticket(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+    
+    # Send notification to all admins
+    admins = db.query(User).filter(User.role == "admin", User.is_active == True).all()
+    for admin in admins:
+        admin_notif = UserNotification(
+            user_id=admin.id,
+            title=f"🎫 New Support Ticket: {ticket_number}",
+            message=f"[{ticket_data.category.value.upper()}] {ticket_data.subject}\nFrom: {current_user.email}",
+            notification_type="ticket",
+            priority="high" if ticket_data.category.value == "bug" else "normal",
+            related_type="ticket",
+            related_id=ticket.id
+        )
+        db.add(admin_notif)
+    db.commit()
     
     return TicketResponse(
         id=ticket.id,
@@ -420,6 +436,10 @@ async def admin_update_ticket(
             detail="Ticket not found"
         )
     
+    # Track if we need to notify user
+    should_notify_user = False
+    notification_message = ""
+    
     # Update fields
     if update_data.status is not None:
         ticket.status = update_data.status.value
@@ -428,6 +448,8 @@ async def admin_update_ticket(
         if update_data.status == TicketStatus.RESOLVED:
             ticket.resolved_by = current_user.id
             ticket.resolved_at = datetime.utcnow()
+            should_notify_user = True
+            notification_message = f"Your ticket {ticket.ticket_number} has been resolved."
     
     if update_data.priority is not None:
         ticket.priority = update_data.priority.value
@@ -436,10 +458,26 @@ async def admin_update_ticket(
         ticket.admin_response = update_data.admin_response
         # Reset user_read_at so they see the new response
         ticket.user_read_at = None
+        should_notify_user = True
+        notification_message = f"Admin has responded to your ticket {ticket.ticket_number}"
     
     ticket.updated_at = datetime.utcnow()
     
     db.commit()
     db.refresh(ticket)
+    
+    # Send notification to ticket owner
+    if should_notify_user:
+        user_notif = UserNotification(
+            user_id=ticket.user_id,
+            title=f"📬 Ticket Update: {ticket.ticket_number}",
+            message=notification_message,
+            notification_type="ticket",
+            priority="normal",
+            related_type="ticket",
+            related_id=ticket.id
+        )
+        db.add(user_notif)
+        db.commit()
     
     return ticket_to_detail(ticket)

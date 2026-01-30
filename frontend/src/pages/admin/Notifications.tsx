@@ -58,8 +58,8 @@ export const Notifications = () => {
         notificationsAPI.getStats(),
       ]);
       
-      setNotifications(notifsRes.items);
-      setTemplates(templatesRes.templates);
+      setNotifications(notifsRes.items || []);
+      setTemplates(Array.isArray(templatesRes) ? templatesRes : (templatesRes.templates || []));
       setStats(statsRes);
     } catch (err) {
       console.error('Failed to load notifications:', err);

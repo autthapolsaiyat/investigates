@@ -75,6 +75,8 @@ routers_to_load = [
     ("call_records", "app.routers.call_records", "router"),
     ("locations", "app.routers.locations", "router"),
     ("crypto_transactions", "app.routers.crypto_transactions", "router"),
+    ("admin_api_keys", "app.routers.admin_api_keys", "router"),
+    ("notifications", "app.routers.notifications", "router"),
 ]
 
 for name, module_path, router_attr in routers_to_load:
