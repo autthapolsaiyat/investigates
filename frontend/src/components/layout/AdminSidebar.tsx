@@ -21,10 +21,24 @@ import {
   Bug,
   Map,
   Key,
-  BookOpen
+  BookOpen,
+  LucideIcon
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { registrationAPI } from '../../services/api';
+
+interface NavItem {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+  end?: boolean;
+  badge?: number;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
@@ -57,7 +71,7 @@ export const AdminSidebar = () => {
     navigate('/app/dashboard');
   };
 
-  const adminNavSections = [
+  const adminNavSections: NavSection[] = [
     {
       title: 'OVERVIEW',
       items: [
@@ -152,7 +166,7 @@ export const AdminSidebar = () => {
                   <item.icon size={18} />
                   <span className="text-sm">{item.label}</span>
                 </div>
-                {item.badge > 0 && (
+                {(item.badge ?? 0) > 0 && (
                   <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full animate-pulse">
                     {item.badge}
                   </span>
