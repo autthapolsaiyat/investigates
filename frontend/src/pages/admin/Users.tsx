@@ -261,14 +261,14 @@ export const Users = () => {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6">
+    <div className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Users</h1>
-          <p className="text-dark-400 mt-1">Manage users in the system</p>
+          <h1 className="text-xl lg:text-2xl font-bold">Users</h1>
+          <p className="text-dark-400 mt-1 text-sm lg:text-base">Manage users in the system</p>
         </div>
-        <Button onClick={openCreateModal}>
+        <Button onClick={openCreateModal} className="w-full sm:w-auto">
           <Plus size={20} className="mr-2" />
           New User
         </Button>
@@ -276,7 +276,7 @@ export const Users = () => {
 
       {/* Search */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={20} />
           <Input
             placeholder="Search users..."

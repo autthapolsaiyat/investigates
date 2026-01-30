@@ -85,7 +85,7 @@ export const AdminSidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-dark-800 border-r border-dark-700 flex flex-col">
+    <aside className="w-64 h-full bg-dark-800 border-r border-dark-700 flex flex-col">
       {/* Logo & Title */}
       <div className="p-4 border-b border-dark-700">
         <div className="flex items-center gap-3 mb-3">

@@ -322,17 +322,17 @@ export default function PendingRegistrations() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <UserPlus className="w-7 h-7 text-primary-400" />
+          <h1 className="text-xl lg:text-2xl font-bold text-white flex items-center gap-3">
+            <UserPlus className="w-6 lg:w-7 h-6 lg:h-7 text-primary-400" />
             Registration Requests
           </h1>
-          <p className="text-gray-400 mt-1">Manage registration requests from new users</p>
+          <p className="text-gray-400 mt-1 text-sm lg:text-base">Manage registration requests from new users</p>
         </div>
-        <Button onClick={() => { fetchRegistrations(); fetchStats(); }}>
+        <Button onClick={() => { fetchRegistrations(); fetchStats(); }} className="w-full sm:w-auto">
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
         </Button>
@@ -340,7 +340,7 @@ export default function PendingRegistrations() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <Card className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">

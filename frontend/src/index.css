@@ -330,3 +330,101 @@ body {
   background-color: rgba(59, 130, 246, 0.5);
   color: white;
 }
+
+/* ========================================
+   Admin Panel Mobile Responsive
+   ======================================== */
+
+/* Responsive Table Container */
+.admin-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table responsive on mobile */
+@media (max-width: 1024px) {
+  /* Make tables scrollable */
+  table {
+    min-width: 600px;
+  }
+  
+  /* Admin page padding */
+  .admin-page {
+    padding: 1rem !important;
+  }
+  
+  /* Stats grid */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Action buttons stack */
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Single column stats */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Smaller text in tables */
+  table th,
+  table td {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem;
+  }
+  
+  /* Hide less important columns on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  /* Full width buttons on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  /* Card padding */
+  .admin-card {
+    padding: 1rem !important;
+  }
+}
+
+/* Touch-friendly buttons */
+@media (hover: none) and (pointer: coarse) {
+  button, 
+  a, 
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Larger tap targets for icons */
+  .icon-button {
+    padding: 0.75rem !important;
+  }
+}
+
+/* Safe area for mobile devices with notch */
+@supports (padding: max(0px)) {
+  .admin-mobile-header {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .admin-sidebar {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* PWA standalone mode */
+@media (display-mode: standalone) {
+  .admin-mobile-header {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
