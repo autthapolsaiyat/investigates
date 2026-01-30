@@ -85,12 +85,22 @@ const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<UserNotificationItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [lastCount, setLastCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchUnreadCount = async () => {
     try {
       const response = await notificationsAPI.getUnreadCount();
-      setUnreadCount(response.unread_count);
+      const newCount = response.unread_count;
+      
+      // Auto-open popup if new notifications arrived
+      if (newCount > lastCount && lastCount > 0) {
+        setIsOpen(true);
+        fetchNotifications();
+      }
+      
+      setLastCount(newCount);
+      setUnreadCount(newCount);
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
@@ -117,9 +127,30 @@ const NotificationBell = () => {
   };
 
   useEffect(() => {
+    // Initial fetch
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 60000);
-    return () => clearInterval(interval);
+    fetchNotifications();
+    
+    // Auto-open if has unread on first load
+    const timer = setTimeout(async () => {
+      try {
+        const response = await notificationsAPI.getUnreadCount();
+        if (response.unread_count > 0) {
+          setIsOpen(true);
+          fetchNotifications();
+        }
+        setLastCount(response.unread_count);
+      } catch (e) {
+        // ignore
+      }
+    }, 1000);
+    
+    // Poll every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -140,7 +171,7 @@ const NotificationBell = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
         className="p-2 rounded-lg hover:bg-dark-700 transition-colors relative"
         title="Notifications"
       >
