@@ -136,15 +136,26 @@ const UserGuide = () => {
                   <Wallet className="w-6 h-6 text-orange-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Crypto Tracker - Track Cryptocurrency</h3>
+                  <h3 className="text-lg font-semibold mb-2">Crypto Tracker - Cryptocurrency Investigation</h3>
                   <p className="text-dark-400 mb-3">
-                    Search and analyze wallet addresses, supports ETH, BTC, USDT-TRC20, BNB, Polygon
-                    Detects Mixer/Tumbler and Risk Scoring
+                    Professional-grade blockchain forensics supporting ETH, BTC, USDT-TRC20, BNB, Polygon.
+                    Features real-time OFAC sanctions screening via Chainalysis API and automatic Mixer/Tumbler detection.
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">Multi-chain</span>
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">Risk Analysis</span>
-                    <span className="px-2 py-1 bg-dark-700 rounded text-xs">Mixer Detection</span>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded text-xs">✓ Multi-chain (5 blockchains)</span>
+                    <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">✓ OFAC Sanctions Check</span>
+                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">✓ Mixer/Tornado Cash Detection</span>
+                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">✓ Risk Scoring (0-100)</span>
+                  </div>
+                  <div className="bg-dark-700/50 rounded-lg p-3 text-sm">
+                    <p className="text-dark-300 mb-2"><strong>Key Features:</strong></p>
+                    <ul className="text-dark-400 space-y-1 text-xs">
+                      <li>• <span className="text-red-400">🚨 OFAC Sanctioned Address Detection</span> - Real-time check via Chainalysis API</li>
+                      <li>• <span className="text-purple-400">🌀 Mixer Detection</span> - Tornado Cash, Wasabi Mixer automatic flagging</li>
+                      <li>• <span className="text-green-400">📊 Risk Score</span> - 0-100 score based on wallet behavior and entity type</li>
+                      <li>• <span className="text-blue-400">🏷️ Known Entity Labels</span> - Exchanges, DeFi protocols, sanctioned wallets</li>
+                      <li>• <span className="text-yellow-400">📋 Import from CSV</span> - Bulk import transactions via Smart Import</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -201,14 +212,25 @@ const UserGuide = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Forensic Report - Court Standard Report</h3>
                   <p className="text-dark-400 mb-3">
-                    Create case summary report ready for court use 
-                    Includes QR Code for evidence verification and Chain of Custody
+                    Comprehensive case summary report ready for court use.
+                    Auto-generates analysis from all imported data including crypto, calls, locations, and bank transactions.
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ Network Graph</span>
-                    <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ Auto Summary</span>
-                    <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ QR Code</span>
+                    <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ AI Summary</span>
+                    <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ QR Code Verification</span>
                     <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">✓ SHA-256 Hash</span>
+                  </div>
+                  <div className="bg-dark-700/50 rounded-lg p-3 text-sm">
+                    <p className="text-dark-300 mb-2"><strong>Report Sections:</strong></p>
+                    <ul className="text-dark-400 space-y-1 text-xs">
+                      <li>• <span className="text-green-400">💰 Money Flow Analysis</span> - Bank transfers, layering patterns</li>
+                      <li>• <span className="text-orange-400">₿ Crypto Analysis</span> - Wallets, OFAC alerts, Mixer flags</li>
+                      <li>• <span className="text-purple-400">📞 Call Analysis</span> - Communication patterns, frequency</li>
+                      <li>• <span className="text-red-400">📍 Location Timeline</span> - Movement patterns, key locations</li>
+                      <li>• <span className="text-yellow-400">🚩 Red Flags</span> - Auto-detected suspicious activities</li>
+                      <li>• <span className="text-blue-400">📋 Investigation Steps</span> - Recommended next actions</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -283,6 +305,7 @@ const UserGuide = () => {
           </h2>
           <p className="text-dark-400 mb-6">
             Download these sample files to test the system. All files are in CSV format ready for Smart Import.
+            Files include realistic Thai investigation data with various risk patterns.
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             <a 
@@ -295,7 +318,7 @@ const UserGuide = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold group-hover:text-purple-400 transition-colors">Call Logs Sample</h3>
-                <p className="text-sm text-dark-400">80 records • 16 KB</p>
+                <p className="text-sm text-dark-400">80 records • Multi-device • GPS coordinates</p>
               </div>
               <Download className="w-5 h-5 text-dark-400 group-hover:text-purple-400" />
             </a>
@@ -310,7 +333,7 @@ const UserGuide = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold group-hover:text-green-400 transition-colors">Bank Transactions Sample</h3>
-                <p className="text-sm text-dark-400">67 records • 10 KB</p>
+                <p className="text-sm text-dark-400">50 records • 6 Banks • Layering patterns</p>
               </div>
               <Download className="w-5 h-5 text-dark-400 group-hover:text-green-400" />
             </a>
@@ -325,7 +348,8 @@ const UserGuide = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold group-hover:text-orange-400 transition-colors">Crypto Transactions Sample</h3>
-                <p className="text-sm text-dark-400">50 records • 7 KB</p>
+                <p className="text-sm text-dark-400">8 records • ETH/BTC • OFAC + Tornado Cash samples</p>
+                <p className="text-xs text-red-400 mt-1">⚠️ Includes sanctioned wallet examples</p>
               </div>
               <Download className="w-5 h-5 text-dark-400 group-hover:text-orange-400" />
             </a>
@@ -340,7 +364,7 @@ const UserGuide = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold group-hover:text-red-400 transition-colors">Location Timeline Sample</h3>
-                <p className="text-sm text-dark-400">86 records • 15 KB</p>
+                <p className="text-sm text-dark-400">86 records • GPS/Cell Tower • Multi-day</p>
               </div>
               <Download className="w-5 h-5 text-dark-400 group-hover:text-red-400" />
             </a>
