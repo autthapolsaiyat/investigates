@@ -2,6 +2,7 @@
  * Admin Sidebar Component
  * Navigation sidebar for Admin Panel
  */
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard,
@@ -23,57 +24,29 @@ import {
   BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-
-const adminNavSections = [
-  {
-    title: 'OVERVIEW',
-    items: [
-      { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
-      { to: '/admin/activity', icon: Activity, label: 'Activity Log' },
-      { to: '/admin/login-map', icon: Map, label: 'Login Map' },
-    ]
-  },
-  {
-    title: 'USER MANAGEMENT',
-    items: [
-      { to: '/admin/registrations', icon: UserPlus, label: 'Registrations' },
-      { to: '/admin/users', icon: Users, label: 'Users' },
-      { to: '/admin/subscriptions', icon: CreditCard, label: 'Subscriptions' },
-      { to: '/admin/licenses', icon: Key, label: 'License Keys' },
-    ]
-  },
-  {
-    title: 'ORGANIZATION',
-    items: [
-      { to: '/admin/organizations', icon: Building2, label: 'Organizations' },
-    ]
-  },
-  {
-    title: 'DATA MANAGEMENT',
-    items: [
-      { to: '/admin/deleted-cases', icon: Trash2, label: 'Deleted Cases' },
-    ]
-  },
-  {
-    title: 'SUPPORT',
-    items: [
-      { to: '/admin/support-tickets', icon: Bug, label: 'Support Tickets' },
-    ]
-  },
-  {
-    title: 'SYSTEM',
-    items: [
-      { to: '/admin/notifications', icon: Bell, label: 'Notifications' },
-      { to: '/admin/reports', icon: FileText, label: 'System Reports' },
-      { to: '/admin/sales-docs', icon: BookOpen, label: 'Sales Docs' },
-      { to: '/admin/settings', icon: Settings, label: 'Settings' },
-    ]
-  },
-];
+import { registrationAPI } from '../../services/api';
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Fetch pending registration count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const stats = await registrationAPI.getStats();
+        setPendingCount(stats.pending || 0);
+      } catch (err) {
+        console.error('Failed to fetch pending count:', err);
+      }
+    };
+    
+    fetchPendingCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -83,6 +56,53 @@ export const AdminSidebar = () => {
   const handleBackToApp = () => {
     navigate('/app/dashboard');
   };
+
+  const adminNavSections = [
+    {
+      title: 'OVERVIEW',
+      items: [
+        { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
+        { to: '/admin/activity', icon: Activity, label: 'Activity Log' },
+        { to: '/admin/login-map', icon: Map, label: 'Login Map' },
+      ]
+    },
+    {
+      title: 'USER MANAGEMENT',
+      items: [
+        { to: '/admin/registrations', icon: UserPlus, label: 'Registrations', badge: pendingCount },
+        { to: '/admin/users', icon: Users, label: 'Users' },
+        { to: '/admin/subscriptions', icon: CreditCard, label: 'Subscriptions' },
+        { to: '/admin/licenses', icon: Key, label: 'License Keys' },
+      ]
+    },
+    {
+      title: 'ORGANIZATION',
+      items: [
+        { to: '/admin/organizations', icon: Building2, label: 'Organizations' },
+      ]
+    },
+    {
+      title: 'DATA MANAGEMENT',
+      items: [
+        { to: '/admin/deleted-cases', icon: Trash2, label: 'Deleted Cases' },
+      ]
+    },
+    {
+      title: 'SUPPORT',
+      items: [
+        { to: '/admin/support-tickets', icon: Bug, label: 'Support Tickets' },
+      ]
+    },
+    {
+      title: 'SYSTEM',
+      items: [
+        { to: '/admin/notifications', icon: Bell, label: 'Notifications' },
+        { to: '/admin/reports', icon: FileText, label: 'System Reports' },
+        { to: '/admin/sales-docs', icon: BookOpen, label: 'Sales Docs' },
+        { to: '/admin/settings', icon: Settings, label: 'Settings' },
+      ]
+    },
+  ];
 
   return (
     <aside className="w-64 h-full bg-dark-800 border-r border-dark-700 flex flex-col">
@@ -121,15 +141,22 @@ export const AdminSidebar = () => {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  `flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-red-500/20 text-red-400'
                       : 'text-dark-300 hover:bg-dark-700 hover:text-white'
                   }`
                 }
               >
-                <item.icon size={18} />
-                <span className="text-sm">{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <item.icon size={18} />
+                  <span className="text-sm">{item.label}</span>
+                </div>
+                {item.badge > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full animate-pulse">
+                    {item.badge}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
