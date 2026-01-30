@@ -47,10 +47,12 @@ export const ForensicReport = () => {
   const [locationCount, setLocationCount] = useState(0);
   const [uniqueLocations, setUniqueLocations] = useState(0);
   const [cryptoCount, setCryptoCount] = useState(0);
+  const [cryptoTransactions, setCryptoTransactions] = useState<any[]>([]);
+  const [highRiskCrypto, setHighRiskCrypto] = useState<any[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-backend.azurewebsites.net';
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net/api/v1';
 
   useEffect(() => {
     fetchCases();
@@ -139,8 +141,31 @@ export const ForensicReport = () => {
         const cryptoData = await cryptoRes.json();
         setCryptoCount(cryptoData.length || 0);
       }
+      
+      // Fetch crypto transactions
+      const txRes = await fetch(`${API_BASE}/crypto/case/${selectedCaseId}/transactions`, { headers });
+      if (txRes.ok) {
+        const txData = await txRes.json();
+        setCryptoTransactions(txData || []);
+        
+        // Filter high-risk (sanctioned, mixer, high score)
+        const highRisk = txData.filter((tx: any) => 
+          tx.risk_score >= 70 || 
+          tx.risk_flag === 'mixer_detected' || 
+          tx.risk_flag === 'tornado_cash' ||
+          tx.from_label?.toLowerCase().includes('sanction') ||
+          tx.to_label?.toLowerCase().includes('sanction') ||
+          tx.from_label?.toLowerCase().includes('tornado') ||
+          tx.to_label?.toLowerCase().includes('tornado') ||
+          tx.from_label?.toLowerCase().includes('mixer') ||
+          tx.to_label?.toLowerCase().includes('mixer')
+        );
+        setHighRiskCrypto(highRisk);
+      }
     } catch {
       setCryptoCount(0);
+      setCryptoTransactions([]);
+      setHighRiskCrypto([]);
     }
   }, [selectedCaseId, API_BASE]);
 
@@ -184,6 +209,9 @@ export const ForensicReport = () => {
 
     if (hasCrypto) {
       summary += `ติดตาม ${cryptoCount} กระเป๋าคริปโต `;
+      if (highRiskCrypto.length > 0) {
+        summary += `⚠️ พบ ${highRiskCrypto.length} รายการเสี่ยงสูง (Mixer/Sanctioned) `;
+      }
     }
 
     summary += 'อย่างไรก็ตาม นี่เป็นการวิเคราะห์เบื้องต้นเท่านั้น แนะนำให้สอบสวนและรวบรวมหลักฐานเพิ่มเติม';
@@ -354,6 +382,117 @@ export const ForensicReport = () => {
             <div className="text-sm text-dark-400">Total Amount</div>
           </Card>
         </div>
+      )}
+
+      {/* High Risk Crypto Alert */}
+      {highRiskCrypto.length > 0 && (
+        <Card className="p-4 bg-red-500/10 border-red-500/30 border-2">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-red-500/20 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-bold text-red-400">⚠️ High Risk Crypto Transactions Detected</h3>
+              <p className="text-sm text-dark-400">Found {highRiskCrypto.length} transactions involving sanctioned addresses or mixers</p>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-red-500/30">
+                  <th className="text-left py-2 px-2 text-red-400">Blockchain</th>
+                  <th className="text-left py-2 px-2 text-red-400">From</th>
+                  <th className="text-left py-2 px-2 text-red-400">To</th>
+                  <th className="text-right py-2 px-2 text-red-400">Amount (USD)</th>
+                  <th className="text-center py-2 px-2 text-red-400">Risk</th>
+                  <th className="text-left py-2 px-2 text-red-400">Flag</th>
+                </tr>
+              </thead>
+              <tbody>
+                {highRiskCrypto.slice(0, 10).map((tx, idx) => (
+                  <tr key={idx} className="border-b border-dark-700 hover:bg-red-500/5">
+                    <td className="py-2 px-2">
+                      <span className="uppercase text-xs px-2 py-1 bg-dark-700 rounded">
+                        {tx.blockchain}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">
+                          {tx.from_address?.substring(0, 10)}...
+                        </span>
+                        {tx.from_label && (
+                          <span className={`text-xs ${
+                            tx.from_label.toLowerCase().includes('sanction') || 
+                            tx.from_label.toLowerCase().includes('tornado') ||
+                            tx.from_label.toLowerCase().includes('mixer')
+                              ? 'text-red-400 font-bold' : 'text-primary-400'
+                          }`}>
+                            {tx.from_label}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2 px-2">
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">
+                          {tx.to_address?.substring(0, 10)}...
+                        </span>
+                        {tx.to_label && (
+                          <span className={`text-xs ${
+                            tx.to_label.toLowerCase().includes('sanction') || 
+                            tx.to_label.toLowerCase().includes('tornado') ||
+                            tx.to_label.toLowerCase().includes('mixer')
+                              ? 'text-red-400 font-bold' : 'text-primary-400'
+                          }`}>
+                            {tx.to_label}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2 px-2 text-right text-green-400 font-medium">
+                      ${(tx.amount_usd || 0).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-2 text-center">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        tx.risk_score >= 90 ? 'bg-red-500 text-white' :
+                        tx.risk_score >= 70 ? 'bg-red-500/50 text-red-200' :
+                        'bg-yellow-500/50 text-yellow-200'
+                      }`}>
+                        {tx.risk_score || 0}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        tx.risk_flag === 'mixer_detected' || tx.risk_flag === 'tornado_cash' 
+                          ? 'bg-purple-500/30 text-purple-300' 
+                          : tx.risk_flag === 'sanctioned'
+                          ? 'bg-red-500/30 text-red-300'
+                          : 'bg-yellow-500/30 text-yellow-300'
+                      }`}>
+                        {tx.risk_flag === 'mixer_detected' ? '🌀 Mixer' :
+                         tx.risk_flag === 'tornado_cash' ? '🌪️ Tornado Cash' :
+                         tx.risk_flag === 'sanctioned' ? '🚨 OFAC' :
+                         '⚠️ High Risk'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {highRiskCrypto.length > 10 && (
+            <p className="text-sm text-dark-400 mt-3 text-center">
+              ... and {highRiskCrypto.length - 10} more high-risk transactions
+            </p>
+          )}
+        </Card>
       )}
 
       {/* AI Summary Card */}
