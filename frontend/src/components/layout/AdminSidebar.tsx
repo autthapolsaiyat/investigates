@@ -22,6 +22,7 @@ import {
   Map,
   Key,
   BookOpen,
+  MessageCircle,
   LucideIcon
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -111,6 +112,7 @@ export const AdminSidebar = () => {
       title: 'SYSTEM',
       items: [
         { to: '/admin/notifications', icon: Bell, label: 'Notifications' },
+        { to: '/admin/line-settings', icon: MessageCircle, label: 'LINE Settings' },
         { to: '/admin/reports', icon: FileText, label: 'System Reports' },
         { to: '/admin/sales-docs', icon: BookOpen, label: 'Sales Docs' },
         { to: '/admin/settings', icon: Settings, label: 'Settings' },

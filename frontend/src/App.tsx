@@ -40,6 +40,7 @@ import { LoginMap } from './pages/admin/LoginMap';
 import { LicenseManagement } from './pages/admin/LicenseManagement';
 import { SalesDocumentation } from './pages/admin/SalesDocumentation';
 import { ApiKeys as ApiKeysPage } from './pages/admin/ApiKeys';
+import { LineSettings } from './pages/admin/LineSettings';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -105,6 +106,7 @@ function App() {
           <Route path="support-tickets" element={<SupportTickets />} />
           <Route path="login-map" element={<LoginMap />} />
           <Route path="sales-docs" element={<SalesDocumentation />} />
+          <Route path="line-settings" element={<LineSettings />} />
         </Route>
         
         {/* Legacy routes redirect to /app */}
