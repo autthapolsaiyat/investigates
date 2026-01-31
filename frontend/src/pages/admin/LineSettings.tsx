@@ -5,9 +5,10 @@
 import { useState, useEffect } from 'react';
 import { 
   MessageCircle, Save, Loader2, Check, AlertCircle, 
-  Send, Eye, EyeOff, ExternalLink, Info
+  Send, Eye, EyeOff, ExternalLink, Info, RefreshCw, Download
 } from 'lucide-react';
 import { Button, Input, Card } from '../../components/ui';
+import { CheckUpdateButton } from '../../components/pwa';
 
 // API base URL
 const API_URL = import.meta.env.VITE_API_URL || 'https://investigates-api.azurewebsites.net';
@@ -312,6 +313,18 @@ export const LineSettings = () => {
             </div>
           </div>
         </div>
+      </Card>
+
+      {/* App Update Section */}
+      <Card className="p-6">
+        <h3 className="font-medium mb-4 flex items-center gap-2">
+          <RefreshCw className="w-5 h-5 text-primary-400" />
+          ตรวจสอบอัพเดทแอป
+        </h3>
+        <p className="text-sm text-dark-400 mb-4">
+          ตรวจสอบและอัพเดทแอปเป็นเวอร์ชันล่าสุด
+        </p>
+        <CheckUpdateButton />
       </Card>
     </div>
   );

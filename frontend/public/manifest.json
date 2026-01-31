@@ -1,13 +1,12 @@
 {
-  "name": "InvestiGate - Digital Forensics Platform",
+  "name": "InvestiGate",
   "short_name": "InvestiGate",
-  "description": "Enterprise-grade digital investigation platform with FBI-standard forensic analysis tools",
+  "description": "Digital Forensics Investigation Platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f1a",
-  "theme_color": "#6366f1",
+  "background_color": "#0f172a",
+  "theme_color": "#dc2626",
   "orientation": "any",
-  "scope": "/",
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -58,7 +57,18 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["business", "productivity", "security"],
-  "lang": "en",
-  "dir": "ltr"
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/app/dashboard",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Cases",
+      "url": "/app/cases",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
 }
