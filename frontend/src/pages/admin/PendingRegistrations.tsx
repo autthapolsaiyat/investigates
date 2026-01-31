@@ -6,20 +6,21 @@ import { useState, useEffect } from 'react';
 import { 
   UserPlus, Check, X, Clock, Search, RefreshCw, 
   ChevronLeft, ChevronRight, Filter, Calendar,
-  Building2, Phone, Mail, Briefcase, AlertCircle
+  Building2, Phone, Mail, Briefcase, AlertCircle, Plus
 } from 'lucide-react';
 import { Button, Input, Card, Badge } from '../../components/ui';
-import { registrationAPI } from '../../services/api';
+import { registrationAPI, organizationsAPI } from '../../services/api';
 import type { 
   RegistrationRequest, 
   RegistrationStatus, 
-  RegistrationStats 
+  RegistrationStats,
+  Organization
 } from '../../services/api';
 
 interface ApproveModalProps {
   registration: RegistrationRequest;
   onClose: () => void;
-  onApprove: (id: number, days: number, role: string) => void;
+  onApprove: (id: number, days: number, role: string, organizationId?: number) => void;
   isLoading: boolean;
 }
 
@@ -27,6 +28,9 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
   const [days, setDays] = useState(30);
   const [role, setRole] = useState('viewer');
   const [customDays, setCustomDays] = useState('');
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<number | undefined>(undefined);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
 
   const presetDays = [
     { label: '30 days (Trial)', value: 30 },
@@ -41,14 +45,30 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
     { label: 'Investigator', value: 'investigator' },
   ];
 
+  // Fetch organizations
+  useEffect(() => {
+    const fetchOrgs = async () => {
+      try {
+        setLoadingOrgs(true);
+        const response = await organizationsAPI.list({ page_size: 100 });
+        setOrganizations(response.items || []);
+      } catch (err) {
+        console.error('Failed to fetch organizations:', err);
+      } finally {
+        setLoadingOrgs(false);
+      }
+    };
+    fetchOrgs();
+  }, []);
+
   const handleApprove = () => {
     const finalDays = days === -1 ? parseInt(customDays) || 30 : days;
-    onApprove(registration.id, finalDays, role);
+    onApprove(registration.id, finalDays, role, selectedOrgId);
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md p-6">
+      <Card className="w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Check className="w-5 h-5 text-green-400" />
           Approve Registration
@@ -59,8 +79,38 @@ function ApproveModal({ registration, onClose, onApprove, isLoading }: ApproveMo
           <p className="text-white font-medium">{registration.first_name} {registration.last_name}</p>
           <p className="text-gray-400 text-sm">{registration.email}</p>
           {registration.organization_name && (
-            <p className="text-gray-500 text-sm">{registration.organization_name}</p>
+            <p className="text-gray-500 text-sm">Requested: {registration.organization_name}</p>
           )}
+        </div>
+
+        {/* Organization Selection */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <Building2 className="w-4 h-4 inline mr-1" />
+            Assign to Organization
+          </label>
+          {loadingOrgs ? (
+            <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Loading organizations...
+            </div>
+          ) : (
+            <select
+              value={selectedOrgId || ''}
+              onChange={(e) => setSelectedOrgId(e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">-- No Organization (Personal) --</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name} ({org.code})
+                </option>
+              ))}
+            </select>
+          )}
+          <p className="text-xs text-gray-500 mt-1">
+            User will be added to this organization
+          </p>
         </div>
 
         {/* Subscription Duration */}
@@ -280,10 +330,14 @@ export default function PendingRegistrations() {
     fetchStats();
   }, [statusFilter, search, page]);
 
-  const handleApprove = async (id: number, days: number, role: string) => {
+  const handleApprove = async (id: number, days: number, role: string, organizationId?: number) => {
     setIsActionLoading(true);
     try {
-      await registrationAPI.approve(id, { subscription_days: days, role });
+      await registrationAPI.approve(id, { 
+        subscription_days: days, 
+        role,
+        organization_id: organizationId 
+      });
       setApproveModal(null);
       fetchRegistrations();
       fetchStats();

@@ -731,6 +731,7 @@ export interface RegistrationCreate {
 export interface RegistrationApprove {
   subscription_days: number;
   role?: string;
+  organization_id?: number;
   notes?: string;
 }
 
